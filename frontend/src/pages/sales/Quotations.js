@@ -757,7 +757,7 @@ const Quotations = () => {
                         </button>
                         {qt.status === 'sent' && !qt.order_id && (
                           <button 
-                            onClick={() => handleConvertToOrder(qt.id)}
+                            onClick={() => openConvertModal(qt)}
                             className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded"
                             title="Convert to Order"
                           >
