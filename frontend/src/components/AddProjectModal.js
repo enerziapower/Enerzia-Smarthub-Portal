@@ -216,21 +216,35 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, prefillData = null }
     fetchSettings();
   }, []);
 
-  // Pre-fill form data when prefillData is provided (from Order Lifecycle)
+  // Pre-fill form data when prefillData is provided (from Order Management)
   useEffect(() => {
     if (isOpen && prefillData) {
+      // If linked to an order with PID format, use that PID for the project
+      const orderNo = prefillData.order_no || '';
+      const isPidFormat = orderNo.startsWith('PID/');
+      
       setFormData(prev => ({
         ...prev,
+        // Use the order's PID as the project PID if it's in PID format
+        pid_no: isPidFormat ? orderNo : prev.pid_no,
         client: prefillData.client || prefillData.customer_name || '',
         location: prefillData.location || prefillData.customer_address || '',
-        project_name: prefillData.project_name || `Project for ${prefillData.order_no || ''}`,
-        po_number: prefillData.po_number || prefillData.order_no || '',
+        project_name: prefillData.project_name || `Project for ${orderNo}`,
+        po_number: prefillData.po_number || orderNo || '',
         po_amount: prefillData.po_amount || prefillData.order_value || prefillData.total_amount || 0,
         budget: prefillData.budget || prefillData.execution_budget || 0,
         linked_order_id: prefillData.order_id || prefillData.id || '',
-        linked_order_no: prefillData.order_no || '',
+        linked_order_no: orderNo,
         category: prefillData.category || prefillData.project_type || 'PSS',
       }));
+      
+      // If order has PID format, extract financial year from it
+      if (isPidFormat) {
+        const parts = orderNo.split('/');
+        if (parts.length >= 2) {
+          setFinancialYear(parts[1]); // e.g., "25-26" from "PID/25-26/363"
+        }
+      }
     }
   }, [isOpen, prefillData]);
 
