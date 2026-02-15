@@ -228,33 +228,18 @@ async def get_next_enquiry_number():
     return f"Enq/{fy_str}/{str(next_num).zfill(4)}"
 
 
-async def get_next_quotation_number():
-    """Generate next quotation number"""
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-    if current_month >= 4:
-        fy_start = current_year
-    else:
-        fy_start = current_year - 1
+async def get_next_quotation_number(linked_pid: str = None):
+    """
+    Generate next quotation number.
+    If linked to PID: Q-PID/25-26/363 
+    If standalone: QT-{FY}-{number}
     
-    fy_str = f"{fy_start % 100:02d}-{(fy_start + 1) % 100:02d}"
+    Args:
+        linked_pid: Optional PID to link quotation to
+    """
+    from utils.pid_system import get_next_quotation_number as get_pid_quotation_number
     
-    pattern = f"QT-{fy_str}-"
-    latest = await db.sales_quotations.find_one(
-        {"quotation_no": {"$regex": f"^{pattern}"}},
-        sort=[("quotation_no", -1)]
-    )
-    
-    if latest:
-        try:
-            last_num = int(latest["quotation_no"].split("-")[-1])
-            next_num = last_num + 1
-        except (ValueError, IndexError):
-            next_num = 1
-    else:
-        next_num = 1
-    
-    return f"QT-{fy_str}-{str(next_num).zfill(4)}"
+    return await get_pid_quotation_number(linked_pid)
 
 
 async def get_next_order_number():
