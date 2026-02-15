@@ -189,14 +189,22 @@ async def get_purchase_request(request_id: str):
 @router.post("/requests")
 async def create_purchase_request(data: PurchaseRequestCreate):
     """Create a new purchase request"""
-    pr_no = await generate_pr_number()
+    pr_no = await generate_pr_number(data.sales_order_id)
     
     # Calculate total estimated value
     total_estimated = sum(item.quantity * item.estimated_price for item in data.items)
     
+    # Get linked PID if sales order is linked
+    linked_pid = None
+    if data.sales_order_id:
+        order = await db.sales_orders.find_one({"id": data.sales_order_id}, {"order_no": 1, "_id": 0})
+        if order:
+            linked_pid = order.get("order_no")
+    
     pr = {
         "id": str(uuid.uuid4()),
         "pr_no": pr_no,
+        "linked_pid": linked_pid,
         "sales_order_id": data.sales_order_id,
         "title": data.title,
         "items": [item.model_dump() for item in data.items],
