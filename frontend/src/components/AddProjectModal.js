@@ -249,7 +249,8 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, prefillData = null }
   }, [isOpen, prefillData]);
 
   useEffect(() => {
-    if (isOpen && !formData.pid_no) {
+    // Only auto-generate PID if not already set (e.g., from linked order)
+    if (isOpen && !formData.pid_no && !prefillData?.order_no?.startsWith('PID/')) {
       // Auto-detect financial year
       const today = new Date();
       const month = today.getMonth() + 1; // 1-12
@@ -270,8 +271,15 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, prefillData = null }
       const monthStr = String(today.getMonth() + 1).padStart(2, '0');
       const year = today.getFullYear();
       setFormData(prev => ({ ...prev, project_date: `${day}/${monthStr}/${year}` }));
+    } else if (isOpen && !formData.project_date) {
+      // Set today's date as default project date
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const monthStr = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      setFormData(prev => ({ ...prev, project_date: `${day}/${monthStr}/${year}` }));
     }
-  }, [isOpen]);
+  }, [isOpen, prefillData]);
 
   const fetchNextPID = async (fy = financialYear) => {
     try {
