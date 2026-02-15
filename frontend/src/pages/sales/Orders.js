@@ -16,6 +16,8 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [projectPrefillData, setProjectPrefillData] = useState(null);
   const [editingOrder, setEditingOrder] = useState(null);
   const [viewingOrder, setViewingOrder] = useState(null);
   const [stats, setStats] = useState({
