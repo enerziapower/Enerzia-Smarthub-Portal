@@ -1093,12 +1093,18 @@ async def get_order(order_id: str):
 
 @router.post("/orders")
 async def create_order(data: OrderCreate):
-    """Create a new sales order"""
-    order_no = await get_next_order_number()
+    """Create a new sales order using Customer PO Number as identifier"""
+    # Customer PO Number is now the order identifier
+    order_no = data.po_number
+    
+    # Check if this PO number already exists
+    existing = await db.sales_orders.find_one({"order_no": order_no}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Order with PO Number '{order_no}' already exists")
     
     order = {
         "id": str(uuid.uuid4()),
-        "order_no": order_no,
+        "order_no": order_no,  # Customer PO Number as order reference
         "quotation_id": data.quotation_id,
         "enquiry_id": data.enquiry_id,
         "customer_name": data.customer_name,
@@ -1111,6 +1117,8 @@ async def create_order(data: OrderCreate):
         "delivery_date": data.delivery_date,
         "po_number": data.po_number,
         "po_date": data.po_date,
+        "acceptance_type": data.acceptance_type,
+        "acceptance_remarks": data.acceptance_remarks,
         "items": data.items,
         "subtotal": data.subtotal,
         "gst_percent": data.gst_percent,
