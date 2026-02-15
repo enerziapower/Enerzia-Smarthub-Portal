@@ -18,6 +18,8 @@ const Quotations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertingQuotation, setConvertingQuotation] = useState(null);
   const [editingQuotation, setEditingQuotation] = useState(null);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [enquiries, setEnquiries] = useState([]);
@@ -25,6 +27,15 @@ const Quotations = () => {
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
   const [stats, setStats] = useState({
     total: 0, draft: 0, sent: 0, accepted: 0, total_value: 0
+  });
+  
+  // Convert to Order form data
+  const [convertFormData, setConvertFormData] = useState({
+    po_number: '',
+    po_date: new Date().toISOString().split('T')[0],
+    acceptance_type: 'written_po',
+    acceptance_remarks: '',
+    delivery_date: ''
   });
   
   const [formData, setFormData] = useState({
