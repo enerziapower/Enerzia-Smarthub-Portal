@@ -150,8 +150,10 @@ class OrderCreate(BaseModel):
     customer_email: Optional[str] = None
     date: str  # DD/MM/YYYY
     delivery_date: Optional[str] = None
-    po_number: Optional[str] = None  # Customer PO number
+    po_number: str  # Customer PO number - REQUIRED, used as order identifier
     po_date: Optional[str] = None
+    acceptance_type: Optional[str] = "written_po"  # written_po, verbal, email, loi
+    acceptance_remarks: Optional[str] = None  # Additional remarks about acceptance
     items: List[dict] = []
     subtotal: float = 0
     gst_percent: float = 18
