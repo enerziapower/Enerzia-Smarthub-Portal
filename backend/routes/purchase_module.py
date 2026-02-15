@@ -99,18 +99,40 @@ class GRNCreate(BaseModel):
 
 # ============== HELPER FUNCTIONS ==============
 
-async def generate_pr_number():
-    """Generate unique PR number"""
-    count = await db.purchase_requests.count_documents({})
-    year = datetime.now().year
-    return f"PR-{year}-{str(count + 1).zfill(4)}"
+async def generate_pr_number(sales_order_id: str = None):
+    """
+    Generate unique PR number.
+    If linked to PID: PR-PID/25-26/363-01
+    If standalone: PR-{year}-{seq}
+    """
+    from utils.pid_system import get_next_purchase_request_number
+    
+    # Get the PID from sales order if linked
+    linked_pid = None
+    if sales_order_id:
+        order = await db.sales_orders.find_one({"id": sales_order_id}, {"order_no": 1, "_id": 0})
+        if order and order.get("order_no", "").startswith("PID/"):
+            linked_pid = order["order_no"]
+    
+    return await get_next_purchase_request_number(linked_pid)
 
 
-async def generate_po_number():
-    """Generate unique PO number"""
-    count = await db.purchase_orders_v2.count_documents({})
-    year = datetime.now().year
-    return f"PO-{year}-{str(count + 1).zfill(4)}"
+async def generate_po_number(sales_order_id: str = None):
+    """
+    Generate unique PO number.
+    If linked to PID: PO-PID/25-26/363-01
+    If standalone: PO-{year}-{seq}
+    """
+    from utils.pid_system import get_next_purchase_order_number
+    
+    # Get the PID from sales order if linked
+    linked_pid = None
+    if sales_order_id:
+        order = await db.sales_orders.find_one({"id": sales_order_id}, {"order_no": 1, "_id": 0})
+        if order and order.get("order_no", "").startswith("PID/"):
+            linked_pid = order["order_no"]
+    
+    return await get_next_purchase_order_number(linked_pid)
 
 
 async def generate_grn_number():
