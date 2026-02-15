@@ -517,11 +517,19 @@ async def get_purchase_order(po_id: str):
 @router.post("/orders")
 async def create_purchase_order(data: PurchaseOrderCreate):
     """Create a new purchase order"""
-    po_no = await generate_po_number()
+    po_no = await generate_po_number(data.sales_order_id)
+    
+    # Get linked PID if sales order is linked
+    linked_pid = None
+    if data.sales_order_id:
+        order = await db.sales_orders.find_one({"id": data.sales_order_id}, {"order_no": 1, "_id": 0})
+        if order:
+            linked_pid = order.get("order_no")
     
     po = {
         "id": str(uuid.uuid4()),
         "po_no": po_no,
+        "linked_pid": linked_pid,
         "purchase_request_id": data.purchase_request_id,
         "sales_order_id": data.sales_order_id,
         "vendor_id": data.vendor_id,
