@@ -270,6 +270,22 @@ async def get_next_order_number():
     return result["next_pid"]
 
 
+@router.get("/next-pid")
+async def get_next_pid_endpoint():
+    """
+    Get the next available PID number for the current financial year.
+    Format: PID/{FY}/{number} e.g., PID/25-26/363
+    """
+    from utils.pid_system import get_next_pid, get_current_financial_year
+    
+    result = await get_next_pid()
+    return {
+        "next_pid": result["next_pid"],
+        "financial_year": result["financial_year"],
+        "sequence": result["sequence"]
+    }
+
+
 # ============== ENQUIRY ENDPOINTS ==============
 
 @router.get("/enquiries")
