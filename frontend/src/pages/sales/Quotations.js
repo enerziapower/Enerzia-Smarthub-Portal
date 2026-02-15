@@ -755,7 +755,7 @@ const Quotations = () => {
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        {qt.status === 'sent' && !qt.order_id && (
+                        {(qt.status === 'sent' || qt.status === 'accepted') && !qt.order_id && (
                           <button 
                             onClick={() => openConvertModal(qt)}
                             className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded"
