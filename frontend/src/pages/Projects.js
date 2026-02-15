@@ -418,6 +418,15 @@ const Projects = () => {
                   <span>{project.location}</span>
                   <span>•</span>
                   <span className="font-medium">{project.engineer_in_charge}</span>
+                  {project.linked_order_no && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-blue-600">
+                        <ChevronRight size={14} />
+                        <span className="text-xs font-medium">Linked: {project.linked_order_no}</span>
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
