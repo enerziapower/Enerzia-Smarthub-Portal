@@ -258,32 +258,16 @@ async def get_next_quotation_number():
 
 
 async def get_next_order_number():
-    """Generate next order number"""
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-    if current_month >= 4:
-        fy_start = current_year
-    else:
-        fy_start = current_year - 1
+    """
+    Generate next order number using unified PID system.
+    Format: PID/{FY}/{number} e.g., PID/25-26/363
     
-    fy_str = f"{fy_start % 100:02d}-{(fy_start + 1) % 100:02d}"
+    Financial Year: April 1 to March 31
+    """
+    from utils.pid_system import get_next_pid
     
-    pattern = f"SO-{fy_str}-"
-    latest = await db.sales_orders.find_one(
-        {"order_no": {"$regex": f"^{pattern}"}},
-        sort=[("order_no", -1)]
-    )
-    
-    if latest:
-        try:
-            last_num = int(latest["order_no"].split("-")[-1])
-            next_num = last_num + 1
-        except (ValueError, IndexError):
-            next_num = 1
-    else:
-        next_num = 1
-    
-    return f"SO-{fy_str}-{str(next_num).zfill(4)}"
+    result = await get_next_pid()
+    return result["next_pid"]
 
 
 # ============== ENQUIRY ENDPOINTS ==============
