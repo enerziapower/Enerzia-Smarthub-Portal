@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Search, Edit2, Trash2, Eye, X, RefreshCw, ShoppingCart,
   ChevronDown, Filter, CheckCircle, Truck, CreditCard, Package,
-  Calendar, Building2, DollarSign, FileText, Link2
+  Calendar, Building2, DollarSign, FileText, Link2, FolderKanban
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AddProjectModal from '../../components/AddProjectModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
