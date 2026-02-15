@@ -580,7 +580,16 @@ async def create_po_from_quote(quote_id: str):
     if not pr:
         raise HTTPException(status_code=404, detail="Purchase request not found")
     
-    po_no = await generate_po_number()
+    # Generate PO number linked to PID
+    sales_order_id = pr.get("sales_order_id")
+    po_no = await generate_po_number(sales_order_id)
+    
+    # Get linked PID
+    linked_pid = None
+    if sales_order_id:
+        order = await db.sales_orders.find_one({"id": sales_order_id}, {"order_no": 1, "_id": 0})
+        if order:
+            linked_pid = order.get("order_no")
     
     # Build items from quote
     items = []
@@ -603,6 +612,7 @@ async def create_po_from_quote(quote_id: str):
     po = {
         "id": str(uuid.uuid4()),
         "po_no": po_no,
+        "linked_pid": linked_pid,
         "purchase_request_id": pr["id"],
         "sales_order_id": pr.get("sales_order_id"),
         "vendor_id": quote.get("vendor_id"),
