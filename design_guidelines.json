@@ -1,0 +1,155 @@
+{
+  "identity": {
+    "persona": "E1 - The Anti-AI Designer",
+    "mission": "Create a 'Control Room' dashboard that balances high-density data with 'Swiss Style' clarity. Avoid generic SaaS templates.",
+    "principles": [
+      "Fusion: Engineering precision x Swiss Poster clarity",
+      "Emotion: Trust through data transparency",
+      "Content: Data is the hero, UI is the stage",
+      "Density: High information density without clutter (The Bento Grid)"
+    ]
+  },
+  "typography": {
+    "headings": {
+      "family": "Manrope, sans-serif",
+      "weights": ["600", "700", "800"],
+      "usage": "Page titles, Card headers, Key metrics",
+      "letterSpacing": "tracking-tight"
+    },
+    "body": {
+      "family": "IBM Plex Sans, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Table data, labels, descriptions",
+      "letterSpacing": "tracking-normal"
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "weights": ["400"],
+      "usage": "IDs, PO Numbers, Financial figures"
+    },
+    "installation": "Import fonts via Google Fonts in index.css: @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&display=swap');"
+  },
+  "colors": {
+    "palette_name": "Swiss Engineering",
+    "mode": "light",
+    "base": {
+      "background": "bg-slate-50",
+      "foreground": "text-slate-900",
+      "card": "bg-white",
+      "border": "border-slate-200"
+    },
+    "primary": {
+      "main": "bg-slate-900",
+      "text": "text-slate-50",
+      "hover": "hover:bg-slate-800"
+    },
+    "status": {
+      "success": {
+        "bg": "bg-emerald-50",
+        "text": "text-emerald-700",
+        "border": "border-emerald-200",
+        "icon": "text-emerald-600"
+      },
+      "warning": {
+        "bg": "bg-amber-50",
+        "text": "text-amber-700",
+        "border": "border-amber-200",
+        "icon": "text-amber-600"
+      },
+      "error": {
+        "bg": "bg-rose-50",
+        "text": "text-rose-700",
+        "border": "border-rose-200",
+        "icon": "text-rose-600"
+      },
+      "neutral": {
+        "bg": "bg-slate-100",
+        "text": "text-slate-600",
+        "border": "border-slate-200",
+        "icon": "text-slate-500"
+      }
+    },
+    "charts": {
+      "primary": "#0f172a",
+      "secondary": "#64748b",
+      "accent1": "#0ea5e9",
+      "accent2": "#8b5cf6",
+      "accent3": "#10b981"
+    }
+  },
+  "layout": {
+    "grid_system": "The Bento Grid (Mode B: Control Room)",
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "card_padding": "p-6",
+      "gap": "gap-6"
+    },
+    "structure": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6",
+      "card_hero": "col-span-1 md:col-span-2 lg:col-span-2 row-span-2",
+      "card_standard": "col-span-1",
+      "card_tall": "col-span-1 row-span-2"
+    }
+  },
+  "components": {
+    "cards": {
+      "style": "flat",
+      "border": "border border-slate-200",
+      "shadow": "shadow-sm hover:shadow-md transition-shadow duration-200",
+      "radius": "rounded-xl"
+    },
+    "tables": {
+      "style": "clean",
+      "header": "bg-slate-50 text-xs uppercase tracking-wider font-semibold text-slate-500",
+      "row": "hover:bg-slate-50/50 transition-colors border-b border-slate-100",
+      "cell": "py-4 px-4 text-sm"
+    },
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 shadow-sm rounded-lg px-4 py-2 font-medium text-sm transition-all active:scale-95",
+      "secondary": "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm rounded-lg px-4 py-2 font-medium text-sm",
+      "ghost": "hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-lg px-3 py-2"
+    },
+    "badges": {
+      "style": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Use subtle noise texture on the sidebar or header background to reduce digital flatness.",
+    "glassmorphism": "Use backdrop-blur-md bg-white/80 for sticky headers and floating action bars.",
+    "micro_interactions": "Add active:scale-95 to all interactive elements. Use hover:translate-x-1 for list items with arrows."
+  },
+  "assets": {
+    "icons": "Lucide React (default). Use stroke-width={1.5} for a refined look.",
+    "images": {
+      "avatars": [
+        "https://images.unsplash.com/photo-1672685667592-0392f458f46f?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1655249481446-25d575f1c054?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ],
+      "projects": [
+        "https://images.unsplash.com/photo-1765062165737-ed4b47014fef?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1760561148865-c6efe73a756a?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1762146828422-50a8bd416d3c?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ]
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. CLEANUP: Remove default Create-React-App styles from App.css. Keep it empty or minimal.",
+    "2. FONTS: Add the Google Fonts import to the top of index.css immediately.",
+    "3. LAYOUT: Implement a Sidebar Layout with a top header. The sidebar should be collapsible.",
+    "4. DASHBOARD: Create a 'Weekly Review' dashboard. Top row: Key Metrics (Total Billing, Pending POs, Active Projects). Middle: 'Billing vs Target' Chart (Bar) and 'Project Status' Distribution (Pie/Donut). Bottom: 'Critical Attention' List.",
+    "5. TABLES: The 'Projects List' must be a rich data table. Use Shadcn Table. Include columns: Project Name, Client, Status (Badge), Completion (Progress Bar), Engineer (Avatar), Billing (Mono font).",
+    "6. BILLING: Create a dedicated view for 'Weekly Billing Plan'. Use a matrix/grid view for weeks.",
+    "7. MOCK DATA: Generate realistic mock data for PSS, AS, OSS, CS categories. Use the provided image URLs for avatars and project thumbnails.",
+    "8. CHARTS: Use Recharts for all visualizations. Style them to match the 'Swiss Engineering' palette.",
+    "9. TESTIDS: Add data-testid to all interactive elements (buttons, inputs, rows)."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds, use solid colors or subtle textures.",
+    "Ensure all text has sufficient contrast (APCA/WCAG AA).",
+    "Use 'Manrope' for all headings and 'IBM Plex Sans' for body text.",
+    "Add 'tracking-tight' to all headings larger than text-xl.",
+    "Never use default scrollbars. Use 'tailwind-scrollbar' or custom CSS for a slim, modern scrollbar."
+  ]
+}

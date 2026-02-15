@@ -1,0 +1,116 @@
+{
+  "summary": "PDF Template Settings - Design Options and Per-Report-Type Settings fully tested. All 13 backend tests passed, 2 skipped (no AMC/Calibration contracts in DB). Frontend UI verified with all 7 report types displayed in Cover Page Designs tab. Fixed logo upload path issue.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/pdf-template/upload-logo",
+        "issue": "Logo was being saved to /app/backend/uploads/ but static files mounted from /app/uploads/ - FIXED",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pdf_template_designs.py",
+    "/app/test_reports/pytest/pytest_pdf_template_designs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "5 design options (Flowing Waves, Geometric Arcs, Diagonal Stripes, Corner Brackets, Circular Dots) are properly implemented",
+    "Per-report-type design settings stored in DB under report_designs field",
+    "All 7 report types (AMC, Calibration, WCC, Equipment Test, IR Thermography, Service, Project Completion) have design settings",
+    "Preview endpoint accepts report_type parameter and uses correct design",
+    "Preview-designs endpoint shows all 5 designs in a single PDF",
+    "Frontend has two tabs: Global Settings and Cover Page Designs",
+    "Each report type card shows design style dropdown and color picker"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pdf_template_designs.py",
+    "/app/backend/routes/pdf_template_settings.py"
+  ],
+  "success_rate": {
+    "backend": "100% - 13 passed, 2 skipped (no test data)",
+    "frontend": "100% - All UI elements verified"
+  },
+  "seed_data_creation": "None - used existing settings",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PDF Template Settings with 5 design options and per-report-type settings is fully functional. The Cover Page Designs tab shows all 7 report types with design style dropdown (5 options) and color picker. Preview endpoints work correctly with report_type parameter. Logo upload now saves to correct directory (/app/uploads/).",
+  "test_results": {
+    "Design_Options_API": {
+      "test_get_design_options": "PASS - Returns all 5 designs and 7 report types",
+      "test_settings_contain_report_designs": "PASS - All 7 report types have design settings",
+      "test_update_report_design_via_settings": "PASS - Updates report_designs correctly",
+      "test_update_single_report_design_endpoint": "PASS - PUT /api/pdf-template/report-design/{type} works",
+      "test_update_report_design_invalid_report_type": "PASS - Rejects invalid report type",
+      "test_update_report_design_invalid_design_id": "PASS - Rejects invalid design_id"
+    },
+    "Preview_Endpoints": {
+      "test_preview_accepts_report_type_parameter": "PASS - All 7 report types generate valid PDFs",
+      "test_preview_designs_endpoint": "PASS - Shows all 5 designs in PDF",
+      "test_preview_designs_with_custom_color": "PASS - Accepts design_color parameter",
+      "test_preview_reflects_report_type_design": "PASS - Different designs for different report types"
+    },
+    "Logo_Upload": {
+      "test_logo_upload_saves_file": "PASS - Logo saved and URL stored in settings",
+      "test_logo_url_accessible": "PASS - Uploaded logo is accessible via URL"
+    },
+    "Reset_Defaults": {
+      "test_reset_restores_default_report_designs": "PASS - Restores default designs for all report types"
+    },
+    "AMC_PDF_Integration": {
+      "test_amc_pdf_generation_with_custom_design": "SKIPPED - No AMC contracts in database"
+    },
+    "Calibration_PDF_Integration": {
+      "test_calibration_pdf_generation_with_custom_design": "SKIPPED - No Calibration contracts in database"
+    }
+  },
+  "frontend_ui_verification": {
+    "Global_Settings_Tab": {
+      "branding_logo_section": "PASS - Logo upload and primary color picker present",
+      "company_information_section": "PASS - All fields present",
+      "cover_page_options_section": "PASS - Toggle options present",
+      "header_footer_section": "PASS - Toggle options present",
+      "back_cover_section": "PASS - Toggle options present",
+      "preview_panel": "PASS - Report type selector and PDF preview present"
+    },
+    "Cover_Page_Designs_Tab": {
+      "amc_reports_card": "PASS - Design style dropdown and color picker",
+      "calibration_reports_card": "PASS - Design style dropdown and color picker",
+      "wcc_card": "PASS - Design style dropdown and color picker",
+      "equipment_test_reports_card": "PASS - Design style dropdown and color picker",
+      "ir_thermography_reports_card": "PASS - Design style dropdown and color picker",
+      "service_reports_card": "PASS - Design style dropdown and color picker",
+      "project_completion_reports_card": "PASS - Design style dropdown and color picker",
+      "view_all_designs_button": "PASS - Opens PDF with all 5 designs"
+    }
+  },
+  "bug_fix_applied": {
+    "file": "/app/backend/routes/pdf_template_settings.py",
+    "issue": "Logo upload saved to /app/backend/uploads/ but static files mounted from /app/uploads/",
+    "fix": "Changed UPLOADS_DIR to /app/uploads/ and updated get_logo_path() to use correct path"
+  },
+  "features_verified": [
+    "5 design options available (Flowing Waves, Geometric Arcs, Diagonal Stripes, Corner Brackets, Circular Dots)",
+    "Per-report-type design settings stored in DB",
+    "All 7 report types have design settings",
+    "Preview endpoint accepts report_type parameter",
+    "Preview-designs endpoint shows all 5 designs",
+    "Cover Page Designs tab shows all 7 report types",
+    "Design color picker works for each report type",
+    "Logo upload saves file correctly",
+    "Logo URL is stored in settings",
+    "Logo displays in preview PDF"
+  ],
+  "test_credentials_used": {
+    "admin_login": {
+      "email": "admin@enerzia.com",
+      "password": "admin123"
+    }
+  }
+}

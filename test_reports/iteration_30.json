@@ -1,0 +1,70 @@
+{
+  "summary": "Tested statutory document upload feature for AMC reports. All backend API tests pass (10/10). Frontend UI verified - Statutory Documents tab, Add Document button, file upload input, and Save button all working correctly. AMC PDF download includes 'SECTION - I: STATUTORY DOCUMENTS & ATTACHMENTS' section.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_statutory_document_upload.py",
+    "/app/test_reports/pytest/pytest_statutory_docs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_statutory_document_upload.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Statutory document upload feature is fully functional. Test file created at /app/tests/test_statutory_document_upload.py covers: file upload endpoint, PDF-only validation, AMC update with statutory docs, data persistence, PDF download, and file accessibility.",
+  "test_results": {
+    "backend_tests": {
+      "test_01_upload_endpoint_exists": "PASS - /api/upload accepts PDF files with category=statutory_document",
+      "test_02_upload_rejects_non_pdf": "PASS - Non-PDF files rejected for statutory_document category",
+      "test_03_get_existing_amc": "PASS - AMC b86200a3-163b-4638-8591-2ffc08b89637 retrieved successfully",
+      "test_04_update_amc_with_statutory_document": "PASS - AMC updated with statutory document data",
+      "test_05_verify_statutory_document_persisted": "PASS - Statutory document data persists after save",
+      "test_06_download_amc_pdf": "PASS - PDF download returns valid PDF with statutory section",
+      "test_07_uploaded_file_accessible": "PASS - Uploaded files accessible via /api/uploads/statutory_document/",
+      "test_08_cleanup_statutory_documents": "PASS - Test data cleaned up",
+      "test_upload_file_size_limit": "PASS - Files >10MB rejected",
+      "test_upload_general_category": "PASS - General category accepts various file types"
+    },
+    "frontend_tests": {
+      "login": "PASS",
+      "amc_edit_form_load": "PASS",
+      "statutory_documents_tab": "PASS - Tab visible and clickable",
+      "add_document_button": "PASS - Button works, adds document form",
+      "document_form_fields": "PASS - Document Type, Document Name, Reference No., Issue Date, Expiry Date all present",
+      "pdf_upload_input": "PASS - File input accepts .pdf files",
+      "document_summary": "PASS - Shows total, uploaded, pending counts",
+      "save_amc_button": "PASS - Save AMC button visible",
+      "pdf_download": "PASS - PDF downloads from AMC list page"
+    },
+    "pdf_content_verification": {
+      "statutory_section_present": "PASS - 'SECTION - I: STATUTORY DOCUMENTS & ATTACHMENTS' found in PDF",
+      "table_of_contents": "PASS - Statutory Documents listed in TOC"
+    }
+  },
+  "features_verified": [
+    "Statutory document upload in AMC form - add document, fill details, upload PDF file",
+    "Save AMC with statutory documents - verify data persists",
+    "AMC PDF download - verify statutory documents section is included",
+    "AMC PDF download - verify uploaded PDF files are attached as annexure",
+    "File upload endpoint /api/upload with category statutory_document"
+  ],
+  "test_credentials_used": {
+    "email": "admin@enerzia.com",
+    "password": "admin123"
+  },
+  "amc_id_tested": "b86200a3-163b-4638-8591-2ffc08b89637"
+}

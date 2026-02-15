@@ -1,0 +1,95 @@
+{
+  "summary": "PDF Template Settings integration with AMC and Calibration PDF generators fully tested. All 18 backend tests passed. Template settings (logo, colors, company info, cover page, back cover, headers/footers) are properly integrated into both PDF generators.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/calibration-report/{id}/report-pdf",
+        "issue": "Cover page footer had hardcoded 'www.enerzia.com' instead of using website from template settings - FIXED",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pdf_template_integration.py",
+    "/app/test_reports/pytest/pytest_pdf_template_integration.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Both amc_pdf.py and calibration_pdf.py properly import and use template settings helper functions from pdf_base.py",
+    "Template settings are cached for 60 seconds to avoid repeated DB calls (good performance optimization)",
+    "Cover page, back cover, and header/footer sections all respect the enabled/disabled toggles from settings",
+    "Company info (name, address, website, phone, email) is properly pulled from template settings",
+    "Primary color (orange accent) is used for decorative curves, header lines, and footer lines",
+    "Logo path is correctly resolved from template settings with fallback to default"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pdf_template_integration.py",
+    "/app/backend/routes/calibration_pdf.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 18 tests passed",
+    "frontend": "N/A - Backend only testing requested"
+  },
+  "seed_data_creation": "Used existing AMC contract (b86200a3-163b-4638-8591-2ffc08b89637) and Calibration contract (5597eae8-b5d6-49ee-8bc1-4d5ef6aef4a7) for testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PDF Template Settings integration is complete. Both AMC and Calibration PDF generators use template settings for: logo, primary color (orange accent), company name, website, address, cover page settings (enabled, show_logo, show_decorative_curves, curve_color, submitted_by), back cover settings (enabled, title, show_address, show_phone, show_email, show_website), and header/footer settings (show_header, show_footer, show_page_numbers, show_header_logo, show_header_line, show_footer_line, footer_company_name, footer_website).",
+  "test_results": {
+    "AMC_PDF_Integration": {
+      "test_amc_pdf_generation_works": "PASS - PDF generated successfully (size > 5KB)",
+      "test_amc_pdf_uses_template_settings_after_update": "PASS - Custom settings applied to PDF",
+      "test_amc_pdf_with_cover_page_disabled": "PASS - PDF generated without cover page",
+      "test_amc_pdf_with_back_cover_disabled": "PASS - PDF generated without back cover",
+      "test_amc_pdf_with_header_footer_toggled": "PASS - PDF generated with modified header/footer"
+    },
+    "Calibration_PDF_Integration": {
+      "test_calibration_pdf_generation_works": "PASS - PDF generated successfully (size > 5KB)",
+      "test_calibration_pdf_uses_template_settings_after_update": "PASS - Custom settings applied to PDF",
+      "test_calibration_pdf_with_cover_page_disabled": "PASS - PDF generated without cover page",
+      "test_calibration_pdf_with_back_cover_disabled": "PASS - PDF generated without back cover",
+      "test_calibration_pdf_with_header_footer_toggled": "PASS - PDF generated with modified header/footer"
+    },
+    "PDF_Preview_Endpoint": {
+      "test_preview_all_pages": "PASS - Preview generates valid PDF",
+      "test_preview_cover_page": "PASS - Cover page preview works",
+      "test_preview_content_page": "PASS - Content page preview works",
+      "test_preview_back_page": "PASS - Back page preview works",
+      "test_preview_reflects_settings_changes": "PASS - Preview reflects updated settings"
+    },
+    "Template_Settings_API": {
+      "test_settings_api_returns_all_sections": "PASS - All sections (branding, company_info, cover_page, back_cover, header_footer) present",
+      "test_settings_update_persists": "PASS - Settings updates persist to database",
+      "test_settings_reset_restores_defaults": "PASS - Reset restores default values"
+    }
+  },
+  "features_verified": [
+    "AMC PDF generation uses template settings for logo",
+    "AMC PDF generation uses template settings for primary color (orange accent)",
+    "AMC PDF generation uses template settings for company name in cover page and footer",
+    "AMC PDF generation uses template settings for company address in 'Submitted By' section",
+    "AMC PDF generation uses template settings for website in footer",
+    "Calibration PDF generation uses template settings similarly",
+    "Template settings changes are reflected in generated PDFs",
+    "PDF preview endpoint still works after integration",
+    "Back cover uses company info from template settings",
+    "Header/Footer can be toggled via settings"
+  ],
+  "test_credentials_used": {
+    "admin_login": {
+      "email": "admin@enerzia.com",
+      "password": "admin123"
+    }
+  },
+  "bug_fix_applied": {
+    "file": "/app/backend/routes/calibration_pdf.py",
+    "line": 762,
+    "issue": "Hardcoded 'www.enerzia.com' in cover page footer",
+    "fix": "Changed to use 'website' variable from template settings"
+  }
+}

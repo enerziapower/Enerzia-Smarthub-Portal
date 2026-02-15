@@ -1,0 +1,97 @@
+{
+  "summary": "Comprehensive testing of 'Link Service Reports to AMC Visits' feature completed. All 7 backend API tests passed. All frontend UI elements verified working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_amc_service_reports.py",
+    "/app/test_reports/pytest/pytest_amc_service_reports.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_amc_service_reports.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100%"
+  },
+  "seed_data_creation": "Used existing AMC: AMC/2026/0001 (ID: b86200a3-163b-4638-8591-2ffc08b89637) with linked service report TRN/2026/0008 (ID: a6b567fd-cf1a-4a4b-992c-e43967c0a070)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Link Service Reports to AMC Visits feature is fully functional. Verified: (1) AMC Management page shows Contracts tab with AMC/2026/0001, (2) Edit AMC form has Service Visits tab, (3) Service Visits tab shows 'Link Service Reports' button and 'Linked Service Reports (1)' section, (4) Link Service Reports modal opens and displays available reports with Link/Unlink buttons, (5) Linked report TRN/2026/0008 persists in database, (6) PDF generation includes 'SECTION - I: SERVICE REPORTS' with linked report details on page 12.",
+  "test_results": {
+    "feature_link_service_reports_to_amc_visits": {
+      "amc_management_page": {
+        "status": "PASS",
+        "url": "/projects/amc",
+        "features": ["Contracts tab visible", "AMC/2026/0001 listed", "Saama Technologies customer"]
+      },
+      "edit_amc_form": {
+        "status": "PASS",
+        "url": "/projects/amc/b86200a3-163b-4638-8591-2ffc08b89637",
+        "features": ["Service Visits tab available", "All 6 tabs visible (Contract Details, Customer Info, Service Provider, Equipment List, Service Visits, Spare & Consumables, Statutory Documents)"]
+      },
+      "service_visits_tab": {
+        "status": "PASS",
+        "features": [
+          "Visit #1 displayed with date 02-01-2026",
+          "Linked Test Reports (2) section",
+          "Linked IR Thermography Reports (1) section",
+          "Linked Service Reports (1) section with TRN/2026/0008",
+          "'Link Service Reports' button (green)",
+          "'Create New' button"
+        ]
+      },
+      "link_service_reports_modal": {
+        "status": "PASS",
+        "features": [
+          "Modal title: 'Link Service Reports to Service Visit'",
+          "Search bar for filtering reports",
+          "Already linked report TRN/2026/0008 shows 'Unlink' button (red)",
+          "Available reports show 'Link' button (green)",
+          "Reports display: report_no, status, equipment_type, project_name, date",
+          "Close button"
+        ]
+      },
+      "data_persistence": {
+        "status": "PASS",
+        "description": "service_report_ids field persists in database after save"
+      },
+      "pdf_generation": {
+        "status": "PASS",
+        "description": "PDF includes 'SECTION - I: SERVICE REPORTS' on page 12 with linked report TRN/2026/0008",
+        "pdf_size": "4.2MB, 39 pages"
+      }
+    },
+    "backend_api_tests": {
+      "GET /api/amc/{id}": "PASS - Returns service_report_ids in service visits",
+      "GET /api/test-reports": "PASS - Returns reports for linking",
+      "GET /api/amc-report/{id}/pdf": "PASS - Generates PDF with Service Reports section",
+      "PUT /api/amc/{id}": "PASS - Updates and persists service_report_ids",
+      "GET /api/amc": "PASS - Lists AMCs",
+      "GET /api/test-reports/{id}": "PASS - Returns linked report details",
+      "service_visit_fields": "PASS - Has test_report_ids, ir_thermography_report_ids, service_report_ids"
+    }
+  },
+  "test_credentials_used": {
+    "employee_login": {
+      "email": "admin@enerzia.com",
+      "password": "admin123"
+    }
+  },
+  "verified_data": {
+    "amc_id": "b86200a3-163b-4638-8591-2ffc08b89637",
+    "amc_no": "AMC/2026/0001",
+    "customer": "Saama Technologies",
+    "linked_service_report_id": "a6b567fd-cf1a-4a4b-992c-e43967c0a070",
+    "linked_service_report_no": "TRN/2026/0008",
+    "linked_service_report_type": "transformer"
+  }
+}
