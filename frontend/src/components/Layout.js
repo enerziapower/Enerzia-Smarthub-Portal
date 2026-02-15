@@ -241,7 +241,7 @@ const Layout = () => {
     { name: 'Enquiries', href: '/sales/enquiries', icon: FileText },
     { name: 'Quotations', href: '/sales/quotations', icon: FileCheck },
     { name: 'Orders', href: '/sales/orders', icon: ShoppingCart },
-    { name: 'Order Lifecycle', href: '/sales/order-lifecycle', icon: TrendingUp },
+    { name: 'Order Management', href: '/sales/order-lifecycle', icon: TrendingUp },
     { name: 'Project Profit', href: '/sales/project-profit', icon: TrendingUp },
     { name: 'Dept. Requirements', href: '/sales/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/sales/reports', icon: FileBarChart },
