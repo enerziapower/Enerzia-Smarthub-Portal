@@ -425,23 +425,92 @@ const Quotations = () => {
     }
   };
 
-  const handleConvertToOrder = async (quotationId) => {
-    if (!window.confirm('Convert this quotation to a sales order?')) return;
+  const openConvertModal = (quotation) => {
+    setConvertingQuotation(quotation);
+    setConvertFormData({
+      po_number: '',
+      po_date: new Date().toISOString().split('T')[0],
+      acceptance_type: 'written_po',
+      acceptance_remarks: '',
+      delivery_date: ''
+    });
+    setShowConvertModal(true);
+  };
+
+  const handleConvertToOrder = async (e) => {
+    e.preventDefault();
+    
+    if (!convertFormData.po_number.trim()) {
+      toast.error('Customer PO Number is required');
+      return;
+    }
     
     try {
-      const response = await fetch(`${API_URL}/api/sales/quotations/${quotationId}/convert-to-order`, {
-        method: 'POST',
+      // First get the full quotation details
+      const qtResponse = await fetch(`${API_URL}/api/sales/quotations/${convertingQuotation.id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
+      const quotation = await qtResponse.json();
       
-      if (!response.ok) throw new Error('Failed to convert to order');
+      // Create order with Customer PO as identifier
+      const orderData = {
+        quotation_id: quotation.id,
+        enquiry_id: quotation.enquiry_id,
+        customer_name: quotation.customer_name,
+        customer_address: quotation.customer_address,
+        customer_gst: quotation.customer_gst,
+        customer_contact: quotation.customer_contact,
+        customer_phone: quotation.customer_phone,
+        customer_email: quotation.customer_email,
+        date: new Date().toISOString().split('T')[0],
+        delivery_date: convertFormData.delivery_date || null,
+        po_number: convertFormData.po_number.trim(),
+        po_date: convertFormData.po_date,
+        acceptance_type: convertFormData.acceptance_type,
+        acceptance_remarks: convertFormData.acceptance_remarks,
+        items: quotation.items || [],
+        subtotal: quotation.subtotal || 0,
+        gst_percent: quotation.gst_percent || 18,
+        gst_amount: quotation.gst_amount || 0,
+        total_amount: quotation.total_amount || 0,
+        payment_terms: quotation.payment_terms,
+        delivery_terms: quotation.delivery_terms,
+        notes: quotation.notes,
+        category: quotation.category
+      };
       
-      toast.success('Order created from quotation!');
+      const response = await fetch(`${API_URL}/api/sales/orders`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to create order');
+      }
+      
+      // Update quotation status to accepted
+      await fetch(`${API_URL}/api/sales/quotations/${convertingQuotation.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'accepted' })
+      });
+      
+      toast.success(`Order created with PO: ${convertFormData.po_number}`);
+      setShowConvertModal(false);
+      setConvertingQuotation(null);
       fetchQuotations();
       fetchStats();
     } catch (error) {
       console.error('Error converting to order:', error);
-      toast.error('Failed to convert to order');
+      toast.error(error.message || 'Failed to convert to order');
     }
   };
 
