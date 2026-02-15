@@ -913,11 +913,45 @@ const Orders = () => {
                 >
                   <Edit2 className="w-4 h-4" /> Edit
                 </button>
+                <button
+                  onClick={() => {
+                    // Prepare prefill data for project
+                    setProjectPrefillData({
+                      order_id: viewingOrder.id,
+                      order_no: viewingOrder.order_no,
+                      customer_name: viewingOrder.customer_name,
+                      customer_address: viewingOrder.customer_address || '',
+                      total_amount: viewingOrder.total_amount,
+                      po_number: viewingOrder.po_number || viewingOrder.order_no,
+                      category: viewingOrder.category || '',
+                    });
+                    setShowViewModal(false);
+                    setShowProjectModal(true);
+                  }}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+                >
+                  <FolderKanban className="w-4 h-4" /> Create Project
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Add Project Modal */}
+      <AddProjectModal 
+        isOpen={showProjectModal}
+        onClose={() => {
+          setShowProjectModal(false);
+          setProjectPrefillData(null);
+        }}
+        onProjectAdded={(newProject) => {
+          toast.success(`Project ${newProject.pid_no} created successfully!`);
+          setShowProjectModal(false);
+          setProjectPrefillData(null);
+        }}
+        prefillData={projectPrefillData}
+      />
     </div>
   );
 };
