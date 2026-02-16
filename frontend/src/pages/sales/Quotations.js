@@ -996,12 +996,12 @@ const Quotations = () => {
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       >
                         <option value="">Select State</option>
-                          {indianStates.map(s => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
-                      </div>
+                        {indianStates.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
                     </div>
+                  </div>
 
                     {/* Billing & Shipping Address */}
                     <div className="grid grid-cols-2 gap-4">
