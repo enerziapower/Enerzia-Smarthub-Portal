@@ -38,19 +38,33 @@ const Quotations = () => {
     delivery_date: ''
   });
   
+  // Team members for salesperson dropdown
+  const [teamMembers, setTeamMembers] = useState([]);
+  
   const [formData, setFormData] = useState({
     enquiry_id: '',
     customer_name: '',
     customer_address: '',
+    shipping_address: '',
     customer_gst: '',
+    gst_treatment: 'registered_regular',
+    place_of_supply: '',
     customer_contact: '',
     customer_phone: '',
     customer_email: '',
+    salesperson: '',
+    salesperson_name: '',
+    reference_no: '',
     date: new Date().toISOString().split('T')[0],
     valid_until: '',
     subject: '',
-    items: [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
+    delivery_days: '',
+    kind_attention: '',
+    transport_mode: '',
+    incoterms: '',
+    items: [{ id: '1', sno: 1, description: '', hsn_sac: '', unit: 'Nos', quantity: 1, unit_price: 0, discount: 0, total: 0 }],
     subtotal: 0,
+    discount_total: 0,
     gst_percent: 18,
     gst_amount: 0,
     total_amount: 0,
