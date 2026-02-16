@@ -663,6 +663,14 @@ const Quotations = () => {
     const validUntilDate = new Date();
     validUntilDate.setDate(validUntilDate.getDate() + 30);
     
+    // Calculate current financial year
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const currentFY = month >= 4 
+      ? `${year % 100}-${(year + 1) % 100}`
+      : `${(year - 1) % 100}-${year % 100}`;
+    
     setFormData({
       enquiry_id: '',
       customer_name: '',
@@ -694,9 +702,11 @@ const Quotations = () => {
       payment_terms: '50% Advance, 50% on delivery',
       delivery_terms: '2-3 weeks from order confirmation',
       notes: '',
-      category: ''
+      category: '',
+      financial_year: currentFY
     });
     setSelectedEnquiry(null);
+    setNextQuoteNumber(null);
   };
 
   const openEditModal = (qt) => {
