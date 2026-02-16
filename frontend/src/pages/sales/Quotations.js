@@ -217,10 +217,6 @@ const Quotations = () => {
       console.error('Error fetching team members:', error);
     }
   };
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-    }
-  };
 
   const fetchEnquiryDetails = async (id) => {
     try {
