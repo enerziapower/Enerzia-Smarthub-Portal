@@ -1299,6 +1299,44 @@ const Quotations = () => {
                 </div>
               </div>
 
+              {/* Transport & Shipping Details */}
+              <div className="p-4 bg-teal-50 rounded-lg border border-teal-200">
+                <h4 className="font-medium text-teal-900 flex items-center gap-2 mb-4">
+                  <Truck className="w-4 h-4" /> Transport & Shipping
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Transport Mode</label>
+                    <select
+                      value={formData.transport_mode}
+                      onChange={(e) => setFormData({...formData, transport_mode: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                    >
+                      <option value="">Select Transport Mode</option>
+                      {transportModes.map(mode => (
+                        <option key={mode} value={mode}>{mode}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+                      <Globe className="w-3 h-3" /> Incoterms
+                    </label>
+                    <select
+                      value={formData.incoterms}
+                      onChange={(e) => setFormData({...formData, incoterms: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                    >
+                      <option value="">Select Incoterms</option>
+                      {incotermsOptions.map(term => (
+                        <option key={term} value={term}>{term}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">International Commercial Terms (Incoterms 2020)</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Terms */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
