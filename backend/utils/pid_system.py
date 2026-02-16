@@ -104,37 +104,34 @@ async def get_next_pid(financial_year: str = None) -> dict:
 async def get_next_quotation_number(linked_pid: str = None) -> str:
     """
     Generate quotation number.
-    If linked to a PID: Q-PID/25-26/363
-    If standalone: Q-25-26-0001
+    Format: Quote/25-26/0001 (Zoho-like format)
     
     Args:
-        linked_pid: Optional PID to link quotation to
+        linked_pid: Optional PID to link quotation to (currently not used)
     
     Returns:
         Quotation number string
     """
     financial_year = get_current_financial_year()
     
-    if linked_pid:
-        # Format: Q-PID/25-26/363
-        return f"Q-{linked_pid}"
-    else:
-        # Standalone quotation: Q-25-26-0001
-        pattern = f"^Q-{financial_year}-"
-        latest = await db.quotations.find_one(
-            {"quotation_no": {"$regex": pattern}},
-            sort=[("quotation_no", -1)]
-        )
-        
-        next_num = 1
-        if latest:
-            try:
-                last_num = int(latest["quotation_no"].split("-")[-1])
-                next_num = last_num + 1
-            except (ValueError, IndexError):
-                pass
-        
-        return f"Q-{financial_year}-{next_num:04d}"
+    # Format: Quote/25-26/0001
+    pattern = f"^Quote/{financial_year}/"
+    
+    # Check sales_quotations collection
+    latest = await db.sales_quotations.find_one(
+        {"quotation_no": {"$regex": pattern}},
+        sort=[("quotation_no", -1)]
+    )
+    
+    next_num = 1
+    if latest:
+        try:
+            last_num = int(latest["quotation_no"].split("/")[-1])
+            next_num = last_num + 1
+        except (ValueError, IndexError):
+            pass
+    
+    return f"Quote/{financial_year}/{next_num:04d}"
 
 
 async def get_next_purchase_order_number(linked_pid: str) -> str:
