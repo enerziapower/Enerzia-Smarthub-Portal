@@ -1173,10 +1173,18 @@ async def create_order(data: OrderCreate):
     if existing:
         raise HTTPException(status_code=400, detail=f"Order with PO Number '{order_no}' already exists")
     
+    # If linked to a quotation, get the quotation number
+    quotation_no = None
+    if data.quotation_id:
+        quotation = await db.sales_quotations.find_one({"id": data.quotation_id}, {"_id": 0, "quotation_no": 1})
+        if quotation:
+            quotation_no = quotation.get("quotation_no")
+    
     order = {
         "id": str(uuid.uuid4()),
         "order_no": order_no,  # Customer PO Number as order reference
         "quotation_id": data.quotation_id,
+        "quotation_no": quotation_no,  # Store the quotation number for display
         "enquiry_id": data.enquiry_id,
         "customer_name": data.customer_name,
         "customer_address": data.customer_address,
