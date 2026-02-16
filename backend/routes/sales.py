@@ -892,10 +892,40 @@ async def get_quotation(quotation_id: str):
     return quotation
 
 
+@router.get("/quotations/next-number")
+async def get_next_quotation_number_endpoint(financial_year: str = None):
+    """Get the next quotation number for preview"""
+    from utils.pid_system import get_current_financial_year
+    
+    if not financial_year:
+        financial_year = get_current_financial_year()
+    
+    # Search pattern for this FY
+    pattern = f"^Quote/{financial_year}/"
+    
+    # Find the latest quotation for this FY
+    latest = await db.sales_quotations.find_one(
+        {"quotation_no": {"$regex": pattern}},
+        sort=[("quotation_no", -1)]
+    )
+    
+    next_num = 1
+    if latest:
+        try:
+            last_num = int(latest["quotation_no"].split("/")[-1])
+            next_num = last_num + 1
+        except (ValueError, IndexError):
+            pass
+    
+    next_number = f"Quote/{financial_year}/{next_num:04d}"
+    return {"next_number": next_number, "financial_year": financial_year, "sequence": next_num}
+
+
 @router.post("/quotations")
 async def create_quotation(data: QuotationCreate):
     """Create a new quotation"""
     quotation_no = await get_next_quotation_number()
+
     
     quotation = {
         "id": str(uuid.uuid4()),
