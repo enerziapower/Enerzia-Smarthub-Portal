@@ -1148,5 +1148,42 @@ All 4 phases successfully implemented and tested:
 - All frontend UI features verified
 
 ---
+
+## Convert to Order Modal - Reworked ✅ (Feb 16, 2026)
+**Location:** `/app/frontend/src/pages/sales/Quotations.js`, `/app/backend/routes/sales.py`
+
+### New Form Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| Customer PO Number | Text Input | ✅ | Customer's PO reference number |
+| PO Date | Date Picker | | Date of the PO |
+| PO Attachment | File Upload | | Upload PO document (PDF, Image) |
+| Order Type | Dropdown | | Work Order, Purchase Order, E.mail/Verbal, Order Pending |
+| Expected Delivery Date | Date Picker | | Expected delivery date |
+| Category | Dropdown | ✅ | PSS, AS, OSS, CS |
+| Remarks | Textarea | | Additional notes |
+
+### Order Type Options
+- Work Order
+- Purchase Order
+- E.mail / Verbal Confirmation
+- Order Pending
+
+### Category Options
+- PSS - Power System Solutions
+- AS - Automation Solutions
+- OSS - Other System Solutions
+- CS - Consulting Services
+
+### Backend Changes
+- `OrderCreate` model updated with: `po_attachment`, `po_attachment_name`, `order_type`, `remarks`
+- `OrderUpdate` model updated with same fields
+- File upload supported via existing `/api/upload` endpoint
+
+### Additional Change
+- Convert to Order button now visible for `draft`, `sent`, and `accepted` quotations
+
+---
 *Last Updated: February 16, 2026*
-*Status: DEPLOYMENT READY ✅ | QUOTATION MODULE COMPLETE ✅*
+*Status: DEPLOYMENT READY ✅ | QUOTATION & ORDER MODULES COMPLETE ✅*
