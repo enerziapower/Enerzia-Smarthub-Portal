@@ -913,137 +913,254 @@ const Quotations = () => {
                 </div>
               )}
 
-              {/* Customer Information */}
-              <div className="p-4 bg-slate-50 rounded-lg space-y-4">
-                <h4 className="font-medium text-slate-900 flex items-center gap-2">
-                  <Building2 className="w-4 h-4" /> Customer Information
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name *</label>
-                    <input
-                      type="text"
-                      required
-                      list="customer-names"
-                      value={formData.customer_name}
-                      onChange={(e) => handleCustomerNameChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                      placeholder="Start typing to search..."
-                    />
-                    <datalist id="customer-names">
-                      {customers.map(c => (
-                        <option key={c.id || c.name} value={c.name} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">GST Number</label>
-                    <input
-                      type="text"
-                      value={formData.customer_gst}
-                      onChange={(e) => setFormData({...formData, customer_gst: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                      placeholder="e.g., 33AABCU9603R1ZM"
-                    />
+              {/* Customer Information - Zoho Style */}
+              <div className="grid grid-cols-3 gap-6">
+                {/* Left Column - Customer Details */}
+                <div className="col-span-2 space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-lg space-y-4">
+                    <h4 className="font-medium text-slate-900 flex items-center gap-2">
+                      <Building2 className="w-4 h-4" /> Customer Information
+                    </h4>
+                    
+                    {/* Customer Name with autocomplete */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        list="customer-names"
+                        value={formData.customer_name}
+                        onChange={(e) => handleCustomerNameChange(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Start typing to search customers..."
+                      />
+                      <datalist id="customer-names">
+                        {customers.map(c => (
+                          <option key={c.id || c.name} value={c.name} />
+                        ))}
+                      </datalist>
+                    </div>
+
+                    {/* GST Fields */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">GST Treatment</label>
+                        <select
+                          value={formData.gst_treatment}
+                          onChange={(e) => setFormData({...formData, gst_treatment: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          {gstTreatments.map(t => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">GSTIN</label>
+                        <input
+                          type="text"
+                          value={formData.customer_gst}
+                          onChange={(e) => setFormData({...formData, customer_gst: e.target.value.toUpperCase()})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          placeholder="e.g., 33AABCU9603R1ZM"
+                          maxLength={15}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Place of Supply</label>
+                        <select
+                          value={formData.place_of_supply}
+                          onChange={(e) => setFormData({...formData, place_of_supply: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">Select State</option>
+                          {indianStates.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Billing & Shipping Address */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Billing Address</label>
+                        <textarea
+                          rows={3}
+                          value={formData.customer_address}
+                          onChange={(e) => setFormData({...formData, customer_address: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Full billing address"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center justify-between">
+                          <span>Shipping Address</span>
+                          <button
+                            type="button"
+                            onClick={() => setFormData({...formData, shipping_address: formData.customer_address})}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Copy from Billing
+                          </button>
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={formData.shipping_address}
+                          onChange={(e) => setFormData({...formData, shipping_address: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Shipping address (if different)"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Contact Details */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Kind Attention</label>
+                        <input
+                          type="text"
+                          value={formData.kind_attention}
+                          onChange={(e) => setFormData({...formData, kind_attention: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Contact person name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                        <input
+                          type="text"
+                          value={formData.customer_phone}
+                          onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={formData.customer_email}
+                          onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-                  <textarea
-                    rows={2}
-                    value={formData.customer_address}
-                    onChange={(e) => setFormData({...formData, customer_address: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    placeholder="Full address including city, state, pincode"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      <User className="w-3 h-3 inline mr-1" /> Contact Person
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.customer_contact}
-                      onChange={(e) => setFormData({...formData, customer_contact: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      <Phone className="w-3 h-3 inline mr-1" /> Phone
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.customer_phone}
-                      onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      <Mail className="w-3 h-3 inline mr-1" /> Email
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.customer_email}
-                      onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    />
+
+                {/* Right Column - Quotation Details */}
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-4">
+                    <h4 className="font-medium text-amber-900 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" /> Quotation Details
+                    </h4>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Reference No.</label>
+                      <input
+                        type="text"
+                        value={formData.reference_no}
+                        onChange={(e) => setFormData({...formData, reference_no: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        placeholder="Customer ref. number"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Quote Date <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.date}
+                        onChange={(e) => setFormData({...formData, date: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Expiry Date <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.valid_until}
+                        onChange={(e) => setFormData({...formData, valid_until: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Salesperson</label>
+                      <select
+                        value={formData.salesperson}
+                        onChange={(e) => {
+                          const member = teamMembers.find(m => m.id === e.target.value);
+                          setFormData({
+                            ...formData, 
+                            salesperson: e.target.value,
+                            salesperson_name: member?.name || ''
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      >
+                        <option value="">Select Salesperson</option>
+                        {teamMembers.map(m => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Delivery in Days</label>
+                      <input
+                        type="number"
+                        value={formData.delivery_days}
+                        onChange={(e) => setFormData({...formData, delivery_days: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        placeholder="e.g., 30"
+                        min="0"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
+                      <select
+                        value={formData.payment_terms}
+                        onChange={(e) => setFormData({...formData, payment_terms: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      >
+                        {paymentTermsOptions.map(pt => (
+                          <option key={pt} value={pt}>{pt}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Quotation Details */}
-              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-4">
-                <h4 className="font-medium text-amber-900 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" /> Quotation Details
-                </h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.date}
-                      onChange={(e) => setFormData({...formData, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Valid Until *</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.valid_until}
-                      onChange={(e) => setFormData({...formData, valid_until: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map(c => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Subject / Description</label>
-                  <input
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    placeholder="Brief description of the quotation"
-                  />
+              {/* Subject Line */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Subject / Description</label>
+                <input
+                  type="text"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  placeholder="Brief description of the quotation"
+                />
                 </div>
               </div>
 
