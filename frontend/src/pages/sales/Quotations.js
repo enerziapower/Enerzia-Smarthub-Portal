@@ -465,6 +465,10 @@ const Quotations = () => {
       toast.error('Valid until date is required');
       return;
     }
+    if (!formData.financial_year || !/^\d{2}-\d{2}$/.test(formData.financial_year)) {
+      toast.error('Financial Year must be in format YY-YY (e.g., 25-26)');
+      return;
+    }
     if (formData.items.length === 0 || !formData.items.some(i => i.description)) {
       toast.error('At least one line item is required');
       return;
