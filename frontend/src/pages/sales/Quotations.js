@@ -1363,17 +1363,7 @@ const Quotations = () => {
               </div>
 
               {/* Terms */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
-                  <textarea
-                    rows={2}
-                    value={formData.payment_terms}
-                    onChange={(e) => setFormData({...formData, payment_terms: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    placeholder="e.g., 50% advance, 50% on completion"
-                  />
-                </div>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Terms</label>
                   <textarea
