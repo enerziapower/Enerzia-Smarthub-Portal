@@ -122,6 +122,7 @@ class QuotationCreate(BaseModel):
     notes: Optional[str] = None
     prepared_by: Optional[str] = None
     category: Optional[str] = None  # PSS, AS, OSS, CS
+    financial_year: Optional[str] = None  # e.g., "25-26", "28-29"
 
 
 class QuotationUpdate(BaseModel):
