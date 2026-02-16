@@ -93,15 +93,26 @@ class QuotationCreate(BaseModel):
     enquiry_id: Optional[str] = None  # Link to enquiry
     customer_name: str
     customer_address: Optional[str] = None
+    shipping_address: Optional[str] = None
     customer_gst: Optional[str] = None
+    gst_treatment: Optional[str] = None
+    place_of_supply: Optional[str] = None
     customer_contact: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None
+    salesperson: Optional[str] = None
+    salesperson_name: Optional[str] = None
+    reference_no: Optional[str] = None
     date: str  # DD/MM/YYYY
     valid_until: str  # DD/MM/YYYY
     subject: Optional[str] = None
+    delivery_days: Optional[str] = None
+    kind_attention: Optional[str] = None
+    transport_mode: Optional[str] = None
+    incoterms: Optional[str] = None
     items: List[dict] = []
     subtotal: float = 0
+    discount_total: float = 0
     gst_percent: float = 18
     gst_amount: float = 0
     total_amount: float = 0
@@ -117,15 +128,26 @@ class QuotationUpdate(BaseModel):
     """Update a quotation"""
     customer_name: Optional[str] = None
     customer_address: Optional[str] = None
+    shipping_address: Optional[str] = None
     customer_gst: Optional[str] = None
+    gst_treatment: Optional[str] = None
+    place_of_supply: Optional[str] = None
     customer_contact: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None
+    salesperson: Optional[str] = None
+    salesperson_name: Optional[str] = None
+    reference_no: Optional[str] = None
     date: Optional[str] = None
     valid_until: Optional[str] = None
     subject: Optional[str] = None
+    delivery_days: Optional[str] = None
+    kind_attention: Optional[str] = None
+    transport_mode: Optional[str] = None
+    incoterms: Optional[str] = None
     items: Optional[List[dict]] = None
     subtotal: Optional[float] = None
+    discount_total: Optional[float] = None
     gst_percent: Optional[float] = None
     gst_amount: Optional[float] = None
     total_amount: Optional[float] = None
