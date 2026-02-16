@@ -1102,5 +1102,40 @@ All 4 phases successfully implemented and tested:
 4. **Phase 4:** Finance Dashboard (Finance -> Dashboard)
 
 ---
-*Last Updated: December 15, 2026*
-*Status: DEPLOYMENT READY ✅ | ORDER LIFECYCLE MANAGEMENT COMPLETE ✅*
+
+## Quotation Module - Zoho-like Rework ✅ COMPLETE (Feb 16, 2026)
+**Location:** `/app/frontend/src/pages/sales/Quotations.js`, `/app/backend/routes/sales.py`
+
+### New Features Added (Zoho Books Format)
+
+| Section | New Fields |
+|---------|------------|
+| **Customer Information** | GST Treatment (6 options), GSTIN, Place of Supply (Indian states), Billing Address, Shipping Address (with "Copy from Billing"), Kind Attention |
+| **Quotation Details** | Reference No., Salesperson dropdown, Delivery in Days, Payment Terms dropdown |
+| **Line Items** | HSN/SAC column added to table |
+| **Transport & Shipping** | Transport Mode (Road/Rail/Air/Sea/Courier/Hand Delivery), Incoterms (11 international trade terms) |
+
+### GST Treatment Options
+- Registered Business - Regular
+- Registered Business - Composition
+- Unregistered Business
+- Consumer
+- Overseas
+- SEZ
+
+### Incoterms Options (2020)
+EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF
+
+### Backend Changes
+- `QuotationCreate` and `QuotationUpdate` models extended with 14 new fields
+- All new fields stored and retrieved from MongoDB
+- HSN/SAC codes stored in line items array
+
+### Testing
+- 31/31 backend API tests passed (100%)
+- All frontend features verified working
+- Convert to Order preserves HSN/SAC codes
+
+---
+*Last Updated: February 16, 2026*
+*Status: DEPLOYMENT READY ✅ | QUOTATION MODULE ZOHO-LIKE REWORK COMPLETE ✅*
