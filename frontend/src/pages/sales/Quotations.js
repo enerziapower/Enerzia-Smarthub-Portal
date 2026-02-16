@@ -73,8 +73,19 @@ const Quotations = () => {
     payment_terms: '50% Advance, 50% on delivery',
     delivery_terms: '2-3 weeks from order confirmation',
     notes: '',
-    category: ''
+    category: '',
+    financial_year: (() => {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      if (month >= 4) {
+        return `${year % 100}-${(year + 1) % 100}`;
+      } else {
+        return `${(year - 1) % 100}-${year % 100}`;
+      }
+    })()
   });
+  const [nextQuoteNumber, setNextQuoteNumber] = useState(null);
 
   const statuses = [
     { value: 'draft', label: 'Draft', color: 'bg-slate-100 text-slate-700' },
