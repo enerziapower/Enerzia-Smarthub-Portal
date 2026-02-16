@@ -1124,30 +1124,26 @@ const Quotations = () => {
                 <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
-                    <input
-                      type="text"
-                      value={(() => {
-                        const now = new Date();
-                        const month = now.getMonth() + 1;
-                        const year = now.getFullYear();
-                        if (month >= 4) {
-                          return `${year % 100}-${(year + 1) % 100}`;
-                        } else {
-                          return `${(year - 1) % 100}-${year % 100}`;
-                        }
-                      })()}
-                      disabled
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-100 text-sm text-slate-600"
-                    />
+                    <select
+                      value={formData.financial_year}
+                      onChange={(e) => {
+                        setFormData({...formData, financial_year: e.target.value});
+                        fetchNextQuoteNumber(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                    >
+                      {financialYearOptions.map(fy => (
+                        <option key={fy} value={fy}>{fy}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Quote Number</label>
                     <input
                       type="text"
-                      value={editingQuotation ? editingQuotation.quotation_no : 'Auto-generated'}
+                      value={editingQuotation ? editingQuotation.quotation_no : (nextQuoteNumber || `Quote/${formData.financial_year}/----`)}
                       disabled
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-100 text-sm text-slate-600 font-mono"
-                      placeholder="Quote/25-26/0001"
                     />
                   </div>
                   <div>
@@ -1176,10 +1172,10 @@ const Quotations = () => {
                   </div>
                 </div>
                 
-                {/* Second row: Salesperson, Delivery Days, Payment Terms */}
+                {/* Second row: Assigned To, Delivery Days, Payment Terms */}
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Salesperson</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Assigned To</label>
                     <select
                       value={formData.salesperson}
                       onChange={(e) => {
@@ -1192,7 +1188,7 @@ const Quotations = () => {
                       }}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                     >
-                      <option value="">Select Salesperson</option>
+                      <option value="">Select Team Member</option>
                       {teamMembers.map(m => (
                         <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
