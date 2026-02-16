@@ -1178,24 +1178,25 @@ const Quotations = () => {
                     <Plus className="w-4 h-4" /> Add Item
                   </button>
                 </div>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
+                <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+                  <table className="w-full min-w-[900px]">
                     <thead className="bg-slate-100">
                       <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600 w-12">S.No</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Description</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600 w-24">Unit</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-slate-600 w-20">Qty</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-slate-600 w-28">Unit Price (₹)</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-slate-600 w-28">Total (₹)</th>
-                        <th className="px-3 py-2 w-10"></th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-slate-600 w-10">S.No</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-slate-600 min-w-[200px]">Description</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-slate-600 w-24">HSN/SAC</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-slate-600 w-20">Unit</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-slate-600 w-16">Qty</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-slate-600 w-24">Rate (₹)</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-slate-600 w-24">Amount (₹)</th>
+                        <th className="px-2 py-2 w-8"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {formData.items.map((item, idx) => (
                         <tr key={item.id}>
-                          <td className="px-3 py-2 text-sm text-slate-600">{item.sno}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2 text-sm text-slate-600">{item.sno}</td>
+                          <td className="px-2 py-2">
                             <input
                               type="text"
                               value={item.description}
@@ -1204,7 +1205,17 @@ const Quotations = () => {
                               placeholder="Item description"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2">
+                            <input
+                              type="text"
+                              value={item.hsn_sac || ''}
+                              onChange={(e) => updateItem(idx, 'hsn_sac', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                              placeholder="HSN/SAC"
+                              maxLength={8}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
                             <select
                               value={item.unit}
                               onChange={(e) => updateItem(idx, 'unit', e.target.value)}
@@ -1215,7 +1226,7 @@ const Quotations = () => {
                               ))}
                             </select>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2">
                             <input
                               type="number"
                               min="0"
@@ -1225,7 +1236,7 @@ const Quotations = () => {
                               className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm text-right focus:outline-none focus:ring-1 focus:ring-slate-900"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2">
                             <input
                               type="number"
                               min="0"
@@ -1235,10 +1246,10 @@ const Quotations = () => {
                               className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm text-right focus:outline-none focus:ring-1 focus:ring-slate-900"
                             />
                           </td>
-                          <td className="px-3 py-2 text-sm text-right font-medium text-slate-900">
+                          <td className="px-2 py-2 text-sm text-right font-medium text-slate-900">
                             {formatCurrency(item.total)}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2">
                             {formData.items.length > 1 && (
                               <button
                                 type="button"
