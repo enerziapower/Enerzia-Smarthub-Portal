@@ -34,10 +34,30 @@ const Quotations = () => {
   const [convertFormData, setConvertFormData] = useState({
     po_number: '',
     po_date: new Date().toISOString().split('T')[0],
-    acceptance_type: 'written_po',
-    acceptance_remarks: '',
-    delivery_date: ''
+    po_attachment: null,
+    po_attachment_name: '',
+    order_type: 'purchase_order',
+    delivery_date: '',
+    category: '',
+    remarks: ''
   });
+  const [uploadingPO, setUploadingPO] = useState(false);
+  
+  // Order type options
+  const orderTypeOptions = [
+    { value: 'work_order', label: 'Work Order' },
+    { value: 'purchase_order', label: 'Purchase Order' },
+    { value: 'email_verbal', label: 'E.mail / Verbal Confirmation' },
+    { value: 'order_pending', label: 'Order Pending' }
+  ];
+  
+  // Category options
+  const categoryOptions = [
+    { value: 'PSS', label: 'PSS - Power System Solutions' },
+    { value: 'AS', label: 'AS - Automation Solutions' },
+    { value: 'OSS', label: 'OSS - Other System Solutions' },
+    { value: 'CS', label: 'CS - Consulting Services' }
+  ];
   
   // Team members for salesperson dropdown
   const [teamMembers, setTeamMembers] = useState([]);
