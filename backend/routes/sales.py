@@ -175,8 +175,10 @@ class OrderCreate(BaseModel):
     delivery_date: Optional[str] = None
     po_number: str  # Customer PO number - REQUIRED, used as order identifier
     po_date: Optional[str] = None
-    acceptance_type: Optional[str] = "written_po"  # written_po, verbal, email, loi
-    acceptance_remarks: Optional[str] = None  # Additional remarks about acceptance
+    po_attachment: Optional[str] = None  # URL to uploaded PO document
+    po_attachment_name: Optional[str] = None  # Original filename
+    order_type: Optional[str] = "purchase_order"  # work_order, purchase_order, email_verbal, order_pending
+    remarks: Optional[str] = None  # Additional remarks about order
     items: List[dict] = []
     subtotal: float = 0
     gst_percent: float = 18
@@ -185,7 +187,7 @@ class OrderCreate(BaseModel):
     payment_terms: Optional[str] = None
     delivery_terms: Optional[str] = None
     notes: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[str] = None  # PSS, AS, OSS, CS
 
 
 class OrderUpdate(BaseModel):
@@ -200,6 +202,10 @@ class OrderUpdate(BaseModel):
     delivery_date: Optional[str] = None
     po_number: Optional[str] = None
     po_date: Optional[str] = None
+    po_attachment: Optional[str] = None
+    po_attachment_name: Optional[str] = None
+    order_type: Optional[str] = None
+    remarks: Optional[str] = None
     items: Optional[List[dict]] = None
     subtotal: Optional[float] = None
     gst_percent: Optional[float] = None
