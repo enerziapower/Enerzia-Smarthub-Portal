@@ -1185,7 +1185,6 @@ const Quotations = () => {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
                   placeholder="Brief description of the quotation"
                 />
-                </div>
               </div>
 
               {/* Line Items */}
