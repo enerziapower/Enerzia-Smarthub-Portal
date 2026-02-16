@@ -92,7 +92,42 @@ const Quotations = () => {
     { value: 'EXPORTS', label: 'Exports' },
   ];
 
-  const unitOptions = ['Nos', 'Set', 'Lot', 'M', 'Sqm', 'Kg', 'LS', 'KM', 'Ltr', 'Pcs', 'Job'];
+  const gstTreatments = [
+    { value: 'registered_regular', label: 'Registered Business - Regular' },
+    { value: 'registered_composition', label: 'Registered Business - Composition' },
+    { value: 'unregistered', label: 'Unregistered Business' },
+    { value: 'consumer', label: 'Consumer' },
+    { value: 'overseas', label: 'Overseas' },
+    { value: 'sez', label: 'SEZ' },
+  ];
+
+  const indianStates = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Puducherry', 'Chandigarh',
+    'Andaman and Nicobar Islands', 'Dadra and Nagar Haveli', 'Daman and Diu', 'Lakshadweep'
+  ];
+
+  const paymentTermsOptions = [
+    'Due on Receipt',
+    'Net 15',
+    'Net 30',
+    'Net 45',
+    'Net 60',
+    '50% Advance, 50% on delivery',
+    '30% Advance, 70% on delivery',
+    'Due on Due Date',
+    'Custom'
+  ];
+
+  const transportModes = ['Road', 'Rail', 'Air', 'Sea', 'Courier', 'Hand Delivery'];
+
+  const incotermsOptions = ['EXW', 'FCA', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP', 'FAS', 'FOB', 'CFR', 'CIF'];
+
+  const unitOptions = ['Nos', 'Set', 'Lot', 'M', 'Sqm', 'Kg', 'LS', 'KM', 'Ltr', 'Pcs', 'Job', 'Box', 'Pair', 'Rft'];
 
   const fetchQuotations = useCallback(async () => {
     try {
