@@ -410,23 +410,25 @@ const Orders = () => {
       {/* Orders Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[1200px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Order No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Delivery</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Amount</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Payment</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-16">FY</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-20">Category</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Order No</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Customer</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-24">Order Date</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-24">Delivery</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase w-28">Taxable Amt</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase w-28">Gross Amt</th>
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-24">Status</th>
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="10" className="px-4 py-8 text-center text-slate-500">
                     <div className="flex items-center justify-center gap-2">
                       <RefreshCw className="w-5 h-5 animate-spin" />
                       Loading...
@@ -435,85 +437,126 @@ const Orders = () => {
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="10" className="px-4 py-8 text-center text-slate-500">
                     <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                     <p>No orders found</p>
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50" data-testid={`order-row-${order.id}`}>
-                    <td className="px-4 py-3">
-                      <div>
-                        <span className="font-medium text-slate-900">{order.order_no}</span>
-                        {order.quotation_id && (
-                          <span className="ml-2 text-xs text-blue-600 flex items-center gap-1">
-                            <Link2 className="w-3 h-3" /> From Quote
+                orders.map((order) => {
+                  // Extract financial year from quotation_no or order date
+                  const extractFY = () => {
+                    if (order.quotation_no) {
+                      const match = order.quotation_no.match(/\/(\d{2}-\d{2})\//);
+                      if (match) return match[1];
+                    }
+                    // Fallback: extract from order date or po_date
+                    const dateStr = order.po_date || order.date;
+                    if (dateStr) {
+                      const date = new Date(dateStr.split('/').reverse().join('-'));
+                      const month = date.getMonth() + 1;
+                      const year = date.getFullYear();
+                      if (month >= 4) {
+                        return `${year % 100}-${(year + 1) % 100}`;
+                      } else {
+                        return `${(year - 1) % 100}-${year % 100}`;
+                      }
+                    }
+                    return '-';
+                  };
+                  
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50" data-testid={`order-row-${order.id}`}>
+                      {/* Financial Year */}
+                      <td className="px-3 py-3 text-sm text-slate-600 font-mono">{extractFY()}</td>
+                      
+                      {/* Category */}
+                      <td className="px-3 py-3">
+                        {order.category ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700">
+                            {order.category}
                           </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{order.customer_name}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{order.date}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{order.delivery_date || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">
-                      {formatCurrency(order.total_amount)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="relative inline-block">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                          className={`px-2 py-1 text-xs font-medium rounded-full appearance-none cursor-pointer pr-6 ${getStatusColor(order.status)}`}
-                        >
-                          {orderStatuses.map(s => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="relative inline-block">
-                        <select
-                          value={order.payment_status}
-                          onChange={(e) => handlePaymentStatusChange(order.id, e.target.value)}
-                          className={`px-2 py-1 text-xs font-medium rounded-full appearance-none cursor-pointer pr-6 ${getPaymentColor(order.payment_status)}`}
-                        >
-                          {paymentStatuses.map(s => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <button 
-                          onClick={() => openViewModal(order)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => openEditModal(order)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(order.id)}
-                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      
+                      {/* Order No */}
+                      <td className="px-3 py-3">
+                        <div>
+                          <span className="font-medium text-slate-900">{order.order_no}</span>
+                          {order.quotation_no && (
+                            <div className="text-xs text-blue-600 flex items-center gap-1 mt-0.5">
+                              <Link2 className="w-3 h-3" /> From {order.quotation_no}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Customer */}
+                      <td className="px-3 py-3 text-sm text-slate-600">{order.customer_name}</td>
+                      
+                      {/* Order Date (PO Date) */}
+                      <td className="px-3 py-3 text-sm text-slate-600">{order.po_date || order.date || '-'}</td>
+                      
+                      {/* Delivery Date */}
+                      <td className="px-3 py-3 text-sm text-slate-600">{order.delivery_date || '-'}</td>
+                      
+                      {/* Taxable Amount (Subtotal) */}
+                      <td className="px-3 py-3 text-sm text-right font-medium text-slate-700">
+                        {formatCurrency(order.subtotal || 0)}
+                      </td>
+                      
+                      {/* Gross Amount (Total) */}
+                      <td className="px-3 py-3 text-sm text-right font-medium text-slate-900">
+                        {formatCurrency(order.total_amount || 0)}
+                      </td>
+                      
+                      {/* Status */}
+                      <td className="px-3 py-3 text-center">
+                        <div className="relative inline-block">
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                            className={`px-2 py-1 text-xs font-medium rounded-full appearance-none cursor-pointer pr-6 ${getStatusColor(order.status)}`}
+                          >
+                            {orderStatuses.map(s => (
+                              <option key={s.value} value={s.value}>{s.label}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" />
+                        </div>
+                      </td>
+                      
+                      {/* Actions */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <button 
+                            onClick={() => openViewModal(order)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => openEditModal(order)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(order.id)}
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
