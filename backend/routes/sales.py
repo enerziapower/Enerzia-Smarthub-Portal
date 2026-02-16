@@ -883,15 +883,6 @@ async def get_quotation_stats():
     }
 
 
-@router.get("/quotations/{quotation_id}")
-async def get_quotation(quotation_id: str):
-    """Get a single quotation"""
-    quotation = await db.sales_quotations.find_one({"id": quotation_id}, {"_id": 0})
-    if not quotation:
-        raise HTTPException(status_code=404, detail="Quotation not found")
-    return quotation
-
-
 @router.get("/quotations/next-number")
 async def get_next_quotation_number_endpoint(financial_year: str = None):
     """Get the next quotation number for preview"""
@@ -919,6 +910,15 @@ async def get_next_quotation_number_endpoint(financial_year: str = None):
     
     next_number = f"Quote/{financial_year}/{next_num:04d}"
     return {"next_number": next_number, "financial_year": financial_year, "sequence": next_num}
+
+
+@router.get("/quotations/{quotation_id}")
+async def get_quotation(quotation_id: str):
+    """Get a single quotation"""
+    quotation = await db.sales_quotations.find_one({"id": quotation_id}, {"_id": 0})
+    if not quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    return quotation
 
 
 @router.post("/quotations")
