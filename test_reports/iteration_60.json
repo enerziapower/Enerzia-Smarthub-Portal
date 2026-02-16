@@ -1,0 +1,169 @@
+{
+  "summary": "Quotation Module Zoho-like Fields testing completed. All 31 backend API tests pass (100%). Frontend UI fully functional with all new fields: HSN/SAC in line items, Transport Mode, Incoterms, GST Treatment, Place of Supply, Billing/Shipping Address, Salesperson, Reference No, Kind Attention, Delivery Days. Convert to Order functionality working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_quotation_zoho_fields.py",
+    "/app/backend/tests/test_quotations.py",
+    "/app/test_reports/pytest/pytest_quotation_zoho_fields.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_quotation_zoho_fields.py",
+    "/app/backend/tests/test_quotations.py"
+  ],
+  "success_rate": {
+    "backend": "100% (31/31 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "seed_data_creation": "Test data created and cleaned up automatically by pytest fixtures",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Quotation Module with Zoho-like fields fully tested. Backend tests in /app/backend/tests/test_quotation_zoho_fields.py cover all new fields: HSN/SAC in line items, Transport Mode (Road/Rail/Air/Sea/Courier/Hand Delivery), Incoterms (EXW/FCA/CPT/CIP/DAP/DPU/DDP/FAS/FOB/CFR/CIF), GST Treatment (registered_regular/registered_composition/unregistered/consumer/overseas/sez), Place of Supply (Indian states), Shipping Address, Salesperson, Reference No, Kind Attention, Delivery Days. All CRUD operations and Convert to Order functionality verified.",
+  "test_results": {
+    "Backend_API_Tests": {
+      "HSN_SAC_Tests": {
+        "create_with_hsn_sac": "PASS - Line items store HSN/SAC codes (8537, 8544, 998719)",
+        "get_hsn_sac": "PASS - HSN/SAC codes retrieved correctly"
+      },
+      "Transport_Mode_Tests": {
+        "Road": "PASS",
+        "Rail": "PASS",
+        "Air": "PASS",
+        "Sea": "PASS",
+        "Courier": "PASS",
+        "Hand_Delivery": "PASS"
+      },
+      "Incoterms_Tests": {
+        "EXW": "PASS",
+        "FCA": "PASS",
+        "CPT": "PASS",
+        "CIP": "PASS",
+        "DAP": "PASS",
+        "DPU": "PASS",
+        "DDP": "PASS",
+        "FAS": "PASS",
+        "FOB": "PASS",
+        "CFR": "PASS",
+        "CIF": "PASS"
+      },
+      "GST_Treatment_Tests": {
+        "registered_regular": "PASS",
+        "registered_composition": "PASS",
+        "unregistered": "PASS",
+        "consumer": "PASS",
+        "overseas": "PASS",
+        "sez": "PASS"
+      },
+      "Place_of_Supply_Tests": {
+        "Tamil_Nadu": "PASS",
+        "Karnataka": "PASS",
+        "Maharashtra": "PASS",
+        "Delhi": "PASS",
+        "Gujarat": "PASS"
+      },
+      "Other_New_Fields": {
+        "shipping_address": "PASS - Separate billing/shipping addresses",
+        "salesperson": "PASS - Salesperson ID and name stored",
+        "reference_no": "PASS - Customer reference number",
+        "kind_attention": "PASS - Contact person attention field",
+        "delivery_days": "PASS - Multiple delivery options tested"
+      },
+      "Combined_Fields_Test": {
+        "all_zoho_fields": "PASS - All new fields work together"
+      },
+      "Update_Tests": {
+        "update_zoho_fields": "PASS - All new fields can be updated"
+      },
+      "Convert_to_Order": {
+        "convert_quotation": "PASS - HSN/SAC preserved in order items"
+      }
+    },
+    "Frontend_UI_Tests": {
+      "Quotations_List_Page": {
+        "page_load": "PASS - Quotations list displays correctly",
+        "stats_cards": "PASS - Total, Draft, Sent, Accepted, Total Value shown",
+        "search_filter": "PASS - Search and status filter working",
+        "actions": "PASS - Edit, Convert to Order, Delete buttons visible"
+      },
+      "New_Quotation_Form": {
+        "customer_information_section": {
+          "customer_name": "PASS - Autocomplete with customer list",
+          "gst_treatment": "PASS - Dropdown with 6 options",
+          "gstin": "PASS - Input field for GST number",
+          "place_of_supply": "PASS - Dropdown with Indian states",
+          "billing_address": "PASS - Textarea for billing address",
+          "shipping_address": "PASS - Textarea with 'Copy from Billing' button",
+          "kind_attention": "PASS - Contact person field",
+          "phone_email": "PASS - Contact details fields"
+        },
+        "quotation_details_section": {
+          "reference_no": "PASS - Customer reference number field",
+          "quote_date": "PASS - Date picker",
+          "expiry_date": "PASS - Date picker with 30-day default",
+          "salesperson": "PASS - Dropdown with team members",
+          "category": "PASS - Dropdown with PSS/AS/OSS/CS/DOM_LIGHTING/EXPORTS",
+          "delivery_days": "PASS - Input field",
+          "payment_terms": "PASS - Dropdown with preset options"
+        },
+        "line_items_section": {
+          "hsn_sac_column": "PASS - HSN/SAC column visible in table",
+          "add_item": "PASS - Add Item button working",
+          "calculations": "PASS - Subtotal, GST, Total calculated correctly"
+        },
+        "transport_shipping_section": {
+          "transport_mode": "PASS - Dropdown with Road/Rail/Air/Sea/Courier/Hand Delivery",
+          "incoterms": "PASS - Dropdown with 11 Incoterms options"
+        }
+      },
+      "Edit_Quotation_Form": {
+        "field_loading": "PASS - All fields load correctly when editing",
+        "hsn_sac_display": "PASS - HSN/SAC codes shown in line items"
+      },
+      "Convert_to_Order_Modal": {
+        "modal_display": "PASS - Modal opens correctly",
+        "po_number_field": "PASS - Customer PO Number required field",
+        "po_date_field": "PASS - PO Date picker",
+        "acceptance_type": "PASS - Dropdown with Written PO option",
+        "delivery_date": "PASS - Expected Delivery Date picker",
+        "remarks": "PASS - Additional notes textarea",
+        "create_order_button": "PASS - Create Order button working"
+      }
+    }
+  },
+  "test_credentials_used": {
+    "admin_login": {
+      "email": "admin@enerzia.com",
+      "password": "admin123"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All APIs connect to real MongoDB - no mocked data"
+  },
+  "api_endpoints_tested": [
+    "POST /api/sales/quotations - Create quotation with all new fields",
+    "GET /api/sales/quotations - List quotations",
+    "GET /api/sales/quotations/{id} - Get single quotation",
+    "PUT /api/sales/quotations/{id} - Update quotation with new fields",
+    "DELETE /api/sales/quotations/{id} - Delete quotation",
+    "GET /api/sales/quotations/stats - Get quotation statistics",
+    "POST /api/sales/orders - Create order from quotation (Convert to Order)",
+    "GET /api/sales/enquiries - Get enquiries for dropdown",
+    "GET /api/settings/clients - Get customers for autocomplete"
+  ],
+  "new_fields_verified": {
+    "line_items": ["hsn_sac"],
+    "transport_shipping": ["transport_mode", "incoterms"],
+    "customer_information": ["gst_treatment", "place_of_supply", "shipping_address", "kind_attention"],
+    "quotation_details": ["salesperson", "salesperson_name", "reference_no", "delivery_days"]
+  }
+}
