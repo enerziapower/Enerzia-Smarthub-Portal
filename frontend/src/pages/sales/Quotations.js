@@ -1069,15 +1069,115 @@ const Quotations = () => {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Right Column - Quotation Details */}
-                <div className="space-y-4">
-                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-4">
-                    <h4 className="font-medium text-amber-900 flex items-center gap-2">
-                      <Calendar className="w-4 h-4" /> Quotation Details
-                    </h4>
-                    
-                    <div>
+              {/* Quotation Details - Horizontal Layout */}
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 className="font-medium text-amber-900 flex items-center gap-2 mb-4">
+                  <Calendar className="w-4 h-4" /> Quotation Details
+                </h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
+                    <input
+                      type="text"
+                      value={(() => {
+                        const now = new Date();
+                        const month = now.getMonth() + 1;
+                        const year = now.getFullYear();
+                        if (month >= 4) {
+                          return `${year % 100}-${(year + 1) % 100}`;
+                        } else {
+                          return `${(year - 1) % 100}-${year % 100}`;
+                        }
+                      })()}
+                      disabled
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-100 text-sm text-slate-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Quote Number</label>
+                    <input
+                      type="text"
+                      value={editingQuotation ? editingQuotation.quotation_no : 'Auto-generated'}
+                      disabled
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-100 text-sm text-slate-600 font-mono"
+                      placeholder="Quote/25-26/0001"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Quote Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Expiry Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.valid_until}
+                      onChange={(e) => setFormData({...formData, valid_until: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                    />
+                  </div>
+                </div>
+                
+                {/* Second row: Salesperson, Delivery Days, Payment Terms */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Salesperson</label>
+                    <select
+                      value={formData.salesperson}
+                      onChange={(e) => {
+                        const member = teamMembers.find(m => m.id === e.target.value);
+                        setFormData({
+                          ...formData, 
+                          salesperson: e.target.value,
+                          salesperson_name: member?.name || ''
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                    >
+                      <option value="">Select Salesperson</option>
+                      {teamMembers.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Delivery in Days</label>
+                    <input
+                      type="number"
+                      value={formData.delivery_days}
+                      onChange={(e) => setFormData({...formData, delivery_days: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      placeholder="e.g., 30"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
+                    <select
+                      value={formData.payment_terms}
+                      onChange={(e) => setFormData({...formData, payment_terms: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                    >
+                      {paymentTermsOptions.map(pt => (
+                        <option key={pt} value={pt}>{pt}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Reference No.</label>
                       <input
                         type="text"
