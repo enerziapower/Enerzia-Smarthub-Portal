@@ -101,18 +101,19 @@ async def get_next_pid(financial_year: str = None) -> dict:
     }
 
 
-async def get_next_quotation_number(linked_pid: str = None) -> str:
+async def get_next_quotation_number(financial_year: str = None) -> str:
     """
     Generate quotation number.
     Format: Quote/25-26/0001 (Zoho-like format)
     
     Args:
-        linked_pid: Optional PID to link quotation to (currently not used)
+        financial_year: Optional FY string like "25-26". Uses current FY if not provided.
     
     Returns:
         Quotation number string
     """
-    financial_year = get_current_financial_year()
+    if not financial_year:
+        financial_year = get_current_financial_year()
     
     # Format: Quote/25-26/0001
     pattern = f"^Quote/{financial_year}/"
