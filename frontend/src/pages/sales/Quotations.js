@@ -262,6 +262,21 @@ const Quotations = () => {
     }
   };
 
+  // Fetch categories from organization settings
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/settings/categories`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   const fetchEnquiryDetails = async (id) => {
     try {
       const response = await fetch(`${API_URL}/api/sales/enquiries/${id}`, {
