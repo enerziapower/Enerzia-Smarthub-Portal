@@ -193,25 +193,6 @@ const Quotations = () => {
     }
   };
 
-  // Financial year options (current and previous 2 years)
-  const getFinancialYearOptions = () => {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
-    
-    let currentFYStart = month >= 4 ? year : year - 1;
-    
-    const options = [];
-    for (let i = -1; i <= 1; i++) {
-      const fyStart = currentFYStart + i;
-      const fyEnd = fyStart + 1;
-      options.push(`${fyStart % 100}-${fyEnd % 100}`);
-    }
-    return options;
-  };
-
-  const financialYearOptions = getFinancialYearOptions();
-
   // Fetch all enquiries for dropdown
   const fetchEnquiries = async () => {
     try {
