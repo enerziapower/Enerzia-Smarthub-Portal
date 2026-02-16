@@ -110,15 +110,6 @@ const Quotations = () => {
     { value: 'expired', label: 'Expired', color: 'bg-yellow-100 text-yellow-700' },
   ];
 
-  const categories = [
-    { value: 'PSS', label: 'PSS - Project & Services' },
-    { value: 'AS', label: 'AS - Asset Services' },
-    { value: 'OSS', label: 'OSS - Other Sales & Services' },
-    { value: 'CS', label: 'CS - Commercial Sales' },
-    { value: 'DOM_LIGHTING', label: 'DOM Lighting' },
-    { value: 'EXPORTS', label: 'Exports' },
-  ];
-
   const gstTreatments = [
     { value: 'registered_regular', label: 'Registered Business - Regular' },
     { value: 'registered_composition', label: 'Registered Business - Composition' },
