@@ -1112,7 +1112,7 @@ All 4 phases successfully implemented and tested:
 |-------|---------|--------|
 | 1 | **Link to Enquiry** | Optional dropdown - filters out already-quoted enquiries |
 | 2 | **Customer Information** | Customer Name, GST Treatment, GSTIN, Place of Supply, Billing/Shipping Address, Kind Attention, Phone, Email |
-| 3 | **Quotation Details** | Financial Year (auto), Quote Number (auto), Quote Date (calendar), Expiry Date (calendar), Salesperson, Delivery in Days, Payment Terms |
+| 3 | **Quotation Details** | Financial Year (editable dropdown), Quote Number (preview), Quote Date (calendar), Expiry Date (calendar), Assigned To, Delivery in Days, Payment Terms |
 | 4 | **Subject/Description** | Text input |
 | 5 | **Line Items** | S.No, Description, HSN/SAC, Unit, Qty, Rate, Amount |
 | 6 | **GST Calculation** | Subtotal, GST %, GST Amount, Total |
@@ -1120,23 +1120,28 @@ All 4 phases successfully implemented and tested:
 | 8 | **Terms** | Delivery Terms, Terms & Conditions, Notes |
 
 ### Quote Number Format
-- **New Format:** `Quote/FY/sequence` (e.g., `Quote/25-26/0001`)
-- Financial Year: April 1 - March 31 (Indian FY)
-- Auto-increments per financial year
+- **Format:** `Quote/FY/sequence` (e.g., `Quote/25-26/0001`)
+- Financial Year: Editable dropdown (24-25, 25-26, 26-27)
+- Quote Number: Auto-generated preview shown before submission
+- New API: `GET /api/sales/quotations/next-number?financial_year=25-26`
+
+### Changes Made (Feb 16, 2026 - Session 3)
+1. ✅ Financial Year field is now EDITABLE (dropdown with 3 options)
+2. ✅ Quote Number shows live preview (e.g., `Quote/25-26/0003`)
+3. ✅ "Salesperson" renamed to "Assigned To" (matching Enquiry terminology)
 
 ### Changes Made (Feb 16, 2026 - Session 2)
-1. ✅ Quote number format changed from `Q-25-26-0001` to `Quote/25-26/0001`
-2. ✅ Financial Year field added (auto-calculated, read-only)
-3. ✅ Category field REMOVED from quotation form
-4. ✅ Quotation Details section moved below Customer Information (horizontal layout)
-5. ✅ Enquiry dropdown filters out already-quoted enquiries (status: quoted, accepted, declined, invoiced)
-6. ✅ Payment Terms moved from bottom to Quotation Details section
+1. ✅ Quote number format: `Quote/25-26/0001`
+2. ✅ Category field REMOVED
+3. ✅ Quotation Details section below Customer Information
+4. ✅ Enquiry dropdown filters already-quoted enquiries
+5. ✅ Payment Terms in Quotation Details section
 
 ### Testing
-- 7/7 backend API tests passed (100%)
-- All frontend UI features verified working
-- Enquiry filtering verified
+- Backend API endpoint `next-number` verified working
+- Financial Year dropdown changes Quote Number preview dynamically
+- All frontend UI features verified
 
 ---
 *Last Updated: February 16, 2026*
-*Status: DEPLOYMENT READY ✅ | QUOTATION MODULE ZOHO-LIKE REWORK COMPLETE ✅*
+*Status: DEPLOYMENT READY ✅ | QUOTATION MODULE COMPLETE ✅*
