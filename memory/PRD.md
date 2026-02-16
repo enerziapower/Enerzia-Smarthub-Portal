@@ -1104,37 +1104,38 @@ All 4 phases successfully implemented and tested:
 ---
 
 ## Quotation Module - Zoho-like Rework ✅ COMPLETE (Feb 16, 2026)
-**Location:** `/app/frontend/src/pages/sales/Quotations.js`, `/app/backend/routes/sales.py`
+**Location:** `/app/frontend/src/pages/sales/Quotations.js`, `/app/backend/routes/sales.py`, `/app/backend/utils/pid_system.py`
 
-### New Features Added (Zoho Books Format)
+### Form Layout (Updated)
 
-| Section | New Fields |
-|---------|------------|
-| **Customer Information** | GST Treatment (6 options), GSTIN, Place of Supply (Indian states), Billing Address, Shipping Address (with "Copy from Billing"), Kind Attention |
-| **Quotation Details** | Reference No., Salesperson dropdown, Delivery in Days, Payment Terms dropdown |
-| **Line Items** | HSN/SAC column added to table |
-| **Transport & Shipping** | Transport Mode (Road/Rail/Air/Sea/Courier/Hand Delivery), Incoterms (11 international trade terms) |
+| Order | Section | Fields |
+|-------|---------|--------|
+| 1 | **Link to Enquiry** | Optional dropdown - filters out already-quoted enquiries |
+| 2 | **Customer Information** | Customer Name, GST Treatment, GSTIN, Place of Supply, Billing/Shipping Address, Kind Attention, Phone, Email |
+| 3 | **Quotation Details** | Financial Year (auto), Quote Number (auto), Quote Date (calendar), Expiry Date (calendar), Salesperson, Delivery in Days, Payment Terms |
+| 4 | **Subject/Description** | Text input |
+| 5 | **Line Items** | S.No, Description, HSN/SAC, Unit, Qty, Rate, Amount |
+| 6 | **GST Calculation** | Subtotal, GST %, GST Amount, Total |
+| 7 | **Transport & Shipping** | Transport Mode, Incoterms |
+| 8 | **Terms** | Delivery Terms, Terms & Conditions, Notes |
 
-### GST Treatment Options
-- Registered Business - Regular
-- Registered Business - Composition
-- Unregistered Business
-- Consumer
-- Overseas
-- SEZ
+### Quote Number Format
+- **New Format:** `Quote/FY/sequence` (e.g., `Quote/25-26/0001`)
+- Financial Year: April 1 - March 31 (Indian FY)
+- Auto-increments per financial year
 
-### Incoterms Options (2020)
-EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF
-
-### Backend Changes
-- `QuotationCreate` and `QuotationUpdate` models extended with 14 new fields
-- All new fields stored and retrieved from MongoDB
-- HSN/SAC codes stored in line items array
+### Changes Made (Feb 16, 2026 - Session 2)
+1. ✅ Quote number format changed from `Q-25-26-0001` to `Quote/25-26/0001`
+2. ✅ Financial Year field added (auto-calculated, read-only)
+3. ✅ Category field REMOVED from quotation form
+4. ✅ Quotation Details section moved below Customer Information (horizontal layout)
+5. ✅ Enquiry dropdown filters out already-quoted enquiries (status: quoted, accepted, declined, invoiced)
+6. ✅ Payment Terms moved from bottom to Quotation Details section
 
 ### Testing
-- 31/31 backend API tests passed (100%)
-- All frontend features verified working
-- Convert to Order preserves HSN/SAC codes
+- 7/7 backend API tests passed (100%)
+- All frontend UI features verified working
+- Enquiry filtering verified
 
 ---
 *Last Updated: February 16, 2026*
