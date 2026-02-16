@@ -776,7 +776,7 @@ const Quotations = () => {
           <p className="text-slate-500 mt-1">Manage sales quotations and proposals</p>
         </div>
         <button 
-          onClick={() => { resetForm(); setEditingQuotation(null); setShowAddModal(true); }} 
+          onClick={() => { resetForm(); setEditingQuotation(null); setShowAddModal(true); fetchNextQuoteNumber(); }} 
           className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
           data-testid="add-quotation-btn"
         >
