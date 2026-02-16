@@ -359,6 +359,7 @@ const Quotations = () => {
       id: Date.now().toString(),
       sno: formData.items.length + 1,
       description: '',
+      hsn_sac: '',
       unit: 'Nos',
       quantity: 1,
       unit_price: 0,
