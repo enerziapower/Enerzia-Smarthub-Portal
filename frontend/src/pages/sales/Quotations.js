@@ -1533,8 +1533,8 @@ const Quotations = () => {
       {/* Convert to Order Modal */}
       {showConvertModal && convertingQuotation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Convert to Order</h3>
                 <p className="text-sm text-slate-500">Enter customer PO details to create order</p>
@@ -1582,18 +1582,58 @@ const Quotations = () => {
                 />
               </div>
 
-              {/* Acceptance Type */}
+              {/* PO Attachment */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Acceptance Type</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">PO Attachment</label>
+                <div className="flex items-center gap-2">
+                  <label className="flex-1 cursor-pointer">
+                    <div className={`flex items-center justify-center px-4 py-3 border-2 border-dashed rounded-lg ${convertFormData.po_attachment ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:border-slate-400'}`}>
+                      {uploadingPO ? (
+                        <span className="text-sm text-slate-500 flex items-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin" /> Uploading...
+                        </span>
+                      ) : convertFormData.po_attachment ? (
+                        <span className="text-sm text-green-700 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" /> {convertFormData.po_attachment_name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-500 flex items-center gap-2">
+                          <FileText className="w-4 h-4" /> Click to upload PO document (PDF, Image)
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                      onChange={handlePOAttachmentUpload}
+                      className="hidden"
+                      disabled={uploadingPO}
+                    />
+                  </label>
+                  {convertFormData.po_attachment && (
+                    <button
+                      type="button"
+                      onClick={() => setConvertFormData({...convertFormData, po_attachment: null, po_attachment_name: ''})}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded"
+                      title="Remove attachment"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Order Type */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Order Type</label>
                 <select
-                  value={convertFormData.acceptance_type}
-                  onChange={(e) => setConvertFormData({...convertFormData, acceptance_type: e.target.value})}
+                  value={convertFormData.order_type}
+                  onChange={(e) => setConvertFormData({...convertFormData, order_type: e.target.value})}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
                 >
-                  <option value="written_po">Written PO</option>
-                  <option value="email">Email Confirmation</option>
-                  <option value="verbal">Verbal Acceptance</option>
-                  <option value="loi">Letter of Intent (LOI)</option>
+                  {orderTypeOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -1608,12 +1648,30 @@ const Quotations = () => {
                 />
               </div>
 
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={convertFormData.category}
+                  onChange={(e) => setConvertFormData({...convertFormData, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                >
+                  <option value="">Select Category</option>
+                  {categoryOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Remarks */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
                 <textarea
-                  value={convertFormData.acceptance_remarks}
-                  onChange={(e) => setConvertFormData({...convertFormData, acceptance_remarks: e.target.value})}
+                  value={convertFormData.remarks}
+                  onChange={(e) => setConvertFormData({...convertFormData, remarks: e.target.value})}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
                   rows={2}
                   placeholder="Any additional notes about this order..."
@@ -1631,7 +1689,8 @@ const Quotations = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                  disabled={uploadingPO}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Create Order
