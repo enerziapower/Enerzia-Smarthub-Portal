@@ -51,13 +51,8 @@ const Quotations = () => {
     { value: 'order_pending', label: 'Order Pending' }
   ];
   
-  // Category options
-  const categoryOptions = [
-    { value: 'PSS', label: 'PSS - Power System Solutions' },
-    { value: 'AS', label: 'AS - Automation Solutions' },
-    { value: 'OSS', label: 'OSS - Other System Solutions' },
-    { value: 'CS', label: 'CS - Consulting Services' }
-  ];
+  // Categories from organization settings
+  const [categories, setCategories] = useState([]);
   
   // Team members for salesperson dropdown
   const [teamMembers, setTeamMembers] = useState([]);
