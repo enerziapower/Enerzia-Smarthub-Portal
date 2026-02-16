@@ -244,7 +244,11 @@ const Quotations = () => {
           customer_phone: enquiry.contact_phone || '',
           customer_email: enquiry.contact_email || '',
           customer_address: matchingCustomer?.address || enquiry.location || '',
+          shipping_address: matchingCustomer?.shipping_address || matchingCustomer?.address || enquiry.location || '',
           customer_gst: matchingCustomer?.gst_number || matchingCustomer?.gst || '',
+          gst_treatment: matchingCustomer?.gst_treatment || 'registered_regular',
+          place_of_supply: matchingCustomer?.state || '',
+          kind_attention: enquiry.contact_person || '',
           subject: enquiry.description || '',
           category: enquiry.category || '',
           valid_until: validUntilDate.toISOString().split('T')[0]
@@ -270,7 +274,11 @@ const Quotations = () => {
         customer_phone: '',
         customer_email: '',
         customer_address: '',
+        shipping_address: '',
         customer_gst: '',
+        gst_treatment: 'registered_regular',
+        place_of_supply: '',
+        kind_attention: '',
         subject: '',
         category: ''
       }));
@@ -291,7 +299,10 @@ const Quotations = () => {
         ...prev,
         customer_name: matchingCustomer.name,
         customer_address: matchingCustomer.address || prev.customer_address,
+        shipping_address: matchingCustomer.shipping_address || matchingCustomer.address || prev.shipping_address,
         customer_gst: matchingCustomer.gst_number || matchingCustomer.gst || prev.customer_gst,
+        gst_treatment: matchingCustomer.gst_treatment || prev.gst_treatment,
+        place_of_supply: matchingCustomer.state || prev.place_of_supply,
         customer_contact: matchingCustomer.contact_person || prev.customer_contact,
         customer_phone: matchingCustomer.phone || prev.customer_phone,
         customer_email: matchingCustomer.email || prev.customer_email
