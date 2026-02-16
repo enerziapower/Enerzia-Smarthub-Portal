@@ -175,9 +175,9 @@ const Quotations = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        // Filter to show only enquiries that can be quoted (not declined, not already accepted)
+        // Filter to show only enquiries that can be quoted (not declined, not already quoted, not accepted)
         const quotableEnquiries = (data.enquiries || []).filter(
-          e => !['declined', 'accepted', 'invoiced'].includes(e.status)
+          e => !['declined', 'accepted', 'invoiced', 'quoted'].includes(e.status) && !e.quotation_id
         );
         setEnquiries(quotableEnquiries);
       }
