@@ -372,6 +372,7 @@ const Quotations = () => {
     if (enquiryId) {
       setTimeout(() => {
         fetchEnquiryDetails(enquiryId);
+        fetchNextQuoteNumber(); // Fetch next quote number when opening from enquiry
         setShowAddModal(true);
       }, 500);
     }
