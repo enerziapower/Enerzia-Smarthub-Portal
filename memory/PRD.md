@@ -1112,7 +1112,7 @@ All 4 phases successfully implemented and tested:
 |-------|---------|--------|
 | 1 | **Link to Enquiry** | Optional dropdown - filters out already-quoted enquiries |
 | 2 | **Customer Information** | Customer Name, GST Treatment, GSTIN, Place of Supply, Billing/Shipping Address, Kind Attention, Phone, Email |
-| 3 | **Quotation Details** | Financial Year (editable dropdown), Quote Number (preview), Quote Date (calendar), Expiry Date (calendar), Assigned To, Delivery in Days, Payment Terms |
+| 3 | **Quotation Details** | Financial Year (text input), Quote Number (preview), Quote Date (calendar), Expiry Date (calendar), Assigned To, Delivery in Days, Payment Terms |
 | 4 | **Subject/Description** | Text input |
 | 5 | **Line Items** | S.No, Description, HSN/SAC, Unit, Qty, Rate, Amount |
 | 6 | **GST Calculation** | Subtotal, GST %, GST Amount, Total |
@@ -1120,15 +1120,20 @@ All 4 phases successfully implemented and tested:
 | 8 | **Terms** | Delivery Terms, Terms & Conditions, Notes |
 
 ### Quote Number Format
-- **Format:** `Quote/FY/sequence` (e.g., `Quote/25-26/0001`)
-- Financial Year: Editable dropdown (24-25, 25-26, 26-27)
-- Quote Number: Auto-generated preview shown before submission
+- **Format:** `Quote/FY/sequence` (e.g., `Quote/25-26/0001`, `Quote/28-29/0001`)
+- **Financial Year:** Text input (YY-YY format) - can enter any year like `28-29`
+- Quote Number: Auto-generated preview updates dynamically when FY changes
 - New API: `GET /api/sales/quotations/next-number?financial_year=25-26`
 
+### Changes Made (Feb 16, 2026 - Session 4)
+1. ✅ **Financial Year** - Changed from dropdown to TEXT INPUT (can enter any year like `28-29`)
+2. ✅ **Assigned To dropdown** - Fixed fetch (was using wrong API endpoint)
+3. ✅ Quote Number preview updates when FY changes (e.g., `Quote/28-29/0001`)
+
 ### Changes Made (Feb 16, 2026 - Session 3)
-1. ✅ Financial Year field is now EDITABLE (dropdown with 3 options)
-2. ✅ Quote Number shows live preview (e.g., `Quote/25-26/0003`)
-3. ✅ "Salesperson" renamed to "Assigned To" (matching Enquiry terminology)
+1. ✅ Financial Year field is now EDITABLE
+2. ✅ Quote Number shows live preview
+3. ✅ "Salesperson" renamed to "Assigned To"
 
 ### Changes Made (Feb 16, 2026 - Session 2)
 1. ✅ Quote number format: `Quote/25-26/0001`
@@ -1138,8 +1143,8 @@ All 4 phases successfully implemented and tested:
 5. ✅ Payment Terms in Quotation Details section
 
 ### Testing
-- Backend API endpoint `next-number` verified working
-- Financial Year dropdown changes Quote Number preview dynamically
+- Backend accepts any financial_year (e.g., `28-29`) and generates `Quote/28-29/0001`
+- Assigned To dropdown shows all team members
 - All frontend UI features verified
 
 ---
