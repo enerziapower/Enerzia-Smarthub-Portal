@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Search, Edit2, Trash2, Eye, Download, X, RefreshCw, FileText,
   ChevronDown, Filter, ArrowRight, CheckCircle, Link2, AlertCircle,
-  Calendar, Building2, DollarSign, Phone, Mail, User, MapPin, FileSearch
+  Calendar, Building2, DollarSign, Phone, Mail, User, MapPin, FileSearch,
+  Truck, Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
