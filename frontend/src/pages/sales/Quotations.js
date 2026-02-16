@@ -938,66 +938,64 @@ const Quotations = () => {
               )}
 
               {/* Customer Information - Zoho Style */}
-              <div className="grid grid-cols-3 gap-6">
-                {/* Left Column - Customer Details */}
-                <div className="col-span-2 space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-lg space-y-4">
-                    <h4 className="font-medium text-slate-900 flex items-center gap-2">
-                      <Building2 className="w-4 h-4" /> Customer Information
-                    </h4>
-                    
-                    {/* Customer Name with autocomplete */}
+              <div className="space-y-4">
+                <div className="p-4 bg-slate-50 rounded-lg space-y-4">
+                  <h4 className="font-medium text-slate-900 flex items-center gap-2">
+                    <Building2 className="w-4 h-4" /> Customer Information
+                  </h4>
+                  
+                  {/* Customer Name with autocomplete */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      list="customer-names"
+                      value={formData.customer_name}
+                      onChange={(e) => handleCustomerNameChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Start typing to search customers..."
+                    />
+                    <datalist id="customer-names">
+                      {customers.map(c => (
+                        <option key={c.id || c.name} value={c.name} />
+                      ))}
+                    </datalist>
+                  </div>
+
+                  {/* GST Fields */}
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">GST Treatment</label>
+                      <select
+                        value={formData.gst_treatment}
+                        onChange={(e) => setFormData({...formData, gst_treatment: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        {gstTreatments.map(t => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">GSTIN</label>
                       <input
                         type="text"
-                        required
-                        list="customer-names"
-                        value={formData.customer_name}
-                        onChange={(e) => handleCustomerNameChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Start typing to search customers..."
+                        value={formData.customer_gst}
+                        onChange={(e) => setFormData({...formData, customer_gst: e.target.value.toUpperCase()})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                        placeholder="e.g., 33AABCU9603R1ZM"
+                        maxLength={15}
                       />
-                      <datalist id="customer-names">
-                        {customers.map(c => (
-                          <option key={c.id || c.name} value={c.name} />
-                        ))}
-                      </datalist>
                     </div>
-
-                    {/* GST Fields */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">GST Treatment</label>
-                        <select
-                          value={formData.gst_treatment}
-                          onChange={(e) => setFormData({...formData, gst_treatment: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                          {gstTreatments.map(t => (
-                            <option key={t.value} value={t.value}>{t.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">GSTIN</label>
-                        <input
-                          type="text"
-                          value={formData.customer_gst}
-                          onChange={(e) => setFormData({...formData, customer_gst: e.target.value.toUpperCase()})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                          placeholder="e.g., 33AABCU9603R1ZM"
-                          maxLength={15}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Place of Supply</label>
-                        <select
-                          value={formData.place_of_supply}
-                          onChange={(e) => setFormData({...formData, place_of_supply: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                          <option value="">Select State</option>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Place of Supply</label>
+                      <select
+                        value={formData.place_of_supply}
+                        onChange={(e) => setFormData({...formData, place_of_supply: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="">Select State</option>
                           {indianStates.map(s => (
                             <option key={s} value={s}>{s}</option>
                           ))}
