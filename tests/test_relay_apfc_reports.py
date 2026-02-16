@@ -8,7 +8,7 @@ import os
 import json
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://order-flow-system-5.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://project-order-system.preview.emergentagent.com').rstrip('/')
 
 class TestRelayAPFCReports:
     """Test Relay and APFC equipment report templates and functionality"""

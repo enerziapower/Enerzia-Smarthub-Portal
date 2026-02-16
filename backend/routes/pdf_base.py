@@ -468,7 +468,7 @@ def get_logo_image(logo_url, width=80):
     if logo_url:
         try:
             if logo_url.startswith('/api/uploads/'):
-                full_url = f"https://order-flow-system-5.preview.emergentagent.com{logo_url}"
+                full_url = f"https://project-order-system.preview.emergentagent.com{logo_url}"
                 response = requests.get(full_url, timeout=5)
                 if response.status_code == 200:
                     img_data = io.BytesIO(response.content)
@@ -518,7 +518,7 @@ async def get_email_html_template(
     logo_html = ""
     logo_url = email_template.get('company_logo_url') or (org_settings.get('logo_url') if org_settings else None)
     if logo_url:
-        base_url = "https://order-flow-system-5.preview.emergentagent.com/api"
+        base_url = "https://project-order-system.preview.emergentagent.com/api"
         if logo_url.startswith('/'):
             logo_html = f'<img src="{base_url}{logo_url}" alt="{company_name}" style="max-height: 60px; margin-bottom: 16px;" />'
     
