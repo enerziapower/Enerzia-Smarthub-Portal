@@ -575,6 +575,11 @@ const Quotations = () => {
       return;
     }
     
+    if (!convertFormData.category) {
+      toast.error('Category is required');
+      return;
+    }
+    
     try {
       // First get the full quotation details
       const qtResponse = await fetch(`${API_URL}/api/sales/quotations/${convertingQuotation.id}`, {
@@ -596,8 +601,10 @@ const Quotations = () => {
         delivery_date: convertFormData.delivery_date || null,
         po_number: convertFormData.po_number.trim(),
         po_date: convertFormData.po_date,
-        acceptance_type: convertFormData.acceptance_type,
-        acceptance_remarks: convertFormData.acceptance_remarks,
+        po_attachment: convertFormData.po_attachment,
+        po_attachment_name: convertFormData.po_attachment_name,
+        order_type: convertFormData.order_type,
+        remarks: convertFormData.remarks,
         items: quotation.items || [],
         subtotal: quotation.subtotal || 0,
         gst_percent: quotation.gst_percent || 18,
@@ -606,7 +613,7 @@ const Quotations = () => {
         payment_terms: quotation.payment_terms,
         delivery_terms: quotation.delivery_terms,
         notes: quotation.notes,
-        category: quotation.category
+        category: convertFormData.category
       };
       
       const response = await fetch(`${API_URL}/api/sales/orders`, {
@@ -641,6 +648,45 @@ const Quotations = () => {
     } catch (error) {
       console.error('Error converting to order:', error);
       toast.error(error.message || 'Failed to convert to order');
+    }
+  };
+
+  // Handle PO attachment upload
+  const handlePOAttachmentUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size should be less than 10MB');
+      return;
+    }
+    
+    setUploadingPO(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch(`${API_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: formData
+      });
+      
+      if (!response.ok) throw new Error('Failed to upload file');
+      
+      const data = await response.json();
+      setConvertFormData(prev => ({
+        ...prev,
+        po_attachment: data.url || data.file_url,
+        po_attachment_name: file.name
+      }));
+      toast.success('PO attachment uploaded');
+    } catch (error) {
+      console.error('Error uploading PO:', error);
+      toast.error('Failed to upload attachment');
+    } finally {
+      setUploadingPO(false);
     }
   };
 
