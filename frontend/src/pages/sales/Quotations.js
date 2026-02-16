@@ -560,9 +560,12 @@ const Quotations = () => {
     setConvertFormData({
       po_number: '',
       po_date: new Date().toISOString().split('T')[0],
-      acceptance_type: 'written_po',
-      acceptance_remarks: '',
-      delivery_date: ''
+      po_attachment: null,
+      po_attachment_name: '',
+      order_type: 'purchase_order',
+      delivery_date: '',
+      category: quotation.category || '',
+      remarks: ''
     });
     setShowConvertModal(true);
   };
