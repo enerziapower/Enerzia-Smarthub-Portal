@@ -203,6 +203,25 @@ const Quotations = () => {
     }
   };
 
+  // Fetch sales team members for salesperson dropdown
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/department-team/sales`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(Array.isArray(data) ? data.filter(m => m.is_active !== false) : []);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  };
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
   const fetchEnquiryDetails = async (id) => {
     try {
       const response = await fetch(`${API_URL}/api/sales/enquiries/${id}`, {
