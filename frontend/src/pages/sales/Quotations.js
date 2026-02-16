@@ -253,12 +253,13 @@ const Quotations = () => {
   // Fetch sales team members for salesperson dropdown
   const fetchTeamMembers = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/department-team/sales`, {
+      const response = await fetch(`${API_URL}/api/users`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
         const data = await response.json();
-        setTeamMembers(Array.isArray(data) ? data.filter(m => m.is_active !== false) : []);
+        const users = data.users || data || [];
+        setTeamMembers(Array.isArray(users) ? users.filter(m => m.is_active !== false) : []);
       }
     } catch (error) {
       console.error('Error fetching team members:', error);
