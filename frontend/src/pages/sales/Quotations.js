@@ -1069,7 +1069,6 @@ const Quotations = () => {
                     </div>
                   </div>
                 </div>
-              </div>
 
               {/* Quotation Details - Horizontal Layout */}
               <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
