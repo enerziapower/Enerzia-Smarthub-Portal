@@ -1135,18 +1135,22 @@ const Quotations = () => {
                 <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
-                    <select
+                    <input
+                      type="text"
                       value={formData.financial_year}
                       onChange={(e) => {
-                        setFormData({...formData, financial_year: e.target.value});
-                        fetchNextQuoteNumber(e.target.value);
+                        const value = e.target.value;
+                        setFormData({...formData, financial_year: value});
+                        // Validate FY format (XX-XX) before fetching
+                        if (/^\d{2}-\d{2}$/.test(value)) {
+                          fetchNextQuoteNumber(value);
+                        }
                       }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                    >
-                      {financialYearOptions.map(fy => (
-                        <option key={fy} value={fy}>{fy}</option>
-                      ))}
-                    </select>
+                      placeholder="25-26"
+                      maxLength={5}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-mono"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Format: YY-YY (e.g., 25-26)</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Quote Number</label>
