@@ -304,6 +304,7 @@ const Quotations = () => {
     fetchStats();
     fetchEnquiries();
     fetchCustomers();
+    fetchTeamMembers();
     
     // If coming from enquiry, load enquiry details
     if (enquiryId) {
