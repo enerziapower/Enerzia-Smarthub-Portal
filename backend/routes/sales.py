@@ -925,7 +925,8 @@ async def get_quotation(quotation_id: str):
 @router.post("/quotations")
 async def create_quotation(data: QuotationCreate):
     """Create a new quotation"""
-    quotation_no = await get_next_quotation_number()
+    # Use provided financial_year or default to current
+    quotation_no = await get_next_quotation_number(data.financial_year)
 
     
     quotation = {
