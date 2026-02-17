@@ -1,5 +1,5 @@
 """
-Email Service - Zoho SMTP Integration for Workhub Enerzia
+Email Service - Zoho SMTP Integration for Smarthub Enerzia
 """
 import smtplib
 import os
@@ -18,7 +18,7 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "")
-SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "Workhub Enerzia")
+SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "Smarthub Enerzia")
 
 
 def send_email(
@@ -112,7 +112,7 @@ def send_email(
 def send_password_reset_email(to_email: str, user_name: str, reset_token: str, reset_url: str) -> dict:
     """Send password reset email"""
     
-    subject = "Reset Your Password - Workhub Enerzia"
+    subject = "Reset Your Password - Smarthub Enerzia"
     
     html_content = f"""
     <!DOCTYPE html>
@@ -125,7 +125,7 @@ def send_password_reset_email(to_email: str, user_name: str, reset_token: str, r
         <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Workhub Enerzia</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Smarthub Enerzia</h1>
                 <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Password Reset Request</p>
             </div>
             
@@ -136,7 +136,7 @@ def send_password_reset_email(to_email: str, user_name: str, reset_token: str, r
                 </p>
                 
                 <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                    We received a request to reset your password for your Workhub Enerzia account. 
+                    We received a request to reset your password for your Smarthub Enerzia account. 
                     Click the button below to create a new password:
                 </p>
                 
@@ -168,7 +168,7 @@ def send_password_reset_email(to_email: str, user_name: str, reset_token: str, r
             <!-- Footer -->
             <div style="text-align: center; padding: 20px;">
                 <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-                    © 2026 Workhub Enerzia. All rights reserved.
+                    © 2026 Smarthub Enerzia. All rights reserved.
                 </p>
                 <p style="color: #94a3b8; font-size: 12px; margin: 8px 0 0 0;">
                     This is an automated message, please do not reply.
@@ -182,7 +182,7 @@ def send_password_reset_email(to_email: str, user_name: str, reset_token: str, r
     plain_content = f"""
     Hello {user_name},
     
-    We received a request to reset your password for your Workhub Enerzia account.
+    We received a request to reset your password for your Smarthub Enerzia account.
     
     Click the link below to reset your password:
     {reset_url}
