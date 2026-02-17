@@ -1,0 +1,422 @@
+[
+  {
+    "_id": "698c849f4d6adc0540e8425d",
+    "project_id": "PID-25-26-017",
+    "schedule_name": "PID/25-26/017 - B & P Electrical Works",
+    "start_date": "2026-02-01",
+    "end_date": "2026-03-31",
+    "customer_info": {
+      "name": "LARSEN AND TOUBRO LIMITED - INFRASTRUCTURE VERTICAL",
+      "company": "LARSEN AND TOUBRO LIMITED - INFRASTRUCTURE VERTICAL",
+      "location": "GATE NO.5, NEERAVALUR VILLAGE ROAD KANCHIPURAM 631561 Tamil Nadu India",
+      "contact_person": "Mr. Aravind",
+      "phone": "9000000009",
+      "email": "info@customer.com"
+    },
+    "phases": [
+      {
+        "name": "Planning & Design",
+        "start": "2026-02-01",
+        "end": "2026-02-10",
+        "progress": 100,
+        "color": "bg-blue-500",
+        "subItems": [
+          {
+            "description": "Designing and drawing approval submission",
+            "qty": "1",
+            "unit": "Nos",
+            "start_date": "2026-02-01",
+            "end_date": "2026-02-05"
+          },
+          {
+            "description": "Material TDS Submission",
+            "qty": "1",
+            "unit": "Nos",
+            "start_date": "2026-02-05",
+            "end_date": "2026-02-10"
+          }
+        ]
+      },
+      {
+        "name": "Material Procurement & Delivery",
+        "start": "2026-02-11",
+        "end": "2026-02-28",
+        "progress": 30,
+        "color": "bg-amber-500",
+        "subItems": [
+          {
+            "description": "SUPPLY OF LDB",
+            "qty": "2",
+            "unit": "NOS",
+            "start_date": "2026-02-11",
+            "end_date": "2026-02-15"
+          },
+          {
+            "description": "SUPPLY of NON-FS 4C Cu Armoured 10SQMM",
+            "qty": "80",
+            "unit": "MTRS",
+            "start_date": "2026-02-12",
+            "end_date": "2026-02-18"
+          },
+          {
+            "description": "SUPPLY OF NON-FS 4C Cu Armoured 16SQMM",
+            "qty": "290",
+            "unit": "MTRS",
+            "start_date": "2026-02-14",
+            "end_date": "2026-02-20"
+          },
+          {
+            "description": "SUPPLY OF NON-FS 4C Cu Armoured 6SQMM",
+            "qty": "240",
+            "unit": "MTRS",
+            "start_date": "2026-02-18",
+            "end_date": "2026-02-24"
+          },
+          {
+            "description": "SUPPLY OF NON-FS 4C Al Armoured 400SQMM",
+            "qty": "2050",
+            "unit": "MTRS",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-28"
+          }
+        ]
+      },
+      {
+        "name": "Installation",
+        "start": "2026-03-01",
+        "end": "2026-03-20",
+        "progress": 0,
+        "color": "bg-green-500",
+        "subItems": [
+          {
+            "description": "LDB Installation",
+            "qty": "2",
+            "unit": "Nos",
+            "start_date": "2026-03-01",
+            "end_date": "2026-03-05"
+          },
+          {
+            "description": "Cable laying - 10SQMM",
+            "qty": "80",
+            "unit": "mtrs",
+            "start_date": "2026-03-03",
+            "end_date": "2026-03-08"
+          },
+          {
+            "description": "Cable laying - 16SQMM",
+            "qty": "290",
+            "unit": "mtrs",
+            "start_date": "2026-03-06",
+            "end_date": "2026-03-12"
+          },
+          {
+            "description": "Cable laying - 6SQMM",
+            "qty": "240",
+            "unit": "mtrs",
+            "start_date": "2026-03-10",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "Cable laying - 400SQMM",
+            "qty": "2050",
+            "unit": "mtrs",
+            "start_date": "2026-03-12",
+            "end_date": "2026-03-20"
+          }
+        ]
+      },
+      {
+        "name": "Testing & Commissioning",
+        "start": "2026-03-21",
+        "end": "2026-03-28",
+        "progress": 0,
+        "color": "bg-purple-500",
+        "subItems": [
+          {
+            "description": "LDB Testing",
+            "qty": "2",
+            "unit": "Nos",
+            "start_date": "2026-03-21",
+            "end_date": "2026-03-23"
+          },
+          {
+            "description": "Cable testing - 10SQMM",
+            "qty": "80",
+            "unit": "mtrs",
+            "start_date": "2026-03-22",
+            "end_date": "2026-03-24"
+          },
+          {
+            "description": "Cable testing - 16SQMM",
+            "qty": "290",
+            "unit": "mtrs",
+            "start_date": "2026-03-23",
+            "end_date": "2026-03-25"
+          },
+          {
+            "description": "Cable testing - 6SQMM",
+            "qty": "240",
+            "unit": "mtrs",
+            "start_date": "2026-03-24",
+            "end_date": "2026-03-26"
+          },
+          {
+            "description": "Cable testing - 400SQMM",
+            "qty": "2050",
+            "unit": "mtrs",
+            "start_date": "2026-03-25",
+            "end_date": "2026-03-28"
+          }
+        ]
+      },
+      {
+        "name": "Documentation",
+        "start": "2026-03-29",
+        "end": "2026-03-31",
+        "progress": 0,
+        "color": "bg-slate-500",
+        "subItems": [
+          {
+            "description": "Test reports compilation",
+            "qty": "1",
+            "unit": "Set",
+            "start_date": "2026-03-29",
+            "end_date": "2026-03-30"
+          },
+          {
+            "description": "Final handover documentation",
+            "qty": "1",
+            "unit": "Set",
+            "start_date": "2026-03-30",
+            "end_date": "2026-03-31"
+          }
+        ]
+      }
+    ],
+    "milestones": [],
+    "notes": "",
+    "status": "in_progress",
+    "id": "45952777-45d5-4b83-9daa-c33e34235abe",
+    "created_at": "2026-02-11T13:31:11.093781+00:00",
+    "updated_at": "2026-02-11T14:45:01.522813+00:00"
+  },
+  {
+    "_id": "69944df542bb0f5df00bcfd5",
+    "project_id": "e0d04e22-6a2d-492c-a0ef-d89bab491409",
+    "schedule_name": "PID/25-26/385 - UPS Cable Laying Work",
+    "start_date": "20/02/2026",
+    "end_date": "22/03/2026",
+    "customer_info": {
+      "name": "NTT DATA Information Processing Services Private Limited",
+      "company": "NTT DATA Information Processing Services Private Limited",
+      "location": "DLF",
+      "contact_person": "Nagamuthu",
+      "phone": "",
+      "email": ""
+    },
+    "phases": [
+      {
+        "name": "Material Procurement & Supply",
+        "start": "2026-02-20",
+        "end": "2026-02-26",
+        "progress": 0,
+        "color": "bg-amber-500",
+        "subItems": [
+          {
+            "description": "Supply of 250A Tpn 36ka MCCB-1nos Supply of 100A Tpn 25ka MCCB-4nos Supply of 63A Tpn 25ka Mccb-4nos 3phase Indication lamp and Multifuction meter with rs485 port provided Current transformer 250/5 -3nos\t",
+            "qty": "Nos",
+            "unit": "1",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 1.6mm sheet metal new door with powder coating MCCB compartment only\t",
+            "qty": "Nos",
+            "unit": "9",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 100A TPN 25ka MCCB-1no Multifunction meter with rs485 port provided Current transformer 100/5 -3nos With wiring charges",
+            "qty": "Set",
+            "unit": "1",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 5 core 6 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "50",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 1 core 6 Sqmm copper flexible cable ",
+            "qty": "Mtrs",
+            "unit": "150",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 1 core 2.5 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "100",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 100x50x1.6mm.thick perforated cable tray with cover\t",
+            "qty": "Mtrs",
+            "unit": "5",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 300x50x1.6mm.thick perforated cable tray cover only",
+            "qty": "Mtrs",
+            "unit": "10",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of 1 core 10 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "200",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          },
+          {
+            "description": "Supply of earthpit material",
+            "qty": "Nos",
+            "unit": "1",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-26"
+          }
+        ]
+      },
+      {
+        "name": "Installation",
+        "start": "2026-02-21",
+        "end": "2026-03-15",
+        "progress": 0,
+        "color": "bg-green-500",
+        "subItems": [
+          {
+            "description": "Installation of 250A Tpn 36ka MCCB-1nos Supply of 100A Tpn 25ka MCCB-4nos Supply of 63A Tpn 25ka Mccb-4nos 3phase Indication lamp and Multifuction meter with rs485 port provided Current transformer 250/5 -3nos\t",
+            "qty": "Nos",
+            "unit": "1",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-01"
+          },
+          {
+            "description": "Installation of 1.6mm sheet metal new door with powder coating MCCB compartment only",
+            "qty": "Nos",
+            "unit": "9",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-01"
+          },
+          {
+            "description": "Installation of 100A TPN 25ka MCCB-1no Multifunction meter with rs485 port provided Current transformer 100/5 -3nos With wiring charges",
+            "qty": "Set",
+            "unit": "1",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": " laying of 5 core 6 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "50",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": " laying of 1 core 6 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "150",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "laying of 1 core 2.5 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "100",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "Rerouting and re termination of UPS DB incomer cable",
+            "qty": "Ls",
+            "unit": "1",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "Rerouting and re termination of UPS DB Outgoing  cable",
+            "qty": "Ls",
+            "unit": "1",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": " laying of 100x50x1.6mm.thick perforated cable tray with cover\t",
+            "qty": "Mtrs",
+            "unit": "5",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": " laying of 300x50x1.6mm.thick perforated cable tray cover only",
+            "qty": "Mtrs",
+            "unit": "10",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "laying of 1 core 10 Sqmm copper flexible cable",
+            "qty": "Mtrs",
+            "unit": "200",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          },
+          {
+            "description": "Installation of Earthpit",
+            "qty": "Nos",
+            "unit": "1",
+            "start_date": "2026-02-21",
+            "end_date": "2026-03-15"
+          }
+        ]
+      },
+      {
+        "name": "Testing & Commissioning",
+        "start": "2026-03-16",
+        "end": "2026-03-18",
+        "progress": 0,
+        "color": "bg-purple-500",
+        "subItems": []
+      },
+      {
+        "name": "Documentation",
+        "start": "2026-03-20",
+        "end": "2026-03-21",
+        "progress": 0,
+        "color": "bg-slate-500",
+        "subItems": [
+          {
+            "description": "Work completion & Invoice",
+            "qty": "1",
+            "unit": "Ls",
+            "start_date": "2026-03-20",
+            "end_date": "2026-03-21"
+          }
+        ]
+      }
+    ],
+    "milestones": [],
+    "notes": "",
+    "status": "in_progress",
+    "id": "2f1cd175-ff0e-42f6-84a4-99bab1ad274f",
+    "created_at": "2026-02-17T11:16:05.141936+00:00",
+    "updated_at": "2026-02-17T11:31:19.998490+00:00"
+  }
+]

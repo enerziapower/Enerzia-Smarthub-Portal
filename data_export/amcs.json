@@ -1,0 +1,188 @@
+[
+  {
+    "_id": "6985e8bd631e007964f4ea40",
+    "id": "0b3e7060-470e-4cef-82cd-add7754f7962",
+    "amc_no": "AMC/2026/0003",
+    "project_id": "1e78dfef-2305-42a6-ab03-703e2c5348f9",
+    "contract_details": {
+      "contract_no": "222302292",
+      "start_date": "2026-01-26",
+      "end_date": "2027-01-25",
+      "contract_value": 124372.0,
+      "payment_terms": "30 Days",
+      "scope_of_work": "OBJECTIVE OF ANNUAL MAINTENANCE CONTRACT (AMC)\n\nWHAT IS AMC?\nAnnual Maintenance Contract (AMC) is maintenance & repair services rendered by the service provider to the customers. The annual maintenance contract helps the customers to maintain their products in efficient working conditions usually one year for free of cost. The Contract will be signed between the customers and the service providers, the annual maintenance contract can be availed in different types.\n\nTYPES OF AMC:\nThe types of annual maintenance contract that can be availed are comprehensive AMC and non-comprehensive AMC. \nA comprehensive service contract includes spare parts, labour, service, transportation of machines, any work to be done. In short the responsibility to keep the machines in good working condition. For any other factor performed by the client and in this case service provider can charge accordingly.\nA non-comprehensive service contract covers only those services where the service provider only charges the work they have employed at clients location to maintain machines. Any other expenses that arise during the maintenance process are borne by the client.\n\nADVANTAGES OF AMC:\nOne of the major advantages of using annual maintenance services are that AMC services saves from unexpected maintenance and repair cost. Besides this, the clients can avail the systematically & timely executed annual maintenance contract services that also renders rounds the clock maintenance & repair from qualified technicians and support staffs. Annual maintenance contract also provides the clients with effective advantages of planning the maintenance and repair services at regular interval of time.  The annual maintenance contract enables the clients with only the genuine spare parts of the machinery or better performance and durability.\nThe acceptance of annual maintenance contract by the service provider totally depends on the conditions of machinery. Agreement of annual maintenance contact is basically for one year and can be customized as per the specifications provided by the client. The conditions of machines are checked by the service providers, before accepting the annual maintenance contract. The replacement and repair of the machine spares part in case of damage is done.\n\nSCOPE OF WORK:\nScope of the AMC is to provide operation & maintenance of all electrical installations such as transformers, HT/LT panels including CT/PT, DG Sets, Pump-motors, sewage pump, general lighting, office light fittings, normal/UPS power supply. To attend fault in main switches, DB, ACB, MCB, MCCB, panel board, etc. and oil change in transformer. In case of cable faults, termination of cable, re-termination the contractor shall arrange to give temporary connection if the cable fault could not be rectified within a day. Operation and maintenance of all major electrical installations is done according to the IE rules and other rules as specified by CEIG/CEA and BEST. To check all the earth electrodes at least once in six months including watering them at regular intervals, continuity of earth, measurement of earth resistance and maintain E-N voltage below 2 Volts.\n\nSTANDARDS ADOPTED FOR AMC:\n- IE rules 1956- Indian electricity rules\n- IS 3043.1987- Code of practice for earthing\n- OISD 137- Inspection of electrical equipment\n- OISD 173- Guidelines on earthing system\n- IS6792-1992\n\nACKNOWLEDGEMENT:\nENERZIA POWER SOLUTIONS express its sincere thanks to the entire team of ADVANEX for the support to successful completion of the contract.",
+      "special_conditions": null
+    },
+    "customer_info": {
+      "customer_name": "Advanex (India) Private Limited",
+      "site_location": "Building B - 300 A,  Indospace industrial Park, Block - B, Panruti Village, Oragadam - Walajabad Rd, Sriperumbudur Taluk, Kanchipuram, Tamilnadu, India - 631604",
+      "contact_person": "Mr. Sankar P",
+      "contact_number": "6369517824",
+      "email": "maintenance@advanex.com"
+    },
+    "service_provider": {
+      "company_name": "Enerzia Power Solutions",
+      "address": "Plot No. 9, Akshaya Building, Sundaresan Nagar,\nElumalai Chettiyar Road, Maduravoyal, Vanagaram,\nChennai, Tamilnadu, India - 600095",
+      "contact_person": "Mr. Arulraj",
+      "contact_number": "8344224274",
+      "email": "arul@enerzia.com",
+      "gstin": "33BYCPS2814M1Z9"
+    },
+    "equipment_list": [
+      {
+        "equipment_type": "transformer",
+        "equipment_name": "1000KVA Transformer",
+        "quantity": 1,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "vcb",
+        "equipment_name": "630A VCB",
+        "quantity": 2,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "acb",
+        "equipment_name": "1600A",
+        "quantity": 2,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "relay",
+        "equipment_name": "Feeder Protection Relay",
+        "quantity": 4,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "relay",
+        "equipment_name": "Earth Fault Relay",
+        "quantity": 1,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "relay",
+        "equipment_name": "Auxillary Relay",
+        "quantity": 3,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      },
+      {
+        "equipment_type": "earth-pit",
+        "equipment_name": "BE & NE",
+        "quantity": 20,
+        "service_frequency": "yearly",
+        "last_service_date": "2026-01-26",
+        "next_service_date": "2027-01-25"
+      }
+    ],
+    "service_visits": [
+      {
+        "visit_id": "visit_1770383110313",
+        "visit_date": "2026-01-26",
+        "visit_type": "scheduled",
+        "status": "completed",
+        "equipment_serviced": [],
+        "technician_name": "Mr. Arulraj",
+        "remarks": "Preventive Maintenance - Shutdown Activity",
+        "test_report_ids": [
+          "b4c62b9f-6afa-48f3-bd96-c64149d3182e",
+          "72171e05-8f76-415f-87af-a0c30191dffd",
+          "d9aa3342-e684-4833-9edd-715a0b5536db",
+          "edb7cdbe-b4dc-410e-92b1-263987e3117e",
+          "0960d3e8-e195-4559-8254-8223da277c9b",
+          "4114b65f-6a4a-40df-a11a-556cdadbbf83",
+          "e4ea5257-edc6-43ac-8609-707bb6d414b1",
+          "345a4805-a164-48d8-8af4-e8230178e829",
+          "eb0be981-c850-46b7-aebd-7f3c93bae233",
+          "20e8864d-65b7-480b-a9fd-9712512cf3ed",
+          "ddd7447c-e4e9-49aa-bf51-80f6597aa1e1",
+          "abe632f6-44b5-441c-97fe-c2f53d0c1fb8",
+          "e20fd1af-211b-4ccc-9109-6a2b79e6d97b",
+          "15a13859-e6bf-41be-b643-3e1e8abc1e88",
+          "594b048f-6709-4d9f-bb12-6475ca2802fe",
+          "9bf1b087-8ea7-4746-ae6d-5f224b894a3b"
+        ],
+        "ir_thermography_report_ids": [],
+        "service_report_ids": []
+      }
+    ],
+    "document_details": {
+      "revision": "00",
+      "prepared_by": "",
+      "approved_by": ""
+    },
+    "spare_consumables": [
+      {
+        "item_name": "Silica Gel",
+        "item_type": "consumable",
+        "quantity": 1,
+        "unit": "kg",
+        "part_number": "NA",
+        "used_date": "2026-01-26",
+        "remarks": "NA"
+      },
+      {
+        "item_name": "Transformer Oil",
+        "item_type": "consumable",
+        "quantity": 50,
+        "unit": "ltr",
+        "part_number": "NA",
+        "used_date": "2026-01-26",
+        "remarks": "NA"
+      },
+      {
+        "item_name": "VCB Power Pack",
+        "item_type": "consumable",
+        "quantity": 2,
+        "unit": "nos",
+        "part_number": "APP-230-110",
+        "used_date": "2026-01-26",
+        "remarks": "Power Pack with Battery Backup ALAN Make, Input 230VAC, 1 Phase Output 110VDC, 100W Backup for 10 Minutes"
+      }
+    ],
+    "statutory_documents": [
+      {
+        "document_type": "compliance_certificate",
+        "document_name": "A Grade Certificate",
+        "reference_no": "EA 3344",
+        "issue_date": "2019-08-16",
+        "expiry_date": "2028-08-15",
+        "file_url": "/api/uploads/statutory_document/20260206_131016_7f8dc53e_A_Grade_License.pdf",
+        "file_name": "A Grade License.pdf"
+      },
+      {
+        "document_type": "compliance_certificate",
+        "document_name": "ISO 9001:2015",
+        "reference_no": "VSQC099-42123616-R1",
+        "issue_date": "2023-03-14",
+        "expiry_date": "2026-03-13",
+        "file_url": "/api/uploads/statutory_document/20260206_131129_88c93aee_ISO_9001_2015_Certificate.pdf",
+        "file_name": "ISO 9001 2015 Certificate.pdf"
+      },
+      {
+        "document_type": "compliance_certificate",
+        "document_name": "ISO 45001:2018",
+        "reference_no": "SCKI03/EPSI23/91/2441",
+        "issue_date": "2023-05-08",
+        "expiry_date": "2026-05-07",
+        "file_url": "/api/uploads/statutory_document/20260206_131225_4f0b1b33_ISO_45001_2018_Certificate.pdf",
+        "file_name": "ISO 45001 2018 Certificate.pdf"
+      }
+    ],
+    "annexure": [],
+    "status": "active",
+    "created_at": "2026-02-06T13:12:29.035160+00:00",
+    "updated_at": "2026-02-14T09:12:03.776834+00:00"
+  }
+]

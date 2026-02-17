@@ -1,0 +1,202 @@
+[
+  {
+    "_id": "6950a3e5fc9ee4f90f725934",
+    "id": "70bb9a62-7c9e-4c78-ad40-c7afd732a4e1",
+    "name": "Mr. Hamin",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.084348+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725935",
+    "id": "fb064782-bccd-49fb-bff9-bff77cd73a8e",
+    "name": "Arul",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.108840+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725936",
+    "id": "21b96a94-b1c4-4147-b698-c37ffa3dcb27",
+    "name": "Arulraj",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.109478+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725937",
+    "id": "1abde04c-f79e-4a3a-be10-f6a18d96caa6",
+    "name": "nnn",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.109832+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725938",
+    "id": "fd515b11-5533-4d16-9ffa-a7a0232435ad",
+    "name": "Mr. Giftson",
+    "email": "giftson@enerzia.com",
+    "phone": "7397409719",
+    "department": "PSS",
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.110103+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725939",
+    "id": "d004ee55-3729-4f7e-a49a-3f880a35bc33",
+    "name": "Mr. Alex",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.110381+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f72593a",
+    "id": "56fa6438-a08a-4c0e-88dd-1c5730cf481a",
+    "name": "pride",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.110595+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f72593c",
+    "id": "aaf8abc7-2495-4d40-abbc-505c96065eba",
+    "name": "Mr. Pradeep",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.111168+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f72593d",
+    "id": "294d2f6f-978d-4c07-8771-248f5ba8643c",
+    "name": "Mr. Nagamuthu",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.111508+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f72593e",
+    "id": "b670156c-7a5b-4617-aedb-cfe2c85c3610",
+    "name": "Mr. Arulraj",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.111813+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725940",
+    "id": "b9a449ff-1839-4d46-bd58-15dbd5185463",
+    "name": "Mr. Test",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.112384+00:00"
+  },
+  {
+    "_id": "6950a3e5fc9ee4f90f725941",
+    "id": "aa79081c-c0f5-40bc-9990-2ab687a84a9a",
+    "name": "pradeep",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2025-12-28T03:28:37.112672+00:00"
+  },
+  {
+    "_id": "6950a6e5fc9ee4f90f72594b",
+    "id": "001500b3-84e4-4b66-8ecf-8ba1797dc144",
+    "name": "Shalini",
+    "email": "shalini@enerzia.com",
+    "phone": "9941087880",
+    "department": "HRD",
+    "is_active": true,
+    "created_at": "2025-12-28T03:41:25.738271+00:00"
+  },
+  {
+    "_id": "6956a0d3427c85a69d078b93",
+    "id": "d5d4f9f6-4aeb-43d2-b758-c41355a93ad4",
+    "name": "Mr. Muthu",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:07.995327+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b94",
+    "id": "2e1f7d72-3554-4de8-abcc-5f5bc3194ba3",
+    "name": "Mr. Jeba",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.003074+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b95",
+    "id": "23010699-1cd6-4af5-8968-03c2b4596cec",
+    "name": "Mr. Sasi",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.003660+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b96",
+    "id": "b360d37f-d3f1-4cba-89fc-3e90982efdb9",
+    "name": "Mr. Muthu/Mr. Alex",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.004070+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b97",
+    "id": "aa3e67d4-9a7f-491d-92ae-954e5bc47b4b",
+    "name": "Mr. Arulraj/Mr. Muthu",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.004541+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b98",
+    "id": "3c126bb4-af08-4d29-a782-039f0bd260e6",
+    "name": "Mr. Kareem",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.004837+00:00"
+  },
+  {
+    "_id": "6956a0d4427c85a69d078b99",
+    "id": "8f3ac0c9-f450-4292-bca5-58bc2bf765f5",
+    "name": "Mr. Gunal",
+    "email": null,
+    "phone": null,
+    "department": null,
+    "is_active": true,
+    "created_at": "2026-01-01T16:29:08.005271+00:00"
+  }
+]

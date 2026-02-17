@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "6950a4f6dd546f3de4298d09",
+    "id": "org_settings",
+    "address_line1": "No.9, Akshaya, Sundaresan Nagar,",
+    "address_line2": "Elumalai Chettiar Road, Maduravoyal",
+    "city": "Chennai",
+    "country": "India",
+    "email": "support@enerzia.com",
+    "industry": "Engineering",
+    "logo_url": "/uploads/logo_d673a85d.png",
+    "name": "Enerzia Power Solutions",
+    "phone": "+91 44 45487875",
+    "postal_code": "600095",
+    "state": "Tamil Nadu",
+    "website": "https://www.enerzia.com"
+  },
+  {
+    "_id": "6950a4f7dd546f3de4298d0c",
+    "id": "general_settings",
+    "currency": "INR",
+    "currency_symbol": "\u20b9",
+    "date_format": "DD/MM/YYYY",
+    "financial_year_start": "April",
+    "timezone": "Asia/Mumbai"
+  },
+  {
+    "_id": "69692d3e05e2c7220c68916b",
+    "id": "email_template_settings",
+    "accent_color": "#059669",
+    "header_bg_color": "#1E3A5F",
+    "updated_at": "2026-01-15T18:09:02.603843+00:00"
+  }
+]

@@ -1,0 +1,93 @@
+[
+  {
+    "_id": "6985915aef4da56c920c1839",
+    "id": "pdf_template_settings",
+    "back_cover": {
+      "enabled": true,
+      "title": "Contact Us",
+      "show_logo": true,
+      "show_address": true,
+      "show_phone": true,
+      "show_email": true,
+      "show_website": true,
+      "additional_text": null
+    },
+    "branding": {
+      "logo_url": "/api/uploads/pdf_logo_4459145c.png",
+      "primary_color": "#F7931E",
+      "secondary_color": "#2d7a4e",
+      "header_text_color": "#333333",
+      "footer_text_color": "#666666"
+    },
+    "company_info": {
+      "company_name": "Enerzia Power Solutions",
+      "tagline": "Powering Excellence",
+      "address_line1": "No.9, Akshaya, Sundaresan Nagar",
+      "address_line2": "ELumalai Chettiar Road, Maduravoyal",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "country": "India",
+      "postal_code": "600095",
+      "phone": "+91 44 45487875",
+      "alt_phone": "+91 9789894644",
+      "email": "info@enerzia.com",
+      "website": "www.enerzia.com",
+      "gst_number": null
+    },
+    "cover_page": {
+      "show_logo": true,
+      "show_decorative_design": true,
+      "show_submitted_by": true,
+      "submitted_by_title": "Submitted By",
+      "show_footer_line": true,
+      "title_font_size": 24,
+      "subtitle_font_size": 14
+    },
+    "header_footer": {
+      "show_header": true,
+      "show_footer": true,
+      "show_page_numbers": true,
+      "show_header_logo": true,
+      "show_header_line": true,
+      "show_footer_line": true,
+      "footer_company_name": true,
+      "footer_website": true
+    },
+    "updated_at": "2026-02-14T09:22:55.082909+00:00",
+    "updated_by": null,
+    "report_designs": {
+      "amc": {
+        "design_id": "design_2",
+        "design_color": "#00fa1d"
+      },
+      "calibration": {
+        "design_id": "design_4",
+        "design_color": "#00FF00"
+      },
+      "wcc": {
+        "design_id": "design_3",
+        "design_color": "#22c55e"
+      },
+      "equipment_test": {
+        "design_id": "design_4",
+        "design_color": "#8b5cf6"
+      },
+      "ir_thermography": {
+        "design_id": "design_1",
+        "design_color": "#ef4444"
+      },
+      "service": {
+        "design_id": "design_1",
+        "design_color": "#f59e0b"
+      },
+      "project_completion": {
+        "design_id": "design_2",
+        "design_color": "#06b6d4"
+      },
+      "project_schedule": {
+        "design_id": "design_3",
+        "design_color": "#0d9488"
+      }
+    }
+  }
+]

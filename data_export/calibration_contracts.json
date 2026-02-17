@@ -1,0 +1,220 @@
+[
+  {
+    "_id": "69844fecd20c81cab67dab0d",
+    "id": "test-cal-001",
+    "contract_no": "CAL/2025/001",
+    "status": "active",
+    "customer_info": {
+      "customer_name": "Test Manufacturing Ltd.",
+      "site_location": "Vallam I",
+      "contact_person": "John Doe",
+      "contact_number": "+91 9876543210",
+      "email": "john@test.com"
+    },
+    "contract_details": {
+      "contract_no": "CAL/2025/001",
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31",
+      "calibration_frequency": "quarterly",
+      "scope_of_work": "Calibration of all electrical meters and instruments.",
+      "special_conditions": ""
+    },
+    "service_provider": {
+      "company_name": "Enerzia Power Solutions",
+      "address": "Chennai, Tamil Nadu",
+      "contact_person": "Admin",
+      "contact_number": "+91 44 45487875",
+      "email": "info@enerzia.com",
+      "nabl_cert_no": "NABL-12345"
+    },
+    "meter_list": [
+      {
+        "id": "m1",
+        "meter_type": "energy_meter",
+        "make": "Schneider",
+        "model": "PM5000",
+        "serial_no": "SN001",
+        "range": "0-1000A",
+        "accuracy_class": "",
+        "location": "MCC Panel 1",
+        "tag_no": ""
+      },
+      {
+        "id": "m2",
+        "meter_type": "voltmeter",
+        "make": "ABB",
+        "model": "VT200",
+        "serial_no": "SN002",
+        "range": "0-500V",
+        "accuracy_class": "",
+        "location": "PCC Room",
+        "tag_no": ""
+      }
+    ],
+    "calibration_visits": [
+      {
+        "id": "v1",
+        "visit_date": "2025-01-15",
+        "visit_type": "regular",
+        "technician": "Tech A",
+        "status": "completed",
+        "test_report_ids": [
+          "8dd3155c-6ba4-4cd9-b29a-720659bdd7ac",
+          "7d00eac9-e55e-4bae-9871-734b0b175a2a"
+        ]
+      },
+      {
+        "id": "v2",
+        "visit_date": "2025-04-15",
+        "visit_type": "regular",
+        "technician": "Tech B",
+        "status": "scheduled",
+        "test_report_ids": []
+      }
+    ],
+    "project_id": "f7f6c132-dbfd-4aed-8d66-9c84c8d347ad",
+    "updated_at": "2026-02-05T17:08:19.372476+00:00",
+    "statutory_documents": [
+      {
+        "id": "doc-test-1",
+        "document_type": "nabl_certificate",
+        "document_name": "Test NABL Certificate",
+        "reference_no": "TEST-123",
+        "issue_date": "2025-01-01",
+        "expiry_date": "2026-01-01",
+        "file_url": "/api/uploads/statutory_document/test.pdf",
+        "file_name": "test.pdf"
+      }
+    ]
+  },
+  {
+    "_id": "6984c3d3c65761069ae824eb",
+    "id": "5597eae8-b5d6-49ee-8bc1-4d5ef6aef4a7",
+    "contract_no": "CAL/2026/0001",
+    "project_id": "1e78dfef-2305-42a6-ab03-703e2c5348f9",
+    "contract_details": {
+      "contract_no": "CALIB12345",
+      "start_date": "2026-02-05",
+      "end_date": "2027-02-04",
+      "calibration_frequency": "yearly",
+      "scope_of_work": "SCOPE OF AMC C.1 SCOPE OF WORK Scope of the AMC is to provide operation & maintenance of all electrical\ninstallations such as transformers, HT/LT panels including CT/PT, DG Sets, Pump-motors, sewage pump, general\nlighting, office light fittings, normal/UPS power supply. To attend fault in main switches, DB, ACB, MCB, MCCB,\npanel board, etc. and oil change in transformer. In case of cable faults, termination of cable, re-termination the\ncontractor shall arrange to give temporary connection if the cable fault could not be rectified within a day.\nOperation and maintenance of all major electrical installations is done according to the IE rules and other rules as\nspecified by CEIG/CEA and BEST. To check all the earth electrodes at least once in six months including watering\nthem at regular intervals, continuity of earth, measurement of earth resistance and maintain E-N voltage below 2\nVolts. \n\nC.2 STANDARDS ADOPTED FOR AMC IE rules 1956- Indian electricity rules IS 3043.1987- Code of\npractice for earthing OISD 137- Inspection of electrical equipment OISD 173- Guidelines on earthing system\nIS6792-1992 ACKNOWLEDGEMENT ENERZIA POWER SOLUTIONS express its sincere thanks to the entire\nteam of INDOSPACE, POLIVAKKAM for the support to successful completion of the contract.",
+      "special_conditions": ""
+    },
+    "customer_info": {
+      "customer_name": "JLL SERVICES PROVATE LIMITED",
+      "site_location": "CHENNAI THARAMANI",
+      "contact_person": "MR MANI",
+      "contact_number": "978898999999",
+      "email": "INFO@ENERZIA.COM"
+    },
+    "service_provider": {
+      "company_name": "Enerzia Power Solutions",
+      "address": "68/111, KJBFJKSBKJFSBVKFSVKF\nFV FVF VFS ,V F,V,F\nMN  VF V FV ,F V,M \nM NM  ",
+      "contact_person": "SUBRAMANI",
+      "contact_number": "98899999999",
+      "email": "INFO@ENERZIA.COM",
+      "nabl_cert_no": ""
+    },
+    "meter_list": [
+      {
+        "id": "meter_1770308326677",
+        "meter_type": "energy_meter",
+        "make": "ENERCON",
+        "model": "HHJJJ",
+        "serial_no": "88999",
+        "range": "230",
+        "accuracy_class": "1.0",
+        "location": "TRANS F ROOM",
+        "tag_no": "7889"
+      },
+      {
+        "id": "meter_1770308359438",
+        "meter_type": "voltmeter",
+        "make": "NBNJKN",
+        "model": "JNJKNKJ",
+        "serial_no": "NJKNN",
+        "range": "600",
+        "accuracy_class": "0.5",
+        "location": "JJNJNNLLL",
+        "tag_no": "9900"
+      },
+      {
+        "id": "meter_1770308388538",
+        "meter_type": "ammeter",
+        "make": "JHBKJHBH",
+        "model": "BBJBHJB",
+        "serial_no": "HBHBHB",
+        "range": "400",
+        "accuracy_class": "0.2S",
+        "location": "BIBJKBKBK",
+        "tag_no": "KJBKJBKJBK"
+      }
+    ],
+    "calibration_visits": [
+      {
+        "id": "visit_1770308411161",
+        "visit_date": "2026-02-05",
+        "visit_type": "scheduled",
+        "status": "scheduled",
+        "technician": "SUBRAMANI",
+        "remarks": "TESTED AS PER NABL STANDARDS",
+        "test_results": [
+          {
+            "meter_id": "meter_1770308326677",
+            "meter_type": "energy_meter",
+            "meter_details": null,
+            "calibration_date": "2026-02-05",
+            "next_due_date": "2026-06-11",
+            "readings": [
+              {
+                "test_point": "YYY",
+                "standard_value": "GUYGYU",
+                "measured_value_before": "888",
+                "measured_value_after": "999",
+                "error_before": "",
+                "error_after": "",
+                "tolerance": "1",
+                "status": "pass"
+              },
+              {
+                "test_point": "",
+                "standard_value": "",
+                "measured_value_before": "",
+                "measured_value_after": "",
+                "error_before": "",
+                "error_after": "",
+                "tolerance": "",
+                "status": ""
+              }
+            ],
+            "overall_status": "pass",
+            "remarks": "",
+            "calibrated_by": "ENERZIA POWER SOLUTIONS",
+            "verified_by": "GIFTSON",
+            "certificate_no": "12344545"
+          }
+        ],
+        "test_report_ids": [
+          "b7c19c4b-d40c-4e06-a088-d2451c14b6f0",
+          "cbd7b197-3826-4f60-8ce6-c0159002f675",
+          "52ba4e95-80b5-44c3-a9dd-c76b66f0d798"
+        ]
+      }
+    ],
+    "status": "active",
+    "created_at": "2026-02-05T16:22:43.537024+00:00",
+    "updated_at": "2026-02-06T14:27:58.602327+00:00",
+    "statutory_documents": [
+      {
+        "id": "doc-1770311490051",
+        "document_type": "test_certificate",
+        "document_name": "ddddd",
+        "reference_no": "pkppkpkp",
+        "issue_date": "2026-02-05",
+        "expiry_date": "2026-02-27",
+        "file_url": "/api/uploads/statutory_document/20260205_171350_28828022_LIST_OF_ONGOING_AND_COMPLETED_PROJECTS.pdf",
+        "file_name": "LIST OF ONGOING AND COMPLETED PROJECTS.pdf"
+      }
+    ]
+  }
+]

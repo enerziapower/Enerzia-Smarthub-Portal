@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "6950a38e83ad94ffec017fdd",
+    "id": "cat_pss",
+    "code": "PSS",
+    "name": "Project Supply & Services",
+    "description": "Project and service work",
+    "is_active": true
+  },
+  {
+    "_id": "6950a38e83ad94ffec017fde",
+    "id": "cat_as",
+    "code": "AS",
+    "name": "Asset Services",
+    "description": "Asset maintenance and services",
+    "is_active": true
+  },
+  {
+    "_id": "6950a38e83ad94ffec017fdf",
+    "id": "cat_oss",
+    "code": "OSS",
+    "name": "Other Supply & Services",
+    "description": "Other sales and services",
+    "is_active": true
+  },
+  {
+    "_id": "6950a38e83ad94ffec017fe0",
+    "id": "cat_cs",
+    "code": "CS",
+    "name": "Commercial Sales",
+    "description": "Commercial sales",
+    "is_active": true
+  }
+]

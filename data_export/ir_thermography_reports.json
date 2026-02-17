@@ -1,0 +1,64 @@
+[
+  {
+    "_id": "696fa277fc6ac19e2777dcdf",
+    "id": "test-ir-report-001",
+    "report_no": "IR/2024/001",
+    "report_type": "pre-thermography",
+    "document_details": {
+      "client": "ABC Industrial Manufacturing Company Pvt Ltd with Very Long Name",
+      "location": "Plot No 123, Industrial Area Phase 2, Sector 5, Main Road, Chennai, Tamil Nadu - 600095",
+      "revision_no": "0",
+      "work_order_number": "WO/2024/001",
+      "work_order_date": "2024-01-15",
+      "date_of_ir_study": "2024-01-20",
+      "thermography_inspection_by": "John Engineer",
+      "load_condition": "80%",
+      "report_prepared_by": "Jane Analyst",
+      "report_reviewed_by": "Mike Supervisor",
+      "coordinating_person": "Sarah Coordinator",
+      "date_of_submission": "2024-01-25",
+      "comments": "Initial inspection completed successfully"
+    },
+    "inspection_items": [
+      {
+        "panel": "Main Distribution Panel",
+        "feeder": "Incomer 1",
+        "location": "Ground Floor",
+        "max_temperature": 65.5,
+        "min_temperature": 35.2,
+        "risk_category": "Warning",
+        "observation": "Elevated temperature detected at main breaker connection",
+        "recommendation": "Retorque connections and re-inspect"
+      },
+      {
+        "panel": "Sub Distribution Panel A",
+        "feeder": "Feeder 2",
+        "location": "First Floor",
+        "max_temperature": 42.3,
+        "min_temperature": 38.1,
+        "risk_category": "Check & Monitor",
+        "observation": "Slight temperature rise at terminal connections",
+        "recommendation": "Monitor during next inspection"
+      },
+      {
+        "panel": "Motor Control Center",
+        "feeder": "Motor 3",
+        "location": "Plant Area",
+        "max_temperature": 38.0,
+        "min_temperature": 37.5,
+        "risk_category": "Normal",
+        "observation": "Operating within normal parameters",
+        "recommendation": "No action required"
+      }
+    ],
+    "summary": {
+      "total_items": 3,
+      "critical": 0,
+      "warning": 1,
+      "check_monitor": 1,
+      "normal": 1
+    },
+    "created_at": "2026-01-20T15:42:47.699975",
+    "updated_at": "2026-01-20T15:42:47.699983"
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "_id": "6981c7fcd23835a9a98b87ef",
+    "id": "1714b4f6-4a1b-4ad8-bc4c-9fc6a00b7a63",
+    "email": "test.customer@example.com",
+    "password_hash": "$2b$12$GZPEb1aHOa6d8U4VvRahmOmgrFlft62tkwxtebuFsw66ruGS361vq",
+    "name": "Test Customer",
+    "company_name": "Test Company Ltd",
+    "contact_number": null,
+    "is_active": true,
+    "created_at": "2026-02-03T10:03:40.661000",
+    "linked_amcs": [],
+    "last_login": "2026-02-03T12:54:17.266000",
+    "linked_projects": [
+      "d149ecd1-87e5-4d05-8cb5-7223aa0ac03a",
+      "030ee74d-4f6e-4cc5-8dd4-f2e92b49601f"
+    ],
+    "document_access": [
+      "amc",
+      "wcc",
+      "projects"
+    ],
+    "portal_access": true,
+    "updated_at": "2026-02-06T11:22:42.119000",
+    "updated_by": "549716b0-9b50-4d83-8521-fac69037e730"
+  },
+  {
+    "_id": "6981c97cd8c4943486de91e2",
+    "id": "18712350-a1e2-4b9a-848b-8ed13b612c14",
+    "email": "TEST_customer_2fdda306@example.com",
+    "password_hash": "$2b$12$V2w23K3qagEqDUqQ5fhbD.pHMGdrEAI3RJ3ndXJYLKz.ARGUsG2UK",
+    "name": "TEST New Customer",
+    "company_name": "TEST Company Ltd",
+    "contact_number": "9876543210",
+    "is_active": true,
+    "created_at": "2026-02-03T10:10:04.268000",
+    "linked_amcs": []
+  },
+  {
+    "_id": "6981c99456a79470db5093fc",
+    "id": "4b1d6bcb-4971-42b5-82bf-45307519d3e9",
+    "email": "TEST_customer_8699bda6@example.com",
+    "password_hash": "$2b$12$QAyrzWSuxcdWf/L5fz5IPOFrK7XcaxAzPaQA1mbkf0aPtMmzYMbMO",
+    "name": "TEST New Customer",
+    "company_name": "TEST Company Ltd",
+    "contact_number": "9876543210",
+    "is_active": true,
+    "created_at": "2026-02-03T10:10:28.250000",
+    "linked_amcs": []
+  },
+  {
+    "_id": "6981efdbc9be11678af1933b",
+    "id": "82d80706-3a38-47d9-9df7-5370d9011830",
+    "email": "giftson@enerzia.com",
+    "password_hash": "$2b$12$wPbEmki2WP752Z8TugfO4uvFQVMu2MSuf4MY4kmaieSCpRlzyhbci",
+    "name": "Giftson",
+    "company_name": "Enerzia Power Solutions",
+    "contact_number": "",
+    "is_active": true,
+    "created_at": "2026-02-03T12:53:47.332000",
+    "linked_amcs": [],
+    "linked_projects": [
+      "1e78dfef-2305-42a6-ab03-703e2c5348f9"
+    ],
+    "portal_access": true,
+    "updated_at": "2026-02-06T14:54:37.270000",
+    "updated_by": "549716b0-9b50-4d83-8521-fac69037e730",
+    "last_login": "2026-02-13T06:27:03.408000"
+  },
+  {
+    "_id": "6985f811996b3268be83874c",
+    "id": "efb9de10-7317-49be-b52f-1cd3f601f546",
+    "email": "test@saama.com",
+    "password_hash": "$2b$12$YGZPP/fgBWtWvzVxMngVx.5nV4/sk/l.7EbQ7AACHAS2ckKRkzQwK",
+    "name": "Test Customer",
+    "company_name": "Saama Technologies",
+    "contact_number": null,
+    "is_active": true,
+    "created_at": "2026-02-06T14:17:53.127000",
+    "linked_amcs": [],
+    "last_login": "2026-02-06T14:52:00.195000"
+  },
+  {
+    "_id": "698b1b86c19e476d0e0b1660",
+    "id": "1292e980-0219-4a29-922c-5cbd486029a2",
+    "email": "murugesananitha17@gmail.com",
+    "password_hash": "$2b$12$BWWdZsmvqrEiiW/H3AkbDergSPSzedcSE06UMhHrAgKYyQjKgmshm",
+    "name": "Anitha",
+    "company_name": "Abc company",
+    "contact_number": "9176816146",
+    "is_active": true,
+    "created_at": "2026-02-10T11:50:30.356000",
+    "linked_amcs": [],
+    "linked_projects": [
+      "d149ecd1-87e5-4d05-8cb5-7223aa0ac03a"
+    ],
+    "updated_at": "2026-02-10T11:51:45.986000",
+    "updated_by": "549716b0-9b50-4d83-8521-fac69037e730",
+    "portal_access": true,
+    "last_login": "2026-02-10T11:56:04.150000"
+  },
+  {
+    "_id": "698ec5f1149332063983bf3a",
+    "id": "c61d4b8d-2332-4cc6-9bd1-030cc3c27700",
+    "email": "haminullah.sf@gmail.com",
+    "password_hash": "$2b$12$SAywMsomJKz5T7rpX/fRdu5x9ophGJVQ/CCSiCjTfV2uBCMMHAoU.",
+    "name": "Haminullah",
+    "company_name": "XYZ power",
+    "contact_number": "9878999999",
+    "is_active": true,
+    "created_at": "2026-02-13T06:34:25.864000",
+    "linked_amcs": [],
+    "portal_access": true,
+    "last_login": "2026-02-13T06:36:27.336000"
+  }
+]
