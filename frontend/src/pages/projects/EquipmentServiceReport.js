@@ -1260,23 +1260,12 @@ const EquipmentServiceReport = () => {
     }));
   };
 
-  const handleVoltmeterParametersChange = (field, value) => {
+  const handleVoltmeterMeasurementTestChange = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      voltmeter_parameters: {
-        ...prev.voltmeter_parameters,
-        [field]: value
-      }
-    }));
-  };
-
-  const handleVoltmeterReadingsChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      voltmeter_readings: {
-        ...prev.voltmeter_readings,
-        [field]: value
-      }
+      voltmeter_measurement_tests: prev.voltmeter_measurement_tests.map((test, i) => 
+        i === index ? { ...test, [field]: value } : test
+      )
     }));
   };
 
