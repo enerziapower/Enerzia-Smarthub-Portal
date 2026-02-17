@@ -1300,23 +1300,12 @@ const EquipmentServiceReport = () => {
     }));
   };
 
-  const handleAmmeterParametersChange = (field, value) => {
+  const handleAmmeterMeasurementTestChange = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      ammeter_parameters: {
-        ...prev.ammeter_parameters,
-        [field]: value
-      }
-    }));
-  };
-
-  const handleAmmeterReadingsChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      ammeter_readings: {
-        ...prev.ammeter_readings,
-        [field]: value
-      }
+      ammeter_measurement_tests: prev.ammeter_measurement_tests.map((test, i) => 
+        i === index ? { ...test, [field]: value } : test
+      )
     }));
   };
 
