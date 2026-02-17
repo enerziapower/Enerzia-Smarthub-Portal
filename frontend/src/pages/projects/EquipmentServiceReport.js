@@ -268,16 +268,11 @@ const EquipmentServiceReport = () => {
       certificate_no: '',
       validity: ''
     },
-    ammeter_parameters: {
-      duc_r: '', duc_y: '', duc_b: '',
-      std_r: '', std_y: '', std_b: ''
-    },
-    ammeter_readings: {
-      final_duc: '', final_std: '',
-      initial_duc: '', initial_std: '',
-      difference_duc: '', difference_std: '',
-      error_percent: ''
-    },
+    ammeter_measurement_tests: [
+      { phase: 'R-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'Y-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'B-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' }
+    ],
     
     // Protection Relay Specific Fields
     relay_details: {
