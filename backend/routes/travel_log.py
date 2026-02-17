@@ -552,7 +552,7 @@ async def download_travel_report_pdf(user_id: str, month: int, year: int):
     styles = getSampleStyleSheet()
     
     # Company Header
-    company_name = org_settings.get('name', 'Workhub Enerzia') if org_settings else 'Workhub Enerzia'
+    company_name = org_settings.get('name', 'Smarthub Enerzia') if org_settings else 'Smarthub Enerzia'
     elements.append(Paragraph(company_name, ParagraphStyle('Title', parent=styles['Heading1'], fontSize=16, alignment=TA_CENTER)))
     elements.append(Spacer(1, 10))
     
@@ -652,7 +652,7 @@ async def download_all_travel_report_excel(month: int, year: int, department: Op
     """Download all employees travel report as Excel"""
     data = await get_all_trips(month=month, year=year, department=department)
     org_settings = await db.organization_settings.find_one({})
-    company_name = org_settings.get('name', 'Workhub Enerzia') if org_settings else 'Workhub Enerzia'
+    company_name = org_settings.get('name', 'Smarthub Enerzia') if org_settings else 'Smarthub Enerzia'
     
     wb = openpyxl.Workbook()
     ws = wb.active

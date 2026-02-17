@@ -3086,7 +3086,7 @@ async def health_check():
         return {
             "status": "healthy",
             "database": "connected",
-            "service": "workhub-enerzia"
+            "service": "smarthub-enerzia"
         }
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")

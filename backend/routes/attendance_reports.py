@@ -50,7 +50,7 @@ async def get_org_settings():
     if settings:
         return serialize_doc(settings)
     return {
-        "name": "Workhub Enerzia",
+        "name": "Smarthub Enerzia",
         "address": "",
         "phone": "",
         "email": "",
@@ -148,7 +148,7 @@ def generate_attendance_pdf(records, user, org_settings, month, year):
     )
     
     # Company Header
-    company_name = org_settings.get('name', 'Workhub Enerzia')
+    company_name = org_settings.get('name', 'Smarthub Enerzia')
     company_address = org_settings.get('address', '')
     company_phone = org_settings.get('phone', '')
     company_email = org_settings.get('email', '')
@@ -335,7 +335,7 @@ def generate_attendance_excel(records, user, org_settings, month, year):
     leave_font = Font(color="2563eb")
     
     # Company Header
-    company_name = org_settings.get('name', 'Workhub Enerzia')
+    company_name = org_settings.get('name', 'Smarthub Enerzia')
     ws.merge_cells('A1:F1')
     ws['A1'] = company_name
     ws['A1'].font = header_font
@@ -581,7 +581,7 @@ async def download_bulk_attendance_excel(month: Optional[int] = None, year: Opti
     )
     
     # Company Header
-    company_name = org_settings.get('name', 'Workhub Enerzia')
+    company_name = org_settings.get('name', 'Smarthub Enerzia')
     ws.merge_cells('A1:G1')
     ws['A1'] = company_name
     ws['A1'].font = header_font
