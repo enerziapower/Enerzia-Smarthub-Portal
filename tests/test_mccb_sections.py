@@ -6,7 +6,7 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://project-order-system.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-zoho-sync.preview.emergentagent.com')
 
 class TestMCCBSections:
     """Test MCCB Section 5 (Micrologic Trip Test) and Section 6 (Carbon Test Report)"""
