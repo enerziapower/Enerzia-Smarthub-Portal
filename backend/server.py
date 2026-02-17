@@ -3634,6 +3634,7 @@ from routes.order_lifecycle import router as order_lifecycle_router
 from routes.purchase_module import router as purchase_module_router
 from routes.expense_management import router as expense_management_router
 from routes.finance_dashboard import router as finance_dashboard_router
+from routes.data_import import router as data_import_router
 
 # The modular routers will handle their routes
 app.include_router(projects_router_v2, prefix="/api", tags=["Projects-V2"])
