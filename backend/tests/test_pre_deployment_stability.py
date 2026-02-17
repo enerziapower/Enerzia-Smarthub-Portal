@@ -1,5 +1,5 @@
 """
-Pre-deployment Stability Test Suite for Workhub Enerzia ERP
+Pre-deployment Stability Test Suite for Smarthub Enerzia ERP
 Tests all critical paths: Projects, AMC, Calibration, Equipment Test Reports,
 Travel Log, Attendance, Leave Management, PDF Generation, Project Schedule
 """

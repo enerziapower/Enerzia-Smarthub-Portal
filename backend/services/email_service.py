@@ -191,7 +191,7 @@ def send_password_reset_email(to_email: str, user_name: str, reset_token: str, r
     
     If you didn't request this password reset, you can safely ignore this email.
     
-    © 2026 Workhub Enerzia
+    © 2026 Smarthub Enerzia
     """
     
     return send_email(to_email, subject, html_content, plain_content)
@@ -203,7 +203,7 @@ def send_travel_approval_email(to_email: str, user_name: str, trip_details: dict
     status_color = "#10b981" if status == "approved" else "#ef4444"
     status_text = "Approved ✓" if status == "approved" else "Rejected ✗"
     
-    subject = f"Travel Log {status.capitalize()} - Workhub Enerzia"
+    subject = f"Travel Log {status.capitalize()} - Smarthub Enerzia"
     
     html_content = f"""
     <!DOCTYPE html>
@@ -214,7 +214,7 @@ def send_travel_approval_email(to_email: str, user_name: str, trip_details: dict
     <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9;">
         <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="background: #1e293b; padding: 25px; border-radius: 16px 16px 0 0; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Workhub Enerzia</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Smarthub Enerzia</h1>
             </div>
             
             <div style="background: #ffffff; padding: 30px; border-radius: 0 0 16px 16px;">
@@ -254,7 +254,7 @@ def send_travel_approval_email(to_email: str, user_name: str, trip_details: dict
                 {f'<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;"><strong style="color: #991b1b;">Reason:</strong><p style="color: #7f1d1d; margin: 5px 0 0 0;">{reason}</p></div>' if reason and status == 'rejected' else ''}
                 
                 <p style="color: #94a3b8; font-size: 13px; margin-top: 25px;">
-                    This is an automated notification from Workhub Enerzia ERP.
+                    This is an automated notification from Smarthub Enerzia ERP.
                 </p>
             </div>
         </div>
@@ -271,7 +271,7 @@ def send_leave_status_email(to_email: str, user_name: str, leave_type: str, date
     status_color = "#10b981" if status == "approved" else "#ef4444"
     status_text = "Approved" if status == "approved" else "Rejected"
     
-    subject = f"Leave Request {status_text} - Workhub Enerzia"
+    subject = f"Leave Request {status_text} - Smarthub Enerzia"
     
     html_content = f"""
     <!DOCTYPE html>
@@ -279,7 +279,7 @@ def send_leave_status_email(to_email: str, user_name: str, leave_type: str, date
     <body style="margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9;">
         <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="background: #1e293b; padding: 25px; border-radius: 16px 16px 0 0; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Workhub Enerzia</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Smarthub Enerzia</h1>
             </div>
             
             <div style="background: #ffffff; padding: 30px; border-radius: 0 0 16px 16px;">
