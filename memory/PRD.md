@@ -1310,3 +1310,51 @@ All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowi
 ---
 *Last Updated: February 17, 2026*
 *Status: VOLTMETER & AMMETER FORMAT CHANGE COMPLETE ✅*
+
+---
+
+## Relay Calibration Report - New Tests Added ✅ (Feb 17, 2026)
+**Files Modified:**
+- `/app/frontend/src/pages/projects/EquipmentServiceReport.js` (UI)
+- `/app/backend/routes/equipment_pdf.py` (PDF generation)
+
+### New Sections Added
+
+#### TEST 3: MASTER TRIP RELAY
+- **Relay Details:** Make, Type, Serial No, Auxiliary Supply
+- **Test Results Table:**
+  | Parameter | Set Value | Measured Value | Status |
+  |-----------|-----------|----------------|--------|
+  | Pick-up Voltage | | | OK/NOT OK/N/A |
+  | Drop-off Voltage | | | OK/NOT OK/N/A |
+  | Operating Time | | | OK/NOT OK/N/A |
+  | Contact Resistance | | | OK/NOT OK/N/A |
+  | Coil Resistance | | | OK/NOT OK/N/A |
+  | Insulation Resistance | | | OK/NOT OK/N/A |
+- **Remarks** field
+- **Enable/Disable Toggle** (Default: Disabled)
+
+#### TEST 4: TRIP CIRCUIT SUPERVISION RELAY
+- **Relay Details:** Make, Type, Serial No, Auxiliary Supply
+- **Test Results Table:**
+  | Parameter | Set Value | Measured Value | Status |
+  |-----------|-----------|----------------|--------|
+  | Pick-up Voltage | | | OK/NOT OK/N/A |
+  | Drop-off Voltage | | | OK/NOT OK/N/A |
+  | Operating Time | | | OK/NOT OK/N/A |
+  | LED Indication Check | | | OK/NOT OK/N/A |
+  | Alarm Contact Check | | | OK/NOT OK/N/A |
+  | Coil Resistance | | | OK/NOT OK/N/A |
+  | Insulation Resistance | | | OK/NOT OK/N/A |
+- **Remarks** field
+- **Enable/Disable Toggle** (Default: Disabled)
+
+### Technical Implementation
+- Added `relay_section_toggles` entries for both new tests
+- Added data structures with relay_details and test_results arrays
+- PDF generation includes both tests when enabled
+- Data persistence on save and load for existing reports
+
+---
+*Last Updated: February 17, 2026*
+*Status: RELAY CALIBRATION TESTS 3 & 4 COMPLETE ✅*
