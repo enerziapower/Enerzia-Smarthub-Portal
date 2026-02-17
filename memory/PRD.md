@@ -1240,3 +1240,30 @@ The Gantt chart rendering is working as designed. The reported issue may have be
 ---
 *Last Updated: February 17, 2026*
 *Status: GANTT CHART VERIFIED WORKING ✅*
+
+---
+
+## Transformer Test Report - Default Values Fix ✅ (Feb 17, 2026)
+**Location:** `/app/frontend/src/pages/projects/TransformerTestReport.js`
+
+### Issue
+Default values of `417.5` were pre-populated in the Applied Primary Voltage fields for:
+- TEST 4: Transformer Ratio Test
+- TEST 5: Three Phase Magnetising Current Test
+
+### Fix Applied
+Removed hardcoded default values from 4 locations:
+
+| Location | Before | After |
+|----------|--------|-------|
+| Initial `ratio_tests` array (line 140) | `applied_1u1v: '417.5'` | `applied_1u1v: ''` |
+| Initial `magnetising_current_tests` array (line 145) | `applied_1u1v: '417.5'` | `applied_1u1v: ''` |
+| Add Tap button handler (line 1372) | `applied_1u1v: '417.5'` | `applied_1u1v: ''` |
+| Add Tap Position button handler (line 1455) | `applied_1u1v: '417.5'` | `applied_1u1v: ''` |
+
+### Result
+All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowing users to enter their own test values.
+
+---
+*Last Updated: February 17, 2026*
+*Status: TRANSFORMER DEFAULT VALUES FIX COMPLETE ✅*
