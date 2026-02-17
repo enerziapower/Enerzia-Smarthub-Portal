@@ -1267,3 +1267,46 @@ All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowi
 ---
 *Last Updated: February 17, 2026*
 *Status: TRANSFORMER DEFAULT VALUES FIX COMPLETE ✅*
+
+---
+
+## Voltmeter & Ammeter Test Results Format Change ✅ (Feb 17, 2026)
+**Files Modified:**
+- `/app/frontend/src/pages/projects/EquipmentServiceReport.js` (UI)
+- `/app/backend/routes/equipment_pdf.py` (PDF generation)
+
+### Changes Made
+
+**Old Format (Removed):**
+- Two separate tables: "TEST RESULTS (Voltage/Current)" and "TEST RESULTS (Reading)"
+- DUC Reading vs STD Reading layout
+- Final/Initial/Difference rows with single Error %
+
+**New Format (Implemented):**
+
+#### Voltmeter - MEASUREMENT TEST
+| PHASE REFERENCE | TEST METER READING (V) | STANDARD METER READING (V) | ERROR % | ERROR LIMIT % |
+|-----------------|------------------------|---------------------------|---------|---------------|
+| R-PHASE         |                        |                           |         | ±1.0          |
+| Y-PHASE         |                        |                           |         | ±1.0          |
+| B-PHASE         |                        |                           |         | ±1.0          |
+| R&Y-PHASE       |                        |                           |         | ±1.0          |
+| Y&B-PHASE       |                        |                           |         | ±1.0          |
+| R&B-PHASE       |                        |                           |         | ±1.0          |
+
+#### Ammeter - MEASUREMENT TEST
+| PHASE REFERENCE | TEST METER READINGS (A) | STANDARD METER READINGS (A) | ERROR(%) | ERROR LIMIT (%) |
+|-----------------|------------------------|---------------------------|---------|---------------|
+| R-PHASE         |                        |                           |         | ±1.0          |
+| Y-PHASE         |                        |                           |         | ±1.0          |
+| B-PHASE         |                        |                           |         | ±1.0          |
+
+### Technical Implementation
+- Changed data model from nested objects to array format for flexibility
+- Added handler functions: `handleVoltmeterMeasurementTestChange`, `handleAmmeterMeasurementTestChange`
+- PDF generation includes backwards compatibility for old data format
+- Default error limit set to ±1.0 for all rows
+
+---
+*Last Updated: February 17, 2026*
+*Status: VOLTMETER & AMMETER FORMAT CHANGE COMPLETE ✅*
