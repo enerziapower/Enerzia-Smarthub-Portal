@@ -3677,6 +3677,7 @@ app.include_router(order_lifecycle_router, tags=["Order-Lifecycle"])
 app.include_router(purchase_module_router, tags=["Purchase-Module"])
 app.include_router(expense_management_router, tags=["Expense-Management"])
 app.include_router(finance_dashboard_router, tags=["Finance-Dashboard"])
+app.include_router(data_import_router, tags=["Data-Import"])
 
 # Include the main router with remaining routes
 app.include_router(api_router)
