@@ -4079,6 +4079,378 @@ const EquipmentServiceReport = () => {
                 </div>
               )}
             </div>
+
+            {/* TEST 3: MASTER TRIP RELAY */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded mr-2">TEST 3</span>
+                  MASTER TRIP RELAY
+                </h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.relay_section_toggles?.master_trip_relay_test === true}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      relay_section_toggles: { ...prev.relay_section_toggles, master_trip_relay_test: e.target.checked }
+                    }))}
+                    className="w-4 h-4 rounded border-slate-300"
+                  />
+                  <span className={`px-3 py-1 text-sm rounded-lg ${formData.relay_section_toggles?.master_trip_relay_test === true ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {formData.relay_section_toggles?.master_trip_relay_test === true ? 'Enabled' : 'Disabled'}
+                  </span>
+                </label>
+              </div>
+              
+              {formData.relay_section_toggles?.master_trip_relay_test === true && (
+                <div className="space-y-4">
+                  {/* Relay Details */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Make</label>
+                      <input
+                        type="text"
+                        value={formData.master_trip_relay_test?.relay_details?.make || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          master_trip_relay_test: {
+                            ...prev.master_trip_relay_test,
+                            relay_details: { ...prev.master_trip_relay_test?.relay_details, make: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter make"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                      <input
+                        type="text"
+                        value={formData.master_trip_relay_test?.relay_details?.type || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          master_trip_relay_test: {
+                            ...prev.master_trip_relay_test,
+                            relay_details: { ...prev.master_trip_relay_test?.relay_details, type: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter type"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Serial No</label>
+                      <input
+                        type="text"
+                        value={formData.master_trip_relay_test?.relay_details?.serial_no || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          master_trip_relay_test: {
+                            ...prev.master_trip_relay_test,
+                            relay_details: { ...prev.master_trip_relay_test?.relay_details, serial_no: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter serial no"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Auxiliary Supply</label>
+                      <input
+                        type="text"
+                        value={formData.master_trip_relay_test?.relay_details?.auxiliary_supply || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          master_trip_relay_test: {
+                            ...prev.master_trip_relay_test,
+                            relay_details: { ...prev.master_trip_relay_test?.relay_details, auxiliary_supply: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="e.g., 110V DC"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Test Results Table */}
+                  <div>
+                    <h4 className="text-md font-semibold text-slate-700 mb-3 bg-red-50 px-3 py-2 rounded">Test Results</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="px-3 py-2 border border-slate-300 text-left">Parameter</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Set Value</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Measured Value</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.master_trip_relay_test?.test_results?.map((row, idx) => (
+                            <tr key={idx} className="border-b hover:bg-slate-50">
+                              <td className="px-3 py-2 border border-slate-300 font-medium">{row.parameter}</td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <input
+                                  type="text"
+                                  value={row.set_value || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.master_trip_relay_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], set_value: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      master_trip_relay_test: { ...prev.master_trip_relay_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                  placeholder="Set value"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <input
+                                  type="text"
+                                  value={row.measured_value || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.master_trip_relay_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], measured_value: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      master_trip_relay_test: { ...prev.master_trip_relay_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                  placeholder="Measured value"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <select
+                                  value={row.status || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.master_trip_relay_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], status: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      master_trip_relay_test: { ...prev.master_trip_relay_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                >
+                                  <option value="">Select</option>
+                                  <option value="OK">OK</option>
+                                  <option value="NOT OK">NOT OK</option>
+                                  <option value="N/A">N/A</option>
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Remarks */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                    <textarea
+                      value={formData.master_trip_relay_test?.remarks || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        master_trip_relay_test: { ...prev.master_trip_relay_test, remarks: e.target.value }
+                      }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                      rows={2}
+                      placeholder="Enter any remarks..."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* TEST 4: TRIP CIRCUIT SUPERVISION RELAY */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded mr-2">TEST 4</span>
+                  TRIP CIRCUIT SUPERVISION RELAY
+                </h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.relay_section_toggles?.trip_circuit_supervision_test === true}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      relay_section_toggles: { ...prev.relay_section_toggles, trip_circuit_supervision_test: e.target.checked }
+                    }))}
+                    className="w-4 h-4 rounded border-slate-300"
+                  />
+                  <span className={`px-3 py-1 text-sm rounded-lg ${formData.relay_section_toggles?.trip_circuit_supervision_test === true ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {formData.relay_section_toggles?.trip_circuit_supervision_test === true ? 'Enabled' : 'Disabled'}
+                  </span>
+                </label>
+              </div>
+              
+              {formData.relay_section_toggles?.trip_circuit_supervision_test === true && (
+                <div className="space-y-4">
+                  {/* Relay Details */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Make</label>
+                      <input
+                        type="text"
+                        value={formData.trip_circuit_supervision_test?.relay_details?.make || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          trip_circuit_supervision_test: {
+                            ...prev.trip_circuit_supervision_test,
+                            relay_details: { ...prev.trip_circuit_supervision_test?.relay_details, make: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter make"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                      <input
+                        type="text"
+                        value={formData.trip_circuit_supervision_test?.relay_details?.type || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          trip_circuit_supervision_test: {
+                            ...prev.trip_circuit_supervision_test,
+                            relay_details: { ...prev.trip_circuit_supervision_test?.relay_details, type: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter type"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Serial No</label>
+                      <input
+                        type="text"
+                        value={formData.trip_circuit_supervision_test?.relay_details?.serial_no || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          trip_circuit_supervision_test: {
+                            ...prev.trip_circuit_supervision_test,
+                            relay_details: { ...prev.trip_circuit_supervision_test?.relay_details, serial_no: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Enter serial no"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Auxiliary Supply</label>
+                      <input
+                        type="text"
+                        value={formData.trip_circuit_supervision_test?.relay_details?.auxiliary_supply || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          trip_circuit_supervision_test: {
+                            ...prev.trip_circuit_supervision_test,
+                            relay_details: { ...prev.trip_circuit_supervision_test?.relay_details, auxiliary_supply: e.target.value }
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="e.g., 110V DC"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Test Results Table */}
+                  <div>
+                    <h4 className="text-md font-semibold text-slate-700 mb-3 bg-violet-50 px-3 py-2 rounded">Test Results</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="px-3 py-2 border border-slate-300 text-left">Parameter</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Set Value</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Measured Value</th>
+                            <th className="px-3 py-2 border border-slate-300 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.trip_circuit_supervision_test?.test_results?.map((row, idx) => (
+                            <tr key={idx} className="border-b hover:bg-slate-50">
+                              <td className="px-3 py-2 border border-slate-300 font-medium">{row.parameter}</td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <input
+                                  type="text"
+                                  value={row.set_value || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.trip_circuit_supervision_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], set_value: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      trip_circuit_supervision_test: { ...prev.trip_circuit_supervision_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                  placeholder="Set value"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <input
+                                  type="text"
+                                  value={row.measured_value || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.trip_circuit_supervision_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], measured_value: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      trip_circuit_supervision_test: { ...prev.trip_circuit_supervision_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                  placeholder="Measured value"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border border-slate-300">
+                                <select
+                                  value={row.status || ''}
+                                  onChange={(e) => {
+                                    const newResults = [...formData.trip_circuit_supervision_test.test_results];
+                                    newResults[idx] = { ...newResults[idx], status: e.target.value };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      trip_circuit_supervision_test: { ...prev.trip_circuit_supervision_test, test_results: newResults }
+                                    }));
+                                  }}
+                                  className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                >
+                                  <option value="">Select</option>
+                                  <option value="OK">OK</option>
+                                  <option value="NOT OK">NOT OK</option>
+                                  <option value="N/A">N/A</option>
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Remarks */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                    <textarea
+                      value={formData.trip_circuit_supervision_test?.remarks || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        trip_circuit_supervision_test: { ...prev.trip_circuit_supervision_test, remarks: e.target.value }
+                      }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                      rows={2}
+                      placeholder="Enter any remarks..."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
