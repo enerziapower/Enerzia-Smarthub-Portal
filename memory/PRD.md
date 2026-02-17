@@ -1358,3 +1358,44 @@ All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowi
 ---
 *Last Updated: February 17, 2026*
 *Status: RELAY CALIBRATION TESTS 3 & 4 COMPLETE ✅*
+
+---
+
+## Rebranding: Workhub → Smarthub ✅ (Feb 17, 2026)
+
+### Brand Name Changes
+| Location | Old Name | New Name |
+|----------|----------|----------|
+| App Title | Workhub Enerzia | Smarthub Enerzia |
+| Sidebar | Workhub | Smarthub |
+| Copyright | WorkHub Enerzia | Smarthub Enerzia |
+| PWA Manifest | Workhub Enerzia | Smarthub Enerzia |
+| Email Templates | Workhub Enerzia | Smarthub Enerzia |
+| Password Reset | workhub.enerzia.com | smarthub.enerzia.com |
+
+### Files Updated
+**Frontend:**
+- `/app/frontend/src/components/Layout.js`
+- `/app/frontend/src/pages/Login.js`
+- `/app/frontend/src/pages/ResetPassword.js`
+- `/app/frontend/src/pages/Setup.js`
+- `/app/frontend/src/pages/settings/ZohoIntegration.js`
+- `/app/frontend/public/index.html`
+- `/app/frontend/public/manifest.json`
+
+**Backend:**
+- `/app/backend/routes/zoho_integration.py`
+- `/app/backend/routes/password_reset.py`
+- `/app/backend/routes/customer_management.py`
+- `/app/backend/routes/attendance_reports.py`
+- `/app/backend/routes/travel_log.py`
+- `/app/backend/server.py`
+- `/app/backend/services/email_service.py`
+- `/app/backend/tests/test_pre_deployment_stability.py`
+
+### Deployment Target
+**Custom Domain:** www.smarthub.enerzia.com
+
+---
+*Last Updated: February 17, 2026*
+*Status: REBRANDING COMPLETE ✅ | READY FOR DEPLOYMENT*
