@@ -2133,6 +2133,134 @@ def create_relay_settings_section(report, styles, width):
         elements.append(table)
         elements.append(Spacer(1, 10))
     
+    # TEST 3: MASTER TRIP RELAY
+    master_trip_test = report.get('master_trip_relay_test', {})
+    if section_toggles.get('master_trip_relay_test', False) and master_trip_test:
+        elements.append(Paragraph("TEST 3: MASTER TRIP RELAY", styles['SectionHeader']))
+        
+        # Relay Details
+        master_details = master_trip_test.get('relay_details', {})
+        if master_details and any(master_details.values()):
+            detail_data = [
+                ['Make:', master_details.get('make', '-'), 'Type:', master_details.get('type', '-')],
+                ['Serial No:', master_details.get('serial_no', '-'), 'Auxiliary Supply:', master_details.get('auxiliary_supply', '-')]
+            ]
+            
+            detail_table = Table(detail_data, colWidths=[width*0.15, width*0.35, width*0.15, width*0.35])
+            detail_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), HEADER_LIGHT_GRAY),
+                ('BACKGROUND', (2, 0), (2, -1), HEADER_LIGHT_GRAY),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(detail_table)
+            elements.append(Spacer(1, 8))
+        
+        # Test Results
+        master_results = master_trip_test.get('test_results', [])
+        if master_results:
+            elements.append(Paragraph("<b>Test Results</b>", subsection_style))
+            
+            results_data = [['Parameter', 'Set Value', 'Measured Value', 'Status']]
+            for row in master_results:
+                if isinstance(row, dict):
+                    results_data.append([
+                        row.get('parameter', ''),
+                        row.get('set_value', '-'),
+                        row.get('measured_value', '-'),
+                        row.get('status', '-')
+                    ])
+            
+            results_table = Table(results_data, colWidths=[width*0.35, width*0.22, width*0.23, width*0.20])
+            results_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HEADER_LIGHT_GRAY),
+                ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_DARK_TEXT),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 7),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(results_table)
+            elements.append(Spacer(1, 8))
+        
+        # Remarks
+        master_remarks = master_trip_test.get('remarks', '')
+        if master_remarks:
+            elements.append(Paragraph(f"<b>Remarks:</b> {master_remarks}", styles['Normal']))
+        elements.append(Spacer(1, 15))
+    
+    # TEST 4: TRIP CIRCUIT SUPERVISION RELAY
+    trip_circuit_test = report.get('trip_circuit_supervision_test', {})
+    if section_toggles.get('trip_circuit_supervision_test', False) and trip_circuit_test:
+        elements.append(Paragraph("TEST 4: TRIP CIRCUIT SUPERVISION RELAY", styles['SectionHeader']))
+        
+        # Relay Details
+        trip_details = trip_circuit_test.get('relay_details', {})
+        if trip_details and any(trip_details.values()):
+            detail_data = [
+                ['Make:', trip_details.get('make', '-'), 'Type:', trip_details.get('type', '-')],
+                ['Serial No:', trip_details.get('serial_no', '-'), 'Auxiliary Supply:', trip_details.get('auxiliary_supply', '-')]
+            ]
+            
+            detail_table = Table(detail_data, colWidths=[width*0.15, width*0.35, width*0.15, width*0.35])
+            detail_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), HEADER_LIGHT_GRAY),
+                ('BACKGROUND', (2, 0), (2, -1), HEADER_LIGHT_GRAY),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(detail_table)
+            elements.append(Spacer(1, 8))
+        
+        # Test Results
+        trip_results = trip_circuit_test.get('test_results', [])
+        if trip_results:
+            elements.append(Paragraph("<b>Test Results</b>", subsection_style))
+            
+            results_data = [['Parameter', 'Set Value', 'Measured Value', 'Status']]
+            for row in trip_results:
+                if isinstance(row, dict):
+                    results_data.append([
+                        row.get('parameter', ''),
+                        row.get('set_value', '-'),
+                        row.get('measured_value', '-'),
+                        row.get('status', '-')
+                    ])
+            
+            results_table = Table(results_data, colWidths=[width*0.35, width*0.22, width*0.23, width*0.20])
+            results_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HEADER_LIGHT_GRAY),
+                ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_DARK_TEXT),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 7),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(results_table)
+            elements.append(Spacer(1, 8))
+        
+        # Remarks
+        trip_remarks = trip_circuit_test.get('remarks', '')
+        if trip_remarks:
+            elements.append(Paragraph(f"<b>Remarks:</b> {trip_remarks}", styles['Normal']))
+        elements.append(Spacer(1, 15))
+    
     return elements
 
 
