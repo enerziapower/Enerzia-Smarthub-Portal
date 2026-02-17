@@ -346,6 +346,45 @@ const EquipmentServiceReport = () => {
       remarks: ''
     },
     
+    // Master Trip Relay Test (TEST 3)
+    master_trip_relay_test: {
+      relay_details: {
+        make: '',
+        type: '',
+        serial_no: '',
+        auxiliary_supply: ''
+      },
+      test_results: [
+        { parameter: 'Pick-up Voltage', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Drop-off Voltage', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Operating Time', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Contact Resistance', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Coil Resistance', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Insulation Resistance', set_value: '', measured_value: '', status: '' }
+      ],
+      remarks: ''
+    },
+    
+    // Trip Circuit Supervision Relay Test (TEST 4)
+    trip_circuit_supervision_test: {
+      relay_details: {
+        make: '',
+        type: '',
+        serial_no: '',
+        auxiliary_supply: ''
+      },
+      test_results: [
+        { parameter: 'Pick-up Voltage', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Drop-off Voltage', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Operating Time', set_value: '', measured_value: '', status: '' },
+        { parameter: 'LED Indication Check', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Alarm Contact Check', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Coil Resistance', set_value: '', measured_value: '', status: '' },
+        { parameter: 'Insulation Resistance', set_value: '', measured_value: '', status: '' }
+      ],
+      remarks: ''
+    },
+    
     // Bulk entries (for MCCB)
     bulk_entries: [],
     
