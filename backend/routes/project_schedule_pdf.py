@@ -1045,14 +1045,15 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                 # Add phase rows with their sub-items
                 for idx, phase in enumerate(phases):
                     phase_name = phase.get('name', '')[:35]
-                    phase_start_date = parse_date(phase.get('start', ''))
-                    phase_end_date = parse_date(phase.get('end', ''))
+                    # Try multiple field names for dates
+                    phase_start_str = phase.get('start', '') or phase.get('start_date', '')
+                    phase_end_str = phase.get('end', '') or phase.get('end_date', '')
                     progress = phase.get('progress', 0)
                     
                     # Phase name with progress and dates
                     phase_dates = ""
-                    if phase.get('start') and phase.get('end'):
-                        phase_dates = f"<br/><font size='6' color='#475569'>{phase.get('start')} - {phase.get('end')}</font>"
+                    if phase_start_str and phase_end_str:
+                        phase_dates = f"<br/><font size='6' color='#475569'>{phase_start_str} - {phase_end_str}</font>"
                     row = [Paragraph(f"<b>{phase_name}</b>{phase_dates}<br/><font size='7' color='#1e40af'>{progress}%</font>", styles['PhaseName'])]
                     
                     # Calculate which weeks this phase spans - NO TEXT, just empty cells
@@ -1070,9 +1071,12 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                         sub_unit = sub_item.get('unit', '')
                         qty_str = f" ({sub_qty} {sub_unit})" if sub_qty else ""
                         
+                        # Try multiple field names for sub-item dates
+                        sub_start_str = sub_item.get('start_date', '') or sub_item.get('start', '')
+                        sub_end_str = sub_item.get('end_date', '') or sub_item.get('end', '')
                         sub_dates = ""
-                        if sub_item.get('start_date') and sub_item.get('end_date'):
-                            sub_dates = f"<br/><font size='6' color='#64748b'>{sub_item.get('start_date')} - {sub_item.get('end_date')}</font>"
+                        if sub_start_str and sub_end_str:
+                            sub_dates = f"<br/><font size='6' color='#64748b'>{sub_start_str} - {sub_end_str}</font>"
                         
                         sub_row = [Paragraph(f"<font size='7'>{sub_desc}</font>{qty_str}{sub_dates}", styles['ScheduleTableCell'])]
                         
