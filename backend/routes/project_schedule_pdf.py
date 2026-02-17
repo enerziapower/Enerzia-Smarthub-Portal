@@ -1124,8 +1124,21 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                     if row_type == 'phase':
                         # Phase row - use full color, light background for name
                         gantt_styles.append(('BACKGROUND', (0, data_row_idx), (0, data_row_idx), colors.HexColor('#f1f5f9')))
-                        phase_start_date = parse_date(phase.get('start', ''))
-                        phase_end_date = parse_date(phase.get('end', ''))
+                        phase_start_date = parse_date(phase.get('start', '')) or parse_date(phase.get('start_date', ''))
+                        phase_end_date = parse_date(phase.get('end', '')) or parse_date(phase.get('end_date', ''))
+                        
+                        # If still no dates, try to infer from sub-items
+                        if not phase_start_date or not phase_end_date:
+                            sub_items = phase.get('subItems', [])
+                            for sub in sub_items:
+                                sub_s = parse_date(sub.get('start_date', '')) or parse_date(sub.get('start', ''))
+                                sub_e = parse_date(sub.get('end_date', '')) or parse_date(sub.get('end', ''))
+                                if sub_s:
+                                    if not phase_start_date or sub_s < phase_start_date:
+                                        phase_start_date = sub_s
+                                if sub_e:
+                                    if not phase_end_date or sub_e > phase_end_date:
+                                        phase_end_date = sub_e
                         
                         for col_idx in range(1, num_weeks + 1):
                             week_start = project_start + timedelta(days=(col_idx - 1) * 7)
@@ -1149,8 +1162,8 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                         
                         if sub_idx >= 0 and sub_idx < len(sub_items):
                             sub_item = sub_items[sub_idx]
-                            sub_start = parse_date(sub_item.get('start_date', ''))
-                            sub_end = parse_date(sub_item.get('end_date', ''))
+                            sub_start = parse_date(sub_item.get('start_date', '')) or parse_date(sub_item.get('start', ''))
+                            sub_end = parse_date(sub_item.get('end_date', '')) or parse_date(sub_item.get('end', ''))
                             
                             # Lighter version of the phase color
                             lighter_color = colors.Color(
