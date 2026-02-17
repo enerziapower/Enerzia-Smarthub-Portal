@@ -19,7 +19,7 @@ const Layout = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [orgSettings, setOrgSettings] = useState({ name: 'Workhub Enerzia', logo_url: null });
+  const [orgSettings, setOrgSettings] = useState({ name: 'Smarthub Enerzia', logo_url: null });
   const [logoKey, setLogoKey] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -455,7 +455,7 @@ const Layout = () => {
             )}
             {(sidebarOpen || isMobile) && (
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">Workhub</h1>
+                <h1 className="text-white font-bold text-lg leading-tight">Smarthub</h1>
                 <p className="text-blue-400 text-xs font-medium">Enerzia</p>
               </div>
             )}
@@ -669,7 +669,7 @@ const Layout = () => {
                 </button>
               )}
               <h2 className="text-base md:text-lg font-semibold text-slate-800 truncate">
-                {orgSettings.name || 'Workhub Enerzia'}
+                {orgSettings.name || 'Smarthub Enerzia'}
               </h2>
             </div>
             

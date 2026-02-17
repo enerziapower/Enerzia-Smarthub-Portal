@@ -122,7 +122,7 @@ const ZohoIntegration = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Zoho Books Integration</h1>
-          <p className="text-slate-500">One-way sync from Zoho Books to Workhub ERP</p>
+          <p className="text-slate-500">One-way sync from Zoho Books to Smarthub ERP</p>
         </div>
         <button
           onClick={fetchStatus}

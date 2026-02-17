@@ -111,7 +111,7 @@ const Login = () => {
                 />
               )}
               <h1 className="text-2xl font-bold text-slate-900">
-                Workhub Enerzia
+                Smarthub Enerzia
               </h1>
               <p className="text-slate-500 mt-2">
                 {needsSetup ? 'Create your admin account to get started' : 'Sign in to your workspace'}
@@ -250,7 +250,7 @@ const Login = () => {
       {/* Copyright Footer */}
       <footer className="py-4 text-center">
         <p className="text-sm text-slate-500">
-          COPYRIGHT © 2026 WorkHub Enerzia, All rights Reserved
+          COPYRIGHT © 2026 Smarthub Enerzia, All rights Reserved
         </p>
       </footer>
 

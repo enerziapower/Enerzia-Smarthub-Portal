@@ -243,7 +243,7 @@ const ResetPassword = () => {
       {/* Footer */}
       <footer className="py-4 text-center">
         <p className="text-sm text-slate-500">
-          COPYRIGHT © 2026 WorkHub Enerzia, All rights Reserved
+          COPYRIGHT © 2026 Smarthub Enerzia, All rights Reserved
         </p>
       </footer>
     </div>
