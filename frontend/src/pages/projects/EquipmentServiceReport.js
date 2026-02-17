@@ -1011,6 +1011,12 @@ const EquipmentServiceReport = () => {
               if (reportData.feeder_protection_test) {
                 merged.feeder_protection_test = reportData.feeder_protection_test;
               }
+              if (reportData.master_trip_relay_test) {
+                merged.master_trip_relay_test = reportData.master_trip_relay_test;
+              }
+              if (reportData.trip_circuit_supervision_test) {
+                merged.trip_circuit_supervision_test = reportData.trip_circuit_supervision_test;
+              }
               
               return merged;
             });
