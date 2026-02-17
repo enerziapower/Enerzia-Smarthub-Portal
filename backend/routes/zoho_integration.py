@@ -1,6 +1,6 @@
 """
 Zoho Books Integration Module
-One-way sync (Read-only) from Zoho Books to Workhub ERP
+One-way sync (Read-only) from Zoho Books to Smarthub ERP
 - Customers
 - Vendors
 - Invoices

@@ -43,7 +43,7 @@ def get_frontend_url(request: Request = None) -> str:
         return frontend_url
     
     # Default fallback
-    return "https://workhub.enerzia.com"
+    return "https://smarthub.enerzia.com"
 
 
 @router.post("/forgot-password")
@@ -213,15 +213,15 @@ async def test_email_connection(request: TestEmailRequest):
         # Send test email
         result = send_email(
             to_email=request.email,
-            subject="Test Email - Workhub Enerzia",
+            subject="Test Email - Smarthub Enerzia",
             html_content="""
             <div style="font-family: sans-serif; padding: 20px;">
                 <h2 style="color: #1e293b;">✅ Email Configuration Working!</h2>
-                <p>Your Workhub Enerzia email integration is configured correctly.</p>
+                <p>Your Smarthub Enerzia email integration is configured correctly.</p>
                 <p style="color: #64748b; font-size: 14px;">This is a test email from the ERP system.</p>
             </div>
             """,
-            plain_content="Email Configuration Working! Your Workhub Enerzia email integration is configured correctly."
+            plain_content="Email Configuration Working! Your Smarthub Enerzia email integration is configured correctly."
         )
         
         return result
