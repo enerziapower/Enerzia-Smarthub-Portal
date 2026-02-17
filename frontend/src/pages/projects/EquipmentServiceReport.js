@@ -287,7 +287,9 @@ const EquipmentServiceReport = () => {
     relay_section_toggles: {
       service_checklist: true,
       protection_relay_test: true,
-      feeder_protection_test: false
+      feeder_protection_test: false,
+      master_trip_relay_test: false,
+      trip_circuit_supervision_test: false
     },
     
     // Protection Relay Test (TEST 1)
