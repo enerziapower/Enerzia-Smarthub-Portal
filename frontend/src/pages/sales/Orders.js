@@ -506,7 +506,6 @@ const Orders = () => {
                       <td className="px-3 py-3 text-sm text-right font-medium text-slate-700 whitespace-nowrap">
                         {formatCurrency(order.subtotal || 0)}
                       </td>
-                      </td>
                       
                       {/* Gross Amount (Total) */}
                       <td className="px-3 py-3 text-sm text-right font-medium text-slate-900">
