@@ -3488,66 +3488,58 @@ def create_ammeter_master_standard_section(report, styles, width):
 
 
 def create_ammeter_test_results_section(report, styles, width):
-    """Create TEST RESULTS section for Ammeter."""
+    """Create TEST RESULTS section for Ammeter - MEASUREMENT TEST format."""
     elements = []
     
     section_toggles = report.get('ammeter_section_toggles', {})
     if section_toggles.get('test_results') is False:
         return elements
     
-    params = report.get('ammeter_parameters', {})
-    readings = report.get('ammeter_readings', {})
+    measurement_tests = report.get('ammeter_measurement_tests', [])
     
-    elements.append(Paragraph("2. TEST RESULTS (Current)", styles['SectionHeader']))
+    # If no new format data, try to use old format for backwards compatibility
+    if not measurement_tests:
+        params = report.get('ammeter_parameters', {})
+        readings = report.get('ammeter_readings', {})
+        if params or readings:
+            # Convert old format to new format
+            measurement_tests = [
+                {'phase': 'R-PHASE', 'test_reading': params.get('duc_r', ''), 'standard_reading': params.get('std_r', ''), 'error_percent': '', 'error_limit': '±1.0'},
+                {'phase': 'Y-PHASE', 'test_reading': params.get('duc_y', ''), 'standard_reading': params.get('std_y', ''), 'error_percent': '', 'error_limit': '±1.0'},
+                {'phase': 'B-PHASE', 'test_reading': params.get('duc_b', ''), 'standard_reading': params.get('std_b', ''), 'error_percent': readings.get('error_percent', ''), 'error_limit': '±1.0'}
+            ]
     
-    # Current Parameters Table
-    params_data = [
-        ['Parameters', 'R', 'Y', 'B'],
-        ['DUC Reading', params.get('duc_r', ''), params.get('duc_y', ''), params.get('duc_b', '')],
-        ['STD Reading', params.get('std_r', ''), params.get('std_y', ''), params.get('std_b', '')]
-    ]
+    elements.append(Paragraph("❖ MEASUREMENT TEST:", styles['SectionHeader']))
     
-    params_table = Table(params_data, colWidths=[width*0.25, width*0.25, width*0.25, width*0.25])
-    params_table.setStyle(TableStyle([
+    # Create header row
+    header = ['PHASE REFERENCE', 'TEST METER READINGS (A)', 'STANDARD METER READINGS (A)', 'ERROR(%)', 'ERROR LIMIT (%)']
+    
+    # Create data rows
+    table_data = [header]
+    for test in measurement_tests:
+        row = [
+            test.get('phase', ''),
+            test.get('test_reading', ''),
+            test.get('standard_reading', ''),
+            test.get('error_percent', ''),
+            test.get('error_limit', '±1.0')
+        ]
+        table_data.append(row)
+    
+    table = Table(table_data, colWidths=[width*0.20, width*0.22, width*0.26, width*0.16, width*0.16])
+    table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
         ('FONTNAME', (1, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 7),
         ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
     ]))
-    elements.append(params_table)
-    elements.append(Spacer(1, 8))
-    
-    # Current Reading Table
-    elements.append(Paragraph("TEST RESULTS (Reading)", styles['SectionHeader']))
-    
-    reading_data = [
-        ['', 'DUC Reading (A)', 'Standard Reading (A)', 'Error in %'],
-        ['Final Reading', readings.get('final_duc', ''), readings.get('final_std', ''), readings.get('error_percent', '')],
-        ['Initial Reading', readings.get('initial_duc', ''), readings.get('initial_std', ''), ''],
-        ['Difference', readings.get('difference_duc', ''), readings.get('difference_std', ''), '']
-    ]
-    
-    reading_table = Table(reading_data, colWidths=[width*0.25, width*0.25, width*0.30, width*0.20])
-    reading_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 7),
-        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
-        ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('SPAN', (3, 1), (3, 3)),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-    ]))
-    elements.append(reading_table)
+    elements.append(table)
     elements.append(Spacer(1, 8))
     
     # Notes
