@@ -137,12 +137,12 @@ const TransformerTestReport = () => {
 
     // TEST 4: Ratio Test (Dynamic - add/delete rows based on transformer taps)
     ratio_tests: [
-      { tap_no: '1', applied_1u1v: '417.5', applied_1v1w: '417.5', applied_1w1u: '417.8', measured_2u2v: '', measured_2v2w: '', measured_2w2u: '', measured_2u2n: '', measured_2v2n: '', measured_2w2n: '' }
+      { tap_no: '1', applied_1u1v: '', applied_1v1w: '', applied_1w1u: '', measured_2u2v: '', measured_2v2w: '', measured_2w2u: '', measured_2u2n: '', measured_2v2n: '', measured_2w2n: '' }
     ],
 
     // TEST 5: Three Phase Magnetising Current Test (Dynamic - add/delete rows based on transformer taps)
     magnetising_current_tests: [
-      { tap_position: '1', applied_1u1v: '417.5', applied_1v1w: '417.5', applied_1w1u: '417.8', current_1u: '', current_1v: '', current_1w: '' }
+      { tap_position: '1', applied_1u1v: '', applied_1v1w: '', applied_1w1u: '', current_1u: '', current_1v: '', current_1w: '' }
     ],
 
     // TEST 6: Vector Group Test
@@ -1369,7 +1369,7 @@ const TransformerTestReport = () => {
               </table>
               <button
                 type="button"
-                onClick={() => addArrayItem('ratio_tests', { tap_no: String(formData.ratio_tests.length + 1), applied_1u1v: '417.5', applied_1v1w: '417.5', applied_1w1u: '417.8', measured_2u2v: '', measured_2v2w: '', measured_2w2u: '', measured_2u2n: '', measured_2v2n: '', measured_2w2n: '' })}
+                onClick={() => addArrayItem('ratio_tests', { tap_no: String(formData.ratio_tests.length + 1), applied_1u1v: '', applied_1v1w: '', applied_1w1u: '', measured_2u2v: '', measured_2v2w: '', measured_2w2u: '', measured_2u2n: '', measured_2v2n: '', measured_2w2n: '' })}
                 className="mt-2 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center gap-1"
               >
                 <Plus size={14} /> Add Tap
@@ -1452,7 +1452,7 @@ const TransformerTestReport = () => {
               </table>
               <button
                 type="button"
-                onClick={() => addArrayItem('magnetising_current_tests', { tap_position: String(formData.magnetising_current_tests.length + 1), applied_1u1v: '417.5', applied_1v1w: '417.5', applied_1w1u: '417.8', current_1u: '', current_1v: '', current_1w: '' })}
+                onClick={() => addArrayItem('magnetising_current_tests', { tap_position: String(formData.magnetising_current_tests.length + 1), applied_1u1v: '', applied_1v1w: '', applied_1w1u: '', current_1u: '', current_1v: '', current_1w: '' })}
                 className="mt-2 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center gap-1"
               >
                 <Plus size={14} /> Add Tap Position
