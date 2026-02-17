@@ -413,16 +413,16 @@ const Orders = () => {
           <table className="w-full min-w-[1200px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-16">FY</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase w-20">FY</th>
                 <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-20">Category</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Order No</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Customer</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-24">Order Date</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-24">Delivery</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-44">Order No</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase min-w-[160px]">Customer</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-28">Order Date</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-28">Delivery</th>
                 <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase w-28">Taxable Amt</th>
                 <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase w-28">Gross Amt</th>
-                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-24">Status</th>
-                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-24">Actions</th>
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-28">Status</th>
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase w-20">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
