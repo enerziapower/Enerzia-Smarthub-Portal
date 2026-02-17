@@ -235,16 +235,14 @@ const EquipmentServiceReport = () => {
       certificate_no: '',
       validity: ''
     },
-    voltmeter_parameters: {
-      duc_vry: '', duc_vyb: '', duc_vbr: '',
-      std_vry: '', std_vyb: '', std_vbr: ''
-    },
-    voltmeter_readings: {
-      final_duc: '', final_std: '',
-      initial_duc: '', initial_std: '',
-      difference_duc: '', difference_std: '',
-      error_percent: ''
-    },
+    voltmeter_measurement_tests: [
+      { phase: 'R-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'Y-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'B-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'R&Y-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'Y&B-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' },
+      { phase: 'R&B-PHASE', test_reading: '', standard_reading: '', error_percent: '', error_limit: '±1.0' }
+    ],
     
     // Ammeter Details
     ammeter_details: {
