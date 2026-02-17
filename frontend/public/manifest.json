@@ -1,7 +1,7 @@
 {
-  "name": "Workhub Enerzia",
-  "short_name": "Workhub",
-  "description": "Workhub Enerzia - Enterprise Management Portal for Projects, Services, and Reports",
+  "name": "Smarthub Enerzia",
+  "short_name": "Smarthub",
+  "description": "Smarthub Enerzia - Enterprise Management Portal for Projects, Services, and Reports",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
