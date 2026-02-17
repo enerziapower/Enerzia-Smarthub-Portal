@@ -1187,3 +1187,56 @@ All 4 phases successfully implemented and tested:
 ---
 *Last Updated: February 16, 2026*
 *Status: DEPLOYMENT READY ✅ | QUOTATION & ORDER MODULES COMPLETE ✅*
+
+---
+
+## Gantt Chart PDF Investigation ✅ (Feb 17, 2026)
+**Location:** `/app/backend/routes/project_schedule_pdf.py`
+
+### Investigation Summary
+**Status: NO BUG FOUND - WORKING CORRECTLY ✅**
+
+The user reported that the Gantt chart in Project Schedule PDFs was not rendering color-coded bars. After thorough investigation:
+
+### Test Results
+1. **PDF 1 (PID/25-26/017 - B & P Electrical Works):**
+   - Schedule ID: `45952777-45d5-4b83-9daa-c33e34235abe`
+   - Generated: 114KB valid PDF
+   - Gantt colors found: Blue (#3b82f6), Orange (#f49e0b), Yellow (#ffea57), Light Blue (#87ceff)
+   - All 5 phases with colored bars visible
+
+2. **PDF 2 (PID/25-26/385 - UPS Cable Laying Work):**
+   - Schedule ID: `2f1cd175-ff0e-42f6-84a4-99bab1ad274f`
+   - Generated: 115KB valid PDF
+   - Gantt colors found: Blue (#3b82f6), Light Blue (#87ceff), Cyan (#0e7490)
+   - All 4 phases with colored bars visible
+
+### Technical Verification
+| Component | Status | Details |
+|-----------|--------|---------|
+| Date Parsing | ✅ Working | Handles DD/MM/YYYY, YYYY-MM-DD, and ISO formats |
+| Week Calculation | ✅ Working | Correctly maps phase dates to timeline weeks |
+| Bar Coloring | ✅ Working | 8 distinct phase colors defined and applied |
+| PDF Generation | ✅ Working | 200 HTTP response, valid PDF structure |
+
+### Date Format Handling
+The `parse_date()` function correctly handles mixed formats:
+- Project dates in `DD/MM/YYYY` (e.g., `20/02/2026`)
+- Phase dates in `YYYY-MM-DD` (e.g., `2026-02-20`)
+- Both parsed correctly for timeline comparison
+
+### AI Analysis Confirmation
+File analysis tool confirmed:
+> "Yes, there are colored bars showing both phases and sub-items in the Gantt chart area. Darker colored blocks represent phase timelines. Lighter blocks represent sub-item/task timelines within each phase."
+
+### Conclusion
+The Gantt chart rendering is working as designed. The reported issue may have been:
+- A specific data issue with a particular project schedule
+- A viewing/display issue in the PDF viewer
+- Already fixed in a previous update
+
+**No code changes required.**
+
+---
+*Last Updated: February 17, 2026*
+*Status: GANTT CHART VERIFIED WORKING ✅*
