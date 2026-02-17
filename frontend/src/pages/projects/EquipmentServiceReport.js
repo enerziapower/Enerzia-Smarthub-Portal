@@ -3199,67 +3199,58 @@ const EquipmentServiceReport = () => {
             
             {formData.voltmeter_section_toggles?.test_results !== false && (
               <div className="space-y-6">
-                {/* Voltage Parameters Table */}
+                {/* Measurement Test Table - New Format */}
                 <div>
-                  <h3 className="font-semibold text-slate-700 mb-2">TEST RESULTS (Voltage)</h3>
+                  <h3 className="font-semibold text-slate-700 mb-2">❖ MEASUREMENT TEST:</h3>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
+                    <table className="w-full text-sm border-collapse border border-slate-300">
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="px-2 py-2 text-left border">Parameters</th>
-                          <th className="px-2 py-2 text-center border">V (R-Y)</th>
-                          <th className="px-2 py-2 text-center border">V (Y-B)</th>
-                          <th className="px-2 py-2 text-center border">V (B-R)</th>
+                          <th className="px-3 py-2 text-center border border-slate-300 font-bold">PHASE REFERENCE</th>
+                          <th className="px-3 py-2 text-center border border-slate-300 font-bold">TEST METER READING (V)</th>
+                          <th className="px-3 py-2 text-center border border-slate-300 font-bold">STANDARD METER READING (V)</th>
+                          <th className="px-3 py-2 text-center border border-slate-300 font-bold">ERROR %</th>
+                          <th className="px-3 py-2 text-center border border-slate-300 font-bold">ERROR LIMIT %</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-b hover:bg-slate-50">
-                          <td className="px-2 py-2 border font-medium">DUC Reading</td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.duc_vry || ''} onChange={(e) => handleVoltmeterParametersChange('duc_vry', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.duc_vyb || ''} onChange={(e) => handleVoltmeterParametersChange('duc_vyb', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.duc_vbr || ''} onChange={(e) => handleVoltmeterParametersChange('duc_vbr', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                        </tr>
-                        <tr className="border-b hover:bg-slate-50">
-                          <td className="px-2 py-2 border font-medium">STD Reading</td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.std_vry || ''} onChange={(e) => handleVoltmeterParametersChange('std_vry', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.std_vyb || ''} onChange={(e) => handleVoltmeterParametersChange('std_vyb', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_parameters?.std_vbr || ''} onChange={(e) => handleVoltmeterParametersChange('std_vbr', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Voltage Reading Table */}
-                <div>
-                  <h3 className="font-semibold text-slate-700 mb-2">TEST RESULTS (Reading)</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
-                      <thead className="bg-slate-100">
-                        <tr>
-                          <th className="px-2 py-2 text-left border"></th>
-                          <th className="px-2 py-2 text-center border">DUC Reading (V)</th>
-                          <th className="px-2 py-2 text-center border">Standard Reading (V)</th>
-                          <th className="px-2 py-2 text-center border">Error in %</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b hover:bg-slate-50">
-                          <td className="px-2 py-2 border font-medium">Final Reading</td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.final_duc || ''} onChange={(e) => handleVoltmeterReadingsChange('final_duc', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.final_std || ''} onChange={(e) => handleVoltmeterReadingsChange('final_std', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border" rowSpan="3"><input type="text" value={formData.voltmeter_readings?.error_percent || ''} onChange={(e) => handleVoltmeterReadingsChange('error_percent', e.target.value)} className="w-full h-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                        </tr>
-                        <tr className="border-b hover:bg-slate-50">
-                          <td className="px-2 py-2 border font-medium">Initial Reading</td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.initial_duc || ''} onChange={(e) => handleVoltmeterReadingsChange('initial_duc', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.initial_std || ''} onChange={(e) => handleVoltmeterReadingsChange('initial_std', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                        </tr>
-                        <tr className="border-b hover:bg-slate-50">
-                          <td className="px-2 py-2 border font-medium">Difference</td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.difference_duc || ''} onChange={(e) => handleVoltmeterReadingsChange('difference_duc', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                          <td className="px-1 py-1 border"><input type="text" value={formData.voltmeter_readings?.difference_std || ''} onChange={(e) => handleVoltmeterReadingsChange('difference_std', e.target.value)} className="w-full px-1 py-1 border border-slate-200 rounded text-sm text-center" /></td>
-                        </tr>
+                        {formData.voltmeter_measurement_tests?.map((test, idx) => (
+                          <tr key={idx} className="border-b hover:bg-slate-50">
+                            <td className="px-3 py-2 border border-slate-300 text-center font-medium">{test.phase}</td>
+                            <td className="px-1 py-1 border border-slate-300">
+                              <input 
+                                type="text" 
+                                value={test.test_reading || ''} 
+                                onChange={(e) => handleVoltmeterMeasurementTestChange(idx, 'test_reading', e.target.value)} 
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-center" 
+                              />
+                            </td>
+                            <td className="px-1 py-1 border border-slate-300">
+                              <input 
+                                type="text" 
+                                value={test.standard_reading || ''} 
+                                onChange={(e) => handleVoltmeterMeasurementTestChange(idx, 'standard_reading', e.target.value)} 
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-center" 
+                              />
+                            </td>
+                            <td className="px-1 py-1 border border-slate-300">
+                              <input 
+                                type="text" 
+                                value={test.error_percent || ''} 
+                                onChange={(e) => handleVoltmeterMeasurementTestChange(idx, 'error_percent', e.target.value)} 
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-center" 
+                              />
+                            </td>
+                            <td className="px-1 py-1 border border-slate-300">
+                              <input 
+                                type="text" 
+                                value={test.error_limit || ''} 
+                                onChange={(e) => handleVoltmeterMeasurementTestChange(idx, 'error_limit', e.target.value)} 
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-center" 
+                              />
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
