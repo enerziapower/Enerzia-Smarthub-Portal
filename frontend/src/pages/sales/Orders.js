@@ -468,7 +468,7 @@ const Orders = () => {
                   return (
                     <tr key={order.id} className="hover:bg-slate-50" data-testid={`order-row-${order.id}`}>
                       {/* Financial Year */}
-                      <td className="px-3 py-3 text-sm text-slate-600 font-mono">{extractFY()}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600 font-mono whitespace-nowrap">{extractFY()}</td>
                       
                       {/* Category */}
                       <td className="px-3 py-3">
@@ -481,30 +481,31 @@ const Orders = () => {
                         )}
                       </td>
                       
-                      {/* Order No */}
-                      <td className="px-3 py-3">
-                        <div>
-                          <span className="font-medium text-slate-900">{order.order_no}</span>
+                      {/* Order No - Fixed width with text wrap */}
+                      <td className="px-3 py-3 max-w-[180px]">
+                        <div className="break-words">
+                          <span className="font-medium text-slate-900 text-sm">{order.order_no}</span>
                           {order.quotation_no && (
                             <div className="text-xs text-blue-600 flex items-center gap-1 mt-0.5">
-                              <Link2 className="w-3 h-3" /> From {order.quotation_no}
+                              <Link2 className="w-3 h-3 flex-shrink-0" /> <span className="truncate">From {order.quotation_no}</span>
                             </div>
                           )}
                         </div>
                       </td>
                       
                       {/* Customer */}
-                      <td className="px-3 py-3 text-sm text-slate-600">{order.customer_name}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{order.customer_name}</td>
                       
                       {/* Order Date (PO Date) */}
-                      <td className="px-3 py-3 text-sm text-slate-600">{order.po_date || order.date || '-'}</td>
+                      <td className="px-3 py-3 text-sm text-slate-600 whitespace-nowrap">{order.po_date || order.date || '-'}</td>
                       
                       {/* Delivery Date */}
-                      <td className="px-3 py-3 text-sm text-slate-600">{order.delivery_date || '-'}</td>
+                      <td className="px-3 py-3 text-sm text-slate-600 whitespace-nowrap">{order.delivery_date || '-'}</td>
                       
                       {/* Taxable Amount (Subtotal) */}
-                      <td className="px-3 py-3 text-sm text-right font-medium text-slate-700">
+                      <td className="px-3 py-3 text-sm text-right font-medium text-slate-700 whitespace-nowrap">
                         {formatCurrency(order.subtotal || 0)}
+                      </td>
                       </td>
                       
                       {/* Gross Amount (Total) */}
