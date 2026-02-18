@@ -37,12 +37,37 @@ class TestEmailRequest(BaseModel):
 
 def get_frontend_url(request: Request = None) -> str:
     """Get frontend URL dynamically based on request origin or environment"""
-    # First try FRONTEND_URL from environment
+    
+    # Try to detect from request headers first (most reliable for production)
+    if request:
+        # Check Origin header
+        origin = request.headers.get("origin")
+        if origin and "smarthub.enerzia.com" in origin:
+            return "https://smarthub.enerzia.com"
+        
+        # Check Referer header
+        referer = request.headers.get("referer")
+        if referer and "smarthub.enerzia.com" in referer:
+            return "https://smarthub.enerzia.com"
+        
+        # Check Host header
+        host = request.headers.get("host")
+        if host:
+            if "smarthub.enerzia.com" in host:
+                return "https://smarthub.enerzia.com"
+            # For any custom domain, use https
+            if not host.startswith("localhost") and not "preview.emergentagent.com" in host:
+                return f"https://{host}"
+    
+    # Check FRONTEND_URL from environment
     frontend_url = os.environ.get("FRONTEND_URL")
     if frontend_url:
+        # Override any old preview URLs
+        if "enerzia-portal" in frontend_url or "erp-zoho-sync" in frontend_url:
+            return "https://smarthub.enerzia.com"
         return frontend_url
     
-    # Default fallback
+    # Default fallback - always use production URL
     return "https://smarthub.enerzia.com"
 
 
