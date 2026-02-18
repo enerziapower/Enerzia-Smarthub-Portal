@@ -893,7 +893,18 @@ const EquipmentServiceReport = () => {
               
               // Load new fields: report_date, overall_result, recommendations, designations
               if (reportData.report_date) merged.report_date = reportData.report_date;
-              if (reportData.overall_result) merged.overall_result = reportData.overall_result;
+              // Support both overall_result and overall_condition (database uses overall_condition)
+              if (reportData.overall_result) {
+                merged.overall_result = reportData.overall_result;
+              } else if (reportData.overall_condition) {
+                // Map from database field name to form field name
+                const conditionMap = {
+                  'satisfactory': 'Satisfactory',
+                  'needs_attention': 'Needs Attention', 
+                  'critical': 'Critical'
+                };
+                merged.overall_result = conditionMap[reportData.overall_condition.toLowerCase()] || reportData.overall_condition;
+              }
               if (reportData.recommendations) merged.recommendations = reportData.recommendations;
               if (reportData.engineer_designation) merged.engineer_designation = reportData.engineer_designation;
               if (reportData.customer_designation) merged.customer_designation = reportData.customer_designation;
