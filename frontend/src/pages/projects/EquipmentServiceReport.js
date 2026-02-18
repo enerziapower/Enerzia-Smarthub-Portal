@@ -804,6 +804,8 @@ const EquipmentServiceReport = () => {
                 status: reportData.status || prev.status,
                 // Equipment details
                 equipment_details: reportData.equipment_details || prev.equipment_details,
+                // Test Results (for Lightning Arrestor and generic equipment types)
+                test_results: reportData.test_results || prev.test_results,
                 // Checklist
                 checklist: reportData.checklist || prev.checklist,
                 // Points to Ensure (for Panel)
