@@ -1415,34 +1415,32 @@ All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowi
 | **1. Duplicate TEST RESULTS in PDF** | Added `lightning-arrestor` to exclusion list in generic `create_test_results_section` call (line 3931-3932) |
 | **2. Equipment Name/Location in PDF** | Removed "Equipment Name" and "Equipment Location" rows from equipment details (line 622-629) |
 | **3. Date of Energization → Next Due On** | Renamed field label in both PDF (line 628) and UI (lines 1821-1842) |
-| **4. Data missing on Edit** | Added `next_due_on` field to formData state and data loading merge |
+| **4. Data missing on Edit** | Added `test_results` to the formData merge object (line 807-808) and fixed `overall_condition` → `overall_result` mapping (line 896-907) |
 
-### Technical Details
+### Technical Details - Data Loading Fix
 
-**PDF Equipment Details (Before):**
-```
-Equipment Name: | [value] | Equipment Location: | [value]
-LA Type: | [value] | Make: | [value]
-Rated Voltage (kV): | [value] | Location: | [value]
-Date of Testing: | [date] | Date of Energization: | [date]
-```
+**Root Cause:** When editing a Lightning Arrestor report, the `test_results` array was not being merged from the saved report data into the form state. It was only being initialized from the template.
 
-**PDF Equipment Details (After):**
-```
-LA Type: | [value] | Make: | [value]
-Rated Voltage (kV): | [value] | Location: | [value]
-Date of Testing: | [date] | Next Due On: | [date]
-```
+**Fix Applied (EquipmentServiceReport.js):**
+```javascript
+// Added to merge object (line 807-808)
+test_results: reportData.test_results || prev.test_results,
 
-**UI Changes:**
-- "Date of Energization" field hidden for lightning-arrestor equipment type
-- New "Next Due On" field added specifically for lightning-arrestor
-- Field properly saved and loaded during edit operations
+// Added overall_condition to overall_result mapping (lines 896-907)
+if (reportData.overall_condition) {
+  const conditionMap = {
+    'satisfactory': 'Satisfactory',
+    'needs_attention': 'Needs Attention', 
+    'critical': 'Critical'
+  };
+  merged.overall_result = conditionMap[reportData.overall_condition.toLowerCase()] || reportData.overall_condition;
+}
+```
 
 ### Testing Results
 - Backend: 100% (8/8 tests passed)
-- Frontend: 100% (all UI changes verified)
-- PDF Analysis: Confirmed no duplicates, correct fields, correct labels
+- Frontend: 100% (all UI changes verified via screenshots)
+- All fields now load correctly when editing: Test Results (IR value, Leakage Current), Checklist status, Overall Result, Remarks
 
 ---
 *Last Updated: February 18, 2026*
