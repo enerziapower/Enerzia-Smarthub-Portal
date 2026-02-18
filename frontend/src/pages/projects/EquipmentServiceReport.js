@@ -1816,12 +1816,23 @@ const EquipmentServiceReport = () => {
                 className="h-10 border-slate-200 focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {equipmentType !== 'energy_meter' && equipmentType !== 'energy-meter' && (
+            {equipmentType !== 'energy_meter' && equipmentType !== 'energy-meter' && equipmentType !== 'lightning_arrestor' && equipmentType !== 'lightning-arrestor' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date of Energization</label>
                 <DatePicker
                   value={formData.date_of_energization || ''}
                   onChange={(val) => handleInputChange({ target: { name: 'date_of_energization', value: val } })}
+                  placeholder="Select date"
+                  className="h-10 border-slate-200 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+            {(equipmentType === 'lightning_arrestor' || equipmentType === 'lightning-arrestor') && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Next Due On</label>
+                <DatePicker
+                  value={formData.next_due_on || formData.date_of_energization || ''}
+                  onChange={(val) => handleInputChange({ target: { name: 'next_due_on', value: val } })}
                   placeholder="Select date"
                   className="h-10 border-slate-200 focus:ring-2 focus:ring-blue-500"
                 />

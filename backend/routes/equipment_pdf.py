@@ -623,10 +623,9 @@ def create_equipment_details_section(report, styles, width, equipment_type):
             # Lightning Arrestor uses equipment_details object for storage
             eq_details = report.get('equipment_details', {})
             data = [
-                ['Equipment Name:', report.get('equipment_name', ''), 'Equipment Location:', report.get('equipment_location', '') or report.get('location', '')],
                 ['LA Type:', eq_details.get('la_type', ''), 'Make:', eq_details.get('make', '')],
-                ['Rated Voltage (kV):', eq_details.get('rated_voltage', ''), 'Location:', eq_details.get('location', '')],
-                ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Date of Energization:', format_date_ddmmyyyy(report.get('date_of_energization', ''))],
+                ['Rated Voltage (kV):', eq_details.get('rated_voltage', ''), 'Location:', eq_details.get('location', '') or report.get('equipment_location', '') or report.get('location', '')],
+                ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Next Due On:', format_date_ddmmyyyy(report.get('next_due_on', '') or report.get('date_of_energization', ''))],
             ]
         elif equipment_type == 'relay':
             # Relay - skip Equipment Name/Location as not in UI
@@ -3928,8 +3927,8 @@ def generate_equipment_pdf_buffer(report: dict, org_settings: dict, equipment_ty
         elements.extend(create_battery_inspection_section(report, styles, content_width))
         elements.extend(create_battery_test_data_section(report, styles, content_width))
     
-    # Generic test results section (skip for meters and battery as they have their own)
-    if equipment_type not in ['energy_meter', 'energy-meter', 'voltmeter', 'ammeter', 'battery']:
+    # Generic test results section (skip for meters, battery, and lightning-arrestor as they have their own)
+    if equipment_type not in ['energy_meter', 'energy-meter', 'voltmeter', 'ammeter', 'battery', 'lightning-arrestor', 'lightning_arrestor']:
         elements.extend(create_test_results_section(report, styles, content_width, equipment_type))
     elements.extend(create_overall_result_section(report, styles, content_width))
     elements.extend(create_signature_section(report, styles, content_width))
