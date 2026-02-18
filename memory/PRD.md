@@ -1399,3 +1399,51 @@ All Applied Primary Voltage fields (1U-1V, 1V-1W, 1W-1U) now start empty, allowi
 ---
 *Last Updated: February 17, 2026*
 *Status: REBRANDING COMPLETE ✅ | READY FOR DEPLOYMENT*
+
+
+---
+
+## Lightning Arrestor Test Report - 4 Bug Fixes ✅ (Feb 18, 2026)
+**Files Modified:**
+- `/app/backend/routes/equipment_pdf.py` (PDF generation)
+- `/app/frontend/src/pages/projects/EquipmentServiceReport.js` (UI)
+
+### Issues Fixed
+
+| Issue | Fix Applied |
+|-------|-------------|
+| **1. Duplicate TEST RESULTS in PDF** | Added `lightning-arrestor` to exclusion list in generic `create_test_results_section` call (line 3931-3932) |
+| **2. Equipment Name/Location in PDF** | Removed "Equipment Name" and "Equipment Location" rows from equipment details (line 622-629) |
+| **3. Date of Energization → Next Due On** | Renamed field label in both PDF (line 628) and UI (lines 1821-1842) |
+| **4. Data missing on Edit** | Added `next_due_on` field to formData state and data loading merge |
+
+### Technical Details
+
+**PDF Equipment Details (Before):**
+```
+Equipment Name: | [value] | Equipment Location: | [value]
+LA Type: | [value] | Make: | [value]
+Rated Voltage (kV): | [value] | Location: | [value]
+Date of Testing: | [date] | Date of Energization: | [date]
+```
+
+**PDF Equipment Details (After):**
+```
+LA Type: | [value] | Make: | [value]
+Rated Voltage (kV): | [value] | Location: | [value]
+Date of Testing: | [date] | Next Due On: | [date]
+```
+
+**UI Changes:**
+- "Date of Energization" field hidden for lightning-arrestor equipment type
+- New "Next Due On" field added specifically for lightning-arrestor
+- Field properly saved and loaded during edit operations
+
+### Testing Results
+- Backend: 100% (8/8 tests passed)
+- Frontend: 100% (all UI changes verified)
+- PDF Analysis: Confirmed no duplicates, correct fields, correct labels
+
+---
+*Last Updated: February 18, 2026*
+*Status: LIGHTNING ARRESTOR FIXES COMPLETE ✅*
