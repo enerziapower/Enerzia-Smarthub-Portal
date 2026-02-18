@@ -308,6 +308,7 @@ PANEL_TEMPLATE = {
         {"name": "make", "label": "Make", "type": "text"},
         {"name": "rated_voltage", "label": "Rated Voltage (V)", "type": "text"},
         {"name": "rated_current", "label": "Rated Current (A)", "type": "text"},
+        {"name": "next_due_date", "label": "Next Due Date", "type": "date"},
     ],
     "panel_section_toggles": {
         "checklist": True,
