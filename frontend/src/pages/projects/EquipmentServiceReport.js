@@ -834,14 +834,12 @@ const EquipmentServiceReport = () => {
                 voltmeter_details: reportData.voltmeter_details || prev.voltmeter_details,
                 voltmeter_section_toggles: reportData.voltmeter_section_toggles || prev.voltmeter_section_toggles,
                 voltmeter_master_standard: reportData.voltmeter_master_standard || prev.voltmeter_master_standard,
-                voltmeter_parameters: reportData.voltmeter_parameters || prev.voltmeter_parameters,
-                voltmeter_readings: reportData.voltmeter_readings || prev.voltmeter_readings,
+                voltmeter_measurement_tests: reportData.voltmeter_measurement_tests || prev.voltmeter_measurement_tests,
                 // Ammeter Details
                 ammeter_details: reportData.ammeter_details || prev.ammeter_details,
                 ammeter_section_toggles: reportData.ammeter_section_toggles || prev.ammeter_section_toggles,
                 ammeter_master_standard: reportData.ammeter_master_standard || prev.ammeter_master_standard,
-                ammeter_parameters: reportData.ammeter_parameters || prev.ammeter_parameters,
-                ammeter_readings: reportData.ammeter_readings || prev.ammeter_readings,
+                ammeter_measurement_tests: reportData.ammeter_measurement_tests || prev.ammeter_measurement_tests,
                 // Signature fields
                 engineer_signature_name: reportData.engineer_signature_name || prev.engineer_signature_name,
                 engineer_signature_date: reportData.engineer_signature_date || prev.engineer_signature_date,
