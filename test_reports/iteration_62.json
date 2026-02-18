@@ -1,0 +1,116 @@
+{
+  "summary": "Lightning Arrestor Test Report fixes verified - All 4 issues resolved. Backend tests: 8/8 passed (100%). Frontend UI verified via Playwright.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_lightning_arrestor_fixes.py",
+    "/app/test_reports/pytest/pytest_lightning_arrestor_fixes.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_lightning_arrestor_fixes.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (all fixes verified)"
+  },
+  "seed_data_creation": "Used existing Lightning Arrestor report ID: e732bd6b-a186-43ff-ba81-9ec89b656b19",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Lightning Arrestor Test Report fixes fully verified. All 4 issues from the problem statement are resolved: 1) No duplicate TEST RESULTS section in PDF, 2) Equipment Name/Location fields removed from PDF, 3) 'Next Due On' label shown instead of 'Date of Energization' in both UI and PDF, 4) Edit form loads all saved data correctly (customer_info, service_provider, equipment_details).",
+  "test_results": {
+    "Backend_API_Tests": {
+      "test_get_lightning_arrestor_report": "PASS - All report data loaded correctly",
+      "test_lightning_arrestor_pdf_generation": "PASS - PDF generated successfully (119717 bytes)",
+      "test_pdf_no_duplicate_test_results": "PASS - Exactly 1 TEST RESULTS section found",
+      "test_pdf_no_equipment_name_location_fields": "PASS - Equipment Name/Location NOT in PDF",
+      "test_pdf_shows_next_due_on_label": "PASS - 'Next Due On:' label present in PDF",
+      "test_report_data_persistence": "PASS - All fields persisted correctly",
+      "test_next_due_on_field_in_api_response": "PASS - next_due_on field present",
+      "test_list_lightning_arrestor_reports": "PASS - List API working"
+    },
+    "Frontend_UI_Tests": {
+      "Edit_Form_Navigation": "PASS - Form loads at /projects/project-reports/service/lightning-arrestor/{id}/edit",
+      "Next_Due_On_Field": "PASS - 'Next Due On' label visible in Report Information section",
+      "Date_of_Energization_Hidden": "PASS - 'Date of Energization' field NOT visible for lightning-arrestor",
+      "Customer_Info_Loading": {
+        "company_name": "PASS - 'Sevalaya' loaded",
+        "site_location": "PASS - 'Alwarpet' loaded",
+        "project_name": "PASS - 'PID/25-26/333 - Solar Street light' loaded",
+        "po_ref": "PASS - 'WO11' loaded",
+        "contact_person": "PASS - 'Mr. Siva' loaded",
+        "contact_phone": "PASS - '7397409719' loaded",
+        "contact_email": "PASS - 'siva@cbre.com' loaded"
+      },
+      "Service_Provider_Loading": {
+        "company_name": "PASS - 'Enerzia Power Solutions' loaded",
+        "engineer_name": "PASS - 'Arulraj - Sr. Project Engineer' loaded"
+      },
+      "Equipment_Details_Loading": {
+        "la_type": "PASS - 'Station Class' loaded",
+        "make": "PASS - 'BIYBKBK' loaded",
+        "rated_voltage": "PASS - 'KJBKJBJ' loaded",
+        "location": "PASS - 'JHVJHVHV' loaded"
+      }
+    },
+    "PDF_Content_Analysis": {
+      "total_pages": 2,
+      "test_results_sections": 1,
+      "equipment_name_field": "NOT PRESENT (correct)",
+      "equipment_location_field": "NOT PRESENT (correct)",
+      "next_due_on_label": "PRESENT (correct)",
+      "fields_in_equipment_details": ["LA Type", "Make", "Rated Voltage (kV)", "Location", "Date of Testing", "Next Due On"]
+    }
+  },
+  "issues_verified_fixed": {
+    "issue_1_duplicate_test_results": {
+      "status": "FIXED",
+      "verification": "PDF text analysis shows exactly 1 'TEST RESULTS' section",
+      "code_fix_location": "/app/backend/routes/equipment_pdf.py line 3931 - lightning-arrestor excluded from generic test_results section"
+    },
+    "issue_2_equipment_name_location_removed": {
+      "status": "FIXED",
+      "verification": "PDF does NOT contain 'Equipment Name:' or 'Equipment Location:' fields",
+      "code_fix_location": "/app/backend/routes/equipment_pdf.py lines 622-629 - Lightning Arrestor equipment details only shows LA Type, Make, Rated Voltage, Location, Date of Testing, Next Due On"
+    },
+    "issue_3_next_due_on_label_in_pdf": {
+      "status": "FIXED",
+      "verification": "PDF shows 'Next Due On:' label with value '19-01-2026'",
+      "code_fix_location": "/app/backend/routes/equipment_pdf.py line 628 - Uses 'Next Due On:' label"
+    },
+    "issue_4_next_due_on_label_in_ui": {
+      "status": "FIXED",
+      "verification": "UI form shows 'Next Due On' field for lightning-arrestor, 'Date of Energization' is hidden",
+      "code_fix_location": "/app/frontend/src/pages/projects/EquipmentServiceReport.js lines 1821-1842 - Conditional rendering based on equipment type"
+    },
+    "issue_5_data_loading_on_edit": {
+      "status": "FIXED",
+      "verification": "All saved data loads correctly when editing report - Company Name, Site Location, Project, Contact Person, etc.",
+      "code_fix_location": "/app/frontend/src/pages/projects/EquipmentServiceReport.js line 800 - next_due_on field merged in edit mode"
+    }
+  },
+  "test_credentials_used": {
+    "admin_login": {
+      "email": "admin@enerzia.com",
+      "password": "admin123"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All APIs connect to real MongoDB - no mocked data"
+  },
+  "api_endpoints_tested": [
+    "POST /api/auth/login - Authentication",
+    "GET /api/test-reports/{id} - Get single Lightning Arrestor report",
+    "GET /api/test-reports/equipment/lightning-arrestor - List Lightning Arrestor reports",
+    "GET /api/equipment-report/lightning-arrestor/{id}/pdf - Generate PDF"
+  ]
+}
