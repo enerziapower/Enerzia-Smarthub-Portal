@@ -797,6 +797,7 @@ const EquipmentServiceReport = () => {
                 test_date: reportData.test_date || prev.test_date,
                 date_of_testing: reportData.date_of_testing || prev.date_of_testing,
                 date_of_energization: reportData.date_of_energization || prev.date_of_energization,
+                next_due_on: reportData.next_due_on || prev.next_due_on,
                 tested_by: reportData.tested_by || prev.tested_by,
                 witnessed_by: reportData.witnessed_by || prev.witnessed_by,
                 remarks: reportData.remarks || prev.remarks,
