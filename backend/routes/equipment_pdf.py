@@ -656,11 +656,15 @@ def create_equipment_details_section(report, styles, width, equipment_type):
                 ['Device Name:', battery_details.get('device_name', ''), 'Battery Make:', battery_details.get('battery_make', '')],
                 ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Next Due Date:', format_date_ddmmyyyy(report.get('next_due_date', ''))],
             ]
-        elif equipment_type == 'electrical-panel':
-            data.extend([
-                ['Panel Type:', report.get('panel_type', ''), 'Voltage:', report.get('voltage', '')],
-                ['No. of Feeders:', report.get('feeder_count', ''), 'Bus Bar Rating:', report.get('busbar_rating', '')],
-            ])
+        elif equipment_type == 'electrical-panel' or equipment_type == 'panel':
+            # Panel / DB uses equipment_details object for storage - match UI fields exactly
+            eq_details = report.get('equipment_details', {})
+            data = [
+                ['Panel Name:', eq_details.get('panel_name', ''), 'Panel Type:', eq_details.get('panel_type', '')],
+                ['Location:', eq_details.get('location', '') or report.get('equipment_location', '') or report.get('location', ''), 'Make:', eq_details.get('make', '')],
+                ['Rated Voltage (V):', eq_details.get('rated_voltage', ''), 'Rated Current (A):', eq_details.get('rated_current', '')],
+                ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Next Due Date:', format_date_ddmmyyyy(report.get('next_due_date', ''))],
+            ]
         elif equipment_type == 'ir-thermography':
             data.extend([
                 ['Camera Model:', report.get('camera_model', ''), 'Emissivity:', report.get('emissivity', '')],
