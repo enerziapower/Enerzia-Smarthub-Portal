@@ -93,6 +93,7 @@ const EquipmentServiceReport = () => {
     test_date: new Date().toISOString().split('T')[0],
     date_of_testing: new Date().toISOString().split('T')[0],
     date_of_energization: '',
+    next_due_on: '',
     tested_by: user?.name || '',
     witnessed_by: '',
     remarks: '',
