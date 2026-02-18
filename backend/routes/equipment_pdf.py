@@ -772,6 +772,11 @@ def create_acb_insulation_resistance_section(report, styles, width):
     """Create Section 2: Insulation Resistance Test for ACB."""
     elements = []
     
+    # Check if section is enabled
+    section_toggles = report.get('acb_section_toggles', {})
+    if section_toggles.get('insulation_resistance_test') is False:
+        return elements
+    
     insulation_data = report.get('insulation_resistance', {})
     if not insulation_data or not isinstance(insulation_data, dict):
         return elements
@@ -890,6 +895,11 @@ def create_acb_coil_resistance_section(report, styles, width):
     """Create Section 3: Coil Resistance Measurement for ACB."""
     elements = []
     
+    # Check if section is enabled
+    section_toggles = report.get('acb_section_toggles', {})
+    if section_toggles.get('coil_resistance_test') is False:
+        return elements
+    
     coil_data = report.get('coil_resistance', {})
     if not coil_data or not isinstance(coil_data, dict):
         return elements
@@ -928,6 +938,11 @@ def create_acb_coil_resistance_section(report, styles, width):
 def create_acb_contact_resistance_section(report, styles, width):
     """Create Section 4: Contact Resistance Measurement for ACB."""
     elements = []
+    
+    # Check if section is enabled
+    section_toggles = report.get('acb_section_toggles', {})
+    if section_toggles.get('contact_resistance_test') is False:
+        return elements
     
     contact_data = report.get('contact_resistance', {})
     if not contact_data or not isinstance(contact_data, dict):
