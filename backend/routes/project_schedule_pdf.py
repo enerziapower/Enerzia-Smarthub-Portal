@@ -1120,9 +1120,10 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                             row_types.append(('subitem', idx))
                     
                     # Calculate column widths for landscape - day columns
+                    # Use fixed width based on max_days_per_page for consistency across all pages
                     phase_col_width = 180
                     available_width = landscape_width - 80 - phase_col_width
-                    day_col_width = available_width / num_days_this_page
+                    day_col_width = available_width / max_days_per_page  # Fixed width for all pages
                     gantt_col_widths = [phase_col_width] + [day_col_width] * num_days_this_page
                     
                     # Calculate row heights
