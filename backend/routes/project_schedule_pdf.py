@@ -1020,198 +1020,192 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
             elements.append(Spacer(1, 15))
         
         # =====================================================
-        # GANTT CHART - ALREADY LANDSCAPE
+        # GANTT CHART - DAY-WISE WITH PAGINATION
         # =====================================================
         project_start = parse_date(schedule_data.get('start_date', ''))
         project_end = parse_date(schedule_data.get('end_date', ''))
         
         if project_start and project_end:
-            total_days = (project_end - project_start).days
+            total_days = (project_end - project_start).days + 1  # Include end date
             if total_days > 0:
-                # Already in landscape mode, just add page break if needed
-                elements.append(Spacer(1, 20))
+                # Max days per page (landscape can fit about 25-30 day columns)
+                max_days_per_page = 25
+                num_pages = math.ceil(total_days / max_days_per_page)
                 
-                gantt_header_data = [['TIMELINE VISUALIZATION (GANTT CHART)']]
-                gantt_header_table = Table(gantt_header_data, colWidths=[landscape_width - 80])
-                gantt_header_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1e40af')),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 11),
-                    ('TOPPADDING', (0, 0), (-1, -1), 8),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                ]))
-                elements.append(gantt_header_table)
-                elements.append(Spacer(1, 15))
-                
-                # Calculate weeks - more columns in landscape
-                num_weeks = math.ceil(total_days / 7)
-                num_weeks = min(num_weeks, 20)  # Max 20 weeks in landscape
-                
-                # Build Gantt header row with exact date labels - WHITE TEXT for visibility
-                gantt_headers = [Paragraph('<font color="white"><b>Phase / Sub-Item</b></font>', styles['ScheduleTableCellBold'])]
-                current_date = project_start
-                for w in range(num_weeks):
-                    # Show exact date range for each week - WHITE TEXT
-                    week_start_str = current_date.strftime('%d/%m')
-                    gantt_headers.append(Paragraph(f'<font color="white"><b>{week_start_str}</b></font>', styles['ScheduleTableCellCenter']))
-                    current_date += timedelta(days=7)
-                
-                gantt_data = [gantt_headers]
-                row_types = []  # Track if row is 'phase' or 'subitem'
-                
-                # Add phase rows with their sub-items
-                for idx, phase in enumerate(phases):
-                    phase_name = phase.get('name', '')[:35]
-                    # Try multiple field names for dates
-                    phase_start_str = phase.get('start', '') or phase.get('start_date', '')
-                    phase_end_str = phase.get('end', '') or phase.get('end_date', '')
-                    progress = phase.get('progress', 0)
+                for page_idx in range(num_pages):
+                    if page_idx > 0:
+                        elements.append(PageBreak())
                     
-                    # Phase name with progress and dates - FORMAT dates to DD-MM-YYYY
-                    phase_dates = ""
-                    if phase_start_str and phase_end_str:
-                        formatted_start = format_date_display(phase_start_str)
-                        formatted_end = format_date_display(phase_end_str)
-                        phase_dates = f"<br/><font size='6' color='#475569'>{formatted_start} - {formatted_end}</font>"
-                    row = [Paragraph(f"<b>{phase_name}</b>{phase_dates}<br/><font size='7' color='#1e40af'>{progress}%</font>", styles['PhaseName'])]
+                    elements.append(Spacer(1, 20))
                     
-                    # Calculate which weeks this phase spans - NO TEXT, just empty cells
-                    for w in range(num_weeks):
-                        row.append('')  # Empty - color will be applied via TableStyle
+                    # Calculate date range for this page
+                    page_start_day = page_idx * max_days_per_page
+                    page_end_day = min((page_idx + 1) * max_days_per_page, total_days)
+                    num_days_this_page = page_end_day - page_start_day
                     
-                    gantt_data.append(row)
-                    row_types.append(('phase', idx))
+                    page_start_date = project_start + timedelta(days=page_start_day)
+                    page_end_date = project_start + timedelta(days=page_end_day - 1)
                     
-                    # Add sub-items for this phase
-                    sub_items = phase.get('subItems', [])
-                    for sub_idx, sub_item in enumerate(sub_items):
-                        sub_desc = sub_item.get('description', f'Sub-item {sub_idx + 1}')[:40]
-                        sub_qty = sub_item.get('qty', '') or sub_item.get('quantity', '')
-                        sub_unit = sub_item.get('unit', '')
-                        qty_str = f" ({sub_qty} {sub_unit})" if sub_qty else ""
-                        
-                        # Try multiple field names for sub-item dates - FORMAT to DD-MM-YYYY
-                        sub_start_str = sub_item.get('start_date', '') or sub_item.get('start', '')
-                        sub_end_str = sub_item.get('end_date', '') or sub_item.get('end', '')
-                        sub_dates = ""
-                        if sub_start_str and sub_end_str:
-                            formatted_sub_start = format_date_display(sub_start_str)
-                            formatted_sub_end = format_date_display(sub_end_str)
-                            sub_dates = f"<br/><font size='6' color='#64748b'>{formatted_sub_start} - {formatted_sub_end}</font>"
-                        
-                        sub_row = [Paragraph(f"<font size='7'>{sub_desc}</font>{qty_str}{sub_dates}", styles['ScheduleTableCell'])]
-                        
-                        for w in range(num_weeks):
-                            sub_row.append('')
-                        
-                        gantt_data.append(sub_row)
-                        row_types.append(('subitem', idx))
-                
-                # Calculate column widths for landscape
-                phase_col_width = 200
-                available_width = landscape_width - 80 - phase_col_width
-                week_col_width = available_width / num_weeks
-                gantt_col_widths = [phase_col_width] + [week_col_width] * num_weeks
-                
-                # Calculate row heights (phases taller, sub-items smaller)
-                row_heights = [32]  # Header
-                for rt in row_types:
-                    if rt[0] == 'phase':
-                        row_heights.append(42)
+                    # Header with page info if multiple pages
+                    if num_pages > 1:
+                        header_text = f'TIMELINE VISUALIZATION (GANTT CHART) - Page {page_idx + 1}/{num_pages}'
                     else:
-                        row_heights.append(30)
-                
-                gantt_table = Table(gantt_data, colWidths=gantt_col_widths, rowHeights=row_heights)
-                
-                gantt_styles = [
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a5f')),  # Dark blue header
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text in header
-                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('ALIGN', (0, 1), (0, -1), 'LEFT'),
-                    ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 9),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),
-                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 5),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]
-                
-                # Color the phase and sub-item bars
-                data_row_idx = 1  # Start after header
-                for row_info in row_types:
-                    row_type, phase_idx = row_info
-                    phase = phases[phase_idx]
-                    color = PHASE_COLORS[phase_idx % len(PHASE_COLORS)]
+                        header_text = 'TIMELINE VISUALIZATION (GANTT CHART)'
                     
-                    if row_type == 'phase':
-                        # Phase row - use full color, light background for name
-                        gantt_styles.append(('BACKGROUND', (0, data_row_idx), (0, data_row_idx), colors.HexColor('#f1f5f9')))
-                        phase_start_date = parse_date(phase.get('start', '')) or parse_date(phase.get('start_date', ''))
-                        phase_end_date = parse_date(phase.get('end', '')) or parse_date(phase.get('end_date', ''))
+                    gantt_header_data = [[header_text]]
+                    gantt_header_table = Table(gantt_header_data, colWidths=[landscape_width - 80])
+                    gantt_header_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1e40af')),
+                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 11),
+                        ('TOPPADDING', (0, 0), (-1, -1), 8),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ]))
+                    elements.append(gantt_header_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Build Gantt header row with daily date labels
+                    gantt_headers = [Paragraph('<font color="white"><b>Phase / Sub-Item</b></font>', styles['ScheduleTableCellBold'])]
+                    current_date = page_start_date
+                    for d in range(num_days_this_page):
+                        # Show date as DD/MM format
+                        day_str = current_date.strftime('%d/%m')
+                        gantt_headers.append(Paragraph(f'<font color="white"><b>{day_str}</b></font>', styles['ScheduleTableCellCenter']))
+                        current_date += timedelta(days=1)
+                    
+                    gantt_data = [gantt_headers]
+                    row_types = []  # Track if row is 'phase' or 'subitem'
+                    
+                    # Add phase rows with their sub-items
+                    for idx, phase in enumerate(phases):
+                        phase_name = phase.get('name', '')[:30]
+                        phase_start_str = phase.get('start', '') or phase.get('start_date', '')
+                        phase_end_str = phase.get('end', '') or phase.get('end_date', '')
+                        progress = phase.get('progress', 0)
                         
-                        # If still no dates, try to infer from sub-items
-                        if not phase_start_date or not phase_end_date:
-                            sub_items = phase.get('subItems', [])
-                            for sub in sub_items:
-                                sub_s = parse_date(sub.get('start_date', '')) or parse_date(sub.get('start', ''))
-                                sub_e = parse_date(sub.get('end_date', '')) or parse_date(sub.get('end', ''))
-                                if sub_s:
-                                    if not phase_start_date or sub_s < phase_start_date:
-                                        phase_start_date = sub_s
-                                if sub_e:
-                                    if not phase_end_date or sub_e > phase_end_date:
-                                        phase_end_date = sub_e
+                        # Phase name with progress
+                        row = [Paragraph(f"<b>{phase_name}</b><br/><font size='7' color='#1e40af'>{progress}%</font>", styles['PhaseName'])]
                         
-                        for col_idx in range(1, num_weeks + 1):
-                            week_start = project_start + timedelta(days=(col_idx - 1) * 7)
-                            week_end = week_start + timedelta(days=7)
-                            
-                            if phase_start_date and phase_end_date:
-                                if phase_start_date <= week_end and phase_end_date >= week_start:
-                                    gantt_styles.append(('BACKGROUND', (col_idx, data_row_idx), (col_idx, data_row_idx), color))
-                    else:
-                        # Sub-item row - use lighter color, even lighter background for name
-                        gantt_styles.append(('BACKGROUND', (0, data_row_idx), (0, data_row_idx), colors.HexColor('#f8fafc')))
+                        # Empty cells for days - color will be applied via TableStyle
+                        for d in range(num_days_this_page):
+                            row.append('')
                         
-                        # Find the sub-item
+                        gantt_data.append(row)
+                        row_types.append(('phase', idx))
+                        
+                        # Add sub-items for this phase
                         sub_items = phase.get('subItems', [])
-                        # Calculate which sub-item this is
-                        sub_idx = 0
-                        for i, rt in enumerate(row_types[:data_row_idx]):
-                            if rt[0] == 'subitem' and rt[1] == phase_idx:
-                                sub_idx += 1
-                        sub_idx -= 1  # Adjust for current item
-                        
-                        if sub_idx >= 0 and sub_idx < len(sub_items):
-                            sub_item = sub_items[sub_idx]
-                            sub_start = parse_date(sub_item.get('start_date', '')) or parse_date(sub_item.get('start', ''))
-                            sub_end = parse_date(sub_item.get('end_date', '')) or parse_date(sub_item.get('end', ''))
+                        for sub_idx, sub_item in enumerate(sub_items):
+                            sub_desc = sub_item.get('description', f'Sub-item {sub_idx + 1}')[:35]
+                            sub_qty = sub_item.get('qty', '') or sub_item.get('quantity', '')
+                            sub_unit = sub_item.get('unit', '')
+                            qty_str = f" ({sub_qty} {sub_unit})" if sub_qty else ""
                             
-                            # Lighter version of the phase color
-                            lighter_color = colors.Color(
-                                min(1, color.red + 0.3),
-                                min(1, color.green + 0.3),
-                                min(1, color.blue + 0.3)
-                            )
+                            sub_row = [Paragraph(f"<font size='7'>{sub_desc}</font>{qty_str}", styles['ScheduleTableCell'])]
                             
-                            for col_idx in range(1, num_weeks + 1):
-                                week_start = project_start + timedelta(days=(col_idx - 1) * 7)
-                                week_end = week_start + timedelta(days=7)
-                                
-                                if sub_start and sub_end:
-                                    if sub_start <= week_end and sub_end >= week_start:
-                                        gantt_styles.append(('BACKGROUND', (col_idx, data_row_idx), (col_idx, data_row_idx), lighter_color))
+                            for d in range(num_days_this_page):
+                                sub_row.append('')
+                            
+                            gantt_data.append(sub_row)
+                            row_types.append(('subitem', idx))
                     
-                    data_row_idx += 1
-                
-                gantt_table.setStyle(TableStyle(gantt_styles))
-                elements.append(gantt_table)
-                elements.append(Spacer(1, 15))
+                    # Calculate column widths for landscape - day columns
+                    phase_col_width = 180
+                    available_width = landscape_width - 80 - phase_col_width
+                    day_col_width = available_width / num_days_this_page
+                    gantt_col_widths = [phase_col_width] + [day_col_width] * num_days_this_page
+                    
+                    # Calculate row heights
+                    row_heights = [28]  # Header
+                    for rt in row_types:
+                        if rt[0] == 'phase':
+                            row_heights.append(36)
+                        else:
+                            row_heights.append(26)
+                    
+                    gantt_table = Table(gantt_data, colWidths=gantt_col_widths, rowHeights=row_heights)
+                    
+                    gantt_styles = [
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a5f')),  # Dark blue header
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 7),
+                        ('FONTSIZE', (0, 1), (-1, -1), 7),
+                        ('TOPPADDING', (0, 0), (-1, -1), 4),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ]
+                    
+                    # Color the phase and sub-item bars based on date overlap
+                    data_row_idx = 1  # Start after header
+                    for row_info in row_types:
+                        row_type, phase_idx = row_info
+                        phase = phases[phase_idx]
+                        color = PHASE_COLORS[phase_idx % len(PHASE_COLORS)]
+                        
+                        if row_type == 'phase':
+                            gantt_styles.append(('BACKGROUND', (0, data_row_idx), (0, data_row_idx), colors.HexColor('#f1f5f9')))
+                            phase_start_date = parse_date(phase.get('start', '')) or parse_date(phase.get('start_date', ''))
+                            phase_end_date = parse_date(phase.get('end', '')) or parse_date(phase.get('end_date', ''))
+                            
+                            # If no dates, try to infer from sub-items
+                            if not phase_start_date or not phase_end_date:
+                                sub_items = phase.get('subItems', [])
+                                for sub in sub_items:
+                                    sub_s = parse_date(sub.get('start_date', '')) or parse_date(sub.get('start', ''))
+                                    sub_e = parse_date(sub.get('end_date', '')) or parse_date(sub.get('end', ''))
+                                    if sub_s and (not phase_start_date or sub_s < phase_start_date):
+                                        phase_start_date = sub_s
+                                    if sub_e and (not phase_end_date or sub_e > phase_end_date):
+                                        phase_end_date = sub_e
+                            
+                            # Color cells for days that fall within phase dates
+                            for col_idx in range(1, num_days_this_page + 1):
+                                cell_date = page_start_date + timedelta(days=(col_idx - 1))
+                                
+                                if phase_start_date and phase_end_date:
+                                    if phase_start_date <= cell_date <= phase_end_date:
+                                        gantt_styles.append(('BACKGROUND', (col_idx, data_row_idx), (col_idx, data_row_idx), color))
+                        else:
+                            # Sub-item row
+                            gantt_styles.append(('BACKGROUND', (0, data_row_idx), (0, data_row_idx), colors.HexColor('#f8fafc')))
+                            
+                            # Get sub-item from phase
+                            sub_items = phase.get('subItems', [])
+                            sub_count = sum(1 for r in row_types[:data_row_idx] if r[0] == 'subitem' and r[1] == phase_idx)
+                            if sub_count > 0 and sub_count <= len(sub_items):
+                                sub_item = sub_items[sub_count - 1]
+                                sub_start = parse_date(sub_item.get('start_date', '')) or parse_date(sub_item.get('start', ''))
+                                sub_end = parse_date(sub_item.get('end_date', '')) or parse_date(sub_item.get('end', ''))
+                                
+                                # Lighter color for sub-items
+                                lighter_color = colors.HexColor(
+                                    '#{:02x}{:02x}{:02x}'.format(
+                                        min(255, int(color.red * 255 * 0.6 + 100)),
+                                        min(255, int(color.green * 255 * 0.6 + 100)),
+                                        min(255, int(color.blue * 255 * 0.6 + 100))
+                                    )
+                                )
+                                
+                                for col_idx in range(1, num_days_this_page + 1):
+                                    cell_date = page_start_date + timedelta(days=(col_idx - 1))
+                                    
+                                    if sub_start and sub_end:
+                                        if sub_start <= cell_date <= sub_end:
+                                            gantt_styles.append(('BACKGROUND', (col_idx, data_row_idx), (col_idx, data_row_idx), lighter_color))
+                        
+                        data_row_idx += 1
+                    
+                    gantt_table.setStyle(TableStyle(gantt_styles))
+                    elements.append(gantt_table)
+                    elements.append(Spacer(1, 10))
                 
                 # Legend with color samples
                 legend_text = "<b>Legend:</b> Darker colored blocks represent phase timelines. Lighter blocks represent sub-item/task timelines within each phase."
