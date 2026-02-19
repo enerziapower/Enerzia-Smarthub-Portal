@@ -323,6 +323,7 @@ const ProjectSchedule = () => {
       },
       phases: defaultPhases.map(p => ({ ...p, subItems: [] })),
       milestones: [],
+      escalation_matrix: defaultEscalationMatrix,
       notes: '',
       status: 'draft'
     });
