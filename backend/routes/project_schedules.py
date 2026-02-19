@@ -47,6 +47,14 @@ class CustomerInfo(BaseModel):
     email: str = ""
 
 
+class EscalationLevel(BaseModel):
+    level: int = 1
+    name: str = ""
+    designation: str = ""
+    email: str = ""
+    mobile: str = ""
+
+
 class ProjectScheduleCreate(BaseModel):
     project_id: str
     schedule_name: str
@@ -55,6 +63,7 @@ class ProjectScheduleCreate(BaseModel):
     customer_info: Optional[CustomerInfo] = CustomerInfo()
     phases: List[Phase] = []
     milestones: List[dict] = []
+    escalation_matrix: List[EscalationLevel] = []
     notes: str = ""
     status: str = "draft"
 
@@ -66,6 +75,7 @@ class ProjectScheduleUpdate(BaseModel):
     customer_info: Optional[CustomerInfo] = None
     phases: Optional[List[Phase]] = None
     milestones: Optional[List[dict]] = None
+    escalation_matrix: Optional[List[EscalationLevel]] = None
     notes: Optional[str] = None
     status: Optional[str] = None
 
