@@ -203,6 +203,12 @@ const ProjectSchedule = () => {
     }));
   };
 
+  const updateEscalationLevel = (index, field, value) => {
+    const updated = [...formData.escalation_matrix];
+    updated[index][field] = value;
+    setFormData(prev => ({ ...prev, escalation_matrix: updated }));
+  };
+
   const addMilestone = () => {
     setFormData(prev => ({
       ...prev,
