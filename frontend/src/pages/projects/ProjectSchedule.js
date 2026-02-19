@@ -30,6 +30,13 @@ const ProjectSchedule = () => {
     { name: 'Documentation', start: '', end: '', progress: 0, color: 'bg-slate-500', subItems: [] }
   ];
 
+  const defaultEscalationMatrix = [
+    { level: 1, name: '', designation: '', email: '', mobile: '' },
+    { level: 2, name: '', designation: '', email: '', mobile: '' },
+    { level: 3, name: '', designation: '', email: '', mobile: '' },
+    { level: 4, name: '', designation: '', email: '', mobile: '' }
+  ];
+
   const [formData, setFormData] = useState({
     project_id: '',
     schedule_name: '',
@@ -45,6 +52,7 @@ const ProjectSchedule = () => {
     },
     phases: defaultPhases,
     milestones: [],
+    escalation_matrix: defaultEscalationMatrix,
     notes: '',
     status: 'draft'
   });
