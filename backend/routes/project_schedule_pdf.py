@@ -960,11 +960,13 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
             elements.append(Spacer(1, 12))
             
             for phase in phases_with_subitems:
-                # Phase name sub-header with dates
+                # Phase name sub-header with dates - FORMAT dates to DD-MM-YYYY
                 phase_name = phase.get('name', 'Phase')
-                phase_start = phase.get('start', '')
-                phase_end = phase.get('end', '')
-                phase_dates = f" ({phase_start} to {phase_end})" if phase_start and phase_end else ""
+                phase_start = phase.get('start', '') or phase.get('start_date', '')
+                phase_end = phase.get('end', '') or phase.get('end_date', '')
+                formatted_phase_start = format_date_display(phase_start) if phase_start else ''
+                formatted_phase_end = format_date_display(phase_end) if phase_end else ''
+                phase_dates = f" ({formatted_phase_start} to {formatted_phase_end})" if formatted_phase_start and formatted_phase_end else ""
                 phase_subheader = [[Paragraph(f"<b>{phase_name}</b>{phase_dates}", styles['ScheduleTableCell'])]]
                 phase_subheader_table = Table(phase_subheader, colWidths=[landscape_width - 80])
                 phase_subheader_table.setStyle(TableStyle([
