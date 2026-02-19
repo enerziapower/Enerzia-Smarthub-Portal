@@ -1357,6 +1357,88 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
     elements.append(summary_table)
     
     # =====================================================
+    # PROJECT ESCALATION MATRIX
+    # =====================================================
+    escalation_matrix = schedule_data.get('escalation_matrix', [])
+    
+    # Filter out empty entries
+    valid_escalation = [e for e in escalation_matrix if e.get('name') or e.get('designation')]
+    
+    if valid_escalation:
+        elements.append(Spacer(1, 25))
+        
+        escalation_header_data = [['PROJECT ESCALATION MATRIX']]
+        escalation_header_table = Table(escalation_header_data, colWidths=[page_width - 80])
+        escalation_header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#dc2626')),  # Red for escalation
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(escalation_header_table)
+        elements.append(Spacer(1, 12))
+        
+        # Build escalation table - two-column layout
+        escalation_data = []
+        
+        level_colors = {
+            1: colors.HexColor('#3b82f6'),   # Blue - Level 1
+            2: colors.HexColor('#f59e0b'),   # Amber - Level 2
+            3: colors.HexColor('#f97316'),   # Orange - Level 3
+            4: colors.HexColor('#dc2626'),   # Red - Level 4
+        }
+        
+        level_bg_colors = {
+            1: colors.HexColor('#dbeafe'),
+            2: colors.HexColor('#fef3c7'),
+            3: colors.HexColor('#ffedd5'),
+            4: colors.HexColor('#fee2e2'),
+        }
+        
+        for entry in valid_escalation:
+            level = entry.get('level', 1)
+            name = entry.get('name', '-')
+            designation = entry.get('designation', '-')
+            email = entry.get('email', '-')
+            mobile = entry.get('mobile', '-')
+            
+            # Get ordinal suffix
+            ordinal = {1: '1st', 2: '2nd', 3: '3rd', 4: '4th'}.get(level, f'{level}th')
+            
+            level_text = f"<b>{ordinal} ESCALATION LEVEL</b>"
+            contact_info = f"<b>Name:</b> {name}<br/><b>Designation:</b> {designation}<br/><b>Email:</b> {email}<br/><b>Mobile:</b> {mobile}"
+            
+            escalation_data.append([
+                Paragraph(level_text, styles['ScheduleTableCellBold']),
+                Paragraph(contact_info, styles['ScheduleTableCell'])
+            ])
+        
+        escalation_table = Table(escalation_data, colWidths=[140, page_width - 80 - 140])
+        
+        escalation_styles = [
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#d1d5db')),
+        ]
+        
+        # Apply level-specific colors
+        for idx, entry in enumerate(valid_escalation):
+            level = entry.get('level', 1)
+            bg_color = level_bg_colors.get(level, level_bg_colors[1])
+            escalation_styles.append(('BACKGROUND', (0, idx), (0, idx), bg_color))
+        
+        escalation_table.setStyle(TableStyle(escalation_styles))
+        elements.append(escalation_table)
+    
+    # =====================================================
     # FOOTER / SIGNATURE SECTION
     # =====================================================
     elements.append(Spacer(1, 40))
