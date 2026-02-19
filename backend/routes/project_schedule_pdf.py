@@ -1072,6 +1072,7 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                         ('TOPPADDING', (0, 0), (-1, -1), 8),
                         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
                     ]))
+                    gantt_header_table.hAlign = 'LEFT'  # Left-align header from margin
                     elements.append(gantt_header_table)
                     elements.append(Spacer(1, 15))
                     
