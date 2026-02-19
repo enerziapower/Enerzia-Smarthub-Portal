@@ -1069,10 +1069,12 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                     phase_end_str = phase.get('end', '') or phase.get('end_date', '')
                     progress = phase.get('progress', 0)
                     
-                    # Phase name with progress and dates
+                    # Phase name with progress and dates - FORMAT dates to DD-MM-YYYY
                     phase_dates = ""
                     if phase_start_str and phase_end_str:
-                        phase_dates = f"<br/><font size='6' color='#475569'>{phase_start_str} - {phase_end_str}</font>"
+                        formatted_start = format_date_display(phase_start_str)
+                        formatted_end = format_date_display(phase_end_str)
+                        phase_dates = f"<br/><font size='6' color='#475569'>{formatted_start} - {formatted_end}</font>"
                     row = [Paragraph(f"<b>{phase_name}</b>{phase_dates}<br/><font size='7' color='#1e40af'>{progress}%</font>", styles['PhaseName'])]
                     
                     # Calculate which weeks this phase spans - NO TEXT, just empty cells
@@ -1090,12 +1092,14 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                         sub_unit = sub_item.get('unit', '')
                         qty_str = f" ({sub_qty} {sub_unit})" if sub_qty else ""
                         
-                        # Try multiple field names for sub-item dates
+                        # Try multiple field names for sub-item dates - FORMAT to DD-MM-YYYY
                         sub_start_str = sub_item.get('start_date', '') or sub_item.get('start', '')
                         sub_end_str = sub_item.get('end_date', '') or sub_item.get('end', '')
                         sub_dates = ""
                         if sub_start_str and sub_end_str:
-                            sub_dates = f"<br/><font size='6' color='#64748b'>{sub_start_str} - {sub_end_str}</font>"
+                            formatted_sub_start = format_date_display(sub_start_str)
+                            formatted_sub_end = format_date_display(sub_end_str)
+                            sub_dates = f"<br/><font size='6' color='#64748b'>{formatted_sub_start} - {formatted_sub_end}</font>"
                         
                         sub_row = [Paragraph(f"<font size='7'>{sub_desc}</font>{qty_str}{sub_dates}", styles['ScheduleTableCell'])]
                         
