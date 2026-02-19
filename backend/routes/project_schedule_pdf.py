@@ -1214,6 +1214,7 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                         data_row_idx += 1
                     
                     gantt_table.setStyle(TableStyle(gantt_styles))
+                    gantt_table.hAlign = 'LEFT'  # Left-align the table from margin
                     elements.append(gantt_table)
                     elements.append(Spacer(1, 10))
                 
