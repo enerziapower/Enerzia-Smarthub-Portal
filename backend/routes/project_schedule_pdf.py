@@ -1029,6 +1029,7 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
         
         # =====================================================
         # GANTT CHART - DAY-WISE WITH PAGINATION
+        # Start on a NEW PAGE after Phase Breakdown
         # =====================================================
         project_start = parse_date(schedule_data.get('start_date', ''))
         project_end = parse_date(schedule_data.get('end_date', ''))
@@ -1041,8 +1042,8 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                 num_pages = math.ceil(total_days / max_days_per_page)
                 
                 for page_idx in range(num_pages):
-                    if page_idx > 0:
-                        elements.append(PageBreak())
+                    # Always start Gantt chart on a new page
+                    elements.append(PageBreak())
                     
                     elements.append(Spacer(1, 20))
                     
