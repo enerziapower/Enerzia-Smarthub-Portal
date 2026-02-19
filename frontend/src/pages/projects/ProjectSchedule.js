@@ -1119,6 +1119,63 @@ const ProjectSchedule = () => {
                 />
               </div>
 
+              {/* Escalation Matrix */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Phone size={16} className="text-red-500" />
+                  <label className="text-sm font-medium text-slate-700">Project Escalation Matrix</label>
+                </div>
+                <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
+                  {formData.escalation_matrix.map((level, idx) => (
+                    <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 text-xs font-bold rounded ${
+                          idx === 0 ? 'bg-blue-100 text-blue-700' :
+                          idx === 1 ? 'bg-amber-100 text-amber-700' :
+                          idx === 2 ? 'bg-orange-100 text-orange-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          Level {level.level}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {idx === 0 ? '(First Contact)' : idx === 3 ? '(Final Escalation)' : ''}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={level.name}
+                          onChange={(e) => updateEscalationLevel(idx, 'name', e.target.value)}
+                          className="px-2 py-1.5 text-sm border border-slate-200 rounded"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Designation"
+                          value={level.designation}
+                          onChange={(e) => updateEscalationLevel(idx, 'designation', e.target.value)}
+                          className="px-2 py-1.5 text-sm border border-slate-200 rounded"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={level.email}
+                          onChange={(e) => updateEscalationLevel(idx, 'email', e.target.value)}
+                          className="px-2 py-1.5 text-sm border border-slate-200 rounded"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Mobile"
+                          value={level.mobile}
+                          onChange={(e) => updateEscalationLevel(idx, 'mobile', e.target.value)}
+                          className="px-2 py-1.5 text-sm border border-slate-200 rounded"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
