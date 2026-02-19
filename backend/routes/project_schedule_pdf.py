@@ -527,6 +527,25 @@ def parse_date(date_str):
     return None
 
 
+def format_date_display(date_str):
+    """Format any date string to DD-MM-YYYY format for display"""
+    if not date_str:
+        return ''
+    
+    # If already in DD-MM-YYYY format, return as is
+    if isinstance(date_str, str) and len(date_str) == 10:
+        parts = date_str.split('-')
+        if len(parts) == 3 and len(parts[0]) == 2:
+            return date_str  # Already DD-MM-YYYY
+    
+    # Parse and reformat
+    parsed = parse_date(date_str)
+    if parsed:
+        return parsed.strftime('%d-%m-%Y')
+    
+    return str(date_str)
+
+
 def create_status_paragraph(status, styles):
     """Create a styled status paragraph with background color indicator"""
     status_text = status.upper().replace('_', ' ')
