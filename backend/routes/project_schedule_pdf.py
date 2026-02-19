@@ -991,13 +991,19 @@ def generate_project_schedule_pdf(schedule_data, project_data=None):
                 sub_rows = [sub_headers]
                 
                 for idx, item in enumerate(phase.get('subItems', []), 1):
+                    # Format sub-item dates to DD-MM-YYYY
+                    sub_start = item.get('start_date', '') or item.get('start', '')
+                    sub_end = item.get('end_date', '') or item.get('end', '')
+                    formatted_sub_start = format_date_display(sub_start) if sub_start else '-'
+                    formatted_sub_end = format_date_display(sub_end) if sub_end else '-'
+                    
                     sub_rows.append([
                         Paragraph(str(idx), styles['ScheduleTableCellCenter']),
                         Paragraph(item.get('description', '-') or '-', styles['ScheduleTableCell']),
                         Paragraph(str(item.get('qty', '') or item.get('quantity', '-') or '-'), styles['ScheduleTableCellCenter']),
                         Paragraph(item.get('unit', '-') or '-', styles['ScheduleTableCellCenter']),
-                        Paragraph(item.get('start_date', '-') or '-', styles['ScheduleTableCellCenter']),
-                        Paragraph(item.get('end_date', '-') or '-', styles['ScheduleTableCellCenter'])
+                        Paragraph(formatted_sub_start, styles['ScheduleTableCellCenter']),
+                        Paragraph(formatted_sub_end, styles['ScheduleTableCellCenter'])
                     ])
                 
                 # Landscape sub-items column widths - adjusted for dates
