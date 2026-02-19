@@ -288,6 +288,7 @@ const ProjectSchedule = () => {
         subItems: p.subItems || []
       })) || defaultPhases,
       milestones: schedule.milestones || [],
+      escalation_matrix: schedule.escalation_matrix || defaultEscalationMatrix,
       notes: schedule.notes || '',
       status: schedule.status || 'draft'
     });
