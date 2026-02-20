@@ -223,8 +223,8 @@ const LeaveDashboard = () => {
       <div className="border-b border-slate-200">
         <nav className="flex gap-1">
           {[
+            { id: 'pending', label: 'Pending Requests', icon: Clock, count: pendingRequests.length },
             { id: 'overview', label: 'Overview', icon: BarChart3 },
-            { id: 'pending', label: 'Pending Requests', icon: Clock, count: dashboardData?.summary?.pending_requests },
             { id: 'balances', label: 'Employee Balances', icon: Users },
           ].map(tab => (
             <button
