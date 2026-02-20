@@ -320,10 +320,11 @@ const LeaveDashboard = () => {
           {/* Pending Requests Tab */}
           {activeTab === 'pending' && (
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              {!dashboardData?.pending_requests?.length ? (
+              {pendingRequests.length === 0 ? (
                 <div className="p-8 text-center text-slate-500">
                   <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-300" />
-                  <p>No pending leave requests</p>
+                  <p className="font-medium">No pending leave requests</p>
+                  <p className="text-sm text-slate-400 mt-1">All caught up! Requests will appear here when employees apply for leave.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -339,8 +340,8 @@ const LeaveDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {dashboardData.pending_requests.map((request) => (
-                        <tr key={request.id || request._id} className="hover:bg-amber-50/30">
+                      {pendingRequests.map((request) => (
+                        <tr key={request.id} className="hover:bg-amber-50/30" data-testid={`leave-request-row-${request.id}`}>
                           <td className="px-4 py-3">
                             <div>
                               <p className="font-medium text-slate-900">{request.user_name}</p>
@@ -353,7 +354,7 @@ const LeaveDashboard = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
-                            {request.from_date} to {request.to_date}
+                            {new Date(request.from_date).toLocaleDateString('en-IN')} - {new Date(request.to_date).toLocaleDateString('en-IN')}
                           </td>
                           <td className="px-4 py-3 text-center font-medium text-slate-900">
                             {request.days}
@@ -364,22 +365,34 @@ const LeaveDashboard = () => {
                             </p>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1">
+                            <div className="flex items-center justify-center gap-2">
                               <button
-                                onClick={() => handleApprove(request.id || request._id)}
-                                disabled={processingId === (request.id || request._id)}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
+                                onClick={() => handleApprove(request.id)}
+                                disabled={processingId === request.id}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
                                 title="Approve"
+                                data-testid={`approve-leave-${request.id}`}
                               >
-                                <Check className="w-4 h-4" />
+                                {processingId === request.id ? (
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                                Approve
                               </button>
                               <button
-                                onClick={() => handleReject(request.id || request._id)}
-                                disabled={processingId === (request.id || request._id)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                onClick={() => handleReject(request.id)}
+                                disabled={processingId === request.id}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
                                 title="Reject"
+                                data-testid={`reject-leave-${request.id}`}
                               >
-                                <X className="w-4 h-4" />
+                                {processingId === request.id ? (
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <X className="w-4 h-4" />
+                                )}
+                                Reject
                               </button>
                             </div>
                           </td>
