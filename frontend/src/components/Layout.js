@@ -292,9 +292,8 @@ const Layout = () => {
     { name: 'Payroll Records', href: '/hr/payroll', icon: FileBarChart },
     { name: 'Statutory Reports', href: '/hr/statutory-reports', icon: FileBarChart },
     { name: 'Advances & Loans', href: '/hr/advances', icon: CreditCard },
-    { name: 'Leave Dashboard', href: '/hr/leave-dashboard', icon: Calendar },
+    { name: 'Leave Management', href: '/hr/leave-dashboard', icon: Calendar },
     { name: 'Overtime Management', href: '/hr/overtime', icon: Clock },
-    { name: 'Leave Approvals', href: '/hr/leave-approvals', icon: CheckSquare },
     { name: 'Permission Approvals', href: '/hr/permission-approvals', icon: CheckSquare },
     { name: 'Dept. Requirements', href: '/hr/dept-requirements', icon: ClipboardList },
   ];
