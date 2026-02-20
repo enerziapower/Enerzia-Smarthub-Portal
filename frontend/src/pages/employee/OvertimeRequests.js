@@ -209,10 +209,20 @@ const OvertimeRequests = () => {
                       </div>
                     </div>
                   </div>
-                  {request.status === 'approved' && request.approved_by && (
+                  {request.status === 'approved' && (
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Approved by</p>
-                      <p className="text-sm text-slate-600">{request.approved_by}</p>
+                      <p className="text-lg font-bold text-green-600">₹{(request.amount || (request.hours * (request.rate_per_hour || 100))).toLocaleString()}</p>
+                      <p className="text-xs text-slate-400">Added to payroll</p>
+                    </div>
+                  )}
+                  {request.status === 'pending' && (
+                    <div className="text-right">
+                      <p className="text-sm text-amber-600 font-medium">Pending HR Approval</p>
+                    </div>
+                  )}
+                  {request.status === 'rejected' && (
+                    <div className="text-right">
+                      <p className="text-sm text-red-600 font-medium">Rejected</p>
                     </div>
                   )}
                 </div>
