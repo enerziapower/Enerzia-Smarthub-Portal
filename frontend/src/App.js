@@ -131,6 +131,8 @@ import HRDashboard from './pages/hr/HRDashboard';
 import EmployeeManagement from './pages/hr/EmployeeManagement';
 import EmployeeManagementFull from './pages/hr/EmployeeManagementFull';
 import PayrollProcessing from './pages/hr/PayrollProcessing';
+import PayrollDashboard from './pages/hr/PayrollDashboard';
+import StatutoryReports from './pages/hr/StatutoryReports';
 import HRTaskManager from './pages/hr/HRTaskManager';
 import HRDeptRequirements from './pages/hr/DeptRequirements';
 import HRPaymentRequests from './pages/hr/PaymentRequests';
