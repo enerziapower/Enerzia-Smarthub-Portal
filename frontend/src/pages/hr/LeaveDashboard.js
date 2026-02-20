@@ -45,7 +45,7 @@ const LeaveDashboard = () => {
 
   const fetchLeaveDetails = async (empId) => {
     try {
-      const response = await api.get(`/api/hr/leave-balance/${empId}`);
+      const response = await api.get(`/hr/leave-balance/${empId}`);
       setLeaveDetails(response.data);
     } catch (err) {
       console.error('Error fetching leave details:', err);
