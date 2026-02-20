@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Users, Search, RefreshCw, Download, Filter,
   CheckCircle, XCircle, Clock, AlertCircle, BarChart3,
-  TrendingUp, CalendarDays, User, ChevronDown, ChevronRight
+  TrendingUp, CalendarDays, User, ChevronDown, ChevronRight,
+  Bell, FileText, UserMinus, Check, X
 } from 'lucide-react';
 import api from '../../services/api';
 
 const LeaveDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [leaveDetails, setLeaveDetails] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [processingId, setProcessingId] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const departments = ['Projects', 'Accounts', 'Sales', 'Purchase', 'HR', 'Operations', 'Exports', 'Finance', 'Admin'];
 
@@ -25,27 +30,37 @@ const LeaveDashboard = () => {
   ];
 
   useEffect(() => {
+    fetchDashboardData();
     fetchEmployees();
-  }, [filterDepartment]);
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/hr/leave/dashboard');
+      setDashboardData(response.data);
+    } catch (err) {
+      console.error('Error fetching dashboard:', err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
-      setLoading(true);
       let url = '/hr/employees?status=active';
       if (filterDepartment) url += `&department=${filterDepartment}`;
       const response = await api.get(url);
       setEmployees(response.data || []);
     } catch (err) {
       console.error('Error fetching employees:', err);
-      setError('Failed to load employees');
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchLeaveDetails = async (empId) => {
     try {
-      const response = await api.get(`/hr/leave-balance/${empId}`);
+      const response = await api.get(`/hr/leave/employee-balance/${empId}`);
       setLeaveDetails(response.data);
     } catch (err) {
       console.error('Error fetching leave details:', err);
@@ -58,16 +73,47 @@ const LeaveDashboard = () => {
     fetchLeaveDetails(emp.emp_id);
   };
 
+  const handleApprove = async (requestId) => {
+    try {
+      setProcessingId(requestId);
+      await api.post(`/hr/leave/approve/${requestId}?approved_by=HR Admin`);
+      setSuccess('Leave approved successfully');
+      fetchDashboardData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to approve leave');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    try {
+      setProcessingId(requestId);
+      await api.post(`/hr/leave/reject/${requestId}?rejected_by=HR Admin`);
+      setSuccess('Leave rejected');
+      fetchDashboardData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to reject leave');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const filteredEmployees = employees.filter(emp =>
     emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.emp_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Summary stats
-  const totalEmployees = employees.length;
-  const totalCL = employees.reduce((sum, e) => sum + (e.leave_balance?.casual_leave || 0), 0);
-  const totalSL = employees.reduce((sum, e) => sum + (e.leave_balance?.sick_leave || 0), 0);
-  const totalEL = employees.reduce((sum, e) => sum + (e.leave_balance?.earned_leave || 0), 0);
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-700';
+      case 'pending': return 'bg-amber-100 text-amber-700';
+      case 'rejected': return 'bg-red-100 text-red-700';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -75,253 +121,446 @@ const LeaveDashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Leave Dashboard</h1>
-          <p className="text-slate-500 mt-1">Track and manage employee leave balances</p>
+          <p className="text-slate-500 mt-1">Manage employee leave requests and balances</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">
-            <Download className="w-4 h-4" /> Export Report
+          <button 
+            onClick={() => { fetchDashboardData(); fetchEmployees(); }}
+            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+          >
+            <RefreshCw className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Messages */}
+      {success && (
+        <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg">
+          <CheckCircle className="w-5 h-5" /> {success}
+        </div>
+      )}
       {error && (
         <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
           <AlertCircle className="w-5 h-5" /> {error}
+          <button onClick={() => setError('')} className="ml-auto"><X className="w-4 h-4" /></button>
         </div>
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="w-5 h-5 text-blue-600" />
+      {dashboardData && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`bg-white p-4 rounded-xl border-2 ${dashboardData.summary.pending_requests > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${dashboardData.summary.pending_requests > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                <Bell className={`w-5 h-5 ${dashboardData.summary.pending_requests > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
+              </div>
+              <div>
+                <p className={`text-2xl font-bold ${dashboardData.summary.pending_requests > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                  {dashboardData.summary.pending_requests}
+                </p>
+                <p className="text-sm text-slate-500">Pending Approval</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{totalEmployees}</p>
-              <p className="text-sm text-slate-500">Active Employees</p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{dashboardData.summary.approved_this_year}</p>
+                <p className="text-sm text-slate-500">Approved (Year)</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{dashboardData.summary.days_on_leave_this_month}</p>
+                <p className="text-sm text-slate-500">Days This Month</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{employees.length}</p>
+                <p className="text-sm text-slate-500">Active Employees</p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{totalCL}</p>
-              <p className="text-sm text-slate-500">Total CL Balance</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Calendar className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{totalSL}</p>
-              <p className="text-sm text-slate-500">Total SL Balance</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Calendar className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{totalEL}</p>
-              <p className="text-sm text-slate-500">Total EL Balance</p>
-            </div>
-          </div>
-        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <nav className="flex gap-1">
+          {[
+            { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'pending', label: 'Pending Requests', icon: Clock, count: dashboardData?.summary?.pending_requests },
+            { id: 'balances', label: 'Employee Balances', icon: Users },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id 
+                  ? 'border-blue-600 text-blue-600' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              {tab.count > 0 && (
+                <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by name or ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-            data-testid="search-input"
-          />
-        </div>
-        <select
-          value={filterDepartment}
-          onChange={(e) => setFilterDepartment(e.target.value)}
-          className="px-3 py-2 border border-slate-200 rounded-lg"
-          data-testid="department-filter"
-        >
-          <option value="">All Departments</option>
-          {departments.map(d => <option key={d} value={d}>{d}</option>)}
-        </select>
-        <button onClick={fetchEmployees} className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
-          <RefreshCw className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Main Content - Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Employee List */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200">
-            <h3 className="font-semibold text-slate-900">Employee Leave Balances</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Employee</th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">CL</th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">SL</th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">EL</th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">CO</th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? (
-                  <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
-                ) : filteredEmployees.length === 0 ? (
-                  <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-500">No employees found</td></tr>
+      {/* Tab Content */}
+      {loading ? (
+        <div className="text-center py-12 text-slate-500">Loading...</div>
+      ) : (
+        <>
+          {/* Overview Tab */}
+          {activeTab === 'overview' && dashboardData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Department Breakdown */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-900 mb-4">Leave by Department</h3>
+                {dashboardData.department_breakdown.length === 0 ? (
+                  <p className="text-slate-500 text-center py-4">No leave data yet</p>
                 ) : (
-                  filteredEmployees.map((emp) => {
-                    const lb = emp.leave_balance || {};
-                    const total = (lb.casual_leave || 0) + (lb.sick_leave || 0) + (lb.earned_leave || 0) + (lb.comp_off || 0);
-                    return (
-                      <tr 
-                        key={emp.emp_id} 
-                        className={`hover:bg-slate-50 cursor-pointer ${selectedEmployee?.emp_id === emp.emp_id ? 'bg-blue-50' : ''}`}
-                        onClick={() => handleEmployeeClick(emp)}
-                        data-testid={`employee-row-${emp.emp_id}`}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-medium text-white">{emp.name?.charAt(0)}</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 text-sm">{emp.name}</p>
-                              <p className="text-xs text-slate-500">{emp.emp_id} • {emp.department}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                            {lb.casual_leave || 0}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                            {lb.sick_leave || 0}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                            {lb.earned_leave || 0}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                            {lb.comp_off || 0}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="font-semibold text-slate-900">{total}</span>
-                        </td>
-                      </tr>
-                    );
-                  })
+                  <div className="space-y-3">
+                    {dashboardData.department_breakdown.map(dept => (
+                      <div key={dept.department} className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600">{dept.department}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-slate-500">{dept.count} requests</span>
+                          <span className="font-medium text-slate-900">{dept.days} days</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Employee Leave Details Panel */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 bg-slate-50">
-            <h3 className="font-semibold text-slate-900">Leave Details</h3>
-          </div>
-          
-          {selectedEmployee && leaveDetails ? (
-            <div className="p-4 space-y-4">
-              {/* Employee Info */}
-              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-lg font-medium text-white">{leaveDetails.name?.charAt(0)}</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">{leaveDetails.name}</p>
-                  <p className="text-sm text-slate-500">{leaveDetails.emp_id}</p>
-                </div>
               </div>
 
-              {/* Leave Breakdown */}
-              <div className="space-y-3">
-                {leaveTypes.map(type => {
-                  const balance = leaveDetails.leave_balance?.[type.key] || {};
-                  return (
-                    <div key={type.key} className="bg-slate-50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${type.color}`}></div>
-                          <span className="font-medium text-slate-900 text-sm">{type.label}</span>
-                        </div>
-                        <span className="text-xs text-slate-500">{type.short}</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
-                          <p className="text-lg font-bold text-slate-900">{balance.total || 0}</p>
-                          <p className="text-xs text-slate-500">Total</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-red-600">{balance.taken || 0}</p>
-                          <p className="text-xs text-slate-500">Taken</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-green-600">{balance.remaining || balance.total || 0}</p>
-                          <p className="text-xs text-slate-500">Balance</p>
+              {/* Leave Type Breakdown */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-900 mb-4">Leave by Type</h3>
+                {dashboardData.leave_type_breakdown.length === 0 ? (
+                  <p className="text-slate-500 text-center py-4">No leave data yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {dashboardData.leave_type_breakdown.map(type => (
+                      <div key={type.type} className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600">{type.type}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-slate-500">{type.count} requests</span>
+                          <span className="font-medium text-slate-900">{type.days} days</span>
                         </div>
                       </div>
-                      {/* Progress Bar */}
-                      <div className="mt-2">
-                        <div className="w-full bg-slate-200 rounded-full h-1.5">
-                          <div 
-                            className={`${type.color} h-1.5 rounded-full`}
-                            style={{ width: `${balance.total ? ((balance.taken || 0) / balance.total) * 100 : 0}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Total Summary */}
-              <div className="bg-blue-50 rounded-lg p-4 mt-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-blue-900">Total Leaves Available</span>
-                  <span className="text-2xl font-bold text-blue-700">
-                    {Object.values(leaveDetails.leave_balance || {}).reduce((sum, lb) => sum + (lb.remaining || lb.total || 0), 0)}
-                  </span>
+              {/* Low Balance Employees */}
+              {dashboardData.low_balance_employees.length > 0 && (
+                <div className="bg-white rounded-xl border border-amber-200 p-6 lg:col-span-2">
+                  <div className="flex items-center gap-2 mb-4">
+                    <UserMinus className="w-5 h-5 text-amber-600" />
+                    <h3 className="font-semibold text-slate-900">Low Leave Balance Alert</h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {dashboardData.low_balance_employees.map(emp => (
+                      <div key={emp.emp_id} className="p-3 bg-amber-50 rounded-lg">
+                        <p className="font-medium text-slate-900 text-sm">{emp.name}</p>
+                        <p className="text-xs text-slate-500">{emp.department}</p>
+                        <p className="text-amber-600 font-semibold mt-1">{emp.total_remaining} days left</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-slate-500">
-              <User className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-              <p>Select an employee to view leave details</p>
+              )}
             </div>
           )}
-        </div>
-      </div>
+
+          {/* Pending Requests Tab */}
+          {activeTab === 'pending' && (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {!dashboardData?.pending_requests?.length ? (
+                <div className="p-8 text-center text-slate-500">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-300" />
+                  <p>No pending leave requests</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Employee</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Leave Type</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Dates</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Days</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Reason</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {dashboardData.pending_requests.map((request) => (
+                        <tr key={request.id || request._id} className="hover:bg-amber-50/30">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-slate-900">{request.user_name}</p>
+                              <p className="text-xs text-slate-500">{request.department}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                              {request.type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {request.from_date} to {request.to_date}
+                          </td>
+                          <td className="px-4 py-3 text-center font-medium text-slate-900">
+                            {request.days}
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-slate-600 max-w-[200px] truncate" title={request.reason}>
+                              {request.reason || '-'}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleApprove(request.id || request._id)}
+                                disabled={processingId === (request.id || request._id)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
+                                title="Approve"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleReject(request.id || request._id)}
+                                disabled={processingId === (request.id || request._id)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                title="Reject"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Employee Balances Tab */}
+          {activeTab === 'balances' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Filters & Employee List */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="relative flex-1 min-w-[200px] max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search by name or ID..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => { setFilterDepartment(e.target.value); fetchEmployees(); }}
+                    className="px-3 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Employee</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">CL</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">SL</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">EL</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">CO</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredEmployees.length === 0 ? (
+                          <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-500">No employees found</td></tr>
+                        ) : (
+                          filteredEmployees.map((emp) => {
+                            const lb = emp.leave_balance || {};
+                            const cl = lb.casual_leave?.remaining ?? 12;
+                            const sl = lb.sick_leave?.remaining ?? 6;
+                            const el = lb.earned_leave?.remaining ?? 15;
+                            const co = lb.comp_off?.remaining ?? 2;
+                            const total = cl + sl + el + co;
+                            return (
+                              <tr 
+                                key={emp.emp_id} 
+                                className={`hover:bg-slate-50 cursor-pointer ${selectedEmployee?.emp_id === emp.emp_id ? 'bg-blue-50' : ''}`}
+                                onClick={() => handleEmployeeClick(emp)}
+                              >
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                      <span className="text-xs font-medium text-white">{emp.name?.charAt(0)}</span>
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-slate-900 text-sm">{emp.name}</p>
+                                      <p className="text-xs text-slate-500">{emp.emp_id} • {emp.department}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${cl <= 2 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    {cl}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${sl <= 1 ? 'bg-red-100 text-red-700' : 'bg-red-50 text-red-600'}`}>
+                                    {sl}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <span className="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                    {el}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                    {co}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <span className={`font-semibold ${total <= 5 ? 'text-red-600' : 'text-slate-900'}`}>{total}</span>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Employee Leave Details Panel */}
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 bg-slate-50">
+                  <h3 className="font-semibold text-slate-900">Leave Details</h3>
+                </div>
+                
+                {selectedEmployee && leaveDetails ? (
+                  <div className="p-4 space-y-4">
+                    {/* Employee Info */}
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-medium text-white">{leaveDetails.emp_name?.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{leaveDetails.emp_name}</p>
+                        <p className="text-sm text-slate-500">{leaveDetails.emp_id} • {leaveDetails.department}</p>
+                      </div>
+                    </div>
+
+                    {/* Leave Breakdown */}
+                    <div className="space-y-3">
+                      {leaveTypes.map(type => {
+                        const balance = leaveDetails.leave_balance?.[type.key] || { total: 0, taken: 0, remaining: 0 };
+                        return (
+                          <div key={type.key} className="bg-slate-50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${type.color}`}></div>
+                                <span className="font-medium text-slate-900 text-sm">{type.label}</span>
+                              </div>
+                              <span className="text-xs text-slate-500">{type.short}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div>
+                                <p className="text-lg font-bold text-slate-900">{balance.total}</p>
+                                <p className="text-xs text-slate-500">Total</p>
+                              </div>
+                              <div>
+                                <p className="text-lg font-bold text-red-600">{balance.taken}</p>
+                                <p className="text-xs text-slate-500">Taken</p>
+                              </div>
+                              <div>
+                                <p className="text-lg font-bold text-green-600">{balance.remaining}</p>
+                                <p className="text-xs text-slate-500">Balance</p>
+                              </div>
+                            </div>
+                            {/* Progress Bar */}
+                            <div className="mt-2">
+                              <div className="w-full bg-slate-200 rounded-full h-1.5">
+                                <div 
+                                  className={`${type.color} h-1.5 rounded-full`}
+                                  style={{ width: `${balance.total ? (balance.taken / balance.total) * 100 : 0}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Total Summary */}
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-blue-900">Total Remaining</span>
+                        <span className="text-2xl font-bold text-blue-700">
+                          {leaveDetails.total_remaining}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Pending Requests */}
+                    {leaveDetails.pending_requests > 0 && (
+                      <div className="bg-amber-50 rounded-lg p-3">
+                        <p className="text-sm text-amber-700">
+                          <strong>{leaveDetails.pending_requests}</strong> pending request(s)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-slate-500">
+                    <User className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p>Select an employee to view leave details</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 py-4">
@@ -331,6 +570,22 @@ const LeaveDashboard = () => {
             <span className="text-sm text-slate-600">{type.short} - {type.label}</span>
           </div>
         ))}
+      </div>
+
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Leave → Payroll Integration</p>
+            <ul className="list-disc list-inside space-y-1 text-blue-700">
+              <li><strong>Employee Request:</strong> Employees submit leave from their workspace</li>
+              <li><strong>HR Approval:</strong> Approved leaves auto-deduct from employee balance</li>
+              <li><strong>LOP Calculation:</strong> Excess leaves (beyond balance) marked as Loss of Pay</li>
+              <li><strong>Payroll:</strong> LOP days automatically deducted from monthly salary</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
