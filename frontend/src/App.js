@@ -139,6 +139,9 @@ import LeaveApprovals from './pages/hr/LeaveApprovals';
 import PermissionApprovals from './pages/hr/PermissionApprovals';
 import AttendanceManagement from './pages/hr/AttendanceManagement';
 import TravelManagement from './pages/hr/TravelManagement';
+import AdvancesLoans from './pages/hr/AdvancesLoans';
+import LeaveDashboard from './pages/hr/LeaveDashboard';
+import OvertimeManagement from './pages/hr/OvertimeManagement';
 
 // Operations Department Pages
 import OperationsDashboard from './pages/operations/OperationsDashboard';
