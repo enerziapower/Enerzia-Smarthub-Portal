@@ -5,7 +5,8 @@ import {
   TrendingUp, CalendarDays, User, ChevronDown, ChevronRight,
   Bell, FileText, UserMinus, Check, X
 } from 'lucide-react';
-import api from '../../services/api';
+import api, { employeeHubAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const LeaveDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
