@@ -170,14 +170,14 @@ const LeaveDashboard = () => {
       {/* Summary Cards */}
       {dashboardData && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className={`bg-white p-4 rounded-xl border-2 ${dashboardData.summary.pending_requests > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200'}`}>
+          <div className={`bg-white p-4 rounded-xl border-2 ${pendingRequests.length > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200'}`}>
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${dashboardData.summary.pending_requests > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
-                <Bell className={`w-5 h-5 ${dashboardData.summary.pending_requests > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
+              <div className={`p-2 rounded-lg ${pendingRequests.length > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                <Bell className={`w-5 h-5 ${pendingRequests.length > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
               </div>
               <div>
-                <p className={`text-2xl font-bold ${dashboardData.summary.pending_requests > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
-                  {dashboardData.summary.pending_requests}
+                <p className={`text-2xl font-bold ${pendingRequests.length > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                  {pendingRequests.length}
                 </p>
                 <p className="text-sm text-slate-500">Pending Approval</p>
               </div>
