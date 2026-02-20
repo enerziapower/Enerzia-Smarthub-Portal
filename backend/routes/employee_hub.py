@@ -120,72 +120,103 @@ def serialize_doc(doc):
 
 
 # ============= OVERTIME REQUESTS =============
+# Connected to HR Overtime Management - Employee requests flow to HR for approval
+# Approved requests are automatically included in payroll calculations
+
+import uuid
 
 @router.get("/overtime")
 async def get_overtime_requests(user_id: Optional[str] = None, status: Optional[str] = None):
-    """Get overtime requests, optionally filtered by user_id and status"""
+    """Get overtime requests for an employee from the unified hr_overtime collection"""
     query = {}
     if user_id:
-        query["user_id"] = user_id
+        # Match by user_id or emp_id (for employees linked to HR records)
+        query["$or"] = [{"user_id": user_id}, {"emp_id": user_id}]
     if status:
         query["status"] = status
     
-    cursor = db.overtime_requests.find(query).sort("created_at", -1)
-    requests = []
-    async for doc in cursor:
-        requests.append(serialize_doc(doc))
+    # Use hr_overtime collection (unified with HR module)
+    cursor = db.hr_overtime.find(query, {"_id": 0}).sort("created_at", -1)
+    requests = await cursor.to_list(100)
     return {"requests": requests}
 
 
 @router.post("/overtime")
 async def create_overtime_request(request: OvertimeRequest, user_id: str, user_name: str, department: str):
-    """Create a new overtime request"""
+    """
+    Create a new overtime request - goes to HR for approval
+    Once approved by HR, it will be included in payroll calculations
+    """
+    # Try to find linked employee record for emp_id
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"user_id": user_id}, {"id": user_id}]},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1}
+    )
+    
+    emp_id = employee.get("emp_id", user_id) if employee else user_id
+    emp_name = employee.get("name", user_name) if employee else user_name
+    emp_dept = employee.get("department", department) if employee else department
+    
+    # Default rate - HR can update when approving
+    default_rate = 100
+    
     doc = {
-        **request.dict(),
-        "user_id": user_id,
-        "user_name": user_name,
-        "department": department,
-        "status": "pending",
+        "id": str(uuid.uuid4()),
+        "emp_id": emp_id,
+        "emp_name": emp_name,
+        "department": emp_dept,
+        "user_id": user_id,  # Keep user_id for employee lookup
+        "date": request.date,
+        "hours": request.hours,
+        "rate_per_hour": default_rate,
+        "amount": request.hours * default_rate,
+        "reason": request.reason,
+        "project": request.project,
+        "status": "pending",  # Pending HR approval
+        "source": "employee_request",  # Track that this came from employee
         "approved_by": None,
+        "approved_at": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    result = await db.overtime_requests.insert_one(doc)
-    doc["id"] = str(result.inserted_id)
-    if "_id" in doc:
-        del doc["_id"]
-    return {"message": "Overtime request submitted", "request": doc}
+    
+    # Insert into hr_overtime collection (unified with HR module)
+    await db.hr_overtime.insert_one(doc)
+    doc.pop("_id", None)
+    
+    return {"message": "Overtime request submitted for HR approval", "request": doc}
 
 
-@router.put("/overtime/{request_id}/approve")
-async def approve_overtime_request(request_id: str, approved_by: str):
-    """Approve an overtime request"""
-    result = await db.overtime_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": {"status": "approved", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
-    return {"message": "Request approved"}
-
-
-@router.put("/overtime/{request_id}/reject")
-async def reject_overtime_request(request_id: str, approved_by: str):
-    """Reject an overtime request"""
-    result = await db.overtime_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": {"status": "rejected", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
-    return {"message": "Request rejected"}
+@router.put("/overtime/{request_id}/withdraw")
+async def withdraw_overtime_request(request_id: str, user_id: str):
+    """Withdraw a pending overtime request (employee can only withdraw their own pending requests)"""
+    result = await db.hr_overtime.delete_one({
+        "id": request_id,
+        "$or": [{"user_id": user_id}, {"emp_id": user_id}],
+        "status": "pending"
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or cannot be withdrawn")
+    
+    return {"message": "Overtime request withdrawn"}
 
 
 @router.delete("/overtime/{request_id}")
 async def delete_overtime_request(request_id: str):
-    """Delete an overtime request"""
-    result = await db.overtime_requests.delete_one({"_id": ObjectId(request_id)})
+    """Delete an overtime request (only pending requests can be deleted)"""
+    # Try both id formats (uuid and ObjectId)
+    result = await db.hr_overtime.delete_one({"id": request_id, "status": "pending"})
+    
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
+        # Try with ObjectId format for backward compatibility
+        try:
+            result = await db.overtime_requests.delete_one({"_id": ObjectId(request_id)})
+        except:
+            pass
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or already processed")
+    
     return {"message": "Request deleted"}
 
 
