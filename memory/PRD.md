@@ -1445,3 +1445,119 @@ if (reportData.overall_condition) {
 ---
 *Last Updated: February 18, 2026*
 *Status: LIGHTNING ARRESTOR FIXES COMPLETE ✅*
+
+
+---
+
+## HR & Payroll System - Phase 2 ✅ COMPLETE (Feb 20, 2026)
+
+### Overview
+Comprehensive HR & Payroll module for employee management, salary processing, advances, leave tracking, and overtime management.
+
+### Phase 1 (Previously Completed)
+- Employee Master Data with full statutory compliance
+- Payroll Processing with EPF, ESIC, Professional Tax calculations
+- Leave Balance management APIs
+
+### Phase 2 Features (Completed Feb 20, 2026)
+
+#### 1. Payslip PDF Generation ✅
+**Location:** `/app/backend/routes/hr_payslip_pdf.py`
+
+| Feature | Implementation |
+|---------|---------------|
+| **PDF Endpoints** | `GET /api/hr/payslip/{record_id}/pdf`, `GET /api/hr/payslip/{emp_id}/{month}/{year}/pdf` |
+| **Professional Layout** | Company header, employee info, attendance summary, earnings/deductions side-by-side, net salary box |
+| **Statutory Info** | Shows EPF, ESIC, Professional Tax deductions with employer contributions |
+| **Color-coded** | Green for earnings, red for deductions, blue for net salary |
+| **Auto-download** | Proper filename: `Payslip_{EmpName}_{Month}_{Year}.pdf` |
+
+#### 2. Advances & Loans Management ✅
+**Location:** `/app/frontend/src/pages/hr/AdvancesLoans.js`, `/app/backend/routes/hr_payroll.py`
+
+| Feature | Implementation |
+|---------|---------------|
+| **Route** | `/hr/advances` |
+| **Stats Cards** | Pending Approval, Active Loans, Outstanding Balance, Total Disbursed |
+| **CRUD Operations** | Create, Approve, Reject advance requests |
+| **EMI Tracking** | Shows repayment progress bar, paid EMIs / total EMIs |
+| **Status Workflow** | pending → approved → active → completed |
+
+**API Endpoints:**
+- `GET /api/hr/advances` - List all advances
+- `POST /api/hr/advances` - Create advance request
+- `PUT /api/hr/advances/{id}/approve` - Approve advance
+- `PUT /api/hr/advances/{id}/reject` - Reject advance
+
+#### 3. Leave Dashboard ✅
+**Location:** `/app/frontend/src/pages/hr/LeaveDashboard.js`
+
+| Feature | Implementation |
+|---------|---------------|
+| **Route** | `/hr/leave-dashboard` |
+| **Stats Cards** | Active Employees, Total CL/SL/EL Balance |
+| **Employee Table** | Name, ID, Department, CL/SL/EL/CO individual balances |
+| **Detail Panel** | Click employee to see breakdown (Total, Taken, Remaining) |
+| **Visual Progress** | Progress bars showing leave usage |
+| **Leave Types** | Casual Leave (CL), Sick Leave (SL), Earned Leave (EL), Comp Off (CO) |
+
+#### 4. Overtime Management ✅
+**Location:** `/app/frontend/src/pages/hr/OvertimeManagement.js`, `/app/backend/routes/hr_payroll.py`
+
+| Feature | Implementation |
+|---------|---------------|
+| **Route** | `/hr/overtime` |
+| **Stats Cards** | Pending Approval, Total OT Hours, Total OT Amount, Employees with OT |
+| **CRUD Operations** | Create, Edit, Delete, Approve, Reject overtime records |
+| **Filters** | Month, Year, Status |
+| **Rate Calculation** | Hours × Rate per hour = Amount |
+
+**API Endpoints:**
+- `GET /api/hr/overtime` - List overtime records
+- `POST /api/hr/overtime` - Create overtime record
+- `PUT /api/hr/overtime/{id}` - Update overtime record
+- `PUT /api/hr/overtime/{id}/approve` - Approve overtime
+- `PUT /api/hr/overtime/{id}/reject` - Reject overtime
+- `DELETE /api/hr/overtime/{id}` - Delete overtime record
+- `GET /api/hr/overtime/summary/{emp_id}` - Employee overtime summary
+
+### Navigation Update
+Added to HR & Admin sidebar:
+- Advances & Loans
+- Leave Dashboard
+- Overtime Management
+
+### Testing Results
+- Backend: 100% (25/25 tests passed)
+- Frontend: 100% (all features working)
+- Test file: `/app/backend/tests/test_hr_phase2.py`
+- Test report: `/app/test_reports/iteration_63.json`
+
+### Bug Fixed During Implementation
+- **API URL Issue:** Frontend HR pages were using `/api/hr/...` URLs causing double prefix `/api/api/hr/...`. Fixed by changing to `/hr/...` (axios baseURL already includes `/api`).
+
+---
+*Last Updated: February 20, 2026*
+*Status: HR & PAYROLL PHASE 2 COMPLETE ✅*
+
+---
+
+## Known Issue - Production Environment
+
+### Email Sender Name (SMTP_FROM_NAME) ⚠️
+**Status:** Requires manual user action in production
+
+**Issue:** Password reset emails in production show "Workhub Enerzia" instead of "Smarthub Enerzia"
+
+**Root Cause:** The `SMTP_FROM_NAME` environment variable in the production deployment settings was not updated during redeployment.
+
+**Fix Required:**
+1. Go to Emergent deployment settings
+2. Navigate to "Environment Variables"
+3. Update `SMTP_FROM_NAME` value to `Smarthub Enerzia`
+4. Re-deploy the application
+
+**Note:** Preview environment is working correctly - this is a production-only issue.
+
+---
+*Last Updated: February 20, 2026*
