@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { 
   Clock, Plus, Search, Check, X, AlertCircle, RefreshCw,
   Calendar, User, Building, Edit2, Trash2, Download,
-  TrendingUp, Users, DollarSign
+  TrendingUp, Users, DollarSign, UserCheck, FileText, Bell
 } from 'lucide-react';
 import api from '../../services/api';
 
 const OvertimeManagement = () => {
   const [overtimeRecords, setOvertimeRecords] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'pending', 'approved'
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,19 +46,23 @@ const OvertimeManagement = () => {
   useEffect(() => {
     fetchOvertimeRecords();
     fetchEmployees();
-  }, [filterStatus, filterMonth, filterYear]);
+  }, [filterMonth, filterYear]);
 
   const fetchOvertimeRecords = async () => {
     try {
       setLoading(true);
-      let url = `/hr/overtime?month=${filterMonth}&year=${filterYear}`;
-      if (filterStatus) url += `&status=${filterStatus}`;
+      const url = `/hr/overtime?month=${filterMonth}&year=${filterYear}`;
       const response = await api.get(url);
-      setOvertimeRecords(response.data || []);
+      const records = response.data || [];
+      setOvertimeRecords(records);
+      
+      // Separate pending requests (from employees)
+      const pending = records.filter(r => r.status === 'pending');
+      setPendingRequests(pending);
     } catch (err) {
       console.error('Error fetching overtime records:', err);
-      // If API doesn't exist yet, use empty array
       setOvertimeRecords([]);
+      setPendingRequests([]);
     } finally {
       setLoading(false);
     }
@@ -106,10 +111,21 @@ const OvertimeManagement = () => {
     }
   };
 
-  const handleApprove = async (recordId) => {
+  const handleApprove = async (recordId, ratePerHour = null) => {
     try {
+      // If rate is provided, update the record first
+      if (ratePerHour) {
+        const record = overtimeRecords.find(r => r.id === recordId);
+        if (record) {
+          await api.put(`/hr/overtime/${recordId}`, {
+            rate_per_hour: parseFloat(ratePerHour),
+            amount: record.hours * parseFloat(ratePerHour)
+          });
+        }
+      }
+      
       await api.put(`/hr/overtime/${recordId}/approve`);
-      setSuccess('Overtime approved successfully');
+      setSuccess('Overtime approved - will be included in payroll');
       fetchOvertimeRecords();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -166,15 +182,28 @@ const OvertimeManagement = () => {
     setShowModal(true);
   };
 
-  const filteredRecords = overtimeRecords.filter(rec =>
-    rec.emp_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rec.emp_id?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter records based on active tab
+  const getFilteredRecords = () => {
+    let records = overtimeRecords;
+    
+    if (activeTab === 'pending') {
+      records = records.filter(r => r.status === 'pending');
+    } else if (activeTab === 'approved') {
+      records = records.filter(r => r.status === 'approved');
+    }
+    
+    return records.filter(rec =>
+      rec.emp_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rec.emp_id?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const filteredRecords = getFilteredRecords();
 
   // Stats calculation
   const totalHours = overtimeRecords.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.hours || 0), 0);
   const totalAmount = overtimeRecords.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.amount || 0), 0);
-  const pendingCount = overtimeRecords.filter(r => r.status === 'pending').length;
+  const pendingCount = pendingRequests.length;
   const uniqueEmployees = new Set(overtimeRecords.filter(r => r.status === 'approved').map(r => r.emp_id)).size;
 
   return (
@@ -183,7 +212,7 @@ const OvertimeManagement = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Overtime Management</h1>
-          <p className="text-slate-500 mt-1">Track and approve employee overtime hours</p>
+          <p className="text-slate-500 mt-1">Approve employee requests & track overtime hours for payroll</p>
         </div>
         <button 
           onClick={() => { resetForm(); setShowModal(true); }}
@@ -210,11 +239,11 @@ const OvertimeManagement = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-5 h-5 text-yellow-600" />
+            <div className={`p-2 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}>
+              <Bell className={`w-5 h-5 ${pendingCount > 0 ? 'text-yellow-600' : 'text-slate-400'}`} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{pendingCount}</p>
+              <p className={`text-2xl font-bold ${pendingCount > 0 ? 'text-yellow-600' : 'text-slate-900'}`}>{pendingCount}</p>
               <p className="text-sm text-slate-500">Pending Approval</p>
             </div>
           </div>
@@ -226,7 +255,7 @@ const OvertimeManagement = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{totalHours.toFixed(1)}</p>
-              <p className="text-sm text-slate-500">Total OT Hours</p>
+              <p className="text-sm text-slate-500">Approved Hours</p>
             </div>
           </div>
         </div>
@@ -252,6 +281,35 @@ const OvertimeManagement = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <nav className="flex gap-1">
+          {[
+            { id: 'all', label: 'All Records', count: overtimeRecords.length },
+            { id: 'pending', label: 'Pending Approval', count: pendingCount, highlight: pendingCount > 0 },
+            { id: 'approved', label: 'Approved', count: overtimeRecords.filter(r => r.status === 'approved').length }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === tab.id 
+                  ? 'border-blue-600 text-blue-600' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+              data-testid={`tab-${tab.id}`}
+            >
+              {tab.label}
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                tab.highlight ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
       </div>
 
       {/* Filters */}
@@ -281,17 +339,6 @@ const OvertimeManagement = () => {
         >
           {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2 border border-slate-200 rounded-lg"
-          data-testid="status-filter"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
         <button onClick={fetchOvertimeRecords} className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
           <RefreshCw className="w-5 h-5" />
         </button>
@@ -309,18 +356,21 @@ const OvertimeManagement = () => {
                 <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Rate/Hr</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Amount</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Reason</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Source</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Status</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan="8" className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
+                <tr><td colSpan="9" className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
               ) : filteredRecords.length === 0 ? (
-                <tr><td colSpan="8" className="px-4 py-8 text-center text-slate-500">No overtime records found</td></tr>
+                <tr><td colSpan="9" className="px-4 py-8 text-center text-slate-500">
+                  {activeTab === 'pending' ? 'No pending requests' : 'No overtime records found'}
+                </td></tr>
               ) : (
                 filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50">
+                  <tr key={record.id} className={`hover:bg-slate-50 ${record.status === 'pending' ? 'bg-yellow-50/30' : ''}`}>
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium text-slate-900">{record.emp_name}</p>
@@ -343,6 +393,20 @@ const OvertimeManagement = () => {
                       <p className="text-sm text-slate-600 max-w-[150px] truncate" title={record.reason}>
                         {record.reason || '-'}
                       </p>
+                      {record.project && (
+                        <p className="text-xs text-slate-400">Project: {record.project}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {record.source === 'employee_request' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+                          <User className="w-3 h-3" /> Employee
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-slate-50 text-slate-600 rounded-full">
+                          <UserCheck className="w-3 h-3" /> HR Entry
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${statusColors[record.status] || 'bg-slate-100 text-slate-700'}`}>
@@ -397,13 +461,28 @@ const OvertimeManagement = () => {
         </div>
       </div>
 
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Overtime → Payroll Flow</p>
+            <ul className="list-disc list-inside space-y-1 text-blue-700">
+              <li><strong>Employee Request:</strong> Employees submit OT requests from their workspace</li>
+              <li><strong>HR Approval:</strong> Review and approve/reject requests, adjust rate if needed</li>
+              <li><strong>Payroll:</strong> Approved OT is automatically added to the employee's salary</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Add/Edit Overtime Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900">
-                {editingRecord ? 'Edit Overtime Record' : 'Add Overtime'}
+                {editingRecord ? 'Edit Overtime Record' : 'Add Overtime (HR Entry)'}
               </h3>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
