@@ -1683,6 +1683,62 @@ Employee Workspace              HR Department              Payroll
 ```
 
 ---
+
+---
+
+## Leave Management Enhancement ✅ COMPLETE (Feb 20, 2026)
+
+### What Was Implemented
+Full integration of Employee Leave Requests with HR Approval and Payroll.
+
+### Flow Diagram
+```
+Employee Workspace              HR Department              Payroll
+┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│ Submit Leave     │ ───► │ Pending Requests │ ───► │ LOP Deduction    │
+│ Request          │      │ Approve/Reject   │      │ from Salary      │
+│ (type, dates,    │      │                  │      │                  │
+│  reason)         │      │ Auto-deduct from │      │                  │
+│                  │      │ employee balance │      │                  │
+└──────────────────┘      └──────────────────┘      └──────────────────┘
+```
+
+### New APIs Created
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/hr/leave/dashboard` | GET | HR Leave Dashboard with stats, pending requests, dept breakdown |
+| `/api/hr/leave/requests` | GET | All leave requests with filters |
+| `/api/hr/leave/approve/{id}` | POST | Approve leave & auto-deduct from balance |
+| `/api/hr/leave/reject/{id}` | POST | Reject leave request |
+| `/api/hr/leave/employee-balance/{emp_id}` | GET | Detailed leave balance for employee |
+| `/api/hr/leave/balance/{emp_id}/reset` | PUT | Reset leave balance for new year |
+| `/api/hr/leave/calendar/{month}/{year}` | GET | Leave calendar (who's on leave each day) |
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **HR Dashboard** | Overview, Pending Requests, Employee Balances tabs |
+| **Auto-Deduction** | Approved leaves auto-deduct from employee balance |
+| **LOP Calculation** | When balance exhausted, excess marked as Loss of Pay |
+| **Leave Types** | Casual (12), Sick (6), Earned (15), Comp Off (2) per year |
+| **Low Balance Alert** | Shows employees with ≤5 days remaining |
+| **Department Breakdown** | Leave statistics by department |
+| **Type Breakdown** | Leave statistics by leave type |
+
+### UI Updates
+- **HR Leave Dashboard**: Complete redesign with tabs, stats, approve/reject actions
+- **Employee Leave Page**: Added info box explaining flow, shows LOP info on approved leaves
+
+### Integration with Payroll
+- Approved leaves deduct from HR employee leave balance
+- Excess leaves (beyond balance) marked as LOP days
+- LOP days automatically deducted from monthly salary in payroll calculation
+
+---
+*Last Updated: February 20, 2026*
+
 *Last Updated: February 20, 2026*
 
 
