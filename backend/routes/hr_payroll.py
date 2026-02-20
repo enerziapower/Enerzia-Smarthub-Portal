@@ -2008,10 +2008,19 @@ async def get_leave_dashboard():
     low_balance_employees = []
     for emp in employees:
         lb = emp.get("leave_balance", {})
+        # Handle both old format (flat numbers) and new format (nested dicts)
+        def get_remaining(leave_type, default):
+            val = lb.get(leave_type, {})
+            if isinstance(val, dict):
+                return val.get("remaining", default)
+            elif isinstance(val, (int, float)):
+                return val
+            return default
+        
         total_remaining = sum([
-            lb.get("casual_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["casual_leave"]),
-            lb.get("sick_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["sick_leave"]),
-            lb.get("earned_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["earned_leave"]),
+            get_remaining("casual_leave", DEFAULT_LEAVE_ALLOCATION["casual_leave"]),
+            get_remaining("sick_leave", DEFAULT_LEAVE_ALLOCATION["sick_leave"]),
+            get_remaining("earned_leave", DEFAULT_LEAVE_ALLOCATION["earned_leave"]),
         ])
         if total_remaining <= 5:
             low_balance_employees.append({
