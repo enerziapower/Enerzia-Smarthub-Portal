@@ -1691,6 +1691,29 @@ Employee Workspace              HR Department              Payroll
 ### What Was Implemented
 Full integration of Employee Leave Requests with HR Approval and Payroll.
 
+### Workflow Integration Fix ✅ COMPLETE (Feb 20, 2026)
+
+**Issue:** Employee requests from "My Workspace" were not properly flowing to "HR & Admin" for approval. Leave approval failed with "Leave request not found" error. There were duplicate UIs (`LeaveApprovals.js` and `LeaveDashboard.js`) causing confusion.
+
+**Root Cause:** Backend approval endpoints only accepted MongoDB ObjectId format, but the frontend was passing string IDs from the serialized documents.
+
+**Fixes Applied:**
+| Component | Fix |
+|-----------|-----|
+| **Backend Endpoints** | Updated all approval endpoints (Leave, Permission, Transport, Expense) to handle both ObjectId and string 'id' formats |
+| **UI Consolidation** | Removed redundant `Leave Approvals` menu item, merged functionality into `Leave Management` (LeaveDashboard.js) |
+| **Pending Requests First** | LeaveDashboard now shows "Pending Requests" tab first for immediate action |
+| **API Consistency** | All approval flows now use `employeeHubAPI` which correctly integrates with the unified collections |
+
+**Backend Files Updated:**
+- `/app/backend/routes/employee_hub.py` - Lines 391-413 (Leave), 260-295 (Permission), 343-387 (Transport), 553-595 (Expense)
+
+**Frontend Files Updated:**
+- `/app/frontend/src/pages/hr/LeaveDashboard.js` - Uses `employeeHubAPI`, shows pending first
+- `/app/frontend/src/components/Layout.js` - Removed "Leave Approvals" menu item
+
+**Testing:** All 16/16 backend tests passed, all frontend workflows verified working.
+
 ### Flow Diagram
 ```
 Employee Workspace              HR Department              Payroll
