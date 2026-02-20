@@ -390,25 +390,51 @@ async def create_leave_request(request: LeaveRequest, user_id: str, user_name: s
 
 @router.put("/leave/{request_id}/approve")
 async def approve_leave_request(request_id: str, approved_by: str):
-    """Approve a leave request"""
-    result = await db.leave_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": {"status": "approved", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
+    """Approve a leave request - handles both ObjectId and string id formats"""
+    # Try to find and update using ObjectId first, then by string id
+    result = None
+    try:
+        result = await db.leave_requests.update_one(
+            {"_id": ObjectId(request_id), "status": "pending"},
+            {"$set": {"status": "approved", "approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    except Exception:
+        pass
+    
+    # If ObjectId didn't work, try with string id field
+    if not result or result.modified_count == 0:
+        result = await db.leave_requests.update_one(
+            {"id": request_id, "status": "pending"},
+            {"$set": {"status": "approved", "approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Leave request not found or already processed")
     return {"message": "Leave request approved"}
 
 
 @router.put("/leave/{request_id}/reject")
 async def reject_leave_request(request_id: str, approved_by: str):
-    """Reject a leave request"""
-    result = await db.leave_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": {"status": "rejected", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
+    """Reject a leave request - handles both ObjectId and string id formats"""
+    # Try to find and update using ObjectId first, then by string id
+    result = None
+    try:
+        result = await db.leave_requests.update_one(
+            {"_id": ObjectId(request_id), "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    except Exception:
+        pass
+    
+    # If ObjectId didn't work, try with string id field
+    if not result or result.modified_count == 0:
+        result = await db.leave_requests.update_one(
+            {"id": request_id, "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Leave request not found or already processed")
     return {"message": "Leave request rejected"}
 
 
