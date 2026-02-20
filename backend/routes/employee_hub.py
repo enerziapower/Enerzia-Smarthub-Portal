@@ -342,29 +342,51 @@ async def create_transport_request(request: TransportRequest, user_id: str, user
 
 @router.put("/transport/{request_id}/approve")
 async def approve_transport_request(request_id: str, approved_by: str, vehicle: Optional[str] = None):
-    """Approve a transport request"""
-    update_data = {"status": "approved", "approved_by": approved_by}
+    """Approve a transport request - handles both ObjectId and string id formats"""
+    update_data = {"status": "approved", "approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}
     if vehicle:
         update_data["vehicle"] = vehicle
     
-    result = await db.transport_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": update_data}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
+    result = None
+    try:
+        result = await db.transport_requests.update_one(
+            {"_id": ObjectId(request_id), "status": "pending"},
+            {"$set": update_data}
+        )
+    except Exception:
+        pass
+    
+    if not result or result.modified_count == 0:
+        result = await db.transport_requests.update_one(
+            {"id": request_id, "status": "pending"},
+            {"$set": update_data}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or already processed")
     return {"message": "Request approved"}
 
 
 @router.put("/transport/{request_id}/reject")
 async def reject_transport_request(request_id: str, approved_by: str):
-    """Reject a transport request"""
-    result = await db.transport_requests.update_one(
-        {"_id": ObjectId(request_id)},
-        {"$set": {"status": "rejected", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Request not found")
+    """Reject a transport request - handles both ObjectId and string id formats"""
+    result = None
+    try:
+        result = await db.transport_requests.update_one(
+            {"_id": ObjectId(request_id), "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    except Exception:
+        pass
+    
+    if not result or result.modified_count == 0:
+        result = await db.transport_requests.update_one(
+            {"id": request_id, "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or already processed")
     return {"message": "Request rejected"}
 
 
