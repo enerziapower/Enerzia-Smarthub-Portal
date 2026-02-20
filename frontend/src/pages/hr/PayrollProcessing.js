@@ -269,7 +269,14 @@ const PayrollProcessing = () => {
               Payslip - {selectedRecord.emp_name} ({selectedRecord.emp_id})
             </h3>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded">
+              <button 
+                onClick={() => {
+                  const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+                  window.open(`${API_URL}/api/hr/payslip/${selectedRecord.id}/pdf`, '_blank');
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded"
+                data-testid="download-payslip-btn"
+              >
                 <Download className="w-4 h-4" /> Download PDF
               </button>
               <button 
