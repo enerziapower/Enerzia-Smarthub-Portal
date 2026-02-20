@@ -1630,6 +1630,63 @@ Added to HR & Admin sidebar:
 - Negative net salary possible if LOP exceeds gross
 
 ---
+
+## Overtime System Integration ✅ COMPLETE (Feb 20, 2026)
+
+### What Was Connected
+Linked Employee Workspace Overtime Requests with HR Overtime Management and Payroll.
+
+### Flow Diagram
+```
+Employee Workspace              HR Department              Payroll
+┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│ Submit OT        │ ───► │ Pending Requests │ ───► │ Approved OT      │
+│ Request          │      │ Approve/Reject   │      │ Added to Salary  │
+│ /employee/       │      │ Set Rate/Hour    │      │                  │
+│ overtime-requests│      │ /hr/overtime     │      │                  │
+└──────────────────┘      └──────────────────┘      └──────────────────┘
+```
+
+### Changes Made
+
+| Component | Change |
+|-----------|--------|
+| **Employee API** | `/api/employee/overtime` now creates records in `hr_overtime` collection |
+| **Employee UI** | Shows payroll amount for approved OT, info box explaining flow |
+| **HR Overtime UI** | New tabs: All/Pending/Approved, shows source (Employee/HR Entry) |
+| **Unified Collection** | Single `hr_overtime` collection used by both modules |
+| **Payroll Integration** | Approved OT automatically included in salary calculations |
+
+### API Endpoints Updated
+- `POST /api/employee/overtime` - Employee submits OT request (status: pending)
+- `PUT /api/employee/overtime/{id}/withdraw` - Employee withdraws pending request
+- `GET /api/hr/overtime` - HR views all OT (includes employee requests)
+- `PUT /api/hr/overtime/{id}/approve` - HR approves (triggers payroll inclusion)
+- `PUT /api/hr/overtime/{id}/reject` - HR rejects
+
+### Data Fields
+```json
+{
+  "id": "uuid",
+  "emp_id": "EMP001",
+  "emp_name": "Employee Name",
+  "date": "2026-02-20",
+  "hours": 3.0,
+  "rate_per_hour": 100,
+  "amount": 300,
+  "reason": "Project deadline",
+  "project": "Project Name",
+  "status": "pending|approved|rejected",
+  "source": "employee_request|hr_entry",
+  "user_id": "linked_user_id"
+}
+```
+
+---
+*Last Updated: February 20, 2026*
+
+
+---
 *Last Updated: February 20, 2026*
 *Status: HR & PAYROLL PHASE 3 COMPLETE ✅*
 
