@@ -38,7 +38,7 @@ const PayrollProcessing = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/hr/employees?status=active');
+      const response = await api.get('/hr/employees?status=active');
       setEmployees(response.data || []);
     } catch (err) {
       console.error('Error fetching employees:', err);
@@ -75,7 +75,7 @@ const PayrollProcessing = () => {
     setError('');
     
     try {
-      const response = await api.post('/api/hr/payroll/run', {
+      const response = await api.post('/hr/payroll/run', {
         month: selectedMonth,
         year: selectedYear,
         employee_ids: selectedEmployees.length > 0 ? selectedEmployees : []

@@ -31,7 +31,7 @@ const LeaveDashboard = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      let url = '/api/hr/employees?status=active';
+      let url = '/hr/employees?status=active';
       if (filterDepartment) url += `&department=${filterDepartment}`;
       const response = await api.get(url);
       setEmployees(response.data || []);

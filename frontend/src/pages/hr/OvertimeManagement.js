@@ -65,7 +65,7 @@ const OvertimeManagement = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/hr/employees?status=active');
+      const response = await api.get('/hr/employees?status=active');
       setEmployees(response.data || []);
     } catch (err) {
       console.error('Error fetching employees:', err);
@@ -93,7 +93,7 @@ const OvertimeManagement = () => {
         await api.put(`/api/hr/overtime/${editingRecord.id}`, payload);
         setSuccess('Overtime record updated successfully');
       } else {
-        await api.post('/api/hr/overtime', payload);
+        await api.post('/hr/overtime', payload);
         setSuccess('Overtime record created successfully');
       }
       

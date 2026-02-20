@@ -98,7 +98,7 @@ const EmployeeManagementFull = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      let url = '/api/hr/employees';
+      let url = '/hr/employees';
       const params = new URLSearchParams();
       if (filterDepartment) params.append('department', filterDepartment);
       if (filterStatus) params.append('status', filterStatus);
@@ -124,7 +124,7 @@ const EmployeeManagementFull = () => {
         await api.put(`/api/hr/employees/${editingEmployee.emp_id}`, formData);
         setSuccess('Employee updated successfully');
       } else {
-        await api.post('/api/hr/employees', formData);
+        await api.post('/hr/employees', formData);
         setSuccess('Employee created successfully');
       }
       fetchEmployees();
