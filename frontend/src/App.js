@@ -364,7 +364,8 @@ function AppRoutes() {
           <Route path="work-planner" element={<HRWorkPlanner />} />
           <Route path="attendance-management" element={<AttendanceManagement />} />
           <Route path="travel-management" element={<TravelManagement />} />
-          <Route path="employees" element={<EmployeeManagement />} />
+          <Route path="employees" element={<EmployeeManagementFull />} />
+          <Route path="payroll" element={<PayrollProcessing />} />
           <Route path="payment-requests" element={<HRPaymentRequests />} />
           <Route path="dept-requirements" element={<HRDeptRequirements />} />
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
