@@ -925,3 +925,184 @@ async def get_hr_dashboard_stats():
             "anniversaries": len(celebrations.get("anniversaries", []))
         }
     }
+
+
+
+# ============= OVERTIME MANAGEMENT =============
+
+class OvertimeCreate(BaseModel):
+    emp_id: str
+    date: str
+    hours: float
+    reason: str = ""
+    rate_per_hour: float = 100
+    amount: Optional[float] = None
+
+
+class OvertimeUpdate(BaseModel):
+    date: Optional[str] = None
+    hours: Optional[float] = None
+    reason: Optional[str] = None
+    rate_per_hour: Optional[float] = None
+    amount: Optional[float] = None
+
+
+@router.get("/overtime")
+async def get_overtime_records(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    emp_id: Optional[str] = None,
+    status: Optional[str] = None
+):
+    """Get all overtime records with optional filters"""
+    query = {}
+    if emp_id:
+        query["emp_id"] = emp_id
+    if status:
+        query["status"] = status
+    
+    # Filter by month/year from date field
+    if month and year:
+        # Match dates like "2025-12-15" for December 2025
+        month_str = f"{year}-{str(month).zfill(2)}"
+        query["date"] = {"$regex": f"^{month_str}"}
+    
+    records = await db.hr_overtime.find(query, {"_id": 0}).sort("date", -1).to_list(1000)
+    return records
+
+
+@router.post("/overtime")
+async def create_overtime(overtime: OvertimeCreate):
+    """Create new overtime record"""
+    # Get employee info
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"emp_id": overtime.emp_id}, {"id": overtime.emp_id}]},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1}
+    )
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Calculate amount
+    amount = overtime.amount or (overtime.hours * overtime.rate_per_hour)
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "emp_id": employee["emp_id"],
+        "emp_name": employee["name"],
+        "department": employee.get("department", ""),
+        "date": overtime.date,
+        "hours": overtime.hours,
+        "rate_per_hour": overtime.rate_per_hour,
+        "amount": amount,
+        "reason": overtime.reason,
+        "status": "pending",  # pending, approved, rejected
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.hr_overtime.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@router.put("/overtime/{overtime_id}")
+async def update_overtime(overtime_id: str, updates: OvertimeUpdate):
+    """Update overtime record"""
+    update_data = {k: v for k, v in updates.dict().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No updates provided")
+    
+    # Recalculate amount if hours or rate changed
+    if "hours" in update_data or "rate_per_hour" in update_data:
+        existing = await db.hr_overtime.find_one({"id": overtime_id}, {"_id": 0})
+        if existing:
+            hours = update_data.get("hours", existing.get("hours", 0))
+            rate = update_data.get("rate_per_hour", existing.get("rate_per_hour", 100))
+            update_data["amount"] = hours * rate
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.hr_overtime.update_one(
+        {"id": overtime_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Overtime record not found")
+    
+    updated = await db.hr_overtime.find_one({"id": overtime_id}, {"_id": 0})
+    return updated
+
+
+@router.put("/overtime/{overtime_id}/approve")
+async def approve_overtime(overtime_id: str):
+    """Approve overtime request"""
+    result = await db.hr_overtime.update_one(
+        {"id": overtime_id, "status": "pending"},
+        {
+            "$set": {
+                "status": "approved",
+                "approved_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Overtime record not found or already processed")
+    
+    return {"message": "Overtime approved successfully"}
+
+
+@router.put("/overtime/{overtime_id}/reject")
+async def reject_overtime(overtime_id: str):
+    """Reject overtime request"""
+    result = await db.hr_overtime.update_one(
+        {"id": overtime_id, "status": "pending"},
+        {
+            "$set": {
+                "status": "rejected",
+                "rejected_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Overtime record not found or already processed")
+    
+    return {"message": "Overtime rejected"}
+
+
+@router.delete("/overtime/{overtime_id}")
+async def delete_overtime(overtime_id: str):
+    """Delete overtime record"""
+    result = await db.hr_overtime.delete_one({"id": overtime_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Overtime record not found")
+    
+    return {"message": "Overtime record deleted"}
+
+
+@router.get("/overtime/summary/{emp_id}")
+async def get_overtime_summary(emp_id: str, month: int, year: int):
+    """Get overtime summary for an employee for a specific month"""
+    month_str = f"{year}-{str(month).zfill(2)}"
+    
+    records = await db.hr_overtime.find({
+        "emp_id": emp_id,
+        "status": "approved",
+        "date": {"$regex": f"^{month_str}"}
+    }, {"_id": 0}).to_list(100)
+    
+    total_hours = sum(r.get("hours", 0) for r in records)
+    total_amount = sum(r.get("amount", 0) for r in records)
+    
+    return {
+        "emp_id": emp_id,
+        "month": month,
+        "year": year,
+        "total_hours": total_hours,
+        "total_amount": total_amount,
+        "record_count": len(records)
+    }
