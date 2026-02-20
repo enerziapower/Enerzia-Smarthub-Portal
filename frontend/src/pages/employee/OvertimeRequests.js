@@ -146,6 +146,23 @@ const OvertimeRequests = () => {
         </div>
       </div>
 
+      {/* Info Box - Payroll Connection */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <FileText className="text-blue-600" size={18} />
+          </div>
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">How Overtime Works</p>
+            <ul className="list-disc list-inside space-y-0.5 text-blue-700">
+              <li>Submit your OT request with date, hours, and reason</li>
+              <li>HR reviews and approves/rejects your request</li>
+              <li>Approved OT is automatically added to your monthly salary</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Requests List */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200">
@@ -163,8 +180,14 @@ const OvertimeRequests = () => {
               <div key={request.id} className="p-4 hover:bg-slate-50" data-testid={`ot-request-${request.id}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                      <Clock className="text-slate-600" size={24} />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      request.status === 'approved' ? 'bg-green-100' : 
+                      request.status === 'rejected' ? 'bg-red-100' : 'bg-amber-100'
+                    }`}>
+                      <Clock className={`${
+                        request.status === 'approved' ? 'text-green-600' :
+                        request.status === 'rejected' ? 'text-red-600' : 'text-amber-600'
+                      }`} size={24} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
