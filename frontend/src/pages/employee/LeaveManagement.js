@@ -152,6 +152,24 @@ const LeaveManagement = () => {
         </div>
       </div>
 
+      {/* Info Box - Leave Flow */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Calendar className="text-blue-600" size={18} />
+          </div>
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">How Leave Works</p>
+            <ul className="list-disc list-inside space-y-0.5 text-blue-700">
+              <li>Submit your leave request with dates and reason</li>
+              <li>HR reviews and approves/rejects your request</li>
+              <li>Approved leaves are deducted from your balance</li>
+              <li>If balance exhausted, excess days marked as Loss of Pay (LOP)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Leave Requests List */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200">
@@ -166,15 +184,19 @@ const LeaveManagement = () => {
         ) : (
           <div className="divide-y divide-slate-100">
             {requests.map((request) => (
-              <div key={request.id} className="p-4 hover:bg-slate-50" data-testid={`leave-request-${request.id}`}>
+              <div key={request.id} className={`p-4 hover:bg-slate-50 ${request.status === 'pending' ? 'bg-amber-50/30' : ''}`} data-testid={`leave-request-${request.id}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      request.status === 'approved' ? 'bg-green-100' :
+                      request.status === 'rejected' ? 'bg-red-100' :
                       request.type?.includes('Casual') ? 'bg-blue-100' :
                       request.type?.includes('Sick') ? 'bg-red-100' :
                       request.type?.includes('Earned') ? 'bg-green-100' : 'bg-purple-100'
                     }`}>
                       <Calendar size={24} className={
+                        request.status === 'approved' ? 'text-green-600' :
+                        request.status === 'rejected' ? 'text-red-600' :
                         request.type?.includes('Casual') ? 'text-blue-600' :
                         request.type?.includes('Sick') ? 'text-red-600' :
                         request.type?.includes('Earned') ? 'text-green-600' : 'text-purple-600'
@@ -189,6 +211,11 @@ const LeaveManagement = () => {
                         <span className={`px-2 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusBadge(request.status)}`}>
                           {request.status}
                         </span>
+                        {request.lop_days > 0 && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                            {request.lop_days} LOP
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-slate-500 mt-1">{request.reason}</p>
                       <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
@@ -203,10 +230,26 @@ const LeaveManagement = () => {
                       </div>
                     </div>
                   </div>
-                  {request.status === 'approved' && request.approved_by && (
+                  {request.status === 'approved' && (
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Approved by</p>
-                      <p className="text-sm text-slate-600">{request.approved_by}</p>
+                      <p className="text-sm font-medium text-green-600">Approved</p>
+                      {request.approved_by && <p className="text-xs text-slate-500">by {request.approved_by}</p>}
+                      {request.lop_days > 0 && (
+                        <p className="text-xs text-orange-600 mt-1">{request.lop_days} days as LOP</p>
+                      )}
+                    </div>
+                  )}
+                  {request.status === 'pending' && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-amber-600">Pending HR Approval</p>
+                    </div>
+                  )}
+                  {request.status === 'rejected' && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-red-600">Rejected</p>
+                      {request.rejection_reason && (
+                        <p className="text-xs text-slate-500">{request.rejection_reason}</p>
+                      )}
                     </div>
                   )}
                 </div>
