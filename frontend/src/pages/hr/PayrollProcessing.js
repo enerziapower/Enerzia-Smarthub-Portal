@@ -48,7 +48,7 @@ const PayrollProcessing = () => {
   const fetchPayrollRecords = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/hr/payroll?month=${selectedMonth}&year=${selectedYear}`);
+      const response = await api.get(`/hr/payroll?month=${selectedMonth}&year=${selectedYear}`);
       setPayrollRecords(response.data || []);
     } catch (err) {
       console.error('Error fetching payroll:', err);
@@ -59,7 +59,7 @@ const PayrollProcessing = () => {
 
   const fetchStatutoryReport = async () => {
     try {
-      const response = await api.get(`/api/hr/reports/statutory/${selectedMonth}/${selectedYear}`);
+      const response = await api.get(`/hr/reports/statutory/${selectedMonth}/${selectedYear}`);
       setStatutoryReport(response.data);
     } catch (err) {
       console.error('Error fetching statutory report:', err);
