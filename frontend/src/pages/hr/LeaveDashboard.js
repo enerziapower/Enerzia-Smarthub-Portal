@@ -146,8 +146,9 @@ const LeaveDashboard = () => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => { fetchDashboardData(); fetchEmployees(); }}
+            onClick={() => { fetchDashboardData(); fetchEmployees(); fetchPendingRequests(); }}
             className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+            data-testid="refresh-leave-dashboard"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
