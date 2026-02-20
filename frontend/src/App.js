@@ -371,6 +371,8 @@ function AppRoutes() {
           <Route path="travel-management" element={<TravelManagement />} />
           <Route path="employees" element={<EmployeeManagementFull />} />
           <Route path="payroll" element={<PayrollProcessing />} />
+          <Route path="payroll-dashboard" element={<PayrollDashboard />} />
+          <Route path="statutory-reports" element={<StatutoryReports />} />
           <Route path="advances" element={<AdvancesLoans />} />
           <Route path="leave-dashboard" element={<LeaveDashboard />} />
           <Route path="overtime" element={<OvertimeManagement />} />
