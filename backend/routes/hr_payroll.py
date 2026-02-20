@@ -1106,3 +1106,808 @@ async def get_overtime_summary(emp_id: str, month: int, year: int):
         "total_amount": total_amount,
         "record_count": len(records)
     }
+
+
+
+# ============= PHASE 3: ATTENDANCE INTEGRATION =============
+
+async def get_employee_attendance_summary(emp_id: str, user_id: str, month: int, year: int) -> dict:
+    """
+    Fetch attendance data for an employee from the attendance collection
+    and calculate working days, present days, LOP days
+    """
+    # Get number of days in the month
+    days_in_month = calendar.monthrange(year, month)[1]
+    
+    # Calculate working days (excluding Sundays - can be made configurable)
+    working_days = 0
+    for day in range(1, days_in_month + 1):
+        date_obj = datetime(year, month, day)
+        if date_obj.weekday() != 6:  # 6 = Sunday
+            working_days += 1
+    
+    # Fetch attendance records
+    start_date = f"{year}-{month:02d}-01"
+    if month == 12:
+        end_date = f"{year + 1}-01-01"
+    else:
+        end_date = f"{year}-{month + 1:02d}-01"
+    
+    # Try to find attendance by user_id or emp_id
+    attendance_records = await db.attendance.find({
+        "$or": [
+            {"user_id": user_id},
+            {"user_id": emp_id}
+        ],
+        "date": {"$gte": start_date, "$lt": end_date}
+    }).to_list(50)
+    
+    # Calculate attendance summary
+    present_days = 0
+    half_days = 0
+    leave_days = 0
+    absent_days = 0
+    
+    for record in attendance_records:
+        status = record.get("status", "").lower()
+        if status == "present":
+            present_days += 1
+        elif status == "half-day":
+            half_days += 1
+        elif status in ["on-leave", "leave"]:
+            leave_days += 1
+        elif status == "absent":
+            absent_days += 1
+    
+    # Effective present days (half days count as 0.5)
+    effective_present = present_days + (half_days * 0.5)
+    
+    # LOP calculation: working days - effective present - paid leaves
+    # Assuming leave_days are paid leaves for now
+    lop_days = max(0, working_days - effective_present - leave_days)
+    
+    return {
+        "days_in_month": days_in_month,
+        "working_days": working_days,
+        "present_days": present_days,
+        "half_days": half_days,
+        "leave_days": leave_days,
+        "absent_days": absent_days,
+        "effective_present": effective_present,
+        "lop_days": round(lop_days, 1),
+        "attendance_records_found": len(attendance_records)
+    }
+
+
+@router.get("/attendance-summary/{emp_id}")
+async def get_attendance_for_payroll(emp_id: str, month: int, year: int):
+    """Get attendance summary for payroll calculation"""
+    # Get employee to find linked user_id
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"emp_id": emp_id}, {"id": emp_id}]},
+        {"_id": 0}
+    )
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    user_id = employee.get("user_id", employee.get("id", emp_id))
+    
+    summary = await get_employee_attendance_summary(emp_id, user_id, month, year)
+    
+    return {
+        "emp_id": emp_id,
+        "emp_name": employee.get("name"),
+        "month": month,
+        "year": year,
+        **summary
+    }
+
+
+# ============= PHASE 3: BULK PAYROLL PROCESSING =============
+
+class BulkPayrollPreview(BaseModel):
+    month: int
+    year: int
+    department: Optional[str] = None
+    fetch_attendance: bool = True
+
+
+@router.post("/payroll/preview")
+async def preview_bulk_payroll(data: BulkPayrollPreview):
+    """
+    Preview payroll for all employees before processing
+    Shows calculated values without saving to database
+    """
+    month = data.month
+    year = data.year
+    
+    # Check if payroll already exists and is finalized
+    existing = await db.hr_payroll_runs.find_one({
+        "month": month,
+        "year": year,
+        "status": "finalized"
+    })
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Payroll for {month}/{year} is already finalized and cannot be modified"
+        )
+    
+    # Get all active employees
+    query = {"status": "active"}
+    if data.department:
+        query["department"] = {"$regex": data.department, "$options": "i"}
+    
+    employees = await db.hr_employees.find(query, {"_id": 0}).to_list(500)
+    
+    if not employees:
+        raise HTTPException(status_code=404, detail="No active employees found")
+    
+    preview_records = []
+    total_gross = 0
+    total_deductions = 0
+    total_net = 0
+    
+    for emp in employees:
+        emp_id = emp.get("emp_id", emp.get("id"))
+        
+        # Get attendance if enabled
+        attendance = {"lop_days": 0, "working_days": 26, "present_days": 26}
+        if data.fetch_attendance:
+            user_id = emp.get("user_id", emp.get("id", emp_id))
+            attendance = await get_employee_attendance_summary(emp_id, user_id, month, year)
+        
+        # Get salary structure
+        salary = emp.get("salary", {})
+        gross = emp.get("gross_salary", 0)
+        
+        if gross == 0:
+            gross = sum([
+                salary.get("basic", 0),
+                salary.get("hra", 0),
+                salary.get("da", 0),
+                salary.get("conveyance", 0),
+                salary.get("medical", 0),
+                salary.get("special_allowance", 0),
+                salary.get("other_allowance", 0)
+            ])
+        
+        # Calculate LOP deduction
+        lop_days = attendance.get("lop_days", 0)
+        working_days = attendance.get("working_days", 26)
+        lop_deduction = round((gross / working_days) * lop_days, 2) if working_days > 0 else 0
+        adjusted_gross = gross - lop_deduction
+        
+        # Calculate EPF (on basic or capped at 15000)
+        basic = salary.get("basic", gross * 0.5)
+        epf_base = min(basic, 15000)
+        epf_employee = round(epf_base * EPF_EMPLOYEE_RATE, 2)
+        epf_employer = round(epf_base * EPF_EMPLOYER_RATE, 2)
+        
+        # Calculate ESIC (if gross <= 21000)
+        esic_applicable = adjusted_gross <= ESIC_SALARY_LIMIT
+        esic_employee = round(adjusted_gross * ESIC_EMPLOYEE_RATE, 2) if esic_applicable else 0
+        esic_employer = round(adjusted_gross * ESIC_EMPLOYER_RATE, 2) if esic_applicable else 0
+        
+        # Calculate Professional Tax
+        pt = 0
+        for slab in TN_PT_SLABS:
+            if slab["min"] <= adjusted_gross <= slab["max"]:
+                pt = slab["tax"]
+                break
+        
+        # Get active advances
+        active_advances = await db.hr_advances.find({
+            "emp_id": emp_id,
+            "status": "active"
+        }, {"_id": 0}).to_list(10)
+        
+        advance_emi = sum(min(adv.get("emi_amount", 0), adv.get("remaining_amount", 0)) for adv in active_advances)
+        
+        # Get approved overtime
+        month_str = f"{year}-{str(month).zfill(2)}"
+        overtime_records = await db.hr_overtime.find({
+            "emp_id": emp_id,
+            "status": "approved",
+            "date": {"$regex": f"^{month_str}"}
+        }, {"_id": 0}).to_list(100)
+        overtime_amount = sum(r.get("amount", 0) for r in overtime_records)
+        
+        # Total deductions
+        total_ded = epf_employee + esic_employee + pt + lop_deduction + advance_emi
+        
+        # Net salary (including overtime)
+        net = adjusted_gross - total_ded + overtime_amount
+        
+        preview_record = {
+            "emp_id": emp_id,
+            "emp_name": emp.get("name"),
+            "department": emp.get("department"),
+            "designation": emp.get("designation"),
+            "attendance": {
+                "working_days": attendance.get("working_days", 26),
+                "present_days": attendance.get("present_days", 0),
+                "lop_days": lop_days,
+                "records_found": attendance.get("attendance_records_found", 0)
+            },
+            "earnings": {
+                "gross": gross,
+                "overtime": overtime_amount,
+                "total": gross + overtime_amount
+            },
+            "deductions": {
+                "epf": epf_employee,
+                "esic": esic_employee,
+                "professional_tax": pt,
+                "lop_deduction": lop_deduction,
+                "advance_emi": advance_emi,
+                "total": total_ded
+            },
+            "net_salary": round(net, 2),
+            "employer_contributions": {
+                "epf": epf_employer,
+                "esic": esic_employer
+            }
+        }
+        
+        preview_records.append(preview_record)
+        total_gross += gross
+        total_deductions += total_ded
+        total_net += net
+    
+    return {
+        "month": month,
+        "year": year,
+        "department": data.department,
+        "employee_count": len(preview_records),
+        "summary": {
+            "total_gross": round(total_gross, 2),
+            "total_deductions": round(total_deductions, 2),
+            "total_net": round(total_net, 2),
+            "total_epf": round(sum(r["deductions"]["epf"] for r in preview_records), 2),
+            "total_esic": round(sum(r["deductions"]["esic"] for r in preview_records), 2),
+            "total_pt": round(sum(r["deductions"]["professional_tax"] for r in preview_records), 2),
+            "employer_epf": round(sum(r["employer_contributions"]["epf"] for r in preview_records), 2),
+            "employer_esic": round(sum(r["employer_contributions"]["esic"] for r in preview_records), 2)
+        },
+        "records": preview_records
+    }
+
+
+class BulkPayrollRun(BaseModel):
+    month: int
+    year: int
+    department: Optional[str] = None
+    fetch_attendance: bool = True
+    processed_by: str = "Admin"
+
+
+@router.post("/payroll/bulk-run")
+async def run_bulk_payroll(data: BulkPayrollRun):
+    """
+    Process payroll for all employees and save to database
+    Creates a payroll run record for tracking
+    """
+    month = data.month
+    year = data.year
+    
+    # Check if payroll already exists and is finalized
+    existing_run = await db.hr_payroll_runs.find_one({
+        "month": month,
+        "year": year,
+        "status": "finalized"
+    })
+    if existing_run:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Payroll for {month}/{year} is already finalized"
+        )
+    
+    # Delete any existing draft payroll for this month
+    await db.hr_payroll.delete_many({
+        "month": month,
+        "year": year
+    })
+    await db.hr_payroll_runs.delete_many({
+        "month": month,
+        "year": year,
+        "status": {"$ne": "finalized"}
+    })
+    
+    # Get preview data
+    preview = await preview_bulk_payroll(BulkPayrollPreview(
+        month=month,
+        year=year,
+        department=data.department,
+        fetch_attendance=data.fetch_attendance
+    ))
+    
+    # Save all payroll records
+    days_in_month = calendar.monthrange(year, month)[1]
+    payroll_records = []
+    
+    for record in preview["records"]:
+        emp_id = record["emp_id"]
+        
+        # Get full employee details
+        employee = await db.hr_employees.find_one(
+            {"$or": [{"emp_id": emp_id}, {"id": emp_id}]},
+            {"_id": 0}
+        )
+        
+        salary = employee.get("salary", {}) if employee else {}
+        bank = employee.get("bank_details", {}) if employee else {}
+        
+        payroll_doc = {
+            "id": str(uuid.uuid4()),
+            "emp_id": emp_id,
+            "emp_name": record["emp_name"],
+            "department": record["department"],
+            "designation": record["designation"],
+            "month": month,
+            "year": year,
+            "days_in_month": days_in_month,
+            "working_days": record["attendance"]["working_days"],
+            "present_days": record["attendance"]["present_days"],
+            "lop_days": record["attendance"]["lop_days"],
+            "earnings": {
+                "basic": salary.get("basic", 0),
+                "hra": salary.get("hra", 0),
+                "da": salary.get("da", 0),
+                "conveyance": salary.get("conveyance", 0),
+                "medical": salary.get("medical", 0),
+                "special_allowance": salary.get("special_allowance", 0),
+                "other_allowance": salary.get("other_allowance", 0),
+                "overtime": record["earnings"]["overtime"]
+            },
+            "gross_salary": record["earnings"]["gross"],
+            "adjusted_gross": record["earnings"]["gross"] - record["deductions"]["lop_deduction"],
+            "deductions": {
+                "epf": record["deductions"]["epf"],
+                "esic": record["deductions"]["esic"],
+                "esic_applicable": record["deductions"]["esic"] > 0,
+                "professional_tax": record["deductions"]["professional_tax"],
+                "lop_deduction": record["deductions"]["lop_deduction"],
+                "advance_emi": record["deductions"]["advance_emi"],
+                "other_deductions": 0
+            },
+            "total_deductions": record["deductions"]["total"],
+            "employer_contributions": record["employer_contributions"],
+            "net_salary": record["net_salary"],
+            "ctc": record["earnings"]["gross"] + record["employer_contributions"]["epf"] + record["employer_contributions"]["esic"],
+            "bank_account": bank.get("account_number", ""),
+            "bank_ifsc": bank.get("ifsc_code", ""),
+            "status": "processed",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.hr_payroll.insert_one(payroll_doc)
+        payroll_doc.pop("_id", None)
+        payroll_records.append(payroll_doc)
+    
+    # Create payroll run record
+    run_id = str(uuid.uuid4())
+    run_doc = {
+        "id": run_id,
+        "month": month,
+        "year": year,
+        "department": data.department,
+        "status": "processed",  # processed, finalized
+        "employee_count": len(payroll_records),
+        "summary": preview["summary"],
+        "processed_by": data.processed_by,
+        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "finalized_at": None,
+        "finalized_by": None
+    }
+    await db.hr_payroll_runs.insert_one(run_doc)
+    run_doc.pop("_id", None)
+    
+    return {
+        "message": f"Payroll processed for {len(payroll_records)} employees",
+        "run_id": run_id,
+        "month": month,
+        "year": year,
+        "summary": preview["summary"],
+        "status": "processed"
+    }
+
+
+# ============= PHASE 3: PAYROLL LOCK/FINALIZE =============
+
+@router.post("/payroll/finalize/{month}/{year}")
+async def finalize_payroll(month: int, year: int, finalized_by: str = "Admin"):
+    """
+    Finalize payroll for a month - prevents further modifications
+    """
+    # Check if payroll run exists
+    run = await db.hr_payroll_runs.find_one({
+        "month": month,
+        "year": year
+    })
+    
+    if not run:
+        raise HTTPException(status_code=404, detail="No payroll run found for this period")
+    
+    if run.get("status") == "finalized":
+        raise HTTPException(status_code=400, detail="Payroll already finalized")
+    
+    # Update run status
+    await db.hr_payroll_runs.update_one(
+        {"month": month, "year": year},
+        {
+            "$set": {
+                "status": "finalized",
+                "finalized_at": datetime.now(timezone.utc).isoformat(),
+                "finalized_by": finalized_by
+            }
+        }
+    )
+    
+    # Update all payroll records
+    await db.hr_payroll.update_many(
+        {"month": month, "year": year},
+        {"$set": {"status": "finalized"}}
+    )
+    
+    return {
+        "message": f"Payroll for {month}/{year} has been finalized",
+        "finalized_by": finalized_by,
+        "finalized_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.post("/payroll/unlock/{month}/{year}")
+async def unlock_payroll(month: int, year: int, unlocked_by: str = "Admin"):
+    """
+    Unlock a finalized payroll (admin only) - allows modifications
+    """
+    run = await db.hr_payroll_runs.find_one({
+        "month": month,
+        "year": year
+    })
+    
+    if not run:
+        raise HTTPException(status_code=404, detail="No payroll run found for this period")
+    
+    if run.get("status") != "finalized":
+        raise HTTPException(status_code=400, detail="Payroll is not finalized")
+    
+    # Update run status
+    await db.hr_payroll_runs.update_one(
+        {"month": month, "year": year},
+        {
+            "$set": {
+                "status": "processed",
+                "unlocked_at": datetime.now(timezone.utc).isoformat(),
+                "unlocked_by": unlocked_by
+            }
+        }
+    )
+    
+    # Update all payroll records
+    await db.hr_payroll.update_many(
+        {"month": month, "year": year},
+        {"$set": {"status": "processed"}}
+    )
+    
+    return {
+        "message": f"Payroll for {month}/{year} has been unlocked",
+        "unlocked_by": unlocked_by
+    }
+
+
+@router.get("/payroll/run-status/{month}/{year}")
+async def get_payroll_run_status(month: int, year: int):
+    """Get payroll run status for a month"""
+    run = await db.hr_payroll_runs.find_one(
+        {"month": month, "year": year},
+        {"_id": 0}
+    )
+    
+    if not run:
+        return {
+            "month": month,
+            "year": year,
+            "status": "not_processed",
+            "message": "Payroll has not been processed for this period"
+        }
+    
+    return run
+
+
+# ============= PHASE 3: MONTHLY PAYROLL DASHBOARD =============
+
+@router.get("/payroll/dashboard/{month}/{year}")
+async def get_payroll_dashboard(month: int, year: int):
+    """
+    Get comprehensive payroll dashboard for a month
+    Includes summary, department breakdown, comparison with previous month
+    """
+    # Get current month payroll records
+    records = await db.hr_payroll.find(
+        {"month": month, "year": year},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not records:
+        return {
+            "month": month,
+            "year": year,
+            "status": "no_data",
+            "message": "No payroll data found for this period"
+        }
+    
+    # Get payroll run info
+    run = await db.hr_payroll_runs.find_one(
+        {"month": month, "year": year},
+        {"_id": 0}
+    )
+    
+    # Calculate summary
+    total_gross = sum(r.get("gross_salary", 0) for r in records)
+    total_net = sum(r.get("net_salary", 0) for r in records)
+    total_deductions = sum(r.get("total_deductions", 0) for r in records)
+    total_epf_employee = sum(r.get("deductions", {}).get("epf", 0) for r in records)
+    total_esic_employee = sum(r.get("deductions", {}).get("esic", 0) for r in records)
+    total_pt = sum(r.get("deductions", {}).get("professional_tax", 0) for r in records)
+    total_lop = sum(r.get("deductions", {}).get("lop_deduction", 0) for r in records)
+    total_advance_emi = sum(r.get("deductions", {}).get("advance_emi", 0) for r in records)
+    total_epf_employer = sum(r.get("employer_contributions", {}).get("epf", 0) for r in records)
+    total_esic_employer = sum(r.get("employer_contributions", {}).get("esic", 0) for r in records)
+    total_ctc = sum(r.get("ctc", 0) for r in records)
+    
+    # Department-wise breakdown
+    dept_breakdown = {}
+    for r in records:
+        dept = r.get("department", "Unknown")
+        if dept not in dept_breakdown:
+            dept_breakdown[dept] = {
+                "employee_count": 0,
+                "gross": 0,
+                "net": 0,
+                "deductions": 0,
+                "epf": 0,
+                "esic": 0
+            }
+        dept_breakdown[dept]["employee_count"] += 1
+        dept_breakdown[dept]["gross"] += r.get("gross_salary", 0)
+        dept_breakdown[dept]["net"] += r.get("net_salary", 0)
+        dept_breakdown[dept]["deductions"] += r.get("total_deductions", 0)
+        dept_breakdown[dept]["epf"] += r.get("deductions", {}).get("epf", 0)
+        dept_breakdown[dept]["esic"] += r.get("deductions", {}).get("esic", 0)
+    
+    # Get previous month for comparison
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    
+    prev_records = await db.hr_payroll.find(
+        {"month": prev_month, "year": prev_year},
+        {"_id": 0}
+    ).to_list(500)
+    
+    prev_gross = sum(r.get("gross_salary", 0) for r in prev_records) if prev_records else 0
+    prev_net = sum(r.get("net_salary", 0) for r in prev_records) if prev_records else 0
+    
+    # Calculate month-over-month change
+    gross_change = ((total_gross - prev_gross) / prev_gross * 100) if prev_gross > 0 else 0
+    net_change = ((total_net - prev_net) / prev_net * 100) if prev_net > 0 else 0
+    
+    return {
+        "month": month,
+        "year": year,
+        "run_status": run.get("status", "unknown") if run else "not_processed",
+        "finalized_at": run.get("finalized_at") if run else None,
+        "employee_count": len(records),
+        "summary": {
+            "total_gross": round(total_gross, 2),
+            "total_net": round(total_net, 2),
+            "total_deductions": round(total_deductions, 2),
+            "total_ctc": round(total_ctc, 2),
+            "avg_salary": round(total_net / len(records), 2) if records else 0
+        },
+        "deductions_breakdown": {
+            "epf_employee": round(total_epf_employee, 2),
+            "esic_employee": round(total_esic_employee, 2),
+            "professional_tax": round(total_pt, 2),
+            "lop_deduction": round(total_lop, 2),
+            "advance_emi": round(total_advance_emi, 2)
+        },
+        "employer_contributions": {
+            "epf": round(total_epf_employer, 2),
+            "esic": round(total_esic_employer, 2),
+            "total": round(total_epf_employer + total_esic_employer, 2)
+        },
+        "department_breakdown": [
+            {"department": k, **v} for k, v in sorted(dept_breakdown.items())
+        ],
+        "comparison": {
+            "previous_month": f"{prev_month}/{prev_year}",
+            "previous_gross": round(prev_gross, 2),
+            "previous_net": round(prev_net, 2),
+            "gross_change_percent": round(gross_change, 1),
+            "net_change_percent": round(net_change, 1),
+            "employee_count_prev": len(prev_records)
+        }
+    }
+
+
+# ============= PHASE 3: STATUTORY REPORTS =============
+
+@router.get("/reports/epf/{month}/{year}")
+async def get_epf_report(month: int, year: int):
+    """
+    Generate EPF report data for a month
+    Includes employee-wise EPF contributions
+    """
+    records = await db.hr_payroll.find(
+        {"month": month, "year": year},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not records:
+        raise HTTPException(status_code=404, detail="No payroll records found for this period")
+    
+    epf_data = []
+    total_employee_epf = 0
+    total_employer_epf = 0
+    total_eps = 0
+    total_edli = 0
+    
+    for r in records:
+        emp_epf = r.get("deductions", {}).get("epf", 0)
+        emp_employer_epf = r.get("employer_contributions", {}).get("epf", 0)
+        
+        # EPF split: 3.67% to EPF, 8.33% to EPS (capped at 15000)
+        basic = r.get("earnings", {}).get("basic", r.get("gross_salary", 0) * 0.5)
+        eps_base = min(basic, 15000)
+        eps_amount = round(eps_base * 0.0833, 2)
+        epf_amount = round(emp_employer_epf - eps_amount, 2)
+        edli = round(eps_base * 0.005, 2)  # 0.5% EDLI
+        
+        # Get employee details for UAN
+        employee = await db.hr_employees.find_one(
+            {"$or": [{"emp_id": r.get("emp_id")}, {"id": r.get("emp_id")}]},
+            {"_id": 0}
+        )
+        
+        statutory = employee.get("statutory", {}) if employee else {}
+        
+        epf_data.append({
+            "emp_id": r.get("emp_id"),
+            "emp_name": r.get("emp_name"),
+            "uan": statutory.get("uan_number", ""),
+            "pf_account": statutory.get("pf_account_number", ""),
+            "gross_salary": r.get("gross_salary", 0),
+            "basic": basic,
+            "epf_wages": min(basic, 15000),
+            "employee_epf": emp_epf,
+            "employer_epf_share": epf_amount,
+            "eps": eps_amount,
+            "edli": edli,
+            "total_employer": round(emp_employer_epf + edli, 2)
+        })
+        
+        total_employee_epf += emp_epf
+        total_employer_epf += emp_employer_epf
+        total_eps += eps_amount
+        total_edli += edli
+    
+    return {
+        "month": month,
+        "year": year,
+        "report_type": "EPF Monthly Return",
+        "employee_count": len(epf_data),
+        "summary": {
+            "total_employee_epf": round(total_employee_epf, 2),
+            "total_employer_epf": round(total_employer_epf, 2),
+            "total_eps": round(total_eps, 2),
+            "total_edli": round(total_edli, 2),
+            "grand_total": round(total_employee_epf + total_employer_epf + total_edli, 2)
+        },
+        "records": epf_data
+    }
+
+
+@router.get("/reports/esic/{month}/{year}")
+async def get_esic_report(month: int, year: int):
+    """
+    Generate ESIC report data for a month
+    Only includes employees where ESIC is applicable (gross <= 21000)
+    """
+    records = await db.hr_payroll.find(
+        {"month": month, "year": year},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not records:
+        raise HTTPException(status_code=404, detail="No payroll records found for this period")
+    
+    esic_data = []
+    total_employee_esic = 0
+    total_employer_esic = 0
+    
+    for r in records:
+        if not r.get("deductions", {}).get("esic_applicable", False):
+            continue
+        
+        emp_esic = r.get("deductions", {}).get("esic", 0)
+        employer_esic = r.get("employer_contributions", {}).get("esic", 0)
+        
+        if emp_esic == 0 and employer_esic == 0:
+            continue
+        
+        # Get employee details for ESIC number
+        employee = await db.hr_employees.find_one(
+            {"$or": [{"emp_id": r.get("emp_id")}, {"id": r.get("emp_id")}]},
+            {"_id": 0}
+        )
+        
+        statutory = employee.get("statutory", {}) if employee else {}
+        
+        esic_data.append({
+            "emp_id": r.get("emp_id"),
+            "emp_name": r.get("emp_name"),
+            "esic_number": statutory.get("esic_number", ""),
+            "gross_salary": r.get("gross_salary", 0),
+            "esic_wages": r.get("adjusted_gross", r.get("gross_salary", 0)),
+            "employee_esic": emp_esic,
+            "employer_esic": employer_esic,
+            "total": round(emp_esic + employer_esic, 2)
+        })
+        
+        total_employee_esic += emp_esic
+        total_employer_esic += employer_esic
+    
+    return {
+        "month": month,
+        "year": year,
+        "report_type": "ESIC Monthly Return",
+        "employee_count": len(esic_data),
+        "summary": {
+            "total_employee_esic": round(total_employee_esic, 2),
+            "total_employer_esic": round(total_employer_esic, 2),
+            "grand_total": round(total_employee_esic + total_employer_esic, 2)
+        },
+        "records": esic_data
+    }
+
+
+@router.get("/reports/professional-tax/{month}/{year}")
+async def get_pt_report(month: int, year: int):
+    """Generate Professional Tax report for a month"""
+    records = await db.hr_payroll.find(
+        {"month": month, "year": year},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not records:
+        raise HTTPException(status_code=404, detail="No payroll records found for this period")
+    
+    pt_data = []
+    total_pt = 0
+    
+    for r in records:
+        pt = r.get("deductions", {}).get("professional_tax", 0)
+        if pt == 0:
+            continue
+        
+        pt_data.append({
+            "emp_id": r.get("emp_id"),
+            "emp_name": r.get("emp_name"),
+            "department": r.get("department"),
+            "gross_salary": r.get("gross_salary", 0),
+            "professional_tax": pt
+        })
+        
+        total_pt += pt
+    
+    return {
+        "month": month,
+        "year": year,
+        "report_type": "Professional Tax - Tamil Nadu",
+        "employee_count": len(pt_data),
+        "total_pt": round(total_pt, 2),
+        "records": pt_data
+    }
