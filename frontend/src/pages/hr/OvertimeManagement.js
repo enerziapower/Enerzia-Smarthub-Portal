@@ -50,7 +50,7 @@ const OvertimeManagement = () => {
   const fetchOvertimeRecords = async () => {
     try {
       setLoading(true);
-      let url = `/api/hr/overtime?month=${filterMonth}&year=${filterYear}`;
+      let url = `/hr/overtime?month=${filterMonth}&year=${filterYear}`;
       if (filterStatus) url += `&status=${filterStatus}`;
       const response = await api.get(url);
       setOvertimeRecords(response.data || []);
@@ -90,7 +90,7 @@ const OvertimeManagement = () => {
       };
 
       if (editingRecord) {
-        await api.put(`/api/hr/overtime/${editingRecord.id}`, payload);
+        await api.put(`/hr/overtime/${editingRecord.id}`, payload);
         setSuccess('Overtime record updated successfully');
       } else {
         await api.post('/hr/overtime', payload);
@@ -108,7 +108,7 @@ const OvertimeManagement = () => {
 
   const handleApprove = async (recordId) => {
     try {
-      await api.put(`/api/hr/overtime/${recordId}/approve`);
+      await api.put(`/hr/overtime/${recordId}/approve`);
       setSuccess('Overtime approved successfully');
       fetchOvertimeRecords();
       setTimeout(() => setSuccess(''), 3000);
@@ -121,7 +121,7 @@ const OvertimeManagement = () => {
     if (!window.confirm('Are you sure you want to reject this overtime request?')) return;
     
     try {
-      await api.put(`/api/hr/overtime/${recordId}/reject`);
+      await api.put(`/hr/overtime/${recordId}/reject`);
       setSuccess('Overtime rejected');
       fetchOvertimeRecords();
       setTimeout(() => setSuccess(''), 3000);
@@ -134,7 +134,7 @@ const OvertimeManagement = () => {
     if (!window.confirm('Are you sure you want to delete this record?')) return;
     
     try {
-      await api.delete(`/api/hr/overtime/${recordId}`);
+      await api.delete(`/hr/overtime/${recordId}`);
       setSuccess('Record deleted');
       fetchOvertimeRecords();
       setTimeout(() => setSuccess(''), 3000);
