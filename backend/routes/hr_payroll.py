@@ -1911,3 +1911,416 @@ async def get_pt_report(month: int, year: int):
         "total_pt": round(total_pt, 2),
         "records": pt_data
     }
+
+
+
+# ============= ENHANCED LEAVE MANAGEMENT =============
+# Connected to HR Employee Records and Payroll
+
+# Default leave allocation per year
+DEFAULT_LEAVE_ALLOCATION = {
+    "casual_leave": 12,
+    "sick_leave": 6,
+    "earned_leave": 15,
+    "comp_off": 2
+}
+
+LEAVE_TYPE_MAPPING = {
+    "casual leave": "casual_leave",
+    "casual": "casual_leave",
+    "sick leave": "sick_leave",
+    "sick": "sick_leave",
+    "earned leave": "earned_leave",
+    "earned": "earned_leave",
+    "privilege leave": "earned_leave",
+    "comp off": "comp_off",
+    "compoff": "comp_off",
+    "compensatory off": "comp_off"
+}
+
+
+def normalize_leave_type(leave_type: str) -> str:
+    """Normalize leave type string to standard key"""
+    return LEAVE_TYPE_MAPPING.get(leave_type.lower().strip(), "casual_leave")
+
+
+@router.get("/leave/dashboard")
+async def get_leave_dashboard():
+    """
+    Get comprehensive leave dashboard for HR
+    Shows pending requests, leave statistics, department breakdown
+    """
+    # Get all pending leave requests
+    pending_requests = await db.leave_requests.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("applied_on", -1).to_list(100)
+    
+    # Serialize ObjectId if present
+    for req in pending_requests:
+        if "_id" in req:
+            req["id"] = str(req["_id"])
+            del req["_id"]
+    
+    # Get all leave requests for current month
+    now = datetime.now()
+    month_start = f"{now.year}-{now.month:02d}-01"
+    
+    all_requests = await db.leave_requests.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate statistics
+    total_pending = len(pending_requests)
+    total_approved = len([r for r in all_requests if r.get("status") == "approved"])
+    total_rejected = len([r for r in all_requests if r.get("status") == "rejected"])
+    
+    # Days on leave this month (approved)
+    days_on_leave = sum(
+        r.get("days", 0) for r in all_requests 
+        if r.get("status") == "approved" and r.get("from_date", "").startswith(f"{now.year}-{now.month:02d}")
+    )
+    
+    # Department-wise breakdown
+    dept_stats = {}
+    for req in all_requests:
+        if req.get("status") == "approved":
+            dept = req.get("department", "Unknown")
+            if dept not in dept_stats:
+                dept_stats[dept] = {"count": 0, "days": 0}
+            dept_stats[dept]["count"] += 1
+            dept_stats[dept]["days"] += req.get("days", 0)
+    
+    # Leave type breakdown
+    type_stats = {}
+    for req in all_requests:
+        if req.get("status") == "approved":
+            leave_type = req.get("type", "Unknown")
+            if leave_type not in type_stats:
+                type_stats[leave_type] = {"count": 0, "days": 0}
+            type_stats[leave_type]["count"] += 1
+            type_stats[leave_type]["days"] += req.get("days", 0)
+    
+    # Get employees with low leave balance
+    employees = await db.hr_employees.find(
+        {"status": "active"},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1, "leave_balance": 1}
+    ).to_list(500)
+    
+    low_balance_employees = []
+    for emp in employees:
+        lb = emp.get("leave_balance", {})
+        total_remaining = sum([
+            lb.get("casual_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["casual_leave"]),
+            lb.get("sick_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["sick_leave"]),
+            lb.get("earned_leave", {}).get("remaining", DEFAULT_LEAVE_ALLOCATION["earned_leave"]),
+        ])
+        if total_remaining <= 5:
+            low_balance_employees.append({
+                "emp_id": emp["emp_id"],
+                "name": emp["name"],
+                "department": emp.get("department", ""),
+                "total_remaining": total_remaining
+            })
+    
+    return {
+        "summary": {
+            "pending_requests": total_pending,
+            "approved_this_year": total_approved,
+            "rejected_this_year": total_rejected,
+            "days_on_leave_this_month": days_on_leave
+        },
+        "pending_requests": pending_requests[:20],  # Latest 20
+        "department_breakdown": [
+            {"department": k, **v} for k, v in sorted(dept_stats.items())
+        ],
+        "leave_type_breakdown": [
+            {"type": k, **v} for k, v in sorted(type_stats.items())
+        ],
+        "low_balance_employees": low_balance_employees[:10]
+    }
+
+
+@router.get("/leave/requests")
+async def get_all_leave_requests(
+    status: Optional[str] = None,
+    department: Optional[str] = None,
+    emp_id: Optional[str] = None,
+    month: Optional[int] = None,
+    year: Optional[int] = None
+):
+    """Get all leave requests with filters for HR"""
+    query = {}
+    
+    if status:
+        query["status"] = status
+    if department:
+        query["department"] = {"$regex": department, "$options": "i"}
+    if emp_id:
+        query["$or"] = [{"emp_id": emp_id}, {"user_id": emp_id}]
+    if month and year:
+        month_str = f"{year}-{month:02d}"
+        query["from_date"] = {"$regex": f"^{month_str}"}
+    
+    requests = await db.leave_requests.find(query, {"_id": 0}).sort("applied_on", -1).to_list(500)
+    
+    # Add id from _id if not present
+    for req in requests:
+        if "id" not in req and "_id" in req:
+            req["id"] = str(req["_id"])
+    
+    return requests
+
+
+@router.post("/leave/approve/{request_id}")
+async def hr_approve_leave(request_id: str, approved_by: str = "HR Admin"):
+    """
+    HR approves leave request and updates employee leave balance
+    Also links to HR employee record for payroll integration
+    """
+    from bson import ObjectId
+    
+    # Find the leave request
+    leave_request = None
+    try:
+        leave_request = await db.leave_requests.find_one({"_id": ObjectId(request_id)})
+    except:
+        leave_request = await db.leave_requests.find_one({"id": request_id})
+    
+    if not leave_request:
+        raise HTTPException(status_code=404, detail="Leave request not found")
+    
+    if leave_request.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Leave request already processed")
+    
+    user_id = leave_request.get("user_id")
+    leave_type = normalize_leave_type(leave_request.get("type", "casual"))
+    days = leave_request.get("days", 1)
+    
+    # Find linked HR employee record
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"user_id": user_id}, {"id": user_id}, {"emp_id": user_id}]},
+        {"_id": 0}
+    )
+    
+    lop_days = 0
+    deducted_days = days
+    
+    if employee:
+        # Get current leave balance
+        leave_balance = employee.get("leave_balance", {})
+        current_balance = leave_balance.get(leave_type, {})
+        remaining = current_balance.get("remaining", DEFAULT_LEAVE_ALLOCATION.get(leave_type, 12))
+        
+        # Calculate deduction and LOP
+        if days > remaining:
+            lop_days = days - remaining
+            deducted_days = remaining
+        
+        # Update employee leave balance
+        new_remaining = max(0, remaining - deducted_days)
+        taken = current_balance.get("taken", 0) + deducted_days
+        
+        await db.hr_employees.update_one(
+            {"$or": [{"user_id": user_id}, {"id": user_id}, {"emp_id": user_id}]},
+            {
+                "$set": {
+                    f"leave_balance.{leave_type}.taken": taken,
+                    f"leave_balance.{leave_type}.remaining": new_remaining,
+                    f"leave_balance.{leave_type}.total": DEFAULT_LEAVE_ALLOCATION.get(leave_type, 12)
+                }
+            }
+        )
+    
+    # Update leave request
+    update_data = {
+        "status": "approved",
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat(),
+        "lop_days": lop_days,
+        "deducted_days": deducted_days,
+        "emp_id": employee.get("emp_id") if employee else None
+    }
+    
+    try:
+        await db.leave_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": update_data}
+        )
+    except:
+        await db.leave_requests.update_one(
+            {"id": request_id},
+            {"$set": update_data}
+        )
+    
+    return {
+        "message": "Leave approved successfully",
+        "days_approved": days,
+        "deducted_from_balance": deducted_days,
+        "lop_days": lop_days,
+        "leave_type": leave_type
+    }
+
+
+@router.post("/leave/reject/{request_id}")
+async def hr_reject_leave(request_id: str, rejected_by: str = "HR Admin", reason: str = ""):
+    """HR rejects leave request"""
+    from bson import ObjectId
+    
+    update_data = {
+        "status": "rejected",
+        "approved_by": rejected_by,
+        "rejected_at": datetime.now(timezone.utc).isoformat(),
+        "rejection_reason": reason
+    }
+    
+    try:
+        result = await db.leave_requests.update_one(
+            {"_id": ObjectId(request_id), "status": "pending"},
+            {"$set": update_data}
+        )
+    except:
+        result = await db.leave_requests.update_one(
+            {"id": request_id, "status": "pending"},
+            {"$set": update_data}
+        )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Leave request not found or already processed")
+    
+    return {"message": "Leave request rejected"}
+
+
+@router.get("/leave/employee-balance/{emp_id}")
+async def get_employee_leave_balance_hr(emp_id: str):
+    """
+    Get detailed leave balance for an employee (HR view)
+    Includes leave history and upcoming leaves
+    """
+    # Find employee
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"emp_id": emp_id}, {"id": emp_id}, {"user_id": emp_id}]},
+        {"_id": 0}
+    )
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    emp_id_actual = employee.get("emp_id", emp_id)
+    user_id = employee.get("user_id", employee.get("id", emp_id))
+    
+    # Get leave balance from employee record
+    leave_balance = employee.get("leave_balance", {})
+    
+    # Build balance object with defaults
+    balance = {}
+    for leave_type, default_total in DEFAULT_LEAVE_ALLOCATION.items():
+        lb = leave_balance.get(leave_type, {})
+        balance[leave_type] = {
+            "total": lb.get("total", default_total),
+            "taken": lb.get("taken", 0),
+            "remaining": lb.get("remaining", default_total)
+        }
+    
+    # Get leave history
+    leave_history = await db.leave_requests.find(
+        {"$or": [{"user_id": user_id}, {"emp_id": emp_id_actual}]},
+        {"_id": 0}
+    ).sort("applied_on", -1).to_list(50)
+    
+    # Get upcoming/current leaves (approved, from_date >= today)
+    today = datetime.now().strftime("%Y-%m-%d")
+    upcoming_leaves = [
+        l for l in leave_history 
+        if l.get("status") == "approved" and l.get("from_date", "") >= today
+    ]
+    
+    return {
+        "emp_id": emp_id_actual,
+        "emp_name": employee.get("name"),
+        "department": employee.get("department"),
+        "leave_balance": balance,
+        "total_remaining": sum(b["remaining"] for b in balance.values()),
+        "leave_history": leave_history[:20],
+        "upcoming_leaves": upcoming_leaves,
+        "pending_requests": len([l for l in leave_history if l.get("status") == "pending"])
+    }
+
+
+@router.put("/leave/balance/{emp_id}/reset")
+async def reset_employee_leave_balance(emp_id: str, year: int = None):
+    """Reset employee leave balance for a new year"""
+    if not year:
+        year = datetime.now().year
+    
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"emp_id": emp_id}, {"id": emp_id}]},
+        {"_id": 0}
+    )
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Reset to default allocation
+    new_balance = {}
+    for leave_type, total in DEFAULT_LEAVE_ALLOCATION.items():
+        new_balance[leave_type] = {
+            "total": total,
+            "taken": 0,
+            "remaining": total,
+            "year": year
+        }
+    
+    await db.hr_employees.update_one(
+        {"$or": [{"emp_id": emp_id}, {"id": emp_id}]},
+        {"$set": {"leave_balance": new_balance}}
+    )
+    
+    return {
+        "message": f"Leave balance reset for {year}",
+        "emp_id": emp_id,
+        "new_balance": new_balance
+    }
+
+
+@router.get("/leave/calendar/{month}/{year}")
+async def get_leave_calendar(month: int, year: int):
+    """Get leave calendar for a month - shows who is on leave each day"""
+    month_str = f"{year}-{month:02d}"
+    
+    # Get all approved leaves for this month
+    leaves = await db.leave_requests.find({
+        "status": "approved",
+        "$or": [
+            {"from_date": {"$regex": f"^{month_str}"}},
+            {"to_date": {"$regex": f"^{month_str}"}}
+        ]
+    }, {"_id": 0}).to_list(500)
+    
+    # Build calendar
+    days_in_month = calendar.monthrange(year, month)[1]
+    calendar_data = {}
+    
+    for day in range(1, days_in_month + 1):
+        date_str = f"{year}-{month:02d}-{day:02d}"
+        employees_on_leave = []
+        
+        for leave in leaves:
+            from_date = leave.get("from_date", "")
+            to_date = leave.get("to_date", from_date)
+            
+            if from_date <= date_str <= to_date:
+                employees_on_leave.append({
+                    "user_name": leave.get("user_name"),
+                    "department": leave.get("department"),
+                    "leave_type": leave.get("type")
+                })
+        
+        if employees_on_leave:
+            calendar_data[date_str] = employees_on_leave
+    
+    return {
+        "month": month,
+        "year": year,
+        "calendar": calendar_data,
+        "total_leave_instances": sum(len(v) for v in calendar_data.values())
+    }
+
