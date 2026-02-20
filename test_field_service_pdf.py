@@ -10,7 +10,7 @@ import json
 import re
 
 class FieldServicePDFTester:
-    def __init__(self, base_url="https://enerzia-reports-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://smarthub-enterprise.preview.emergentagent.com"):
         self.base_url = base_url
         self.auth_token = None
         self.tests_run = 0

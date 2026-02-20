@@ -68,7 +68,7 @@ async def get_email_html_template(
     logo_url = email_template.get('company_logo_url') or (org_settings.get('logo_url') if org_settings else None)
     if logo_url:
         # Use full URL for email
-        base_url = "https://enerzia-reports-2.preview.emergentagent.com/api"
+        base_url = "https://smarthub-enterprise.preview.emergentagent.com/api"
         if logo_url.startswith('/'):
             logo_html = f'<img src="{base_url}{logo_url}" alt="{company_name}" style="max-height: 60px; margin-bottom: 16px;" />'
     
