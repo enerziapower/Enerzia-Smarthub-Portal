@@ -39,7 +39,7 @@ const AdvancesLoans = () => {
   const fetchAdvances = async () => {
     try {
       setLoading(true);
-      let url = '/api/hr/advances';
+      let url = '/hr/advances';
       if (filterStatus) url += `?status=${filterStatus}`;
       const response = await api.get(url);
       setAdvances(response.data || []);
@@ -53,7 +53,7 @@ const AdvancesLoans = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/hr/employees?status=active');
+      const response = await api.get('/hr/employees?status=active');
       setEmployees(response.data || []);
     } catch (err) {
       console.error('Error fetching employees:', err);
@@ -70,7 +70,7 @@ const AdvancesLoans = () => {
     }
 
     try {
-      await api.post(`/api/hr/advances?emp_id=${formData.emp_id}`, {
+      await api.post(`/hr/advances?emp_id=${formData.emp_id}`, {
         amount: parseFloat(formData.amount),
         reason: formData.reason,
         repayment_months: parseInt(formData.repayment_months)
@@ -87,7 +87,7 @@ const AdvancesLoans = () => {
 
   const handleApprove = async (advanceId) => {
     try {
-      await api.put(`/api/hr/advances/${advanceId}/approve?approved_by=Admin`);
+      await api.put(`/hr/advances/${advanceId}/approve?approved_by=Admin`);
       setSuccess('Advance approved successfully');
       fetchAdvances();
       setTimeout(() => setSuccess(''), 3000);
@@ -100,7 +100,7 @@ const AdvancesLoans = () => {
     if (!window.confirm('Are you sure you want to reject this advance request?')) return;
     
     try {
-      await api.put(`/api/hr/advances/${advanceId}/reject?rejected_by=Admin`);
+      await api.put(`/hr/advances/${advanceId}/reject?rejected_by=Admin`);
       setSuccess('Advance rejected');
       fetchAdvances();
       setTimeout(() => setSuccess(''), 3000);
