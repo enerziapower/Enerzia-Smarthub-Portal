@@ -89,12 +89,16 @@ const LeaveDashboard = () => {
   const handleApprove = async (requestId) => {
     try {
       setProcessingId(requestId);
-      await api.post(`/hr/leave/approve/${requestId}?approved_by=HR Admin`);
+      setError('');
+      await employeeHubAPI.approveLeaveRequest(requestId, user?.name || 'HR Admin');
       setSuccess('Leave approved successfully');
       fetchDashboardData();
+      fetchPendingRequests();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
+      console.error('Error approving leave:', err);
       setError(err.response?.data?.detail || 'Failed to approve leave');
+      setTimeout(() => setError(''), 5000);
     } finally {
       setProcessingId(null);
     }
@@ -103,12 +107,16 @@ const LeaveDashboard = () => {
   const handleReject = async (requestId) => {
     try {
       setProcessingId(requestId);
-      await api.post(`/hr/leave/reject/${requestId}?rejected_by=HR Admin`);
+      setError('');
+      await employeeHubAPI.rejectLeaveRequest(requestId, user?.name || 'HR Admin');
       setSuccess('Leave rejected');
       fetchDashboardData();
+      fetchPendingRequests();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
+      console.error('Error rejecting leave:', err);
       setError(err.response?.data?.detail || 'Failed to reject leave');
+      setTimeout(() => setError(''), 5000);
     } finally {
       setProcessingId(null);
     }
