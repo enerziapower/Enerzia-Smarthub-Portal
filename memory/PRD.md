@@ -1542,6 +1542,100 @@ Added to HR & Admin sidebar:
 
 ---
 
+## HR & Payroll System - Phase 3 ✅ COMPLETE (Feb 20, 2026)
+
+### Overview
+Phase 3 completes the core payroll functionality with attendance integration, bulk processing, lock/finalize, dashboard, and statutory reports.
+
+### Phase 3 Features (Completed Feb 20, 2026)
+
+#### 1. Attendance Integration ✅
+**API:** `GET /api/hr/attendance-summary/{emp_id}?month=X&year=Y`
+
+| Feature | Implementation |
+|---------|---------------|
+| **Auto LOP Calculation** | Fetches from `attendance` collection, calculates working days vs present days |
+| **Working Days** | Excludes Sundays (configurable) |
+| **Effective Present** | Full days + (half days × 0.5) |
+| **LOP Days** | Working Days - Effective Present - Paid Leaves |
+
+#### 2. Bulk Payroll Processing ✅
+**APIs:**
+- `POST /api/hr/payroll/preview` - Preview without saving
+- `POST /api/hr/payroll/bulk-run` - Process and save all records
+
+| Feature | Implementation |
+|---------|---------------|
+| **Preview Mode** | Shows calculated values before committing |
+| **Attendance Integration** | Auto-fetches attendance data |
+| **Overtime Inclusion** | Adds approved overtime to earnings |
+| **Advance EMI** | Auto-deducts active advance EMIs |
+| **Department Filter** | Process specific department only |
+
+#### 3. Payroll Lock/Finalize ✅
+**APIs:**
+- `POST /api/hr/payroll/finalize/{month}/{year}` - Lock payroll
+- `POST /api/hr/payroll/unlock/{month}/{year}` - Unlock for corrections
+
+| Feature | Implementation |
+|---------|---------------|
+| **Status Workflow** | not_processed → processed → finalized |
+| **Finalize** | Prevents further modifications |
+| **Unlock** | Allows admin to reopen for corrections |
+| **Audit Trail** | Records who finalized/unlocked and when |
+
+#### 4. Monthly Payroll Dashboard ✅
+**Route:** `/hr/payroll-dashboard`
+**API:** `GET /api/hr/payroll/dashboard/{month}/{year}`
+
+| Feature | Implementation |
+|---------|---------------|
+| **Summary Cards** | Total Gross, Net Payable, Deductions, Employee Count |
+| **Deductions Breakdown** | EPF, ESIC, PT, LOP, Advance EMI |
+| **Employer Contributions** | EPF (12%), ESIC (3.25%), Total CTC |
+| **Department Breakdown** | Dept-wise employee count, gross, deductions, net |
+| **MoM Comparison** | Gross/Net change % vs previous month |
+
+#### 5. Statutory Reports ✅
+**Route:** `/hr/statutory-reports`
+
+| Report | API | Contents |
+|--------|-----|----------|
+| **EPF Report** | `GET /api/hr/reports/epf/{month}/{year}` | UAN, PF Account, EPF Wages, Employee EPF, Employer EPF, EPS, EDLI |
+| **ESIC Report** | `GET /api/hr/reports/esic/{month}/{year}` | ESIC Number, ESIC Wages, Employee/Employer ESIC (gross ≤ ₹21,000) |
+| **Professional Tax** | `GET /api/hr/reports/professional-tax/{month}/{year}` | TN PT deductions by employee |
+
+**Features:**
+- Summary totals for each report
+- CSV export functionality
+- Print-friendly layout
+- Month/Year selector
+
+### Navigation Updates
+Added to HR & Admin sidebar:
+- Payroll Dashboard (new)
+- Payroll Records (existing)
+- Statutory Reports (new)
+
+### Testing Results
+- Backend: 100% (18/18 tests passed)
+- Frontend: 100% (all features working)
+- Test file: `/app/backend/tests/test_hr_phase3.py`
+- Test report: `/app/test_reports/iteration_64.json`
+
+### Technical Notes
+- LOP is calculated only when attendance records exist; otherwise assumes full LOP
+- ESIC applies only when adjusted gross ≤ ₹21,000
+- PT calculated on adjusted gross (after LOP deduction)
+- Negative net salary possible if LOP exceeds gross
+
+---
+*Last Updated: February 20, 2026*
+*Status: HR & PAYROLL PHASE 3 COMPLETE ✅*
+
+
+---
+
 ## Known Issue - Production Environment
 
 ### Email Sender Name (SMTP_FROM_NAME) ⚠️
