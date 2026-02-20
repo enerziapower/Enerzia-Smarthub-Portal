@@ -288,6 +288,7 @@ const Layout = () => {
     { name: 'Attendance Management', href: '/hr/attendance-management', icon: Clock },
     { name: 'Travel Log Management', href: '/hr/travel-management', icon: MapPin },
     { name: 'Employee Management', href: '/hr/employees', icon: UserCircle },
+    { name: 'Payroll Processing', href: '/hr/payroll', icon: DollarSign },
     { name: 'Leave Approvals', href: '/hr/leave-approvals', icon: CheckSquare },
     { name: 'Permission Approvals', href: '/hr/permission-approvals', icon: CheckSquare },
     { name: 'Dept. Requirements', href: '/hr/dept-requirements', icon: ClipboardList },
