@@ -552,25 +552,47 @@ async def create_expense_claim(claim: ExpenseClaim, user_id: str, user_name: str
 
 @router.put("/expenses/{claim_id}/approve")
 async def approve_expense_claim(claim_id: str, approved_by: str):
-    """Approve an expense claim"""
-    result = await db.expense_claims.update_one(
-        {"_id": ObjectId(claim_id)},
-        {"$set": {"status": "approved", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Claim not found")
+    """Approve an expense claim - handles both ObjectId and string id formats"""
+    result = None
+    try:
+        result = await db.expense_claims.update_one(
+            {"_id": ObjectId(claim_id), "status": "pending"},
+            {"$set": {"status": "approved", "approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    except Exception:
+        pass
+    
+    if not result or result.modified_count == 0:
+        result = await db.expense_claims.update_one(
+            {"id": claim_id, "status": "pending"},
+            {"$set": {"status": "approved", "approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Claim not found or already processed")
     return {"message": "Claim approved"}
 
 
 @router.put("/expenses/{claim_id}/reject")
 async def reject_expense_claim(claim_id: str, approved_by: str):
-    """Reject an expense claim"""
-    result = await db.expense_claims.update_one(
-        {"_id": ObjectId(claim_id)},
-        {"$set": {"status": "rejected", "approved_by": approved_by}}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Claim not found")
+    """Reject an expense claim - handles both ObjectId and string id formats"""
+    result = None
+    try:
+        result = await db.expense_claims.update_one(
+            {"_id": ObjectId(claim_id), "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    except Exception:
+        pass
+    
+    if not result or result.modified_count == 0:
+        result = await db.expense_claims.update_one(
+            {"id": claim_id, "status": "pending"},
+            {"$set": {"status": "rejected", "approved_by": approved_by, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    if not result or result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Claim not found or already processed")
     return {"message": "Claim rejected"}
 
 
