@@ -9,6 +9,7 @@ import api, { employeeHubAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const LeaveDashboard = () => {
+  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,10 +17,11 @@ const LeaveDashboard = () => {
   const [filterDepartment, setFilterDepartment] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [leaveDetails, setLeaveDetails] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('pending');
   const [processingId, setProcessingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   const departments = ['Projects', 'Accounts', 'Sales', 'Purchase', 'HR', 'Operations', 'Exports', 'Finance', 'Admin'];
 
