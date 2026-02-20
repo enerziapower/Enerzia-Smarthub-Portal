@@ -288,14 +288,15 @@ const Layout = () => {
     { name: 'Attendance Management', href: '/hr/attendance-management', icon: Clock },
     { name: 'Travel Log Management', href: '/hr/travel-management', icon: MapPin },
     { name: 'Employee Management', href: '/hr/employees', icon: UserCircle },
-    { name: 'Payroll Processing', href: '/hr/payroll', icon: DollarSign },
+    { name: 'Payroll Dashboard', href: '/hr/payroll-dashboard', icon: DollarSign },
+    { name: 'Payroll Records', href: '/hr/payroll', icon: FileBarChart },
+    { name: 'Statutory Reports', href: '/hr/statutory-reports', icon: FileBarChart },
     { name: 'Advances & Loans', href: '/hr/advances', icon: CreditCard },
     { name: 'Leave Dashboard', href: '/hr/leave-dashboard', icon: Calendar },
     { name: 'Overtime Management', href: '/hr/overtime', icon: Clock },
     { name: 'Leave Approvals', href: '/hr/leave-approvals', icon: CheckSquare },
     { name: 'Permission Approvals', href: '/hr/permission-approvals', icon: CheckSquare },
     { name: 'Dept. Requirements', href: '/hr/dept-requirements', icon: ClipboardList },
-    { name: 'Reports', href: '/hr/reports', icon: FileBarChart },
   ];
 
   // Operations Department
