@@ -121,7 +121,7 @@ const EmployeeManagementFull = () => {
     
     try {
       if (editingEmployee) {
-        await api.put(`/api/hr/employees/${editingEmployee.emp_id}`, formData);
+        await api.put(`/hr/employees/${editingEmployee.emp_id}`, formData);
         setSuccess('Employee updated successfully');
       } else {
         await api.post('/hr/employees', formData);
@@ -142,7 +142,7 @@ const EmployeeManagementFull = () => {
     if (!window.confirm('Are you sure you want to deactivate this employee?')) return;
     
     try {
-      await api.delete(`/api/hr/employees/${empId}`);
+      await api.delete(`/hr/employees/${empId}`);
       setSuccess('Employee deactivated');
       fetchEmployees();
       setTimeout(() => setSuccess(''), 3000);
