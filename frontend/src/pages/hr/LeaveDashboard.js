@@ -35,7 +35,17 @@ const LeaveDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchEmployees();
+    fetchPendingRequests();
   }, []);
+
+  const fetchPendingRequests = async () => {
+    try {
+      const res = await employeeHubAPI.getLeaveRequests({ status: 'pending' });
+      setPendingRequests(res.data.requests || []);
+    } catch (err) {
+      console.error('Error fetching pending requests:', err);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
