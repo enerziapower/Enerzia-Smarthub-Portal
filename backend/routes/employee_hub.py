@@ -146,19 +146,45 @@ async def create_overtime_request(request: OvertimeRequest, user_id: str, user_n
     """
     Create a new overtime request - goes to HR for approval
     Once approved by HR, it will be included in payroll calculations
+    OT Rate is auto-calculated from employee's gross salary: (Gross ÷ 208) × 2
     """
-    # Try to find linked employee record for emp_id
+    # OT Rate Calculation Constants
+    WORKING_HOURS_PER_MONTH = 208  # 26 days × 8 hours
+    OT_MULTIPLIER = 2.0
+    
+    # Try to find linked employee record for emp_id and salary
     employee = await db.hr_employees.find_one(
-        {"$or": [{"user_id": user_id}, {"id": user_id}]},
-        {"_id": 0, "emp_id": 1, "name": 1, "department": 1}
+        {"$or": [{"user_id": user_id}, {"id": user_id}, {"email": user_id}]},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1, "gross_salary": 1, "salary": 1}
     )
     
     emp_id = employee.get("emp_id", user_id) if employee else user_id
     emp_name = employee.get("name", user_name) if employee else user_name
     emp_dept = employee.get("department", department) if employee else department
     
-    # Default rate - HR can update when approving
-    default_rate = 100
+    # Get gross salary and calculate OT rate
+    gross_salary = 0
+    if employee:
+        gross_salary = employee.get("gross_salary", 0)
+        # If gross_salary not available, calculate from salary components
+        if not gross_salary and employee.get("salary"):
+            salary = employee["salary"]
+            gross_salary = sum([
+                salary.get("basic", 0),
+                salary.get("hra", 0),
+                salary.get("conveyance", 0),
+                salary.get("medical", 0),
+                salary.get("special_allowance", 0),
+                salary.get("other_allowance", 0)
+            ])
+    
+    # Calculate OT rate from gross salary: (Gross ÷ 208) × 2
+    if gross_salary > 0:
+        hourly_rate = gross_salary / WORKING_HOURS_PER_MONTH
+        ot_rate = round(hourly_rate * OT_MULTIPLIER, 2)
+    else:
+        hourly_rate = 0
+        ot_rate = 100  # Default fallback if no salary info
     
     doc = {
         "id": str(uuid.uuid4()),
@@ -168,8 +194,11 @@ async def create_overtime_request(request: OvertimeRequest, user_id: str, user_n
         "user_id": user_id,  # Keep user_id for employee lookup
         "date": request.date,
         "hours": request.hours,
-        "rate_per_hour": default_rate,
-        "amount": request.hours * default_rate,
+        "gross_salary": gross_salary,
+        "hourly_rate": round(hourly_rate, 2),
+        "ot_multiplier": OT_MULTIPLIER,
+        "rate_per_hour": ot_rate,
+        "amount": round(request.hours * ot_rate, 2),
         "reason": request.reason,
         "project": request.project,
         "status": "pending",  # Pending HR approval
