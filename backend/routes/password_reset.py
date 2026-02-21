@@ -42,32 +42,46 @@ def get_frontend_url(request: Request = None) -> str:
     if request:
         # Check Origin header
         origin = request.headers.get("origin")
-        if origin and "smarthub.enerzia.com" in origin:
-            return "https://smarthub.enerzia.com"
+        if origin:
+            # Use the origin directly if it's a valid URL
+            if "smarthub.enerzia.com" in origin:
+                return "https://smarthub.enerzia.com"
+            if "preview.emergentagent.com" in origin:
+                return origin  # Return the preview URL as-is
         
         # Check Referer header
         referer = request.headers.get("referer")
-        if referer and "smarthub.enerzia.com" in referer:
-            return "https://smarthub.enerzia.com"
+        if referer:
+            if "smarthub.enerzia.com" in referer:
+                return "https://smarthub.enerzia.com"
+            if "preview.emergentagent.com" in referer:
+                # Extract base URL from referer
+                from urllib.parse import urlparse
+                parsed = urlparse(referer)
+                return f"{parsed.scheme}://{parsed.netloc}"
         
         # Check Host header
         host = request.headers.get("host")
         if host:
             if "smarthub.enerzia.com" in host:
                 return "https://smarthub.enerzia.com"
+            if "preview.emergentagent.com" in host:
+                return f"https://{host}"
             # For any custom domain, use https
-            if not host.startswith("localhost") and not "preview.emergentagent.com" in host:
+            if not host.startswith("localhost"):
                 return f"https://{host}"
     
     # Check FRONTEND_URL from environment
     frontend_url = os.environ.get("FRONTEND_URL")
     if frontend_url:
-        # Override any old preview URLs
-        if "enerzia-portal" in frontend_url or "erp-zoho-sync" in frontend_url:
-            return "https://smarthub.enerzia.com"
         return frontend_url
     
-    # Default fallback - always use production URL
+    # Check REACT_APP_BACKEND_URL and derive frontend URL
+    backend_url = os.environ.get("REACT_APP_BACKEND_URL")
+    if backend_url:
+        return backend_url  # Frontend and backend share the same domain in this setup
+    
+    # Default fallback - use production URL
     return "https://smarthub.enerzia.com"
 
 
