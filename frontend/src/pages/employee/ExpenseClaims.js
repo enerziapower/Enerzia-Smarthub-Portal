@@ -598,11 +598,15 @@ const ExpenseClaims = () => {
                         <button
                           onClick={handleSubmitForApproval}
                           disabled={submitting || currentSheet.items?.length === 0}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                            currentSheet.status === 'rejected' 
+                              ? 'bg-amber-600 hover:bg-amber-700' 
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
                           data-testid="submit-for-approval-btn"
                         >
                           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                          Submit for Approval
+                          {currentSheet.status === 'rejected' ? 'Resubmit for Approval' : 'Submit for Approval'}
                         </button>
                       </>
                     )}
