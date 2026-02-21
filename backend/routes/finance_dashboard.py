@@ -22,6 +22,9 @@ db = client[os.environ.get('DB_NAME', 'enerzia_erp')]
 
 router = APIRouter(prefix="/api/finance-dashboard", tags=["Finance Dashboard"])
 
+# Second router for expense sheet approvals (used by Finance module)
+finance_router = APIRouter(prefix="/api/finance", tags=["Finance Expense Approvals"])
+
 
 # ============== HELPER FUNCTIONS ==============
 
