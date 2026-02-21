@@ -19,13 +19,21 @@ const OvertimeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loadingRate, setLoadingRate] = useState(false);
+  const [selectedEmployeeInfo, setSelectedEmployeeInfo] = useState(null);
+
+  // OT Rate Constants
+  const WORKING_HOURS_PER_MONTH = 208; // 26 days × 8 hours
+  const OT_MULTIPLIER = 2.0;
 
   const [formData, setFormData] = useState({
     emp_id: '',
     date: new Date().toISOString().split('T')[0],
     hours: '',
     reason: '',
-    rate_per_hour: 100
+    rate_per_hour: 0,
+    gross_salary: 0,
+    hourly_rate: 0
   });
 
   const months = [
