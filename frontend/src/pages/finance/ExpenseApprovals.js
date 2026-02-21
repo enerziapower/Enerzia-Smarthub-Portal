@@ -166,9 +166,14 @@ const ExpenseApprovals = () => {
     e.preventDefault();
     try {
       setProcessingId('direct');
+      // Convert amount to number for backend
+      const payload = {
+        ...directAdvanceForm,
+        amount: parseFloat(directAdvanceForm.amount) || 0
+      };
       await api.post(
         `/finance/advances/direct?paid_by=${encodeURIComponent(user?.name || 'Finance')}`,
-        directAdvanceForm
+        payload
       );
       toast.success('Direct advance payment recorded');
       setShowDirectAdvanceModal(false);
