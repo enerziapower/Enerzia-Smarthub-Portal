@@ -137,11 +137,22 @@ async def get_customer_360(customer_name: str):
             {"_id": 0}
         )
         
-        # Get all enquiries for this customer - try exact match first, then regex
-        enquiries = await db.sales_enquiries.find(
-            {"company_name": customer_name},
-            {"_id": 0}
-        ).sort("created_at", -1).to_list(100)
+        customer_id = customer.get("id") if customer else None
+        
+        # Get all enquiries for this customer - by customer_id first, then by name
+        enquiries = []
+        if customer_id:
+            enquiries = await db.sales_enquiries.find(
+                {"customer_id": customer_id},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
+        
+        # Fallback to name matching if no customer_id results
+        if not enquiries:
+            enquiries = await db.sales_enquiries.find(
+                {"company_name": customer_name},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
         
         # If no exact match, try regex
         if not enquiries:
@@ -150,21 +161,62 @@ async def get_customer_360(customer_name: str):
                 {"_id": 0}
             ).sort("created_at", -1).to_list(100)
         
-        # Calculate metrics
+        # Get all quotations for this customer
+        quotations = []
+        if customer_id:
+            quotations = await db.sales_quotations.find(
+                {"customer_id": customer_id},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
+        
+        if not quotations:
+            quotations = await db.sales_quotations.find(
+                {"customer_name": name_regex},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
+        
+        # Get all orders for this customer
+        orders = []
+        if customer_id:
+            orders = await db.sales_orders.find(
+                {"customer_id": customer_id},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
+        
+        if not orders:
+            orders = await db.sales_orders.find(
+                {"customer_name": name_regex},
+                {"_id": 0}
+            ).sort("created_at", -1).to_list(100)
+        
+        # Calculate enquiry metrics
         total_enquiries = len(enquiries)
-        total_value = sum(e.get("value", 0) or 0 for e in enquiries)
-        won_enquiries = [e for e in enquiries if e.get("status") in ["accepted", "invoiced"]]
+        total_enquiry_value = sum(e.get("value", 0) or 0 for e in enquiries)
+        won_enquiries = [e for e in enquiries if e.get("status") in ["accepted", "invoiced", "quoted", "ordered"]]
         lost_enquiries = [e for e in enquiries if e.get("status") == "declined"]
-        pending_enquiries = [e for e in enquiries if e.get("status") not in ["accepted", "invoiced", "declined"]]
+        pending_enquiries = [e for e in enquiries if e.get("status") not in ["accepted", "invoiced", "quoted", "ordered", "declined"]]
         
-        won_value = sum(e.get("value", 0) or 0 for e in won_enquiries)
-        pending_value = sum(e.get("value", 0) or 0 for e in pending_enquiries)
+        # Calculate quotation metrics
+        total_quotations = len(quotations)
+        total_quoted_value = sum(q.get("total_amount", 0) or 0 for q in quotations)
+        accepted_quotations = [q for q in quotations if q.get("status") in ["accepted", "converted"]]
+        pending_quotations = [q for q in quotations if q.get("status") in ["draft", "sent", "pending"]]
         
-        # Win rate
+        # Calculate order metrics
+        total_orders = len(orders)
+        total_order_value = sum(o.get("total_amount", 0) or 0 for o in orders)
+        completed_orders = [o for o in orders if o.get("status") in ["completed", "delivered"]]
+        pending_orders = [o for o in orders if o.get("status") in ["pending", "in_progress", "processing"]]
+        paid_orders = [o for o in orders if o.get("payment_status") == "paid"]
+        
+        # Win rate (enquiry to order conversion)
         win_rate = (len(won_enquiries) / total_enquiries * 100) if total_enquiries > 0 else 0
         
+        # Quote to Order conversion rate
+        quote_to_order_rate = (total_orders / total_quotations * 100) if total_quotations > 0 else 0
+        
         # Average order value
-        avg_order_value = (won_value / len(won_enquiries)) if won_enquiries else 0
+        avg_order_value = (total_order_value / total_orders) if total_orders > 0 else 0
         
         # Enquiry status breakdown
         status_breakdown = {}
@@ -182,36 +234,56 @@ async def get_customer_360(customer_name: str):
             month_start = now.replace(day=1) - timedelta(days=30*i)
             month_end = month_start + timedelta(days=30)
             month_enquiries = []
+            month_orders = []
             for e in enquiries:
                 created_at = e.get("created_at")
                 if created_at:
-                    # Make datetime timezone-aware if needed
                     if created_at.tzinfo is None:
                         created_at = created_at.replace(tzinfo=timezone.utc)
                     if month_start <= created_at < month_end:
                         month_enquiries.append(e)
+            for o in orders:
+                created_at = o.get("created_at")
+                if created_at:
+                    if created_at.tzinfo is None:
+                        created_at = created_at.replace(tzinfo=timezone.utc)
+                    if month_start <= created_at < month_end:
+                        month_orders.append(o)
             monthly_trend.append({
                 "month": month_start.strftime("%b %Y"),
                 "enquiries": len(month_enquiries),
-                "value": sum(e.get("value", 0) or 0 for e in month_enquiries)
+                "enquiry_value": sum(e.get("value", 0) or 0 for e in month_enquiries),
+                "orders": len(month_orders),
+                "order_value": sum(o.get("total_amount", 0) or 0 for o in month_orders)
             })
         
         return {
             "customer": customer,
+            "customer_id": customer_id,
             "metrics": {
                 "total_enquiries": total_enquiries,
-                "total_value": total_value,
-                "won_value": won_value,
-                "pending_value": pending_value,
-                "win_rate": round(win_rate, 1),
-                "avg_order_value": round(avg_order_value, 0),
+                "total_enquiry_value": total_enquiry_value,
                 "won_count": len(won_enquiries),
                 "lost_count": len(lost_enquiries),
-                "pending_count": len(pending_enquiries)
+                "pending_enquiries": len(pending_enquiries),
+                "total_quotations": total_quotations,
+                "total_quoted_value": total_quoted_value,
+                "accepted_quotations": len(accepted_quotations),
+                "pending_quotations": len(pending_quotations),
+                "total_orders": total_orders,
+                "total_order_value": total_order_value,
+                "completed_orders": len(completed_orders),
+                "pending_orders": len(pending_orders),
+                "paid_orders": len(paid_orders),
+                "win_rate": round(win_rate, 1),
+                "quote_to_order_rate": round(quote_to_order_rate, 1),
+                "avg_order_value": round(avg_order_value, 0)
             },
             "status_breakdown": status_breakdown,
             "monthly_trend": monthly_trend,
-            "recent_enquiries": enquiries[:10]
+            "recent_enquiries": enquiries[:10],
+            "recent_quotations": quotations[:10],
+            "recent_orders": orders[:10]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
