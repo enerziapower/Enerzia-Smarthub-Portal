@@ -930,12 +930,34 @@ async def get_hr_dashboard_stats():
 
 # ============= OVERTIME MANAGEMENT =============
 
+# OT Rate Calculation Constants
+WORKING_DAYS_PER_MONTH = 26  # Standard working days
+WORKING_HOURS_PER_DAY = 8    # Standard working hours per day
+TOTAL_WORKING_HOURS_PER_MONTH = WORKING_DAYS_PER_MONTH * WORKING_HOURS_PER_DAY  # 208 hours
+OT_MULTIPLIER = 2.0          # Standard OT rate multiplier (2x)
+
+
+def calculate_ot_rate(gross_salary: float) -> float:
+    """
+    Calculate OT rate based on employee's gross salary
+    Formula: (Gross Salary ÷ 208) × 2
+    
+    Example: ₹30,000 ÷ 208 × 2 = ₹288.46/hour
+    """
+    if not gross_salary or gross_salary <= 0:
+        return 100.0  # Default fallback
+    
+    hourly_rate = gross_salary / TOTAL_WORKING_HOURS_PER_MONTH
+    ot_rate = hourly_rate * OT_MULTIPLIER
+    return round(ot_rate, 2)
+
+
 class OvertimeCreate(BaseModel):
     emp_id: str
     date: str
     hours: float
     reason: str = ""
-    rate_per_hour: float = 100
+    rate_per_hour: Optional[float] = None  # Now optional - will auto-calculate if not provided
     amount: Optional[float] = None
 
 
@@ -945,6 +967,37 @@ class OvertimeUpdate(BaseModel):
     reason: Optional[str] = None
     rate_per_hour: Optional[float] = None
     amount: Optional[float] = None
+
+
+@router.get("/overtime/calculate-rate/{emp_id}")
+async def get_employee_ot_rate(emp_id: str):
+    """Get calculated OT rate for an employee based on their gross salary"""
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"emp_id": emp_id}, {"id": emp_id}]},
+        {"_id": 0, "emp_id": 1, "name": 1, "gross_salary": 1, "salary": 1}
+    )
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    gross_salary = employee.get("gross_salary", 0)
+    
+    # If gross_salary not directly available, calculate from salary components
+    if not gross_salary and employee.get("salary"):
+        gross_salary = calculate_gross_salary(employee["salary"])
+    
+    ot_rate = calculate_ot_rate(gross_salary)
+    hourly_rate = round(gross_salary / TOTAL_WORKING_HOURS_PER_MONTH, 2) if gross_salary else 0
+    
+    return {
+        "emp_id": employee.get("emp_id"),
+        "emp_name": employee.get("name"),
+        "gross_salary": gross_salary,
+        "working_hours_per_month": TOTAL_WORKING_HOURS_PER_MONTH,
+        "hourly_rate": hourly_rate,
+        "ot_multiplier": OT_MULTIPLIER,
+        "ot_rate_per_hour": ot_rate
+    }
 
 
 @router.get("/overtime")
