@@ -149,6 +149,39 @@ def serialize_doc(doc):
     return doc
 
 
+# ============= ADVANCE REQUEST MODELS =============
+# Employee requests advance → Finance approves → Finance records payment
+# Pooled balance system - carries forward until used
+
+class AdvanceRequest(BaseModel):
+    """Employee request for advance payment"""
+    amount: float
+    purpose: str
+    project_name: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+class AdvanceRequestInDB(AdvanceRequest):
+    id: str
+    user_id: str
+    user_name: str
+    emp_id: str
+    department: str
+    status: str = "pending"  # pending, approved, rejected, paid
+    requested_at: str
+    approved_by: Optional[str] = None
+    approved_at: Optional[str] = None
+    rejected_by: Optional[str] = None
+    rejected_at: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    # Payment details (filled when Finance pays)
+    paid_amount: Optional[float] = None
+    payment_date: Optional[str] = None
+    payment_mode: Optional[str] = None
+    payment_reference: Optional[str] = None
+    paid_by: Optional[str] = None
+
+
 # ============= OVERTIME REQUESTS =============
 # Connected to HR Overtime Management - Employee requests flow to HR for approval
 # Approved requests are automatically included in payroll calculations
