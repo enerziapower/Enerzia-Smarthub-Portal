@@ -249,15 +249,17 @@ const ExpenseClaims = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      if (res.data.url) {
-        setItemForm(prev => ({ ...prev, receipt_url: res.data.url }));
-      } else if (res.data.path) {
-        setItemForm(prev => ({ ...prev, receipt_url: res.data.path }));
+      // Backend returns url in file_url or url field
+      const uploadedUrl = res.data.file_url || res.data.url || res.data.path;
+      if (uploadedUrl) {
+        setItemForm(prev => ({ ...prev, receipt_url: uploadedUrl }));
+        toast.success('Receipt uploaded successfully');
+      } else {
+        toast.error('Upload succeeded but no URL returned');
       }
-      toast.success('Receipt uploaded');
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload receipt. Please try again.');
+      toast.error(error.response?.data?.detail || 'Failed to upload receipt. Please try again.');
     } finally {
       setUploadingReceipt(false);
     }
