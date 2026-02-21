@@ -166,6 +166,7 @@ class OrderCreate(BaseModel):
     """Create a new sales order"""
     quotation_id: Optional[str] = None  # Link to quotation
     enquiry_id: Optional[str] = None  # Link to enquiry
+    customer_id: Optional[str] = None  # Link to customer record
     customer_name: str
     customer_address: Optional[str] = None
     customer_gst: Optional[str] = None
@@ -193,6 +194,7 @@ class OrderCreate(BaseModel):
 
 class OrderUpdate(BaseModel):
     """Update a sales order"""
+    customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     customer_address: Optional[str] = None
     customer_gst: Optional[str] = None
