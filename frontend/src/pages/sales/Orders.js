@@ -264,6 +264,7 @@ const Orders = () => {
 
   const resetForm = () => {
     setFormData({
+      customer_id: '',
       customer_name: '',
       customer_address: '',
       customer_gst: '',
@@ -289,6 +290,7 @@ const Orders = () => {
   const openEditModal = (order) => {
     setEditingOrder(order);
     setFormData({
+      customer_id: order.customer_id || '',
       customer_name: order.customer_name || '',
       customer_address: order.customer_address || '',
       customer_gst: order.customer_gst || '',
