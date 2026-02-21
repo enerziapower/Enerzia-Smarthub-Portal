@@ -85,6 +85,39 @@ const OvertimeManagement = () => {
     }
   };
 
+  // Fetch OT rate when employee is selected
+  const fetchEmployeeOTRate = async (empId) => {
+    if (!empId) {
+      setSelectedEmployeeInfo(null);
+      setFormData(prev => ({ ...prev, rate_per_hour: 0, gross_salary: 0, hourly_rate: 0 }));
+      return;
+    }
+    
+    try {
+      setLoadingRate(true);
+      const response = await api.get(`/hr/overtime/calculate-rate/${empId}`);
+      const data = response.data;
+      setSelectedEmployeeInfo(data);
+      setFormData(prev => ({
+        ...prev,
+        rate_per_hour: data.ot_rate_per_hour,
+        gross_salary: data.gross_salary,
+        hourly_rate: data.hourly_rate
+      }));
+    } catch (err) {
+      console.error('Error fetching OT rate:', err);
+      // Fallback to default
+      setFormData(prev => ({ ...prev, rate_per_hour: 100, gross_salary: 0, hourly_rate: 0 }));
+    } finally {
+      setLoadingRate(false);
+    }
+  };
+
+  const handleEmployeeChange = (empId) => {
+    setFormData(prev => ({ ...prev, emp_id: empId }));
+    fetchEmployeeOTRate(empId);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
