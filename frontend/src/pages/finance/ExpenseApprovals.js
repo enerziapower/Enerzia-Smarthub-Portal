@@ -72,8 +72,8 @@ const ExpenseApprovals = () => {
 
   const fetchEmployees = async () => {
     try {
-      const res = await api.get('/users');
-      setEmployees(res.data.users || []);
+      const res = await api.get('/finance/employees');
+      setEmployees(res.data.employees || []);
     } catch (error) {
       console.error('Error fetching employees:', error);
     }
