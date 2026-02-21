@@ -778,3 +778,181 @@ async def get_financial_kpis():
             "expense_approval_rate": round((approved_exp / (pending_exp + approved_exp) * 100) if (pending_exp + approved_exp) else 0, 1)
         }
     }
+
+
+# ============== EXPENSE SHEET APPROVAL ENDPOINTS (Finance Module) ==============
+# These endpoints handle the finance workflow for employee expense sheets
+# Workflow: Employee submits -> Finance verifies -> Finance approves -> Finance pays
+
+from pydantic import BaseModel as PydanticBaseModel
+from bson import ObjectId
+
+
+class PaymentRequest(PydanticBaseModel):
+    """Payment details for marking expense sheet as paid"""
+    payment_mode: str = "Bank Transfer"
+    payment_reference: Optional[str] = None
+    paid_amount: float
+    paid_by: str
+
+
+async def find_expense_sheet(sheet_id: str):
+    """Helper to find expense sheet by id (supports both ObjectId and string id)"""
+    sheet = None
+    try:
+        sheet = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not sheet:
+        sheet = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    return sheet
+
+
+def serialize_expense_sheet(doc):
+    """Convert MongoDB document to JSON-serializable dict"""
+    if doc is None:
+        return None
+    doc["id"] = str(doc.get("_id", doc.get("id", "")))
+    doc.pop("_id", None)
+    return doc
+
+
+@finance_router.get("/expense-sheets")
+async def get_all_expense_sheets(status: Optional[str] = None):
+    """Get all expense sheets for finance review (excludes drafts)"""
+    query = {"status": {"$ne": "draft"}}  # Don't show draft sheets to finance
+    if status and status != "all":
+        query["status"] = status
+    
+    cursor = db.expense_sheets.find(query).sort([("submitted_at", -1), ("created_at", -1)])
+    sheets = []
+    async for doc in cursor:
+        sheets.append(serialize_expense_sheet(doc))
+    
+    return {"sheets": sheets}
+
+
+@finance_router.get("/expense-sheets/{sheet_id}")
+async def get_expense_sheet_detail(sheet_id: str):
+    """Get a specific expense sheet for review"""
+    sheet = await find_expense_sheet(sheet_id)
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    return serialize_expense_sheet(sheet)
+
+
+@finance_router.put("/expense-sheets/{sheet_id}/verify")
+async def verify_expense_sheet(sheet_id: str, verified_by: str):
+    """
+    Verify an expense sheet - first step of finance approval
+    Status: pending -> verified
+    """
+    sheet = await find_expense_sheet(sheet_id)
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if sheet.get("status") != "pending":
+        raise HTTPException(status_code=400, detail=f"Cannot verify sheet with status: {sheet.get('status')}. Sheet must be in 'pending' status.")
+    
+    update_data = {
+        "status": "verified",
+        "verified_by": verified_by,
+        "verified_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense sheet verified successfully", "status": "verified"}
+
+
+@finance_router.put("/expense-sheets/{sheet_id}/approve")
+async def approve_expense_sheet(sheet_id: str, approved_by: str):
+    """
+    Approve an expense sheet - second step of finance approval
+    Status: verified -> approved
+    """
+    sheet = await find_expense_sheet(sheet_id)
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if sheet.get("status") != "verified":
+        raise HTTPException(status_code=400, detail=f"Cannot approve sheet with status: {sheet.get('status')}. Sheet must be verified first.")
+    
+    update_data = {
+        "status": "approved",
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense sheet approved successfully", "status": "approved"}
+
+
+@finance_router.put("/expense-sheets/{sheet_id}/reject")
+async def reject_expense_sheet(sheet_id: str, rejected_by: str, reason: str = ""):
+    """
+    Reject an expense sheet - can reject at any stage (pending or verified)
+    Status: pending/verified -> rejected
+    Employee can then edit and resubmit
+    """
+    sheet = await find_expense_sheet(sheet_id)
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if sheet.get("status") not in ["pending", "verified"]:
+        raise HTTPException(status_code=400, detail=f"Cannot reject sheet with status: {sheet.get('status')}")
+    
+    update_data = {
+        "status": "rejected",
+        "rejected_by": rejected_by,
+        "rejected_at": datetime.now(timezone.utc).isoformat(),
+        "rejection_reason": reason
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense sheet rejected", "status": "rejected"}
+
+
+@finance_router.put("/expense-sheets/{sheet_id}/pay")
+async def mark_expense_sheet_paid(sheet_id: str, payment: PaymentRequest):
+    """
+    Mark expense sheet as paid - final step
+    Status: approved -> paid
+    Records payment details
+    """
+    sheet = await find_expense_sheet(sheet_id)
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if sheet.get("status") != "approved":
+        raise HTTPException(status_code=400, detail=f"Cannot mark as paid. Sheet status is: {sheet.get('status')}. Sheet must be approved first.")
+    
+    update_data = {
+        "status": "paid",
+        "paid_at": datetime.now(timezone.utc).isoformat(),
+        "paid_amount": payment.paid_amount,
+        "payment_mode": payment.payment_mode,
+        "payment_reference": payment.payment_reference,
+        "paid_by": payment.paid_by
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Payment recorded successfully", "status": "paid"}
