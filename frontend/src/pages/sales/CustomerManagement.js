@@ -1201,29 +1201,5 @@ const Customer360Modal = ({ data, customerName, onClose, formatCurrency }) => {
     </div>
   );
 };
-                      <tr key={idx}>
-                        <td className="px-3 py-2 text-sm font-medium">{e.enquiry_no}</td>
-                        <td className="px-3 py-2 text-sm text-slate-500">{e.date}</td>
-                        <td className="px-3 py-2 text-sm text-slate-600 truncate max-w-[200px]">{e.description}</td>
-                        <td className="px-3 py-2 text-sm text-right font-medium">{formatCurrency(e.value)}</td>
-                        <td className="px-3 py-2 text-center">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            e.status === 'accepted' || e.status === 'invoiced' ? 'bg-green-100 text-green-700' :
-                            e.status === 'declined' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>{e.status}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default CustomerManagement;
