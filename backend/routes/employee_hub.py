@@ -752,7 +752,15 @@ def determine_attendance_status(check_in: str, check_out: str, manual_status: st
 
 @router.get("/attendance/{user_id}")
 async def get_attendance(user_id: str, month: Optional[int] = None, year: Optional[int] = None):
-    """Get attendance records for a user with detailed summary for payroll"""
+    """
+    Get comprehensive attendance records for a user including:
+    - Check-in/Check-out records
+    - Approved leaves
+    - Approved permissions
+    - Approved overtime
+    - Auto-marked absents for past days
+    - Weekends/Holidays
+    """
     if not month:
         month = datetime.now().month
     if not year:
@@ -765,29 +773,189 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
     else:
         end_date = f"{year}-{month + 1:02d}-01"
     
+    # Get number of days in month
+    import calendar
+    days_in_month = calendar.monthrange(year, month)[1]
+    
+    # 1. Fetch attendance records (check-in/out)
     cursor = db.attendance.find({
         "user_id": user_id,
         "date": {"$gte": start_date, "$lt": end_date}
     }).sort("date", 1)
     
-    records = []
+    attendance_records = {}
     async for doc in cursor:
-        records.append(serialize_doc(doc))
+        record = serialize_doc(doc)
+        attendance_records[record["date"]] = record
     
-    # Calculate detailed summary for payroll
-    present = sum(1 for r in records if r.get("status") == "present")
-    absent = sum(1 for r in records if r.get("status") == "absent")
-    half_days = sum(1 for r in records if r.get("status") == "half-day")
-    on_leave = sum(1 for r in records if r.get("status") == "on-leave")
-    holidays = sum(1 for r in records if r.get("status") == "holiday")
-    permission = sum(1 for r in records if r.get("status") == "permission")
+    # 2. Fetch approved leaves for the month
+    leave_cursor = db.leave_requests.find({
+        "user_id": user_id,
+        "status": "approved",
+        "$or": [
+            {"from_date": {"$gte": start_date, "$lt": end_date}},
+            {"to_date": {"$gte": start_date, "$lt": end_date}},
+            {"from_date": {"$lte": start_date}, "to_date": {"$gte": end_date}}
+        ]
+    })
+    
+    leave_dates = {}
+    async for leave in leave_cursor:
+        # Parse leave dates and mark each day
+        from_date = datetime.strptime(leave["from_date"], "%Y-%m-%d")
+        to_date = datetime.strptime(leave["to_date"], "%Y-%m-%d")
+        current = from_date
+        while current <= to_date:
+            date_str = current.strftime("%Y-%m-%d")
+            if date_str >= start_date and date_str < end_date:
+                leave_dates[date_str] = {
+                    "type": leave.get("type", "Leave"),
+                    "is_half_day": leave.get("is_half_day", False),
+                    "half_day_type": leave.get("half_day_type", ""),  # morning/afternoon
+                    "reason": leave.get("reason", "")
+                }
+            current += timedelta(days=1)
+    
+    # 3. Fetch approved permissions for the month
+    permission_cursor = db.permission_requests.find({
+        "user_id": user_id,
+        "status": "approved",
+        "date": {"$gte": start_date, "$lt": end_date}
+    })
+    
+    permission_dates = {}
+    async for perm in permission_cursor:
+        date_str = perm.get("date")
+        if date_str:
+            permission_dates[date_str] = {
+                "from_time": perm.get("from_time", ""),
+                "to_time": perm.get("to_time", ""),
+                "duration": perm.get("duration", 0),
+                "reason": perm.get("reason", "")
+            }
+    
+    # 4. Fetch approved overtime for the month
+    overtime_cursor = db.hr_overtime.find({
+        "$or": [
+            {"user_id": user_id},
+            {"emp_id": user_id}
+        ],
+        "status": "approved",
+        "date": {"$gte": start_date, "$lt": end_date}
+    })
+    
+    overtime_dates = {}
+    async for ot in overtime_cursor:
+        date_str = ot.get("date")
+        if date_str:
+            overtime_dates[date_str] = {
+                "hours": ot.get("hours", 0),
+                "amount": ot.get("amount", 0),
+                "reason": ot.get("reason", "")
+            }
+    
+    # 5. Build comprehensive calendar with all data
+    today = datetime.now().strftime("%Y-%m-%d")
+    records = []
+    
+    # Define public holidays (can be fetched from DB later)
+    public_holidays = {}  # Format: {"2026-01-26": "Republic Day", ...}
+    
+    for day in range(1, days_in_month + 1):
+        date_str = f"{year}-{month:02d}-{day:02d}"
+        date_obj = datetime(year, month, day)
+        day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+        
+        # Start with attendance record if exists
+        record = attendance_records.get(date_str, {})
+        
+        # Determine status
+        status = record.get("status", "")
+        status_details = {}
+        
+        # Check for Sunday (holiday)
+        if day_of_week == 6:  # Sunday
+            status = "holiday"
+            status_details = {"holiday_type": "weekly_off", "name": "Sunday"}
+        
+        # Check for public holiday
+        elif date_str in public_holidays:
+            status = "holiday"
+            status_details = {"holiday_type": "public", "name": public_holidays[date_str]}
+        
+        # Check for approved leave
+        elif date_str in leave_dates:
+            leave_info = leave_dates[date_str]
+            if leave_info.get("is_half_day"):
+                status = "half-day"
+                status_details = {
+                    "type": "leave",
+                    "leave_type": leave_info["type"],
+                    "half_day_type": leave_info.get("half_day_type", ""),
+                    "reason": leave_info.get("reason", "")
+                }
+            else:
+                status = "on-leave"
+                status_details = {
+                    "type": "leave",
+                    "leave_type": leave_info["type"],
+                    "reason": leave_info.get("reason", "")
+                }
+        
+        # If no status yet and date is in the past, mark as absent
+        elif not status and date_str < today and day_of_week != 6:
+            status = "absent"
+            status_details = {"auto_marked": True}
+        
+        # Check for permission (can overlap with present)
+        permission_info = permission_dates.get(date_str)
+        if permission_info:
+            status_details["has_permission"] = True
+            status_details["permission"] = permission_info
+        
+        # Check for overtime (can overlap with present)
+        overtime_info = overtime_dates.get(date_str)
+        if overtime_info:
+            status_details["has_overtime"] = True
+            status_details["overtime_approved"] = overtime_info
+        
+        # Build the record
+        final_record = {
+            "date": date_str,
+            "day_of_week": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day_of_week],
+            "status": status or ("" if date_str >= today else "absent"),
+            "check_in": record.get("check_in"),
+            "check_out": record.get("check_out"),
+            "work_hours": record.get("work_hours", 0),
+            "overtime": record.get("overtime", 0),
+            "details": status_details
+        }
+        
+        records.append(final_record)
+    
+    # 6. Calculate summary
+    present = sum(1 for r in records if r["status"] == "present")
+    absent = sum(1 for r in records if r["status"] == "absent")
+    half_days = sum(1 for r in records if r["status"] == "half-day")
+    on_leave = sum(1 for r in records if r["status"] == "on-leave")
+    holidays = sum(1 for r in records if r["status"] == "holiday")
+    permission_count = sum(1 for r in records if r.get("details", {}).get("has_permission"))
     
     # Calculate total work hours and overtime
     total_work_hours = sum(r.get("work_hours", 0) for r in records)
     total_overtime = sum(r.get("overtime", 0) for r in records)
     
+    # Approved OT hours from hr_overtime
+    approved_ot_hours = sum(ot.get("hours", 0) for ot in overtime_dates.values())
+    approved_ot_amount = sum(ot.get("amount", 0) for ot in overtime_dates.values())
+    
     # Days with overtime
-    overtime_days = sum(1 for r in records if r.get("overtime", 0) > 0)
+    overtime_days = sum(1 for r in records if r.get("overtime", 0) > 0 or r.get("details", {}).get("has_overtime"))
+    
+    # Calculate effective working days (for payroll)
+    working_days = days_in_month - holidays
+    effective_present = present + (half_days * 0.5)
+    lop_days = max(0, working_days - effective_present - on_leave)
     
     return {
         "records": records,
@@ -797,12 +965,20 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
             "halfDays": half_days,
             "onLeave": on_leave,
             "holidays": holidays,
-            "permission": permission,
+            "permission": permission_count,
             "totalDays": len(records),
+            "workingDays": working_days,
+            "effectivePresent": effective_present,
+            "lopDays": lop_days,
             "totalWorkHours": round(total_work_hours, 2),
             "totalOvertime": round(total_overtime, 2),
+            "approvedOTHours": approved_ot_hours,
+            "approvedOTAmount": round(approved_ot_amount, 2),
             "overtimeDays": overtime_days
         },
+        "leaves": list(leave_dates.items()),
+        "permissions": list(permission_dates.items()),
+        "overtimes": list(overtime_dates.items()),
         "officeTimings": {
             "startTime": OFFICE_START_TIME,
             "endTime": OFFICE_END_TIME,
