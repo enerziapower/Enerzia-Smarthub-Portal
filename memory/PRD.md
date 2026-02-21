@@ -1894,6 +1894,103 @@ Employee                        Finance Department
 
 ---
 
+### Advance Payment Management ✅ COMPLETE (Feb 21, 2026)
+
+**Location:**
+- Frontend Employee: `frontend/src/pages/employee/ExpenseClaims.js` (Advance Balance section, Request modal, History modal)
+- Frontend Finance: `frontend/src/pages/finance/ExpenseApprovals.js` (Advance Management tab)
+- Backend Employee: `backend/routes/employee_hub.py` - Lines 185-265 (Advance Request endpoints)
+- Backend Finance: `backend/routes/finance_dashboard.py` - Lines 960-1180 (Advance Management endpoints)
+
+**Feature Overview:** Complete advance payment management system where employees can request advances and Finance can approve, record payments, and track running balances.
+
+**Workflow:**
+```
+Employee                           Finance Department
+┌─────────────────────┐           ┌──────────────────────────────────┐
+│ View Advance Balance│           │  View Pending Requests           │
+│ (Running Balance)   │           │        ↓                         │
+│       ↓             │           │  [Approve] or [Reject]           │
+│ Request Advance     │  ───────► │        ↓                         │
+│ (Amount, Purpose,   │  Request  │  [Record Payment]                │
+│  Project)           │           │  (Amount, Date, Mode, Reference) │
+│       ↓             │           │        ↓                         │
+│ View History        │  ◄─────── │  Employee Balance Updated        │
+│ (Transactions)      │  Balance  │                                  │
+└─────────────────────┘           │  OR                              │
+                                  │  [Record Direct Advance]         │
+                                  │  (for urgent/walk-in cases)      │
+                                  └──────────────────────────────────┘
+
+Running Balance = Total Advances Paid - Total Advances Used in Expense Sheets
+```
+
+**API Endpoints (Employee):**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/employee/advance-requests` | POST | Request new advance |
+| `/api/employee/advance-requests` | GET | Get my advance requests |
+| `/api/employee/advance-requests/{id}` | DELETE | Withdraw pending request |
+| `/api/employee/advance-balance/{user_id}` | GET | Get my running balance |
+
+**API Endpoints (Finance):**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/finance/advance-requests` | GET | Get all advance requests |
+| `/api/finance/advance-requests/{id}/approve` | PUT | Approve request |
+| `/api/finance/advance-requests/{id}/reject` | PUT | Reject request |
+| `/api/finance/advance-requests/{id}/pay` | PUT | Record payment |
+| `/api/finance/advances/direct` | POST | Record direct advance |
+| `/api/finance/advances/employee/{user_id}` | GET | Employee advance history |
+| `/api/finance/advances/balances` | GET | All employee balances |
+
+**Frontend Features:**
+| Feature | Location | Description |
+|---------|----------|-------------|
+| Advance Balance Card | ExpenseClaims.js | Shows running balance, received, used |
+| Request Advance Modal | ExpenseClaims.js | Form for amount, purpose, project |
+| Advance History Modal | ExpenseClaims.js | Transaction history, balance breakdown |
+| Advance Management Tab | ExpenseApprovals.js | New tab for advance workflow |
+| Pending Requests List | ExpenseApprovals.js | Approve/Reject buttons |
+| Payment Recording Modal | ExpenseApprovals.js | Payment details form |
+| Direct Advance Modal | ExpenseApprovals.js | Record walk-in advances |
+| Employee Balances Table | ExpenseApprovals.js | All employees with outstanding advances |
+
+**Database Collection:** `advance_requests`
+```json
+{
+  "id": "uuid",
+  "user_id": "user_id",
+  "user_name": "Employee Name",
+  "emp_id": "EMP001",
+  "department": "Engineering",
+  "amount": 5000,
+  "purpose": "Site visit expenses",
+  "project_name": "Project Name",
+  "remarks": "Additional notes",
+  "status": "pending|approved|rejected|paid",
+  "requested_at": "ISO timestamp",
+  "approved_by": "Finance User",
+  "approved_at": "ISO timestamp",
+  "rejected_by": null,
+  "rejection_reason": null,
+  "paid_amount": 5000,
+  "payment_date": "2026-02-21",
+  "payment_mode": "Bank Transfer",
+  "payment_reference": "TXN123456",
+  "paid_by": "Finance User",
+  "is_direct_payment": false
+}
+```
+
+**Testing:** 100% pass rate - 24/24 backend tests, all frontend workflows verified.
+
+---
+*Last Updated: February 21, 2026*
+*Status: ADVANCE PAYMENT MANAGEMENT COMPLETE ✅*
+
+---
+
 ## Known Issue - Production Environment
 
 ### Email Sender Name (SMTP_FROM_NAME) ⚠️
