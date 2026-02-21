@@ -59,6 +59,7 @@ const Quotations = () => {
   
   const [formData, setFormData] = useState({
     enquiry_id: '',
+    customer_id: '',  // Link to customer record
     customer_name: '',
     customer_address: '',
     shipping_address: '',
