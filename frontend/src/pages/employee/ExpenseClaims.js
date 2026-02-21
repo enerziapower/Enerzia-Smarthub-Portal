@@ -1,91 +1,216 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Receipt, Plus, CheckCircle, XCircle, AlertCircle,
-  Calendar, IndianRupee, FileText, Loader2
+  Receipt, Plus, CheckCircle, XCircle, AlertCircle, Clock,
+  Calendar, IndianRupee, FileText, Loader2, Upload, Trash2,
+  ChevronDown, ChevronRight, Eye, Download, X, Camera,
+  Building2, MapPin, CreditCard, FileSpreadsheet, Send
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { employeeHubAPI } from '../../services/api';
+import api, { employeeHubAPI } from '../../services/api';
 import { toast } from 'sonner';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const BILL_TYPES = [
+  'Travel - Bus/Auto/Cab',
+  'Travel - Train/Flight',
+  'Food & Refreshments',
+  'Accommodation/Lodging',
+  'Materials/Supplies',
+  'Electrical Materials',
+  'Plumbing Materials',
+  'Painting Materials',
+  'Tools & Equipment',
+  'Courier/Delivery',
+  'Communication/Phone',
+  'Printing/Stationery',
+  'Porter/Labour Charges',
+  'Miscellaneous'
+];
+
+const PAYMENT_MODES = ['Cash', 'UPI/GPay', 'Paytm', 'Card', 'Bank Transfer', 'Other'];
 
 const ExpenseClaims = () => {
   const { user } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  const [claims, setClaims] = useState([]);
+  const [activeTab, setActiveTab] = useState('current'); // current, history, summary
+  const [sheets, setSheets] = useState([]);
+  const [currentSheet, setCurrentSheet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [showSheetModal, setShowSheetModal] = useState(false);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [expandedSheet, setExpandedSheet] = useState(null);
 
-  const [formData, setFormData] = useState({
-    category: 'Travel',
+  // Current month/year
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  // New sheet form
+  const [sheetForm, setSheetForm] = useState({
+    month: currentMonth,
+    year: currentYear,
+    advance_received: 0,
+    advance_received_date: '',
+    previous_due: 0,
+    remarks: ''
+  });
+
+  // New expense item form
+  const [itemForm, setItemForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    project_name: '',
+    bill_type: 'Travel - Bus/Auto/Cab',
     description: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    place: '',
+    mode: 'Cash',
     receipt_url: ''
   });
 
-  useEffect(() => {
-    fetchClaims();
-  }, [user]);
-
-  const fetchClaims = async () => {
+  const fetchSheets = useCallback(async () => {
+    if (!user?.id) return;
     try {
       setLoading(true);
-      const res = await employeeHubAPI.getExpenseClaims({ user_id: user?.id });
-      setClaims(res.data.claims || []);
+      const res = await api.get(`/employee/expense-sheets?user_id=${user.id}`);
+      setSheets(res.data.sheets || []);
+      
+      // Find current month's sheet
+      const current = res.data.sheets?.find(
+        s => s.month === currentMonth && s.year === currentYear
+      );
+      setCurrentSheet(current || null);
+      
+      // Fetch summary
+      const summaryRes = await api.get(`/employee/expense-sheets/summary/${user.id}?year=${currentYear}`);
+      setSummary(summaryRes.data);
     } catch (error) {
-      console.error('Error fetching expense claims:', error);
-      toast.error('Failed to load expense claims');
+      console.error('Error fetching expense sheets:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, currentMonth, currentYear]);
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    fetchSheets();
+  }, [fetchSheets]);
+
+  const handleCreateSheet = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await employeeHubAPI.createExpenseClaim(
-        { ...formData, amount: parseFloat(formData.amount) },
-        user?.id,
-        user?.name || 'User',
-        user?.department || 'Unknown'
+      await api.post(
+        `/employee/expense-sheets?user_id=${user.id}&user_name=${encodeURIComponent(user.name || 'User')}&department=${encodeURIComponent(user.department || 'Unknown')}&emp_id=${user.emp_id || user.id}&designation=${encodeURIComponent(user.designation || 'Employee')}`,
+        {
+          ...sheetForm,
+          items: []
+        }
       );
-      toast.success('Expense claim submitted successfully');
-      setShowModal(false);
-      setFormData({ category: 'Travel', description: '', amount: '', date: new Date().toISOString().split('T')[0], receipt_url: '' });
-      fetchClaims();
+      toast.success('Expense sheet created successfully');
+      setShowSheetModal(false);
+      fetchSheets();
     } catch (error) {
-      console.error('Error creating expense claim:', error);
-      toast.error('Failed to submit expense claim');
+      console.error('Error creating sheet:', error);
+      toast.error(error.response?.data?.detail || 'Failed to create expense sheet');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-700';
-      case 'pending': return 'bg-amber-100 text-amber-700';
-      case 'rejected': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-600';
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    if (!currentSheet) {
+      toast.error('Please create an expense sheet first');
+      return;
+    }
+    
+    try {
+      setSubmitting(true);
+      await api.post(
+        `/employee/expense-sheets/${currentSheet.id}/add-item?user_id=${user.id}`,
+        {
+          ...itemForm,
+          amount: parseFloat(itemForm.amount)
+        }
+      );
+      toast.success('Expense item added');
+      setShowAddItemModal(false);
+      setItemForm({
+        date: new Date().toISOString().split('T')[0],
+        project_name: '',
+        bill_type: 'Travel - Bus/Auto/Cab',
+        description: '',
+        amount: '',
+        place: '',
+        mode: 'Cash',
+        receipt_url: ''
+      });
+      fetchSheets();
+    } catch (error) {
+      console.error('Error adding item:', error);
+      toast.error(error.response?.data?.detail || 'Failed to add expense item');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const getCategoryIcon = (category) => {
-    const colors = {
-      'Travel': 'bg-blue-100 text-blue-600',
-      'Food': 'bg-orange-100 text-orange-600',
-      'Transport': 'bg-purple-100 text-purple-600',
-      'Accommodation': 'bg-green-100 text-green-600',
-      'Communication': 'bg-cyan-100 text-cyan-600',
-      'Miscellaneous': 'bg-slate-100 text-slate-600'
-    };
-    return colors[category] || colors['Miscellaneous'];
+  const handleDeleteItem = async (sheetId, itemIndex) => {
+    if (!window.confirm('Are you sure you want to delete this expense item?')) return;
+    
+    try {
+      await api.delete(`/employee/expense-sheets/${sheetId}/item/${itemIndex}?user_id=${user.id}`);
+      toast.success('Item deleted');
+      fetchSheets();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    }
   };
 
-  const totalClaimed = claims.reduce((sum, c) => sum + (c.amount || 0), 0);
-  const approvedAmount = claims.filter(c => c.status === 'approved').reduce((sum, c) => sum + (c.amount || 0), 0);
-  const pendingAmount = claims.filter(c => c.status === 'pending').reduce((sum, c) => sum + (c.amount || 0), 0);
-  const pendingCount = claims.filter(c => c.status === 'pending').length;
+  const handleReceiptUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+    
+    try {
+      setUploadingReceipt(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', 'expense_receipts');
+      
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setItemForm(prev => ({ ...prev, receipt_url: res.data.path }));
+      toast.success('Receipt uploaded');
+    } catch (error) {
+      console.error('Error uploading receipt:', error);
+      toast.error('Failed to upload receipt');
+    } finally {
+      setUploadingReceipt(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Clock },
+      verified: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Eye },
+      approved: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
+      rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+      paid: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: IndianRupee }
+    };
+    return badges[status] || badges.pending;
+  };
+
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
 
   if (loading) {
     return (
@@ -101,202 +226,671 @@ const ExpenseClaims = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Expense Claims</h1>
-          <p className="text-slate-500 mt-1">Submit and track your expense reimbursements</p>
+          <p className="text-slate-500 mt-1">Submit monthly project expenses for reimbursement</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-          data-testid="new-claim-btn"
-        >
-          <Plus size={18} />
-          New Claim
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Receipt className="text-blue-600" size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Total Claimed</p>
-              <p className="text-2xl font-bold text-slate-800">₹{totalClaimed.toLocaleString('en-IN')}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-xl border border-green-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <CheckCircle className="text-green-600" size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-green-600">Approved</p>
-              <p className="text-2xl font-bold text-green-700">₹{approvedAmount.toLocaleString('en-IN')}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-amber-50 rounded-xl border border-amber-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-              <AlertCircle className="text-amber-600" size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-amber-600">Pending</p>
-              <p className="text-2xl font-bold text-amber-700">₹{pendingAmount.toLocaleString('en-IN')}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-purple-50 rounded-xl border border-purple-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-              <FileText className="text-purple-600" size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-purple-600">Pending Claims</p>
-              <p className="text-2xl font-bold text-purple-700">{pendingCount}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Claims List */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-800">My Expense Claims</h2>
-        </div>
-        {claims.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <Receipt className="mx-auto mb-3 text-slate-300" size={48} />
-            <p>No expense claims yet</p>
-            <p className="text-sm">Click "New Claim" to submit an expense</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {claims.map((claim) => (
-              <div key={claim.id} className="p-4 hover:bg-slate-50" data-testid={`expense-claim-${claim.id}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getCategoryIcon(claim.category)}`}>
-                      <Receipt size={24} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-slate-800">{claim.category}</h4>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusBadge(claim.status)}`}>
-                          {claim.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-500">{claim.description}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                        <span className="flex items-center gap-1">
-                          <Calendar size={12} />
-                          {new Date(claim.date).toLocaleDateString('en-IN')}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <IndianRupee size={12} />
-                          {claim.amount.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-slate-800">₹{claim.amount.toLocaleString('en-IN')}</p>
-                    {claim.status === 'approved' && claim.approved_by && (
-                      <p className="text-xs text-slate-400 mt-1">by {claim.approved_by}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        {!currentSheet && (
+          <button
+            onClick={() => setShowSheetModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            data-testid="create-sheet-btn"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Create {monthNames[currentMonth]} Sheet
+          </button>
         )}
       </div>
 
-      {/* New Claim Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-800">New Expense Claim</h2>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <IndianRupee className="text-blue-600" size={20} />
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            <div>
+              <p className="text-xs text-slate-500">Total Claimed ({currentYear})</p>
+              <p className="text-xl font-bold text-slate-800">₹{(summary?.total_claimed || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="text-green-600" size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Total Paid</p>
+              <p className="text-xl font-bold text-green-600">₹{(summary?.total_paid || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Clock className="text-amber-600" size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Pending Approval</p>
+              <p className="text-xl font-bold text-amber-600">₹{(summary?.total_pending || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <div className={`rounded-xl border p-4 ${summary?.balance_due > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${summary?.balance_due > 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
+              <Receipt className={summary?.balance_due > 0 ? 'text-red-600' : 'text-slate-400'} size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Balance Due</p>
+              <p className={`text-xl font-bold ${summary?.balance_due > 0 ? 'text-red-600' : 'text-slate-400'}`}>
+                ₹{(summary?.balance_due || 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <nav className="flex gap-1">
+          {[
+            { id: 'current', label: `Current (${monthNames[currentMonth]})`, icon: FileSpreadsheet },
+            { id: 'history', label: 'All Sheets', icon: Calendar },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Current Month Sheet */}
+      {activeTab === 'current' && (
+        <div className="space-y-4">
+          {currentSheet ? (
+            <>
+              {/* Sheet Header */}
+              <div className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-800">
+                      {currentSheet.month_name} {currentSheet.year} Expense Sheet
+                    </h2>
+                    <p className="text-sm text-slate-500">Sheet No: {currentSheet.sheet_no}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const badge = getStatusBadge(currentSheet.status);
+                      return (
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${badge.bg} ${badge.text}`}>
+                          <badge.icon className="w-4 h-4" />
+                          {currentSheet.status.charAt(0).toUpperCase() + currentSheet.status.slice(1)}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Summary Row */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-3 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="text-xs text-slate-500">Total Expenses</p>
+                    <p className="font-semibold text-slate-800">₹{(currentSheet.total_amount || 0).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Advance Received</p>
+                    <p className="font-semibold text-green-600">₹{(currentSheet.advance_received || 0).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Previous Due</p>
+                    <p className="font-semibold text-amber-600">₹{(currentSheet.previous_due || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="col-span-2 md:col-span-1">
+                    <p className="text-xs text-slate-500">Net Claim Amount</p>
+                    <p className="font-bold text-blue-600 text-lg">₹{(currentSheet.net_claim_amount || 0).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Items</p>
+                    <p className="font-semibold text-slate-800">{currentSheet.item_count || 0}</p>
+                  </div>
+                </div>
+
+                {/* Add Item Button */}
+                {currentSheet.status === 'pending' && (
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => setShowAddItemModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      data-testid="add-expense-item-btn"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Expense Item
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Expense Items Table */}
+              {currentSheet.items && currentSheet.items.length > 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">S.No</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Project/Customer</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Bill Type</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Description</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Place</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">Mode</th>
+                          <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase">Amount</th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">Receipt</th>
+                          {currentSheet.status === 'pending' && (
+                            <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">Action</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {currentSheet.items.map((item, index) => (
+                          <tr key={index} className="hover:bg-slate-50" data-testid={`expense-item-${index}`}>
+                            <td className="px-3 py-3 text-sm text-slate-600">{index + 1}</td>
+                            <td className="px-3 py-3 text-sm text-slate-800">
+                              {new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </td>
+                            <td className="px-3 py-3">
+                              <p className="text-sm font-medium text-slate-800">{item.project_name || '-'}</p>
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">
+                                {item.bill_type}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-slate-600 max-w-[200px] truncate" title={item.description}>
+                              {item.description || '-'}
+                            </td>
+                            <td className="px-3 py-3 text-sm text-slate-600">{item.place || '-'}</td>
+                            <td className="px-3 py-3 text-sm text-slate-600">{item.mode || '-'}</td>
+                            <td className="px-3 py-3 text-sm font-semibold text-slate-800 text-right">
+                              ₹{(item.amount || 0).toLocaleString()}
+                            </td>
+                            <td className="px-3 py-3 text-center">
+                              {item.receipt_url ? (
+                                <a
+                                  href={`${API_URL}${item.receipt_url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 text-xs">No receipt</span>
+                              )}
+                            </td>
+                            {currentSheet.status === 'pending' && (
+                              <td className="px-3 py-3 text-center">
+                                <button
+                                  onClick={() => handleDeleteItem(currentSheet.id, index)}
+                                  className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                  title="Delete item"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-50 border-t-2 border-slate-200">
+                        <tr>
+                          <td colSpan={7} className="px-3 py-3 text-right text-sm font-semibold text-slate-700">
+                            Total:
+                          </td>
+                          <td className="px-3 py-3 text-right text-lg font-bold text-blue-600">
+                            ₹{(currentSheet.total_amount || 0).toLocaleString()}
+                          </td>
+                          <td colSpan={2}></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+                  <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500">No expense items added yet</p>
+                  <p className="text-sm text-slate-400 mt-1">Click "Add Expense Item" to start adding your expenses</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+              <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-600 font-medium">No expense sheet for {monthNames[currentMonth]} {currentYear}</p>
+              <p className="text-sm text-slate-400 mt-1">Create a new expense sheet to start adding your expenses</p>
+              <button
+                onClick={() => setShowSheetModal(true)}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Create Expense Sheet
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* All Sheets History */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          {sheets.length > 0 ? (
+            sheets.map(sheet => (
+              <div key={sheet.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div 
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50"
+                  onClick={() => setExpandedSheet(expandedSheet === sheet.id ? null : sheet.id)}
                 >
-                  <option>Travel</option>
-                  <option>Food</option>
-                  <option>Transport</option>
-                  <option>Accommodation</option>
-                  <option>Communication</option>
-                  <option>Miscellaneous</option>
-                </select>
+                  <div className="flex items-center gap-4">
+                    <FileSpreadsheet className="w-5 h-5 text-slate-400" />
+                    <div>
+                      <h3 className="font-medium text-slate-800">
+                        {sheet.month_name} {sheet.year}
+                      </h3>
+                      <p className="text-xs text-slate-500">Sheet No: {sheet.sheet_no} • {sheet.item_count} items</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm text-slate-500">Net Claim</p>
+                      <p className="font-semibold text-slate-800">₹{(sheet.net_claim_amount || 0).toLocaleString()}</p>
+                    </div>
+                    {(() => {
+                      const badge = getStatusBadge(sheet.status);
+                      return (
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
+                          <badge.icon className="w-3 h-3" />
+                          {sheet.status}
+                        </span>
+                      );
+                    })()}
+                    {expandedSheet === sheet.id ? (
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+                
+                {/* Expanded Details */}
+                {expandedSheet === sheet.id && (
+                  <div className="border-t border-slate-200 p-4 bg-slate-50">
+                    <div className="grid grid-cols-4 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-slate-500">Total Expenses</p>
+                        <p className="font-semibold">₹{(sheet.total_amount || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Advance</p>
+                        <p className="font-semibold text-green-600">₹{(sheet.advance_received || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Previous Due</p>
+                        <p className="font-semibold text-amber-600">₹{(sheet.previous_due || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Submitted</p>
+                        <p className="font-semibold">{new Date(sheet.submitted_at).toLocaleDateString('en-IN')}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Items Preview */}
+                    {sheet.items && sheet.items.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-white">
+                            <tr>
+                              <th className="px-2 py-2 text-left text-xs text-slate-500">Date</th>
+                              <th className="px-2 py-2 text-left text-xs text-slate-500">Project</th>
+                              <th className="px-2 py-2 text-left text-xs text-slate-500">Type</th>
+                              <th className="px-2 py-2 text-left text-xs text-slate-500">Description</th>
+                              <th className="px-2 py-2 text-right text-xs text-slate-500">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sheet.items.slice(0, 5).map((item, idx) => (
+                              <tr key={idx} className="border-t border-slate-100">
+                                <td className="px-2 py-2">{new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                                <td className="px-2 py-2">{item.project_name || '-'}</td>
+                                <td className="px-2 py-2">{item.bill_type}</td>
+                                <td className="px-2 py-2 truncate max-w-[150px]">{item.description}</td>
+                                <td className="px-2 py-2 text-right font-medium">₹{item.amount.toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {sheet.items.length > 5 && (
+                          <p className="text-xs text-slate-500 text-center py-2">
+                            ... and {sheet.items.length - 5} more items
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <input
-                  type="text"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="e.g., Client meeting travel"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                  data-testid="expense-description-input"
-                />
-              </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+              <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">No expense sheets found</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Sheet Modal */}
+      {showSheetModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Create Expense Sheet</h3>
+              <button onClick={() => setShowSheetModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateSheet} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
-                  <input
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Month *</label>
+                  <select
+                    value={sheetForm.month}
+                    onChange={(e) => setSheetForm({ ...sheetForm, month: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
                     required
-                    data-testid="expense-amount-input"
-                  />
+                  >
+                    {monthNames.slice(1).map((name, idx) => (
+                      <option key={idx + 1} value={idx + 1}>{name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Year *</label>
+                  <select
+                    value={sheetForm.year}
+                    onChange={(e) => setSheetForm({ ...sheetForm, year: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
                     required
-                    data-testid="expense-date-input"
-                  />
+                  >
+                    {[currentYear - 1, currentYear, currentYear + 1].map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Advance Received (₹)</label>
+                <input
+                  type="number"
+                  value={sheetForm.advance_received}
+                  onChange={(e) => setSheetForm({ ...sheetForm, advance_received: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Advance Received Date</label>
+                <input
+                  type="date"
+                  value={sheetForm.advance_received_date}
+                  onChange={(e) => setSheetForm({ ...sheetForm, advance_received_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Previous Due (₹)</label>
+                <input
+                  type="number"
+                  value={sheetForm.previous_due}
+                  onChange={(e) => setSheetForm({ ...sheetForm, previous_due: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="Carry forward from previous month"
+                  min="0"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                <textarea
+                  value={sheetForm.remarks}
+                  onChange={(e) => setSheetForm({ ...sheetForm, remarks: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  rows={2}
+                  placeholder="Any additional notes"
+                />
+              </div>
+              
               <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
-                  disabled={submitting}
+                <button 
+                  type="button" 
+                  onClick={() => setShowSheetModal(false)}
+                  className="px-4 py-2 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
                 >
                   Cancel
                 </button>
-                <button
+                <button 
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                   disabled={submitting}
-                  data-testid="expense-submit-btn"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {submitting && <Loader2 size={16} className="animate-spin" />}
-                  Submit Claim
+                  {submitting ? 'Creating...' : 'Create Sheet'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Add Item Modal */}
+      {showAddItemModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold text-slate-900">Add Expense Item</h3>
+              <button onClick={() => setShowAddItemModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddItem} className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    value={itemForm.date}
+                    onChange={(e) => setItemForm({ ...itemForm, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    value={itemForm.amount}
+                    onChange={(e) => setItemForm({ ...itemForm, amount: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    placeholder="0.00"
+                    min="1"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Project/Customer Name *</label>
+                <input
+                  type="text"
+                  value={itemForm.project_name}
+                  onChange={(e) => setItemForm({ ...itemForm, project_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Indospace Polivakkam, Philips Taramani"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Bill Type *</label>
+                <select
+                  value={itemForm.bill_type}
+                  onChange={(e) => setItemForm({ ...itemForm, bill_type: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  required
+                >
+                  {BILL_TYPES.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description *</label>
+                <input
+                  type="text"
+                  value={itemForm.description}
+                  onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Paint, Thinner, Bus fare to site"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Place</label>
+                  <input
+                    type="text"
+                    value={itemForm.place}
+                    onChange={(e) => setItemForm({ ...itemForm, place: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    placeholder="e.g., Chennai, Poonamallee"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Mode</label>
+                  <select
+                    value={itemForm.mode}
+                    onChange={(e) => setItemForm({ ...itemForm, mode: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  >
+                    {PAYMENT_MODES.map(mode => (
+                      <option key={mode} value={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Receipt Upload */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Receipt/Bill Photo</label>
+                <div className="border-2 border-dashed border-slate-200 rounded-lg p-4">
+                  {itemForm.receipt_url ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <span className="text-sm text-green-700">Receipt uploaded</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`${API_URL}${itemForm.receipt_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setItemForm({ ...itemForm, receipt_url: '' })}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center cursor-pointer">
+                      {uploadingReceipt ? (
+                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-8 h-8 text-slate-400 mb-2" />
+                          <span className="text-sm text-slate-500">Click to upload receipt photo</span>
+                          <span className="text-xs text-slate-400 mt-1">JPG, PNG, PDF (Max 5MB)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleReceiptUpload}
+                        className="hidden"
+                        disabled={uploadingReceipt}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddItemModal(false)}
+                  className="px-4 py-2 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={submitting || uploadingReceipt}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {submitting ? 'Adding...' : 'Add Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="text-sm text-blue-800">
+          <p className="font-medium mb-2">📋 How Expense Claims Work</p>
+          <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <li><strong>Create Sheet:</strong> Create a monthly expense sheet to start adding expenses</li>
+            <li><strong>Add Items:</strong> Add each expense with project name, bill type, and amount</li>
+            <li><strong>Attach Receipts:</strong> Upload photos of bills/receipts as proof</li>
+            <li><strong>Submit:</strong> Finance dept. will verify your advance, expenses, and receipts</li>
+            <li><strong>Payment:</strong> Approved claims will be processed for payment</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };
