@@ -854,12 +854,24 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
                 "reason": ot.get("reason", "")
             }
     
-    # 5. Build comprehensive calendar with all data
+    # 5. Fetch holidays from the holidays collection (Admin Hub)
+    holiday_cursor = db.holidays.find({
+        "date": {"$gte": start_date, "$lt": end_date}
+    })
+    
+    public_holidays = {}
+    async for holiday in holiday_cursor:
+        date_str = holiday.get("date")
+        if date_str:
+            public_holidays[date_str] = {
+                "name": holiday.get("name", "Holiday"),
+                "type": holiday.get("type", "company"),  # national, regional, company
+                "day": holiday.get("day", "")
+            }
+    
+    # 6. Build comprehensive calendar with all data
     today = datetime.now().strftime("%Y-%m-%d")
     records = []
-    
-    # Define public holidays (can be fetched from DB later)
-    public_holidays = {}  # Format: {"2026-01-26": "Republic Day", ...}
     
     for day in range(1, days_in_month + 1):
         date_str = f"{year}-{month:02d}-{day:02d}"
