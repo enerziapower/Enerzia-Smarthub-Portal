@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, LogIn, LogOut, CheckCircle, XCircle, AlertCircle,
-  Calendar, ChevronLeft, ChevronRight, Loader2, Download, FileText
+  Calendar, ChevronLeft, ChevronRight, Loader2, Download,
+  Coffee, Plane, Sun, Timer, DollarSign, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { employeeHubAPI } from '../../services/api';
@@ -20,8 +21,13 @@ const EmployeeAttendance = () => {
     holidays: 0,
     permission: 0,
     totalDays: 0,
+    workingDays: 0,
+    effectivePresent: 0,
+    lopDays: 0,
     totalWorkHours: 0,
     totalOvertime: 0,
+    approvedOTHours: 0,
+    approvedOTAmount: 0,
     overtimeDays: 0
   });
   const [officeTimings, setOfficeTimings] = useState({
@@ -36,6 +42,7 @@ const EmployeeAttendance = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
     fetchAttendance();
@@ -51,18 +58,7 @@ const EmployeeAttendance = () => {
       setLoading(true);
       const res = await employeeHubAPI.getAttendance(user.id, currentMonth, currentYear);
       setAttendance(res.data.records || []);
-      setSummary(res.data.summary || {
-        present: 0,
-        absent: 0,
-        halfDays: 0,
-        onLeave: 0,
-        holidays: 0,
-        permission: 0,
-        totalDays: 0,
-        totalWorkHours: 0,
-        totalOvertime: 0,
-        overtimeDays: 0
-      });
+      setSummary(res.data.summary || {});
       if (res.data.officeTimings) {
         setOfficeTimings(res.data.officeTimings);
       }
@@ -150,7 +146,7 @@ const EmployeeAttendance = () => {
     }
   };
 
-  // Generate calendar days
+  // Generate calendar from attendance records
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1).getDay();
   const calendarDays = [];
@@ -160,7 +156,7 @@ const EmployeeAttendance = () => {
     calendarDays.push(null);
   }
   
-  // Add actual days
+  // Add actual days from attendance records
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const record = attendance.find(a => a.date === dateStr);
@@ -175,7 +171,44 @@ const EmployeeAttendance = () => {
       case 'on-leave': return 'bg-blue-500';
       case 'holiday': return 'bg-purple-500';
       case 'permission': return 'bg-cyan-500';
-      default: return 'bg-slate-300';
+      default: return 'bg-slate-200';
+    }
+  };
+
+  const getStatusBg = (status) => {
+    switch (status) {
+      case 'present': return 'bg-green-50 border-green-200';
+      case 'absent': return 'bg-red-50 border-red-200';
+      case 'half-day': return 'bg-amber-50 border-amber-200';
+      case 'on-leave': return 'bg-blue-50 border-blue-200';
+      case 'holiday': return 'bg-purple-50 border-purple-200';
+      case 'permission': return 'bg-cyan-50 border-cyan-200';
+      default: return 'bg-white border-slate-200';
+    }
+  };
+
+  const getStatusIcon = (record) => {
+    if (!record) return null;
+    const status = record.status;
+    const details = record.details || {};
+    
+    // Check for overtime badge
+    if (details.has_overtime) {
+      return <Timer className="w-3 h-3 text-orange-500" />;
+    }
+    
+    // Check for permission badge
+    if (details.has_permission) {
+      return <Coffee className="w-3 h-3 text-cyan-500" />;
+    }
+    
+    switch (status) {
+      case 'present': return <CheckCircle className="w-3 h-3 text-green-600" />;
+      case 'absent': return <XCircle className="w-3 h-3 text-red-600" />;
+      case 'half-day': return <AlertCircle className="w-3 h-3 text-amber-600" />;
+      case 'on-leave': return <Plane className="w-3 h-3 text-blue-600" />;
+      case 'holiday': return <Sun className="w-3 h-3 text-purple-600" />;
+      default: return null;
     }
   };
 
@@ -205,7 +238,7 @@ const EmployeeAttendance = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">My Attendance</h1>
-          <p className="text-slate-500 mt-1">Track your daily attendance and work hours</p>
+          <p className="text-slate-500 mt-1">Check-in, leaves, permissions, overtime - all in one view</p>
         </div>
         <button
           onClick={downloadPDF}
@@ -282,117 +315,130 @@ const EmployeeAttendance = () => {
       </div>
 
       {/* Summary Cards - Row 1: Attendance Status */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="text-green-600" size={20} />
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="text-green-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Present</p>
-              <p className="text-xl font-bold text-green-600">{summary.present}</p>
+              <p className="text-xs text-slate-500">Present</p>
+              <p className="text-lg font-bold text-green-600">{summary.present}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <XCircle className="text-red-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <XCircle className="text-red-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Absent</p>
-              <p className="text-xl font-bold text-red-600">{summary.absent}</p>
+              <p className="text-xs text-slate-500">Absent</p>
+              <p className="text-lg font-bold text-red-600">{summary.absent}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="text-amber-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+              <AlertCircle className="text-amber-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Half Days</p>
-              <p className="text-xl font-bold text-amber-600">{summary.halfDays}</p>
+              <p className="text-xs text-slate-500">Half Days</p>
+              <p className="text-lg font-bold text-amber-600">{summary.halfDays}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Calendar className="text-blue-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Plane className="text-blue-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">On Leave</p>
-              <p className="text-xl font-bold text-blue-600">{summary.onLeave}</p>
+              <p className="text-xs text-slate-500">On Leave</p>
+              <p className="text-lg font-bold text-blue-600">{summary.onLeave}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Calendar className="text-purple-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Sun className="text-purple-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Holidays</p>
-              <p className="text-xl font-bold text-purple-600">{summary.holidays || 0}</p>
+              <p className="text-xs text-slate-500">Holidays</p>
+              <p className="text-lg font-bold text-purple-600">{summary.holidays || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-              <Clock className="text-cyan-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
+              <Coffee className="text-cyan-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Permission</p>
-              <p className="text-xl font-bold text-cyan-600">{summary.permission || 0}</p>
+              <p className="text-xs text-slate-500">Permission</p>
+              <p className="text-lg font-bold text-cyan-600">{summary.permission || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <Clock className="text-slate-600" size={20} />
+        <div className="bg-white rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Timer className="text-orange-600" size={16} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Total Days</p>
-              <p className="text-xl font-bold text-slate-800">{summary.totalDays}</p>
+              <p className="text-xs text-slate-500">OT Days</p>
+              <p className="text-lg font-bold text-orange-600">{summary.overtimeDays || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Summary Cards - Row 2: Work Hours & Overtime (for Payroll) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Cards - Row 2: Work Hours, Overtime & Payroll Impact */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-100 text-sm">Total Work Hours</p>
               <p className="text-2xl font-bold">{summary.totalWorkHours || 0} hrs</p>
             </div>
-            <Clock className="w-10 h-10 text-indigo-200" />
+            <Clock className="w-8 h-8 text-indigo-200" />
           </div>
-          <p className="text-xs text-indigo-200 mt-2">Standard: {officeTimings.standardHours} hrs/day</p>
         </div>
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm">Total Overtime</p>
-              <p className="text-2xl font-bold">{summary.totalOvertime || 0} hrs</p>
+              <p className="text-orange-100 text-sm">Approved OT</p>
+              <p className="text-2xl font-bold">{summary.approvedOTHours || 0} hrs</p>
             </div>
-            <AlertCircle className="w-10 h-10 text-orange-200" />
+            <Timer className="w-8 h-8 text-orange-200" />
           </div>
-          <p className="text-xs text-orange-200 mt-2">{summary.overtimeDays || 0} days with overtime</p>
+          {summary.approvedOTAmount > 0 && (
+            <p className="text-xs text-orange-200 mt-1">₹{summary.approvedOTAmount?.toLocaleString()}</p>
+          )}
         </div>
-        <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-300 text-sm">Office Timings</p>
-              <p className="text-xl font-bold">{officeTimings.startTime} - {officeTimings.endTime}</p>
+              <p className="text-emerald-100 text-sm">Working Days</p>
+              <p className="text-2xl font-bold">{summary.workingDays || 26}</p>
             </div>
-            <Calendar className="w-10 h-10 text-slate-400" />
+            <Calendar className="w-8 h-8 text-emerald-200" />
           </div>
-          <p className="text-xs text-slate-300 mt-2">{officeTimings.standardHours} hours = 1 working day</p>
+          <p className="text-xs text-emerald-200 mt-1">Effective: {summary.effectivePresent || 0} days</p>
+        </div>
+        <div className={`rounded-xl p-4 text-white ${summary.lopDays > 0 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-slate-500 to-slate-600'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${summary.lopDays > 0 ? 'text-red-100' : 'text-slate-300'}`}>LOP Days</p>
+              <p className="text-2xl font-bold">{summary.lopDays || 0}</p>
+            </div>
+            <DollarSign className={`w-8 h-8 ${summary.lopDays > 0 ? 'text-red-200' : 'text-slate-400'}`} />
+          </div>
+          <p className={`text-xs mt-1 ${summary.lopDays > 0 ? 'text-red-200' : 'text-slate-400'}`}>
+            {summary.lopDays > 0 ? 'Will affect salary' : 'No deductions'}
+          </p>
         </div>
       </div>
 
@@ -416,7 +462,7 @@ const EmployeeAttendance = () => {
           {/* Calendar Header */}
           <div className="grid grid-cols-7 gap-2 mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+              <div key={day} className={`text-center text-xs font-medium py-2 ${day === 'Sun' ? 'text-purple-600' : 'text-slate-500'}`}>
                 {day}
               </div>
             ))}
@@ -424,32 +470,72 @@ const EmployeeAttendance = () => {
           
           {/* Calendar Days */}
           <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((item, idx) => (
-              <div
-                key={idx}
-                className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm ${
-                  item ? 'hover:bg-slate-50 cursor-pointer' : ''
-                }`}
-              >
-                {item && (
-                  <>
-                    <span className={`font-medium ${
-                      item.record ? 'text-slate-800' : 'text-slate-400'
-                    }`}>
-                      {item.day}
-                    </span>
-                    {item.record && (
-                      <div className={`w-2 h-2 rounded-full mt-1 ${getStatusColor(item.record.status)}`} />
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
+            {calendarDays.map((item, idx) => {
+              const isSunday = idx % 7 === 0;
+              const record = item?.record;
+              const status = record?.status;
+              const details = record?.details || {};
+              const today = new Date().toISOString().split('T')[0];
+              const isToday = item?.date === today;
+              const isFuture = item?.date > today;
+              
+              return (
+                <div
+                  key={idx}
+                  onClick={() => item && record && setSelectedDay(item)}
+                  className={`min-h-[60px] flex flex-col items-center justify-start p-1 rounded-lg text-sm border transition-all ${
+                    item ? 'cursor-pointer hover:shadow-md' : ''
+                  } ${
+                    isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''
+                  } ${
+                    record ? getStatusBg(status) : (isSunday && !isFuture ? 'bg-purple-50 border-purple-100' : 'bg-white border-slate-100')
+                  }`}
+                  data-testid={item ? `calendar-day-${item.day}` : undefined}
+                >
+                  {item && (
+                    <>
+                      <span className={`font-medium text-xs ${
+                        status ? 'text-slate-700' : (isSunday ? 'text-purple-600' : 'text-slate-400')
+                      }`}>
+                        {item.day}
+                      </span>
+                      
+                      {/* Status indicator */}
+                      {record && (
+                        <div className="flex flex-col items-center mt-0.5">
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+                          
+                          {/* Additional badges */}
+                          <div className="flex gap-0.5 mt-0.5">
+                            {details.has_overtime && (
+                              <span className="text-[8px] bg-orange-500 text-white px-1 rounded">OT</span>
+                            )}
+                            {details.has_permission && (
+                              <span className="text-[8px] bg-cyan-500 text-white px-1 rounded">P</span>
+                            )}
+                            {details.leave_type && (
+                              <span className="text-[8px] bg-blue-500 text-white px-1 rounded truncate max-w-[30px]">
+                                {details.leave_type.substring(0, 2)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Sunday marker for future/no-record days */}
+                      {!record && isSunday && !isFuture && (
+                        <Sun className="w-3 h-3 text-purple-400 mt-1" />
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Legend */}
-        <div className="px-4 pb-4 flex flex-wrap gap-4 text-xs">
+        <div className="px-4 pb-4 flex flex-wrap gap-4 text-xs border-t border-slate-100 pt-3">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
             <span className="text-slate-600">Present</span>
@@ -470,6 +556,128 @@ const EmployeeAttendance = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
             <span className="text-slate-600">Holiday</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[8px] bg-orange-500 text-white px-1 rounded">OT</span>
+            <span className="text-slate-600">Overtime</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[8px] bg-cyan-500 text-white px-1 rounded">P</span>
+            <span className="text-slate-600">Permission</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Day Detail Modal */}
+      {selectedDay && selectedDay.record && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDay(null)}>
+          <div className="bg-white rounded-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {new Date(selectedDay.date).toLocaleDateString('en-IN', { 
+                  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+                })}
+              </h3>
+              <button onClick={() => setSelectedDay(null)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Status */}
+              <div className={`p-3 rounded-lg ${getStatusBg(selectedDay.record.status)}`}>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(selectedDay.record)}
+                  <span className="font-medium">{getStatusLabel(selectedDay.record.status)}</span>
+                </div>
+              </div>
+              
+              {/* Check-in/out times */}
+              {(selectedDay.record.check_in || selectedDay.record.check_out) && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-xs text-slate-500">Check In</p>
+                    <p className="font-semibold text-slate-800">{selectedDay.record.check_in || '-'}</p>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-xs text-slate-500">Check Out</p>
+                    <p className="font-semibold text-slate-800">{selectedDay.record.check_out || '-'}</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Work hours */}
+              {selectedDay.record.work_hours > 0 && (
+                <div className="bg-indigo-50 p-3 rounded-lg">
+                  <p className="text-xs text-indigo-600">Work Hours</p>
+                  <p className="font-semibold text-indigo-800">{selectedDay.record.work_hours} hours</p>
+                </div>
+              )}
+              
+              {/* Leave details */}
+              {selectedDay.record.details?.leave_type && (
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-blue-600">Leave Type</p>
+                  <p className="font-semibold text-blue-800">{selectedDay.record.details.leave_type}</p>
+                  {selectedDay.record.details.reason && (
+                    <p className="text-sm text-blue-600 mt-1">{selectedDay.record.details.reason}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Permission details */}
+              {selectedDay.record.details?.has_permission && (
+                <div className="bg-cyan-50 p-3 rounded-lg">
+                  <p className="text-xs text-cyan-600">Permission</p>
+                  <p className="font-semibold text-cyan-800">
+                    {selectedDay.record.details.permission?.from_time} - {selectedDay.record.details.permission?.to_time}
+                  </p>
+                  {selectedDay.record.details.permission?.reason && (
+                    <p className="text-sm text-cyan-600 mt-1">{selectedDay.record.details.permission.reason}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Overtime details */}
+              {selectedDay.record.details?.has_overtime && (
+                <div className="bg-orange-50 p-3 rounded-lg">
+                  <p className="text-xs text-orange-600">Approved Overtime</p>
+                  <p className="font-semibold text-orange-800">
+                    {selectedDay.record.details.overtime_approved?.hours} hours
+                    {selectedDay.record.details.overtime_approved?.amount > 0 && (
+                      <span className="text-sm ml-2">(₹{selectedDay.record.details.overtime_approved.amount.toLocaleString()})</span>
+                    )}
+                  </p>
+                  {selectedDay.record.details.overtime_approved?.reason && (
+                    <p className="text-sm text-orange-600 mt-1">{selectedDay.record.details.overtime_approved.reason}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Holiday details */}
+              {selectedDay.record.details?.holiday_type && (
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <p className="text-xs text-purple-600">Holiday</p>
+                  <p className="font-semibold text-purple-800">
+                    {selectedDay.record.details.name || (selectedDay.record.details.holiday_type === 'weekly_off' ? 'Weekly Off' : 'Public Holiday')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="text-sm text-blue-800">
+          <p className="font-medium mb-2">📅 How My Attendance Works</p>
+          <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <li><strong>Check In/Out:</strong> Mark your daily attendance from this page</li>
+            <li><strong>Leaves:</strong> Approved leaves automatically appear on the calendar</li>
+            <li><strong>Permissions:</strong> Approved permissions show with a "P" badge</li>
+            <li><strong>Overtime:</strong> Approved OT shows with an "OT" badge and amount</li>
+            <li><strong>Payroll:</strong> All data flows to HR for salary calculation (LOP, OT pay)</li>
+          </ul>
         </div>
       </div>
     </div>
