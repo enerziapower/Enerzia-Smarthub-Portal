@@ -1177,12 +1177,22 @@ async def create_order(data: OrderCreate):
     if existing:
         raise HTTPException(status_code=400, detail=f"Order with PO Number '{order_no}' already exists")
     
-    # If linked to a quotation, get the quotation number
+    # If linked to a quotation, get the quotation number and customer_id
     quotation_no = None
+    customer_id = data.customer_id
     if data.quotation_id:
-        quotation = await db.sales_quotations.find_one({"id": data.quotation_id}, {"_id": 0, "quotation_no": 1})
+        quotation = await db.sales_quotations.find_one({"id": data.quotation_id}, {"_id": 0, "quotation_no": 1, "customer_id": 1})
         if quotation:
             quotation_no = quotation.get("quotation_no")
+            # Inherit customer_id from quotation if not provided
+            if not customer_id:
+                customer_id = quotation.get("customer_id")
+    
+    # If still no customer_id, try to get it from the enquiry
+    if not customer_id and data.enquiry_id:
+        enquiry = await db.sales_enquiries.find_one({"id": data.enquiry_id}, {"_id": 0, "customer_id": 1})
+        if enquiry:
+            customer_id = enquiry.get("customer_id")
     
     order = {
         "id": str(uuid.uuid4()),
@@ -1190,6 +1200,7 @@ async def create_order(data: OrderCreate):
         "quotation_id": data.quotation_id,
         "quotation_no": quotation_no,  # Store the quotation number for display
         "enquiry_id": data.enquiry_id,
+        "customer_id": customer_id,  # Link to customer record
         "customer_name": data.customer_name,
         "customer_address": data.customer_address,
         "customer_gst": data.customer_gst,
