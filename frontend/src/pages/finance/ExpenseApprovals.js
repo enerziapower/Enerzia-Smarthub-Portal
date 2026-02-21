@@ -783,7 +783,7 @@ const ExpenseApprovals = () => {
         </div>
       )}
 
-      {/* Info Box */}
+      {/* Info Box - Expenses */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="text-sm text-blue-800">
           <p className="font-medium mb-2">📋 Expense Approval Workflow</p>
@@ -795,6 +795,466 @@ const ExpenseApprovals = () => {
           </ul>
         </div>
       </div>
+        </>
+      )}
+
+      {/* Advance Management Tab Content */}
+      {mainTab === 'advances' && (
+        <>
+          {/* Advance Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all ${advanceFilter === 'pending' ? 'border-amber-400 bg-amber-50' : 'border-slate-200'}`} onClick={() => setAdvanceFilter('pending')}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Pending Requests</p>
+                  <p className="text-xl font-bold text-slate-800">{advanceStats.pending_count || 0}</p>
+                  <p className="text-sm text-amber-600">₹{(advanceStats.pending_amount || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <div className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all ${advanceFilter === 'approved' ? 'border-blue-400 bg-blue-50' : 'border-slate-200'}`} onClick={() => setAdvanceFilter('approved')}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Check className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Approved (Unpaid)</p>
+                  <p className="text-xl font-bold text-slate-800">{advanceStats.approved_count || 0}</p>
+                  <p className="text-sm text-blue-600">₹{(advanceStats.approved_amount || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <div className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all ${advanceFilter === 'paid' ? 'border-green-400 bg-green-50' : 'border-slate-200'}`} onClick={() => setAdvanceFilter('paid')}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Paid</p>
+                  <p className="text-xl font-bold text-slate-800">{advanceStats.paid_count || 0}</p>
+                  <p className="text-sm text-green-600">₹{(advanceStats.paid_amount || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <div className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all ${advanceFilter === 'all' ? 'border-purple-400 bg-purple-50' : 'border-slate-200'}`} onClick={() => setAdvanceFilter('all')}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">All Requests</p>
+                  <p className="text-xl font-bold text-slate-800">{advanceRequests.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Advance Requests List */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-800">Advance Requests</h3>
+            </div>
+            
+            {advanceRequests.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                <Wallet className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                <p>No advance requests found</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {advanceRequests.map((request) => (
+                  <div key={request.id} className="p-4 hover:bg-slate-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">{request.user_name}</p>
+                          <p className="text-sm text-slate-500">{request.department} • {request.emp_id}</p>
+                          <p className="text-sm text-slate-600 mt-1">{request.purpose}</p>
+                          {request.project_name && (
+                            <p className="text-xs text-slate-500">Project: {request.project_name}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-slate-800">₹{(request.amount || 0).toLocaleString()}</p>
+                        <p className="text-sm text-slate-500">
+                          {new Date(request.requested_at).toLocaleDateString('en-IN')}
+                        </p>
+                        <span className={`inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full ${
+                          request.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                          request.status === 'approved' ? 'bg-blue-100 text-blue-700' :
+                          request.status === 'paid' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-2 mt-3">
+                      {request.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleApproveAdvance(request.id)}
+                            disabled={processingId === request.id}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {processingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectAdvance(request.id, 'Request not approved')}
+                            disabled={processingId === request.id}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {request.status === 'approved' && (
+                        <button
+                          onClick={() => openAdvancePaymentModal(request)}
+                          disabled={processingId === request.id}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          Record Payment
+                        </button>
+                      )}
+                      {request.status === 'paid' && (
+                        <div className="text-sm text-slate-500">
+                          Paid on {request.payment_date ? new Date(request.payment_date).toLocaleDateString('en-IN') : '-'} 
+                          {request.payment_reference && ` • Ref: ${request.payment_reference}`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Employee Advance Balances */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800">Employee Advance Balances</h3>
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <Users className="w-4 h-4" />
+                {advanceBalances.filter(b => b.running_balance > 0).length} employees with outstanding advances
+              </div>
+            </div>
+            
+            {advanceBalances.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                <p>No advance balances found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Employee</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Total Advances</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Total Used</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Running Balance</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Last Advance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {advanceBalances.map((balance) => (
+                      <tr key={balance.user_id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-slate-800">{balance.user_name}</p>
+                          <p className="text-sm text-slate-500">{balance.department}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-green-600">
+                          ₹{(balance.total_advances || 0).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-red-600">
+                          ₹{(balance.total_used || 0).toLocaleString()}
+                        </td>
+                        <td className={`px-4 py-3 text-right font-bold ${balance.running_balance > 0 ? 'text-purple-600' : 'text-slate-400'}`}>
+                          ₹{(balance.running_balance || 0).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-slate-500">
+                          {balance.last_advance_date ? new Date(balance.last_advance_date).toLocaleDateString('en-IN') : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Info Box - Advances */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="text-sm text-purple-800">
+              <p className="font-medium mb-2">💰 Advance Management Workflow</p>
+              <ul className="list-disc list-inside space-y-1 text-purple-700">
+                <li><strong>Request:</strong> Employee requests advance from their Expense Claims page</li>
+                <li><strong>Approve:</strong> Finance reviews and approves valid requests</li>
+                <li><strong>Pay:</strong> Record payment details (mode, reference, date)</li>
+                <li><strong>Track:</strong> Balance auto-updates when expenses are settled</li>
+                <li><strong>Direct Payment:</strong> Use "Record Direct Advance" for walk-in/urgent cases</li>
+              </ul>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Advance Payment Modal */}
+      {showAdvancePaymentModal && selectedAdvance && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Record Advance Payment</h3>
+              <button onClick={() => setShowAdvancePaymentModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                <p className="text-sm text-purple-800">
+                  <strong>{selectedAdvance.user_name}</strong> • {selectedAdvance.department}
+                </p>
+                <p className="text-sm text-purple-700 mt-1">{selectedAdvance.purpose}</p>
+                <p className="text-lg font-bold text-purple-800 mt-2">
+                  Requested: ₹{(selectedAdvance.amount || 0).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Amount Paid (₹) *</label>
+                <input
+                  type="number"
+                  value={advancePaymentForm.paid_amount}
+                  onChange={(e) => setAdvancePaymentForm({ ...advancePaymentForm, paid_amount: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Payment Date *</label>
+                <input
+                  type="date"
+                  value={advancePaymentForm.payment_date}
+                  onChange={(e) => setAdvancePaymentForm({ ...advancePaymentForm, payment_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Payment Mode *</label>
+                <select
+                  value={advancePaymentForm.payment_mode}
+                  onChange={(e) => setAdvancePaymentForm({ ...advancePaymentForm, payment_mode: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                >
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cheque">Cheque</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Reference/Transaction ID</label>
+                <input
+                  type="text"
+                  value={advancePaymentForm.payment_reference}
+                  onChange={(e) => setAdvancePaymentForm({ ...advancePaymentForm, payment_reference: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., TXN123456"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                <textarea
+                  value={advancePaymentForm.remarks}
+                  onChange={(e) => setAdvancePaymentForm({ ...advancePaymentForm, remarks: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  rows={2}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t border-slate-200">
+              <button
+                onClick={() => setShowAdvancePaymentModal(false)}
+                className="px-4 py-2 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePayAdvance}
+                disabled={processingId}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {processingId ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Record Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Advance Payment Modal */}
+      {showDirectAdvanceModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Record Direct Advance Payment</h3>
+              <button onClick={() => setShowDirectAdvanceModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleDirectAdvancePayment} className="p-4 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-800">
+                  <strong>Direct Advance:</strong> Use this for urgent/walk-in cases where employee needs advance immediately without prior request.
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Employee *</label>
+                <select
+                  value={directAdvanceForm.user_id}
+                  onChange={handleEmployeeSelect}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  required
+                >
+                  <option value="">-- Select Employee --</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name || emp.email} ({emp.department || 'No Dept'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {directAdvanceForm.user_id && (
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-500">Employee:</span> {directAdvanceForm.user_name}
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <span className="text-slate-500">Department:</span> {directAdvanceForm.department || 'N/A'}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    value={directAdvanceForm.amount}
+                    onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, amount: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    placeholder="Enter amount"
+                    min="100"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Date *</label>
+                  <input
+                    type="date"
+                    value={directAdvanceForm.payment_date}
+                    onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, payment_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Purpose *</label>
+                <input
+                  type="text"
+                  value={directAdvanceForm.purpose}
+                  onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, purpose: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Site visit expenses, Material purchase"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
+                <input
+                  type="text"
+                  value={directAdvanceForm.project_name}
+                  onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, project_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Indospace Polivakkam"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Mode *</label>
+                  <select
+                    value={directAdvanceForm.payment_mode}
+                    onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, payment_mode: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Reference/TXN ID</label>
+                  <input
+                    type="text"
+                    value={directAdvanceForm.payment_reference}
+                    onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, payment_reference: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    placeholder="e.g., TXN123456"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                <textarea
+                  value={directAdvanceForm.remarks}
+                  onChange={(e) => setDirectAdvanceForm({ ...directAdvanceForm, remarks: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  rows={2}
+                  placeholder="Any additional notes"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectAdvanceModal(false)}
+                  className="px-4 py-2 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={processingId === 'direct' || !directAdvanceForm.user_id}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {processingId === 'direct' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDownCircle className="w-4 h-4" />}
+                  Record Payment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
