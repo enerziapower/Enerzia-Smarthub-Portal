@@ -94,11 +94,40 @@ class LeaveRequestInDB(LeaveRequest):
     applied_on: str
 
 
+# ============= EXPENSE CLAIMS - Monthly Project Expense Sheet =============
+# Based on the company's Excel expense sheet format
+# Flow: Employee submits monthly expenses → Finance verifies → Payment processed
+
+class ExpenseItem(BaseModel):
+    """Individual expense line item"""
+    date: str  # Date of expense
+    project_name: str  # Project/Customer name
+    bill_type: str  # Type of expense (Travel, Food, Materials, etc.)
+    description: str  # Detailed description
+    amount: float  # Amount in INR
+    place: Optional[str] = None  # Place of expense
+    mode: Optional[str] = None  # Payment mode (Cash, UPI, Card, etc.)
+    receipt_url: Optional[str] = None  # Receipt/document attachment
+
+
+class ExpenseSheet(BaseModel):
+    """Monthly expense sheet submission"""
+    month: int  # 1-12
+    year: int
+    items: List[ExpenseItem] = []
+    advance_received: float = 0  # Advance amount received
+    advance_received_date: Optional[str] = None
+    previous_due: float = 0  # Carry forward from previous sheet
+    remarks: Optional[str] = None
+
+
 class ExpenseClaim(BaseModel):
+    """Legacy single expense claim - kept for backward compatibility"""
     category: str  # Travel, Food, Transport, Accommodation, Communication, Miscellaneous
     description: str
     amount: float
     date: str
+    project_name: Optional[str] = None
     receipt_url: Optional[str] = None
 
 
