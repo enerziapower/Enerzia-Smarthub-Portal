@@ -739,8 +739,9 @@ async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str
         "previous_due": sheet.previous_due,
         "net_claim_amount": net_claim,
         "remarks": sheet.remarks,
-        "status": "pending",  # pending, verified, approved, rejected, paid
-        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "status": "draft",  # draft, pending, verified, approved, rejected, paid
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "submitted_at": None,
         "verified_by": None,
         "verified_at": None,
         "approved_by": None,
@@ -753,7 +754,7 @@ async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str
     
     await db.expense_sheets.insert_one(doc)
     doc.pop("_id", None)
-    return {"message": "Expense sheet submitted successfully", "sheet": doc}
+    return {"message": "Expense sheet created successfully", "sheet": doc}
 
 
 @router.put("/expense-sheets/{sheet_id}")
