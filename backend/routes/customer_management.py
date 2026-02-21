@@ -876,3 +876,29 @@ async def get_customers_with_analytics(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/customers-simple")
+async def get_customers_simple(
+    search: Optional[str] = None,
+    limit: int = 1000
+):
+    """Get simple customer list without heavy analytics (for dropdowns and lists)"""
+    try:
+        query = {"customer_type": "domestic"}
+        if search:
+            query["name"] = Regex(re.escape(search), "i")
+        
+        customers = await db.clients.find(
+            query, 
+            {"_id": 0, "id": 1, "name": 1, "contact_person": 1, "email": 1, "phone": 1, "address": 1, "gst_number": 1}
+        ).sort("name", 1).limit(limit).to_list(limit)
+        
+        total = await db.clients.count_documents(query)
+        
+        return {
+            "customers": customers,
+            "total": total
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
