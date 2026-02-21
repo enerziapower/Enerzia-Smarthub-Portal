@@ -289,6 +289,71 @@ async def get_customer_360(customer_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/customer-by-id/{customer_id}/360")
+async def get_customer_360_by_id(customer_id: str):
+    """Get complete 360° view of a customer by their ID"""
+    try:
+        # Find customer details by ID
+        customer = await db.clients.find_one(
+            {"id": customer_id},
+            {"_id": 0}
+        )
+        
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        customer_name = customer.get("name", "")
+        
+        # Get all enquiries by customer_id
+        enquiries = await db.sales_enquiries.find(
+            {"customer_id": customer_id},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        
+        # Get all quotations by customer_id
+        quotations = await db.sales_quotations.find(
+            {"customer_id": customer_id},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        
+        # Get all orders by customer_id
+        orders = await db.sales_orders.find(
+            {"customer_id": customer_id},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        
+        # Calculate metrics
+        total_enquiry_value = sum(e.get("value", 0) or 0 for e in enquiries)
+        total_quoted_value = sum(q.get("total_amount", 0) or 0 for q in quotations)
+        total_order_value = sum(o.get("total_amount", 0) or 0 for o in orders)
+        
+        # Calculate conversion rates
+        enquiry_to_quote_rate = (len(quotations) / len(enquiries) * 100) if enquiries else 0
+        quote_to_order_rate = (len(orders) / len(quotations) * 100) if quotations else 0
+        
+        return {
+            "customer": customer,
+            "customer_id": customer_id,
+            "summary": {
+                "total_enquiries": len(enquiries),
+                "total_quotations": len(quotations),
+                "total_orders": len(orders),
+                "total_enquiry_value": total_enquiry_value,
+                "total_quoted_value": total_quoted_value,
+                "total_order_value": total_order_value,
+                "enquiry_to_quote_rate": round(enquiry_to_quote_rate, 1),
+                "quote_to_order_rate": round(quote_to_order_rate, 1)
+            },
+            "enquiries": enquiries,
+            "quotations": quotations,
+            "orders": orders
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============== ENQUIRY ANALYSIS ==============
 
 @router.get("/enquiry-analysis")
