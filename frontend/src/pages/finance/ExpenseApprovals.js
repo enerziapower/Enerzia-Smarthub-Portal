@@ -93,6 +93,125 @@ const ExpenseApprovals = () => {
     }
   };
 
+  const fetchAdvanceRequests = async () => {
+    try {
+      setLoading(true);
+      const params = advanceFilter !== 'all' ? `?status=${advanceFilter}` : '';
+      const res = await api.get(`/finance/advance-requests${params}`);
+      setAdvanceRequests(res.data.requests || []);
+      setAdvanceStats(res.data.stats || {});
+    } catch (error) {
+      console.error('Error fetching advance requests:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAdvanceBalances = async () => {
+    try {
+      const res = await api.get('/finance/advances/balances');
+      setAdvanceBalances(res.data.balances || []);
+    } catch (error) {
+      console.error('Error fetching advance balances:', error);
+    }
+  };
+
+  const handleApproveAdvance = async (requestId) => {
+    try {
+      setProcessingId(requestId);
+      await api.put(`/finance/advance-requests/${requestId}/approve?approved_by=${encodeURIComponent(user?.name || 'Finance')}`);
+      toast.success('Advance request approved. Please record payment details.');
+      fetchAdvanceRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to approve');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleRejectAdvance = async (requestId, reason) => {
+    try {
+      setProcessingId(requestId);
+      await api.put(`/finance/advance-requests/${requestId}/reject?rejected_by=${encodeURIComponent(user?.name || 'Finance')}&reason=${encodeURIComponent(reason || 'Request rejected')}`);
+      toast.success('Advance request rejected');
+      fetchAdvanceRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to reject');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handlePayAdvance = async () => {
+    if (!selectedAdvance) return;
+    try {
+      setProcessingId(selectedAdvance.id);
+      await api.put(
+        `/finance/advance-requests/${selectedAdvance.id}/pay?paid_by=${encodeURIComponent(user?.name || 'Finance')}`,
+        advancePaymentForm
+      );
+      toast.success('Advance payment recorded');
+      setShowAdvancePaymentModal(false);
+      setSelectedAdvance(null);
+      fetchAdvanceRequests();
+      fetchAdvanceBalances();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to record payment');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDirectAdvancePayment = async (e) => {
+    e.preventDefault();
+    try {
+      setProcessingId('direct');
+      await api.post(
+        `/finance/advances/direct?paid_by=${encodeURIComponent(user?.name || 'Finance')}`,
+        directAdvanceForm
+      );
+      toast.success('Direct advance payment recorded');
+      setShowDirectAdvanceModal(false);
+      setDirectAdvanceForm({
+        user_id: '', user_name: '', emp_id: '', department: '',
+        amount: '', purpose: '', project_name: '',
+        payment_date: new Date().toISOString().split('T')[0],
+        payment_mode: 'Cash', payment_reference: '', remarks: ''
+      });
+      fetchAdvanceRequests();
+      fetchAdvanceBalances();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to record payment');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const openAdvancePaymentModal = (advance) => {
+    setSelectedAdvance(advance);
+    setAdvancePaymentForm({
+      paid_amount: advance.amount || 0,
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_mode: 'Bank Transfer',
+      payment_reference: '',
+      remarks: ''
+    });
+    setShowAdvancePaymentModal(true);
+  };
+
+  const handleEmployeeSelect = (e) => {
+    const emp = employees.find(em => em.id === e.target.value);
+    if (emp) {
+      setDirectAdvanceForm({
+        ...directAdvanceForm,
+        user_id: emp.id,
+        user_name: emp.name || emp.email,
+        emp_id: emp.emp_id || emp.id,
+        department: emp.department || ''
+      });
+    }
+  };
+
   const handleVerify = async (sheetId) => {
     try {
       setProcessingId(sheetId);
