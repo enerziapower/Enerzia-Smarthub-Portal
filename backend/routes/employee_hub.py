@@ -5,9 +5,10 @@ Includes: Overtime Requests, Permission Requests, Transport Requests, Leave Mana
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 import os
+import calendar
 
 router = APIRouter(prefix="/api/employee", tags=["Employee Hub"])
 
