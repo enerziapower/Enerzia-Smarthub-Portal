@@ -517,12 +517,13 @@ const OvertimeManagement = () => {
         <div className="flex items-start gap-3">
           <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Overtime → Payroll Flow</p>
+            <p className="font-medium mb-1">OT Rate Calculation Formula</p>
             <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li><strong>Employee Request:</strong> Employees submit OT requests from their workspace</li>
-              <li><strong>HR Approval:</strong> Review and approve/reject requests, adjust rate if needed</li>
-              <li><strong>Payroll:</strong> Approved OT is automatically added to the employee's salary</li>
+              <li><strong>Hourly Rate:</strong> Gross Salary ÷ 208 (26 days × 8 hrs/day)</li>
+              <li><strong>OT Rate:</strong> Hourly Rate × 2 (Standard Multiplier)</li>
+              <li><strong>Total OT Pay:</strong> OT Rate × Hours Worked</li>
             </ul>
+            <p className="mt-2 text-xs text-blue-600 italic">Example: ₹30,000 ÷ 208 × 2 = ₹288.46/hour OT rate</p>
           </div>
         </div>
       </div>
@@ -530,7 +531,7 @@ const OvertimeManagement = () => {
       {/* Add/Edit Overtime Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md">
+          <div className="bg-white rounded-xl w-full max-w-lg">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900">
                 {editingRecord ? 'Edit Overtime Record' : 'Add Overtime (HR Entry)'}
@@ -545,7 +546,7 @@ const OvertimeManagement = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Employee *</label>
                 <select
                   value={formData.emp_id}
-                  onChange={(e) => setFormData({...formData, emp_id: e.target.value})}
+                  onChange={(e) => handleEmployeeChange(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg"
                   required
                   disabled={editingRecord}
@@ -554,11 +555,39 @@ const OvertimeManagement = () => {
                   <option value="">Select Employee</option>
                   {employees.map(emp => (
                     <option key={emp.emp_id} value={emp.emp_id}>
-                      {emp.name} ({emp.emp_id})
+                      {emp.name} ({emp.emp_id}) - ₹{(emp.gross_salary || 0).toLocaleString()}
                     </option>
                   ))}
                 </select>
               </div>
+
+              {/* OT Rate Calculation Display */}
+              {formData.emp_id && (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-medium text-slate-600 uppercase">Auto-Calculated OT Rate</p>
+                  {loadingRate ? (
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Calculating...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-slate-500">Gross Salary</p>
+                        <p className="font-semibold text-slate-800">₹{(formData.gross_salary || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Hourly Rate</p>
+                        <p className="font-semibold text-slate-800">₹{(formData.hourly_rate || 0).toFixed(2)}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-slate-500">OT Rate (2× Hourly)</p>
+                        <p className="font-bold text-green-600 text-lg">₹{(formData.rate_per_hour || 0).toFixed(2)}/hr</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
@@ -589,24 +618,33 @@ const OvertimeManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Rate/Hour (₹)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Rate/Hour (₹) *</label>
                   <input
                     type="number"
                     value={formData.rate_per_hour}
-                    onChange={(e) => setFormData({...formData, rate_per_hour: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                    onChange={(e) => setFormData({...formData, rate_per_hour: parseFloat(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50"
                     min="0"
+                    step="0.01"
                     data-testid="rate-input"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Auto-calculated from salary (editable)</p>
                 </div>
               </div>
 
-              {formData.hours && formData.rate_per_hour && (
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    <span className="font-medium">Total Amount: </span>
-                    ₹{(parseFloat(formData.hours || 0) * parseFloat(formData.rate_per_hour || 0)).toLocaleString()}
-                  </p>
+              {formData.hours && formData.rate_per_hour > 0 && (
+                <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-green-600 uppercase font-medium">Total OT Amount</p>
+                      <p className="text-sm text-green-700">
+                        {formData.hours} hrs × ₹{formData.rate_per_hour.toFixed(2)} = 
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-green-700">
+                      ₹{(parseFloat(formData.hours || 0) * parseFloat(formData.rate_per_hour || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -632,7 +670,8 @@ const OvertimeManagement = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  disabled={loadingRate || !formData.rate_per_hour}
                   data-testid="submit-overtime-btn"
                 >
                   {editingRecord ? 'Update' : 'Add'} Overtime
