@@ -1026,18 +1026,32 @@ async def get_overtime_records(
 
 @router.post("/overtime")
 async def create_overtime(overtime: OvertimeCreate):
-    """Create new overtime record"""
-    # Get employee info
+    """Create new overtime record with auto-calculated rate from salary"""
+    # Get employee info including salary for OT rate calculation
     employee = await db.hr_employees.find_one(
         {"$or": [{"emp_id": overtime.emp_id}, {"id": overtime.emp_id}]},
-        {"_id": 0, "emp_id": 1, "name": 1, "department": 1}
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1, "gross_salary": 1, "salary": 1}
     )
     
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
-    # Calculate amount
-    amount = overtime.amount or (overtime.hours * overtime.rate_per_hour)
+    # Get gross salary
+    gross_salary = employee.get("gross_salary", 0)
+    if not gross_salary and employee.get("salary"):
+        gross_salary = calculate_gross_salary(employee["salary"])
+    
+    # Calculate OT rate from salary if not provided
+    if overtime.rate_per_hour is None or overtime.rate_per_hour <= 0:
+        rate_per_hour = calculate_ot_rate(gross_salary)
+    else:
+        rate_per_hour = overtime.rate_per_hour
+    
+    # Calculate amount: OT Rate × Hours
+    amount = overtime.amount or (overtime.hours * rate_per_hour)
+    
+    # Calculate hourly rate for reference
+    hourly_rate = round(gross_salary / TOTAL_WORKING_HOURS_PER_MONTH, 2) if gross_salary else 0
     
     doc = {
         "id": str(uuid.uuid4()),
@@ -1046,8 +1060,11 @@ async def create_overtime(overtime: OvertimeCreate):
         "department": employee.get("department", ""),
         "date": overtime.date,
         "hours": overtime.hours,
-        "rate_per_hour": overtime.rate_per_hour,
-        "amount": amount,
+        "gross_salary": gross_salary,
+        "hourly_rate": hourly_rate,
+        "ot_multiplier": OT_MULTIPLIER,
+        "rate_per_hour": rate_per_hour,
+        "amount": round(amount, 2),
         "reason": overtime.reason,
         "status": "pending",  # pending, approved, rejected
         "created_at": datetime.now(timezone.utc).isoformat()
