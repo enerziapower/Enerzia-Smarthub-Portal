@@ -775,7 +775,6 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
         end_date = f"{year}-{month + 1:02d}-01"
     
     # Get number of days in month
-    import calendar
     days_in_month = calendar.monthrange(year, month)[1]
     
     # 1. Fetch attendance records (check-in/out)
