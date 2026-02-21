@@ -866,8 +866,8 @@ async def delete_expense_item(sheet_id: str, item_index: int, user_id: str):
     if existing.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to edit this sheet")
     
-    if existing.get("status") not in ["pending", "rejected"]:
-        raise HTTPException(status_code=400, detail="Cannot delete items from verified/approved sheet")
+    if existing.get("status") not in ["draft", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot delete items from submitted/approved sheet")
     
     items = existing.get("items", [])
     if item_index < 0 or item_index >= len(items):
