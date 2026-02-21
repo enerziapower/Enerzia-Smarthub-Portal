@@ -117,9 +117,62 @@ const ExpenseClaims = () => {
     }
   }, [user, currentMonth, currentYear]);
 
+  const fetchAdvanceBalance = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await api.get(`/employee/advance-balance/${user.id}`);
+      setAdvanceBalance(res.data);
+    } catch (error) {
+      console.error('Error fetching advance balance:', error);
+    }
+  }, [user]);
+
+  const fetchAdvanceRequests = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await api.get(`/employee/advance-requests?user_id=${user.id}`);
+      setAdvanceRequests(res.data.requests || []);
+    } catch (error) {
+      console.error('Error fetching advance requests:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchSheets();
-  }, [fetchSheets]);
+    fetchAdvanceBalance();
+    fetchAdvanceRequests();
+  }, [fetchSheets, fetchAdvanceBalance, fetchAdvanceRequests]);
+
+  const handleRequestAdvance = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await api.post(
+        `/employee/advance-requests?user_id=${user.id}&user_name=${encodeURIComponent(user.name || 'User')}&department=${encodeURIComponent(user.department || 'Unknown')}&emp_id=${user.emp_id || user.id}`,
+        advanceForm
+      );
+      toast.success('Advance request submitted to Finance');
+      setShowAdvanceRequestModal(false);
+      setAdvanceForm({ amount: '', purpose: '', project_name: '', remarks: '' });
+      fetchAdvanceRequests();
+      fetchAdvanceBalance();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to submit advance request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleWithdrawAdvanceRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to withdraw this advance request?')) return;
+    try {
+      await api.delete(`/employee/advance-requests/${requestId}?user_id=${user.id}`);
+      toast.success('Advance request withdrawn');
+      fetchAdvanceRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to withdraw request');
+    }
+  };
 
   const handleCreateSheet = async (e) => {
     e.preventDefault();
