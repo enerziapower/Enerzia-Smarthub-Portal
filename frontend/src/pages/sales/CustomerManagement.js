@@ -961,12 +961,12 @@ const CustomersTab = ({ customers, searchTerm, setSearchTerm, formatCurrency, on
 
 // ============== CUSTOMER 360 MODAL ==============
 const Customer360Modal = ({ data, customerName, onClose, formatCurrency }) => {
-  const { customer, metrics, status_breakdown, recent_enquiries } = data;
+  const { customer, metrics, status_breakdown, recent_enquiries, recent_quotations, recent_orders } = data;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between">
+      <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10">
           <div>
             <h3 className="text-lg font-bold text-slate-900">{customerName}</h3>
             <p className="text-sm text-slate-500">Customer 360° View</p>
@@ -996,75 +996,63 @@ const Customer360Modal = ({ data, customerName, onClose, formatCurrency }) => {
                   <span className="text-sm">{customer.email}</span>
                 </div>
               )}
-              {(customer.location || customer.city) && (
+              {(customer.location || customer.city || customer.address) && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm">{customer.location || customer.city}</span>
+                  <span className="text-sm truncate">{customer.location || customer.city || customer.address}</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {/* Pipeline Summary */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white">
+              <Target className="w-8 h-8 opacity-80 mb-2" />
+              <p className="text-blue-100 text-sm">Enquiries</p>
+              <p className="text-3xl font-bold">{metrics?.total_enquiries || 0}</p>
+              <p className="text-blue-200 text-sm mt-1">{formatCurrency(metrics?.total_enquiry_value || 0)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white">
+              <DollarSign className="w-8 h-8 opacity-80 mb-2" />
+              <p className="text-purple-100 text-sm">Quotations</p>
+              <p className="text-3xl font-bold">{metrics?.total_quotations || 0}</p>
+              <p className="text-purple-200 text-sm mt-1">{formatCurrency(metrics?.total_quoted_value || 0)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white">
+              <TrendingUp className="w-8 h-8 opacity-80 mb-2" />
+              <p className="text-green-100 text-sm">Orders</p>
+              <p className="text-3xl font-bold">{metrics?.total_orders || 0}</p>
+              <p className="text-green-200 text-sm mt-1">{formatCurrency(metrics?.total_order_value || 0)}</p>
+            </div>
+          </div>
+
+          {/* Conversion Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{metrics.total_enquiries}</p>
-              <p className="text-xs text-slate-500">Total Enquiries</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{metrics.won_count}</p>
-              <p className="text-xs text-slate-500">Won</p>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{metrics.pending_count}</p>
-              <p className="text-xs text-slate-500">Pending</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">{metrics.win_rate}%</p>
+              <p className="text-2xl font-bold text-blue-600">{metrics?.win_rate || 0}%</p>
               <p className="text-xs text-slate-500">Win Rate</p>
             </div>
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-purple-600">{metrics?.quote_to_order_rate || 0}%</p>
+              <p className="text-xs text-slate-500">Quote to Order</p>
+            </div>
             <div className="bg-amber-50 rounded-lg p-4 text-center">
-              <p className="text-xl font-bold text-amber-600">{formatCurrency(metrics.avg_order_value)}</p>
-              <p className="text-xs text-slate-500">Avg Order</p>
+              <p className="text-xl font-bold text-amber-600">{formatCurrency(metrics?.avg_order_value || 0)}</p>
+              <p className="text-xs text-slate-500">Avg Order Value</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{metrics?.paid_orders || 0}</p>
+              <p className="text-xs text-slate-500">Paid Orders</p>
             </div>
           </div>
-
-          {/* Value Summary */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-slate-900 text-white rounded-lg p-5">
-              <p className="text-slate-300 text-sm">Total Business Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(metrics.total_value)}</p>
-            </div>
-            <div className="bg-green-600 text-white rounded-lg p-5">
-              <p className="text-green-100 text-sm">Won Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(metrics.won_value)}</p>
-            </div>
-            <div className="bg-yellow-500 text-white rounded-lg p-5">
-              <p className="text-yellow-100 text-sm">Pending Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(metrics.pending_value)}</p>
-            </div>
-          </div>
-
-          {/* Status Breakdown */}
-          {status_breakdown && Object.keys(status_breakdown).length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <h4 className="font-semibold text-slate-800 mb-3">Enquiry Status Breakdown</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {Object.entries(status_breakdown).map(([status, data]) => (
-                  <div key={status} className="p-2 bg-slate-50 rounded text-center">
-                    <p className="text-lg font-bold text-slate-800">{data.count}</p>
-                    <p className="text-xs text-slate-500 capitalize">{status.replace(/_/g, ' ')}</p>
-                    <p className="text-xs text-slate-400">{formatCurrency(data.value)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Recent Enquiries */}
           {recent_enquiries && recent_enquiries.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <h4 className="font-semibold text-slate-800 mb-3">Recent Enquiries</h4>
+              <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <Target className="w-4 h-4 text-blue-500" /> Recent Enquiries
+              </h4>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50">
@@ -1078,6 +1066,141 @@ const Customer360Modal = ({ data, customerName, onClose, formatCurrency }) => {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {recent_enquiries.slice(0, 5).map((e, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 text-sm font-medium text-slate-800">{e.enquiry_no}</td>
+                        <td className="px-3 py-2 text-sm text-slate-600">{e.date}</td>
+                        <td className="px-3 py-2 text-sm text-slate-600 truncate max-w-[200px]">{e.description || '-'}</td>
+                        <td className="px-3 py-2 text-sm text-right font-medium">{formatCurrency(e.value)}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            e.status === 'accepted' || e.status === 'ordered' ? 'bg-green-100 text-green-700' :
+                            e.status === 'quoted' ? 'bg-blue-100 text-blue-700' :
+                            e.status === 'declined' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {e.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Quotations */}
+          {recent_quotations && recent_quotations.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-purple-500" /> Recent Quotations
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Quote No</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Date</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Subject</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-slate-500">Amount</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-slate-500">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recent_quotations.slice(0, 5).map((q, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 text-sm font-medium text-slate-800">{q.quotation_no}</td>
+                        <td className="px-3 py-2 text-sm text-slate-600">{q.date}</td>
+                        <td className="px-3 py-2 text-sm text-slate-600 truncate max-w-[200px]">{q.subject || '-'}</td>
+                        <td className="px-3 py-2 text-sm text-right font-medium">{formatCurrency(q.total_amount)}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            q.status === 'accepted' || q.status === 'converted' ? 'bg-green-100 text-green-700' :
+                            q.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                            q.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {q.status || 'draft'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Orders */}
+          {recent_orders && recent_orders.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-green-500" /> Recent Orders
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Order/PO No</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Date</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-slate-500">Amount</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-slate-500">Status</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-slate-500">Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recent_orders.slice(0, 5).map((o, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 text-sm font-medium text-slate-800">{o.order_no || o.po_number}</td>
+                        <td className="px-3 py-2 text-sm text-slate-600">{o.date}</td>
+                        <td className="px-3 py-2 text-sm text-right font-medium">{formatCurrency(o.total_amount)}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            o.status === 'completed' || o.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            o.status === 'in_progress' || o.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                            o.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {o.status || 'pending'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            o.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
+                            o.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {o.payment_status || 'unpaid'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Status Breakdown */}
+          {status_breakdown && Object.keys(status_breakdown).length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-800 mb-3">Enquiry Status Breakdown</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {Object.entries(status_breakdown).map(([status, statusData]) => (
+                  <div key={status} className="p-2 bg-slate-50 rounded text-center">
+                    <p className="text-lg font-bold text-slate-800">{statusData.count}</p>
+                    <p className="text-xs text-slate-500 capitalize">{status.replace(/_/g, ' ')}</p>
+                    <p className="text-xs text-slate-400">{formatCurrency(statusData.value)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
                       <tr key={idx}>
                         <td className="px-3 py-2 text-sm font-medium">{e.enquiry_no}</td>
                         <td className="px-3 py-2 text-sm text-slate-500">{e.date}</td>
