@@ -4,7 +4,7 @@ import {
   Calendar, IndianRupee, FileText, Loader2, Upload, Trash2,
   ChevronDown, ChevronRight, Eye, Download, X, Camera,
   Building2, MapPin, CreditCard, FileSpreadsheet, Send,
-  Edit2, Save
+  Edit2, Save, Wallet, ArrowUpCircle, ArrowDownCircle, History
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api, { employeeHubAPI } from '../../services/api';
@@ -46,6 +46,18 @@ const ExpenseClaims = () => {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [summary, setSummary] = useState(null);
   const [expandedSheet, setExpandedSheet] = useState(null);
+  
+  // Advance management state
+  const [advanceBalance, setAdvanceBalance] = useState(null);
+  const [showAdvanceRequestModal, setShowAdvanceRequestModal] = useState(false);
+  const [showAdvanceHistoryModal, setShowAdvanceHistoryModal] = useState(false);
+  const [advanceRequests, setAdvanceRequests] = useState([]);
+  const [advanceForm, setAdvanceForm] = useState({
+    amount: '',
+    purpose: '',
+    project_name: '',
+    remarks: ''
+  });
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
