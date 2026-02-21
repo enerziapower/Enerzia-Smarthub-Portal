@@ -546,11 +546,40 @@ const ExpenseClaims = () => {
                   </div>
                 </div>
 
+                {/* Rejection Notice */}
+                {currentSheet.status === 'rejected' && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-red-700">This expense sheet was rejected</p>
+                        {currentSheet.rejection_reason && (
+                          <p className="text-sm text-red-600 mt-1">
+                            <strong>Reason:</strong> {currentSheet.rejection_reason}
+                          </p>
+                        )}
+                        {currentSheet.rejected_by && (
+                          <p className="text-xs text-red-500 mt-1">
+                            Rejected by {currentSheet.rejected_by} on {currentSheet.rejected_at ? new Date(currentSheet.rejected_at).toLocaleDateString('en-IN') : '-'}
+                          </p>
+                        )}
+                        <p className="text-sm text-red-600 mt-2">
+                          You can edit the items and resubmit for approval.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="mt-4 flex justify-between items-center">
                   <div className="text-sm text-slate-500">
                     {canEdit(currentSheet) ? (
-                      <span className="text-green-600">✓ You can add/edit expenses</span>
+                      currentSheet.status === 'rejected' ? (
+                        <span className="text-amber-600">📝 Edit and resubmit this sheet</span>
+                      ) : (
+                        <span className="text-green-600">✓ You can add/edit expenses</span>
+                      )
                     ) : (
                       <span className="text-amber-600">⚠ Sheet is {currentSheet.status} - cannot edit</span>
                     )}
