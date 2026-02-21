@@ -3,7 +3,7 @@ import {
   Receipt, CheckCircle, XCircle, Clock, IndianRupee, Eye,
   User, FileText, Loader2, Search, FileSpreadsheet, ChevronDown,
   ChevronRight, Calendar, Building2, CreditCard, X, Check,
-  AlertCircle, DollarSign
+  AlertCircle, DollarSign, Wallet, Plus, Users, ArrowDownCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -13,6 +13,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const ExpenseApprovals = () => {
   const { user } = useAuth();
+  const [mainTab, setMainTab] = useState('expenses'); // expenses, advances
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -28,10 +29,55 @@ const ExpenseApprovals = () => {
     payment_reference: '',
     paid_amount: 0
   });
+  
+  // Advance management state
+  const [advanceRequests, setAdvanceRequests] = useState([]);
+  const [advanceStats, setAdvanceStats] = useState({});
+  const [advanceFilter, setAdvanceFilter] = useState('pending');
+  const [advanceBalances, setAdvanceBalances] = useState([]);
+  const [selectedAdvance, setSelectedAdvance] = useState(null);
+  const [showAdvancePaymentModal, setShowAdvancePaymentModal] = useState(false);
+  const [showDirectAdvanceModal, setShowDirectAdvanceModal] = useState(false);
+  const [advancePaymentForm, setAdvancePaymentForm] = useState({
+    paid_amount: 0,
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_mode: 'Bank Transfer',
+    payment_reference: '',
+    remarks: ''
+  });
+  const [directAdvanceForm, setDirectAdvanceForm] = useState({
+    user_id: '',
+    user_name: '',
+    emp_id: '',
+    department: '',
+    amount: '',
+    purpose: '',
+    project_name: '',
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_mode: 'Cash',
+    payment_reference: '',
+    remarks: ''
+  });
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    fetchSheets();
-  }, [filter]);
+    if (mainTab === 'expenses') {
+      fetchSheets();
+    } else {
+      fetchAdvanceRequests();
+      fetchAdvanceBalances();
+      fetchEmployees();
+    }
+  }, [mainTab, filter, advanceFilter]);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get('/users');
+      setEmployees(res.data.users || []);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
 
   const fetchSheets = async () => {
     try {
