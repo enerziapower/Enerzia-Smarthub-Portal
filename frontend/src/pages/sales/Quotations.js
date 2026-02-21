@@ -279,9 +279,16 @@ const Quotations = () => {
         setSelectedEnquiry(enquiry);
         
         // Find matching customer for GST and Address
-        const matchingCustomer = customers.find(
-          c => c.name?.toLowerCase() === enquiry.company_name?.toLowerCase()
-        );
+        // Use customer_id from enquiry if available, otherwise match by name
+        let matchingCustomer = null;
+        if (enquiry.customer_id) {
+          matchingCustomer = customers.find(c => c.id === enquiry.customer_id);
+        }
+        if (!matchingCustomer) {
+          matchingCustomer = customers.find(
+            c => c.name?.toLowerCase() === enquiry.company_name?.toLowerCase()
+          );
+        }
         
         // Set default valid until date (30 days from now)
         const validUntilDate = new Date();
@@ -290,6 +297,7 @@ const Quotations = () => {
         setFormData(prev => ({
           ...prev,
           enquiry_id: enquiry.id,
+          customer_id: enquiry.customer_id || matchingCustomer?.id || '',
           customer_name: enquiry.company_name || '',
           customer_contact: enquiry.contact_person || '',
           customer_phone: enquiry.contact_phone || '',
