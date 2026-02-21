@@ -734,16 +734,21 @@ async def get_expense_sheet(sheet_id: str):
 async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str, 
                                department: str, emp_id: Optional[str] = None, designation: Optional[str] = None):
     """Create a new monthly expense sheet"""
-    # Check if sheet already exists for this month
+    # Check if sheet already exists for this month (including rejected ones)
     existing = await db.expense_sheets.find_one({
         "user_id": user_id,
         "month": sheet.month,
-        "year": sheet.year,
-        "status": {"$ne": "rejected"}  # Allow resubmission if rejected
+        "year": sheet.year
     })
     
     if existing:
-        raise HTTPException(status_code=400, detail=f"Expense sheet for {sheet.month}/{sheet.year} already exists")
+        if existing.get("status") == "rejected":
+            raise HTTPException(
+                status_code=400, 
+                detail=f"A rejected expense sheet for {sheet.month}/{sheet.year} already exists. Please edit and resubmit that sheet instead of creating a new one."
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Expense sheet for {sheet.month}/{sheet.year} already exists")
     
     # Calculate totals
     total_amount = sum(item.amount for item in sheet.items)
