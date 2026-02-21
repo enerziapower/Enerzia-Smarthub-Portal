@@ -28,6 +28,16 @@ finance_router = APIRouter(prefix="/api/finance", tags=["Finance Expense Approva
 
 # ============== HELPER FUNCTIONS ==============
 
+@finance_router.get("/employees")
+async def get_employees_for_dropdown():
+    """Get list of employees for dropdowns (no auth required, returns minimal data)"""
+    cursor = db.users.find(
+        {},
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "department": 1, "emp_id": 1, "role": 1}
+    ).sort("name", 1)
+    employees = await cursor.to_list(500)
+    return {"employees": employees}
+
 def calculate_budget_amount(order_value: float, budget: dict) -> float:
     """Calculate budget amount from percentage or value"""
     if not budget:
