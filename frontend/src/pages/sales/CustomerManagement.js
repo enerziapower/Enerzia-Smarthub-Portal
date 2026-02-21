@@ -47,7 +47,7 @@ const CustomerManagement = () => {
         fetchData('order-analysis', setOrderAnalysis),
         fetchData('projections', setProjections),
         fetchData('customer-targeting', setTargeting),
-        fetchData('customers?limit=100', (data) => setCustomers(data.customers || []))
+        fetchData('customers?limit=1000', (data) => setCustomers(data.customers || []))
       ]);
       setLoading(false);
     };
