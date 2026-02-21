@@ -820,8 +820,8 @@ async def add_expense_item(sheet_id: str, item: ExpenseItem, user_id: str):
     if existing.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to edit this sheet")
     
-    if existing.get("status") not in ["pending", "rejected"]:
-        raise HTTPException(status_code=400, detail="Cannot add items to verified/approved sheet")
+    if existing.get("status") not in ["draft", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot add items to submitted/approved sheet")
     
     # Add the item
     items = existing.get("items", [])
