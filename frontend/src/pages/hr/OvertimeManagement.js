@@ -206,9 +206,12 @@ const OvertimeManagement = () => {
       date: new Date().toISOString().split('T')[0],
       hours: '',
       reason: '',
-      rate_per_hour: 100
+      rate_per_hour: 0,
+      gross_salary: 0,
+      hourly_rate: 0
     });
     setEditingRecord(null);
+    setSelectedEmployeeInfo(null);
   };
 
   const openEditModal = (record) => {
@@ -218,7 +221,14 @@ const OvertimeManagement = () => {
       date: record.date,
       hours: record.hours,
       reason: record.reason || '',
-      rate_per_hour: record.rate_per_hour || 100
+      rate_per_hour: record.rate_per_hour || 100,
+      gross_salary: record.gross_salary || 0,
+      hourly_rate: record.hourly_rate || 0
+    });
+    setSelectedEmployeeInfo({
+      gross_salary: record.gross_salary || 0,
+      hourly_rate: record.hourly_rate || 0,
+      ot_rate_per_hour: record.rate_per_hour || 100
     });
     setShowModal(true);
   };
