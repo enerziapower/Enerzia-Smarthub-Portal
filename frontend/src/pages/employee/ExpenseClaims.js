@@ -955,14 +955,227 @@ const ExpenseClaims = () => {
         </div>
       )}
 
+      {/* Request Advance Modal */}
+      {showAdvanceRequestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Request Advance</h3>
+              <button onClick={() => setShowAdvanceRequestModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleRequestAdvance} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹) *</label>
+                <input
+                  type="number"
+                  value={advanceForm.amount}
+                  onChange={(e) => setAdvanceForm({ ...advanceForm, amount: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="Enter amount"
+                  min="100"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Purpose *</label>
+                <input
+                  type="text"
+                  value={advanceForm.purpose}
+                  onChange={(e) => setAdvanceForm({ ...advanceForm, purpose: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Site visit expenses, Material purchase"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Project Name (Optional)</label>
+                <input
+                  type="text"
+                  value={advanceForm.project_name}
+                  onChange={(e) => setAdvanceForm({ ...advanceForm, project_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  placeholder="e.g., Indospace Polivakkam"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
+                <textarea
+                  value={advanceForm.remarks}
+                  onChange={(e) => setAdvanceForm({ ...advanceForm, remarks: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                  rows={2}
+                  placeholder="Any additional notes"
+                />
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                <p className="text-sm text-purple-700">
+                  <strong>Current Balance:</strong> ₹{(advanceBalance?.running_balance || 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-purple-600 mt-1">
+                  Your request will be sent to Finance for approval
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanceRequestModal(false)}
+                  className="px-4 py-2 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting...' : 'Request Advance'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Advance History Modal */}
+      {showAdvanceHistoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Advance History</h3>
+              <button onClick={() => setShowAdvanceHistoryModal(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-120px)]">
+              {/* Balance Summary */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-purple-50 rounded-lg p-3 text-center">
+                  <ArrowDownCircle className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xs text-purple-600">Total Received</p>
+                  <p className="text-lg font-bold text-purple-700">₹{(advanceBalance?.total_advances_received || 0).toLocaleString()}</p>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3 text-center">
+                  <ArrowUpCircle className="w-6 h-6 text-amber-600 mx-auto mb-1" />
+                  <p className="text-xs text-amber-600">Total Used</p>
+                  <p className="text-lg font-bold text-amber-700">₹{(advanceBalance?.total_advance_used || 0).toLocaleString()}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <Wallet className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                  <p className="text-xs text-green-600">Current Balance</p>
+                  <p className="text-lg font-bold text-green-700">₹{(advanceBalance?.running_balance || 0).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Pending Requests */}
+              {advanceRequests.filter(r => r.status === 'pending' || r.status === 'approved').length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-slate-700 mb-2">Pending/Approved Requests</h4>
+                  <div className="space-y-2">
+                    {advanceRequests.filter(r => r.status === 'pending' || r.status === 'approved').map(req => (
+                      <div key={req.id} className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div>
+                          <p className="font-medium text-slate-800">₹{req.amount?.toLocaleString()}</p>
+                          <p className="text-sm text-slate-600">{req.purpose}</p>
+                          <p className="text-xs text-slate-500">{new Date(req.requested_at).toLocaleDateString('en-IN')}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            req.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {req.status === 'pending' ? 'Pending' : 'Approved'}
+                          </span>
+                          {req.status === 'pending' && (
+                            <button
+                              onClick={() => handleWithdrawAdvanceRequest(req.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Withdraw"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Transactions */}
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 mb-2">Recent Transactions</h4>
+                {advanceBalance?.recent_transactions?.length > 0 ? (
+                  <div className="space-y-2">
+                    {advanceBalance.recent_transactions.map((txn, idx) => (
+                      <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border ${
+                        txn.type === 'advance_received' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          {txn.type === 'advance_received' ? (
+                            <ArrowDownCircle className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <ArrowUpCircle className="w-5 h-5 text-red-600" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">{txn.description}</p>
+                            {txn.reference && <p className="text-xs text-slate-500">Ref: {txn.reference}</p>}
+                            {txn.date && <p className="text-xs text-slate-500">{new Date(txn.date).toLocaleDateString('en-IN')}</p>}
+                          </div>
+                        </div>
+                        <p className={`font-semibold ${txn.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {txn.amount > 0 ? '+' : ''}₹{Math.abs(txn.amount).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-center py-4">No transactions yet</p>
+                )}
+              </div>
+
+              {/* Advance Payments History */}
+              {advanceBalance?.advance_history?.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-slate-700 mb-2">All Advance Payments</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs text-slate-500">Date</th>
+                          <th className="px-3 py-2 text-left text-xs text-slate-500">Purpose</th>
+                          <th className="px-3 py-2 text-right text-xs text-slate-500">Amount</th>
+                          <th className="px-3 py-2 text-left text-xs text-slate-500">Reference</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {advanceBalance.advance_history.map((adv, idx) => (
+                          <tr key={idx}>
+                            <td className="px-3 py-2">{adv.payment_date ? new Date(adv.payment_date).toLocaleDateString('en-IN') : '-'}</td>
+                            <td className="px-3 py-2">{adv.purpose}</td>
+                            <td className="px-3 py-2 text-right font-medium text-green-600">₹{(adv.paid_amount || 0).toLocaleString()}</td>
+                            <td className="px-3 py-2 text-slate-500">{adv.payment_reference || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="text-sm text-blue-800">
           <p className="font-medium mb-2">📋 How Expense Claims Work</p>
           <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <li><strong>Request Advance:</strong> Request advance from Finance for project expenses</li>
             <li><strong>Create Sheet:</strong> Create a monthly expense sheet</li>
             <li><strong>Add Items:</strong> Add each expense with project name, bill type, amount, and receipt</li>
-            <li><strong>Review:</strong> View, edit, or delete items before submitting</li>
+            <li><strong>Report Advance:</strong> Enter the advance amount received when creating/editing sheet</li>
             <li><strong>Submit:</strong> Click "Submit for Approval" to send to Finance</li>
             <li><strong>Approval:</strong> Finance dept. verifies and processes payment</li>
           </ul>
