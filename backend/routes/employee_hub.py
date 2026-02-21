@@ -1021,6 +1021,153 @@ async def get_expense_summary(user_id: str, year: Optional[int] = None):
     }
 
 
+# ============= ADVANCE REQUESTS (Employee Side) =============
+# Employee can request advances, view balance, and see request history
+
+@router.get("/advance-requests")
+async def get_advance_requests(user_id: str, status: Optional[str] = None):
+    """Get advance requests for an employee"""
+    query = {"user_id": user_id}
+    if status:
+        query["status"] = status
+    
+    cursor = db.advance_requests.find(query, {"_id": 0}).sort("requested_at", -1)
+    requests = await cursor.to_list(100)
+    return {"requests": requests}
+
+
+@router.post("/advance-requests")
+async def create_advance_request(
+    request: AdvanceRequest,
+    user_id: str,
+    user_name: str,
+    department: str,
+    emp_id: Optional[str] = None
+):
+    """Create a new advance request - goes to Finance for approval"""
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_name": user_name,
+        "emp_id": emp_id or user_id,
+        "department": department,
+        "amount": request.amount,
+        "purpose": request.purpose,
+        "project_name": request.project_name,
+        "remarks": request.remarks,
+        "status": "pending",
+        "requested_at": datetime.now(timezone.utc).isoformat(),
+        "approved_by": None,
+        "approved_at": None,
+        "rejected_by": None,
+        "rejected_at": None,
+        "rejection_reason": None,
+        "paid_amount": None,
+        "payment_date": None,
+        "payment_mode": None,
+        "payment_reference": None,
+        "paid_by": None
+    }
+    
+    await db.advance_requests.insert_one(doc)
+    doc.pop("_id", None)
+    
+    return {"message": "Advance request submitted to Finance", "request": doc}
+
+
+@router.delete("/advance-requests/{request_id}")
+async def withdraw_advance_request(request_id: str, user_id: str):
+    """Withdraw a pending advance request (employee can only withdraw their own pending requests)"""
+    result = await db.advance_requests.delete_one({
+        "id": request_id,
+        "user_id": user_id,
+        "status": "pending"
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or cannot be withdrawn")
+    
+    return {"message": "Advance request withdrawn"}
+
+
+@router.get("/advance-balance/{user_id}")
+async def get_advance_balance(user_id: str):
+    """
+    Get running advance balance for an employee
+    Balance = Total advances paid - Total expenses reimbursed
+    
+    This shows how much advance money the employee still has with them
+    """
+    # Get all paid advances for this employee
+    advances_cursor = db.advance_requests.find(
+        {"user_id": user_id, "status": "paid"},
+        {"_id": 0, "paid_amount": 1, "payment_date": 1, "purpose": 1, "payment_reference": 1}
+    ).sort("payment_date", -1)
+    advances = await advances_cursor.to_list(100)
+    
+    total_advances = sum(a.get("paid_amount", 0) for a in advances)
+    
+    # Get all paid expense sheets for this employee
+    # When an expense sheet is paid, the net_claim_amount is what was reimbursed
+    # But we need to track what was deducted from advances vs what was paid out
+    expenses_cursor = db.expense_sheets.find(
+        {"user_id": user_id, "status": "paid"},
+        {"_id": 0, "advance_received": 1, "net_claim_amount": 1, "paid_amount": 1, "month_name": 1, "year": 1}
+    ).sort([("year", -1), ("month", -1)])
+    expense_sheets = await expenses_cursor.to_list(100)
+    
+    # Total advance amounts used in expense sheets
+    total_advance_used = sum(e.get("advance_received", 0) for e in expense_sheets)
+    
+    # Calculate running balance
+    # Positive = Employee has advance money with them
+    # Negative = Company owes employee (shouldn't happen normally)
+    running_balance = total_advances - total_advance_used
+    
+    # Get pending advance requests
+    pending_cursor = db.advance_requests.find(
+        {"user_id": user_id, "status": "pending"},
+        {"_id": 0, "amount": 1, "purpose": 1, "requested_at": 1}
+    )
+    pending_requests = await pending_cursor.to_list(20)
+    pending_amount = sum(p.get("amount", 0) for p in pending_requests)
+    
+    # Recent transactions (last 10 - both advances received and expenses settled)
+    recent_transactions = []
+    
+    for adv in advances[:5]:
+        recent_transactions.append({
+            "type": "advance_received",
+            "amount": adv.get("paid_amount", 0),
+            "date": adv.get("payment_date"),
+            "description": adv.get("purpose", "Advance"),
+            "reference": adv.get("payment_reference")
+        })
+    
+    for exp in expense_sheets[:5]:
+        if exp.get("advance_received", 0) > 0:
+            recent_transactions.append({
+                "type": "advance_used",
+                "amount": -exp.get("advance_received", 0),
+                "date": exp.get("paid_at") if "paid_at" in exp else None,
+                "description": f"Used in {exp.get('month_name')} {exp.get('year')} expenses"
+            })
+    
+    # Sort by date
+    recent_transactions.sort(key=lambda x: x.get("date") or "", reverse=True)
+    
+    return {
+        "user_id": user_id,
+        "running_balance": running_balance,
+        "total_advances_received": total_advances,
+        "total_advance_used": total_advance_used,
+        "pending_requests_amount": pending_amount,
+        "pending_requests_count": len(pending_requests),
+        "advance_history": advances[:10],
+        "recent_transactions": recent_transactions[:10]
+    }
+
+
 # ============= EMPLOYEE DASHBOARD =============
 
 @router.get("/dashboard/{user_id}")
