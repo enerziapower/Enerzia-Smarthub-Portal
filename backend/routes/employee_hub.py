@@ -655,6 +655,297 @@ async def reject_expense_claim(claim_id: str, approved_by: str):
     return {"message": "Claim rejected"}
 
 
+# ============= MONTHLY EXPENSE SHEETS =============
+# New system for monthly project expense submissions with receipt attachments
+
+@router.get("/expense-sheets")
+async def get_expense_sheets(user_id: Optional[str] = None, month: Optional[int] = None, 
+                             year: Optional[int] = None, status: Optional[str] = None):
+    """Get expense sheets with optional filters"""
+    query = {}
+    if user_id:
+        query["user_id"] = user_id
+    if month:
+        query["month"] = month
+    if year:
+        query["year"] = year
+    if status:
+        query["status"] = status
+    
+    cursor = db.expense_sheets.find(query).sort([("year", -1), ("month", -1), ("created_at", -1)])
+    sheets = []
+    async for doc in cursor:
+        sheets.append(serialize_doc(doc))
+    return {"sheets": sheets}
+
+
+@router.get("/expense-sheets/{sheet_id}")
+async def get_expense_sheet(sheet_id: str):
+    """Get a specific expense sheet by ID"""
+    sheet = None
+    try:
+        sheet = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not sheet:
+        sheet = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    return serialize_doc(sheet)
+
+
+@router.post("/expense-sheets")
+async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str, 
+                               department: str, emp_id: Optional[str] = None, designation: Optional[str] = None):
+    """Create a new monthly expense sheet"""
+    # Check if sheet already exists for this month
+    existing = await db.expense_sheets.find_one({
+        "user_id": user_id,
+        "month": sheet.month,
+        "year": sheet.year,
+        "status": {"$ne": "rejected"}  # Allow resubmission if rejected
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Expense sheet for {sheet.month}/{sheet.year} already exists")
+    
+    # Calculate totals
+    total_amount = sum(item.amount for item in sheet.items)
+    net_claim = total_amount + sheet.previous_due - sheet.advance_received
+    
+    # Generate sheet number
+    count = await db.expense_sheets.count_documents({"year": sheet.year})
+    sheet_no = f"EXP-{sheet.year}-{count + 1:04d}"
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "sheet_no": sheet_no,
+        "user_id": user_id,
+        "user_name": user_name,
+        "emp_id": emp_id or user_id,
+        "designation": designation or "Employee",
+        "department": department,
+        "month": sheet.month,
+        "year": sheet.year,
+        "month_name": calendar.month_name[sheet.month],
+        "items": [item.dict() for item in sheet.items],
+        "item_count": len(sheet.items),
+        "total_amount": total_amount,
+        "advance_received": sheet.advance_received,
+        "advance_received_date": sheet.advance_received_date,
+        "previous_due": sheet.previous_due,
+        "net_claim_amount": net_claim,
+        "remarks": sheet.remarks,
+        "status": "pending",  # pending, verified, approved, rejected, paid
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "verified_by": None,
+        "verified_at": None,
+        "approved_by": None,
+        "approved_at": None,
+        "paid_at": None,
+        "paid_amount": None,
+        "payment_mode": None,
+        "payment_reference": None
+    }
+    
+    await db.expense_sheets.insert_one(doc)
+    doc.pop("_id", None)
+    return {"message": "Expense sheet submitted successfully", "sheet": doc}
+
+
+@router.put("/expense-sheets/{sheet_id}")
+async def update_expense_sheet(sheet_id: str, sheet: ExpenseSheet):
+    """Update an expense sheet (only if status is pending or rejected)"""
+    # Find the sheet
+    existing = None
+    try:
+        existing = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not existing:
+        existing = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if existing.get("status") not in ["pending", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot edit sheet that is already verified/approved")
+    
+    # Recalculate totals
+    total_amount = sum(item.amount for item in sheet.items)
+    net_claim = total_amount + sheet.previous_due - sheet.advance_received
+    
+    update_data = {
+        "items": [item.dict() for item in sheet.items],
+        "item_count": len(sheet.items),
+        "total_amount": total_amount,
+        "advance_received": sheet.advance_received,
+        "advance_received_date": sheet.advance_received_date,
+        "previous_due": sheet.previous_due,
+        "net_claim_amount": net_claim,
+        "remarks": sheet.remarks,
+        "status": "pending",  # Reset to pending if it was rejected
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense sheet updated successfully"}
+
+
+@router.post("/expense-sheets/{sheet_id}/add-item")
+async def add_expense_item(sheet_id: str, item: ExpenseItem, user_id: str):
+    """Add a single expense item to an existing sheet"""
+    # Find the sheet
+    existing = None
+    try:
+        existing = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not existing:
+        existing = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if existing.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this sheet")
+    
+    if existing.get("status") not in ["pending", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot add items to verified/approved sheet")
+    
+    # Add the item
+    items = existing.get("items", [])
+    items.append(item.dict())
+    
+    # Recalculate totals
+    total_amount = sum(i.get("amount", 0) for i in items)
+    net_claim = total_amount + existing.get("previous_due", 0) - existing.get("advance_received", 0)
+    
+    update_data = {
+        "items": items,
+        "item_count": len(items),
+        "total_amount": total_amount,
+        "net_claim_amount": net_claim,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense item added successfully", "total_amount": total_amount, "net_claim": net_claim}
+
+
+@router.delete("/expense-sheets/{sheet_id}/item/{item_index}")
+async def delete_expense_item(sheet_id: str, item_index: int, user_id: str):
+    """Delete an expense item from a sheet"""
+    # Find the sheet
+    existing = None
+    try:
+        existing = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not existing:
+        existing = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if existing.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this sheet")
+    
+    if existing.get("status") not in ["pending", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot delete items from verified/approved sheet")
+    
+    items = existing.get("items", [])
+    if item_index < 0 or item_index >= len(items):
+        raise HTTPException(status_code=400, detail="Invalid item index")
+    
+    # Remove the item
+    items.pop(item_index)
+    
+    # Recalculate totals
+    total_amount = sum(i.get("amount", 0) for i in items)
+    net_claim = total_amount + existing.get("previous_due", 0) - existing.get("advance_received", 0)
+    
+    update_data = {
+        "items": items,
+        "item_count": len(items),
+        "total_amount": total_amount,
+        "net_claim_amount": net_claim,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense item deleted successfully"}
+
+
+@router.get("/expense-sheets/summary/{user_id}")
+async def get_expense_summary(user_id: str, year: Optional[int] = None):
+    """Get expense summary for an employee"""
+    if not year:
+        year = datetime.now().year
+    
+    # Get all sheets for the year
+    cursor = db.expense_sheets.find({"user_id": user_id, "year": year})
+    
+    monthly_data = {}
+    total_claimed = 0
+    total_paid = 0
+    total_pending = 0
+    
+    async for sheet in cursor:
+        month = sheet.get("month")
+        monthly_data[month] = {
+            "month_name": sheet.get("month_name"),
+            "total_amount": sheet.get("total_amount", 0),
+            "net_claim": sheet.get("net_claim_amount", 0),
+            "status": sheet.get("status"),
+            "paid_amount": sheet.get("paid_amount", 0),
+            "sheet_id": sheet.get("id") or str(sheet.get("_id"))
+        }
+        
+        total_claimed += sheet.get("total_amount", 0)
+        if sheet.get("status") == "paid":
+            total_paid += sheet.get("paid_amount", 0) or sheet.get("net_claim_amount", 0)
+        elif sheet.get("status") in ["pending", "verified", "approved"]:
+            total_pending += sheet.get("net_claim_amount", 0)
+    
+    # Get previous year's carry forward (last month's net claim if not paid)
+    prev_year_sheet = await db.expense_sheets.find_one(
+        {"user_id": user_id, "year": year - 1, "month": 12},
+        sort=[("created_at", -1)]
+    )
+    previous_year_due = 0
+    if prev_year_sheet and prev_year_sheet.get("status") != "paid":
+        previous_year_due = prev_year_sheet.get("net_claim_amount", 0)
+    
+    return {
+        "year": year,
+        "monthly_data": monthly_data,
+        "total_claimed": total_claimed,
+        "total_paid": total_paid,
+        "total_pending": total_pending,
+        "previous_year_due": previous_year_due,
+        "balance_due": total_claimed - total_paid + previous_year_due
+    }
+
+
 # ============= EMPLOYEE DASHBOARD =============
 
 @router.get("/dashboard/{user_id}")
