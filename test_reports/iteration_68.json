@@ -1,0 +1,133 @@
+{
+  "summary": "Customer 360 API and customer_id linking feature testing completed successfully. All 26 backend API tests passed (100%). The customer_id linking flow (Customer → Enquiry → Quotation → Order) works correctly for NEW records. However, existing quotations and orders in the database don't have customer_id set because they were created before this feature was implemented.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "Existing data migration",
+        "issue": "Existing quotations and orders don't have customer_id field populated. Only enquiries have customer_id. This means Customer 360 by ID won't show historical quotations/orders.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_customer_360_linking.py",
+    "/app/test_reports/pytest/pytest_customer_360_linking.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Consider a one-time data migration script to backfill customer_id in existing quotations and orders based on their linked enquiry's customer_id"
+  ],
+  "critical_code_review_comments": [
+    "Customer 360 by name endpoint correctly falls back to name matching when customer_id is not available",
+    "Customer 360 by ID endpoint correctly queries by customer_id field",
+    "Order creation correctly inherits customer_id from quotation when not explicitly provided",
+    "Order creation also falls back to enquiry's customer_id if quotation doesn't have it",
+    "All sales models (EnquiryCreate, QuotationCreate, OrderCreate) have customer_id field",
+    "The customer_id linking is properly implemented in the backend code"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_customer_360_linking.py"
+  ],
+  "success_rate": {
+    "backend": "100% (26/26 tests passed)",
+    "frontend": "Not tested (backend only request)"
+  },
+  "seed_data_creation": "Test data with TEST_ prefix was created and cleaned up during pytest execution. Tests verified: enquiry creation with customer_id, quotation creation with customer_id, order creation with customer_id inheritance, Customer 360 by name, Customer 360 by ID.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Customer 360 API and customer_id linking feature fully tested. Key findings: 1) All new records correctly save and inherit customer_id. 2) Customer 360 by name endpoint works with fallback to name matching. 3) Customer 360 by ID endpoint works but requires customer_id to be set on records. 4) Existing quotations/orders in DB don't have customer_id (created before feature). 5) Test customer: Indospace (ID: cb8cc3d5-9373-440c-a78c-a1d4539de3df).",
+  "test_results": {
+    "TestCustomer360ByName": {
+      "test_customer_360_by_name_returns_200": "PASS",
+      "test_customer_360_by_name_returns_customer_data": "PASS",
+      "test_customer_360_by_name_returns_metrics": "PASS",
+      "test_customer_360_by_name_returns_recent_data": "PASS"
+    },
+    "TestCustomer360ById": {
+      "test_customer_360_by_id_returns_200": "PASS",
+      "test_customer_360_by_id_returns_customer_data": "PASS",
+      "test_customer_360_by_id_returns_summary": "PASS",
+      "test_customer_360_by_id_returns_linked_data": "PASS",
+      "test_customer_360_by_invalid_id_returns_404": "PASS"
+    },
+    "TestEnquiryCustomerIdLinking": {
+      "test_create_enquiry_with_customer_id": "PASS",
+      "test_enquiry_appears_in_customer_360_by_id": "PASS"
+    },
+    "TestQuotationCustomerIdInheritance": {
+      "test_quotation_has_customer_id": "PASS",
+      "test_quotation_appears_in_customer_360_by_id": "PASS"
+    },
+    "TestOrderCustomerIdInheritance": {
+      "test_order_has_customer_id": "PASS",
+      "test_order_appears_in_customer_360_by_id": "PASS",
+      "test_full_pipeline_in_customer_360": "PASS"
+    },
+    "TestOrderCustomerIdInheritanceFromQuotation": {
+      "test_order_inherits_customer_id_from_quotation": "PASS"
+    },
+    "TestCustomerManagementOverview": {
+      "test_overview_returns_200": "PASS",
+      "test_overview_returns_summary": "PASS",
+      "test_overview_returns_enquiry_stats": "PASS"
+    },
+    "TestEnquiryAnalysis": {
+      "test_enquiry_analysis_returns_200": "PASS",
+      "test_enquiry_analysis_returns_distributions": "PASS"
+    },
+    "TestQuoteAnalysis": {
+      "test_quote_analysis_returns_200": "PASS",
+      "test_quote_analysis_returns_summary": "PASS"
+    },
+    "TestOrderAnalysis": {
+      "test_order_analysis_returns_200": "PASS",
+      "test_order_analysis_returns_summary": "PASS"
+    }
+  },
+  "api_endpoints_tested": [
+    "GET /api/customer-management/customer/{name}/360 - Customer 360 by name",
+    "GET /api/customer-management/customer-by-id/{id}/360 - Customer 360 by ID",
+    "GET /api/customer-management/overview - Customer management overview",
+    "GET /api/customer-management/enquiry-analysis - Enquiry analysis",
+    "GET /api/customer-management/quote-analysis - Quote analysis",
+    "GET /api/customer-management/order-analysis - Order analysis",
+    "POST /api/sales/enquiries - Create enquiry with customer_id",
+    "GET /api/sales/enquiries/{id} - Get enquiry",
+    "POST /api/sales/quotations - Create quotation with customer_id",
+    "GET /api/sales/quotations/{id} - Get quotation",
+    "POST /api/sales/orders - Create order with customer_id inheritance",
+    "GET /api/sales/orders/{id} - Get order"
+  ],
+  "test_credentials_used": {
+    "test_customer_name": "Indospace",
+    "test_customer_id": "cb8cc3d5-9373-440c-a78c-a1d4539de3df"
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All APIs connect to real MongoDB - no mocked data"
+  },
+  "features_verified": [
+    "Customer 360 by name returns enquiries, quotations, orders (with name fallback)",
+    "Customer 360 by ID returns customer data and linked records",
+    "Creating enquiry with customer_id saves correctly",
+    "Creating quotation with customer_id saves correctly",
+    "Creating order inherits customer_id from quotation",
+    "Creating order inherits customer_id from enquiry if quotation doesn't have it",
+    "Customer 360 metrics calculation (win_rate, quote_to_order_rate, avg_order_value)",
+    "Customer management overview statistics",
+    "Enquiry analysis distributions",
+    "Quote analysis summary",
+    "Order analysis summary"
+  ],
+  "data_observation": {
+    "enquiries_with_customer_id": "8 enquiries have customer_id set",
+    "quotations_with_customer_id": "0 quotations have customer_id (existing data)",
+    "orders_with_customer_id": "0 orders have customer_id (existing data)",
+    "note": "New records created via API will have customer_id properly set. Existing records need migration."
+  }
+}
