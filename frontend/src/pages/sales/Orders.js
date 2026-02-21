@@ -25,6 +25,7 @@ const Orders = () => {
   });
   
   const [formData, setFormData] = useState({
+    customer_id: '',  // Link to customer record
     customer_name: '',
     customer_address: '',
     customer_gst: '',
