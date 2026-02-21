@@ -896,6 +896,44 @@ async def delete_expense_item(sheet_id: str, item_index: int, user_id: str):
     return {"message": "Expense item deleted successfully"}
 
 
+@router.put("/expense-sheets/{sheet_id}/submit")
+async def submit_expense_sheet(sheet_id: str, user_id: str):
+    """Submit expense sheet for approval - changes status from draft to pending"""
+    # Find the sheet
+    existing = None
+    try:
+        existing = await db.expense_sheets.find_one({"_id": ObjectId(sheet_id)})
+    except Exception:
+        pass
+    
+    if not existing:
+        existing = await db.expense_sheets.find_one({"id": sheet_id})
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Expense sheet not found")
+    
+    if existing.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to submit this sheet")
+    
+    if existing.get("status") not in ["draft", "rejected"]:
+        raise HTTPException(status_code=400, detail=f"Cannot submit sheet with status: {existing.get('status')}")
+    
+    if not existing.get("items") or len(existing.get("items", [])) == 0:
+        raise HTTPException(status_code=400, detail="Cannot submit empty expense sheet. Add at least one expense item.")
+    
+    update_data = {
+        "status": "pending",
+        "submitted_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        await db.expense_sheets.update_one({"_id": ObjectId(sheet_id)}, {"$set": update_data})
+    except Exception:
+        await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
+    
+    return {"message": "Expense sheet submitted for approval"}
+
+
 @router.get("/expense-sheets/summary/{user_id}")
 async def get_expense_summary(user_id: str, year: Optional[int] = None):
     """Get expense summary for an employee"""
