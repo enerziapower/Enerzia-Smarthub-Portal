@@ -91,6 +91,7 @@ class QuotationItem(BaseModel):
 class QuotationCreate(BaseModel):
     """Create a new quotation"""
     enquiry_id: Optional[str] = None  # Link to enquiry
+    customer_id: Optional[str] = None  # Link to customer record
     customer_name: str
     customer_address: Optional[str] = None
     shipping_address: Optional[str] = None
