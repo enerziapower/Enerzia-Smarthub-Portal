@@ -427,6 +427,49 @@ const ExpenseClaims = () => {
         </div>
       </div>
 
+      {/* Advance Balance Section */}
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Wallet className="text-purple-600" size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-purple-700 font-medium">Advance Balance</p>
+              <p className={`text-2xl font-bold ${(advanceBalance?.running_balance || 0) > 0 ? 'text-purple-700' : 'text-slate-500'}`}>
+                ₹{(advanceBalance?.running_balance || 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-purple-600">
+                Received: ₹{(advanceBalance?.total_advances_received || 0).toLocaleString()} | 
+                Used: ₹{(advanceBalance?.total_advance_used || 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {advanceBalance?.pending_requests_count > 0 && (
+              <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                {advanceBalance.pending_requests_count} pending request{advanceBalance.pending_requests_count > 1 ? 's' : ''}
+              </span>
+            )}
+            <button
+              onClick={() => setShowAdvanceHistoryModal(true)}
+              className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg"
+              title="View Advance History"
+            >
+              <History className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowAdvanceRequestModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              data-testid="request-advance-btn"
+            >
+              <Plus className="w-4 h-4" />
+              Request Advance
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="border-b border-slate-200">
         <nav className="flex gap-1">
