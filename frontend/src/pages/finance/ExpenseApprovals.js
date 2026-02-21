@@ -329,13 +329,59 @@ const ExpenseApprovals = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Expense Approvals</h1>
-          <p className="text-slate-500 mt-1">Review and approve employee expense sheets</p>
+          <h1 className="text-2xl font-bold text-slate-800">Finance Management</h1>
+          <p className="text-slate-500 mt-1">Manage expense sheets and employee advances</p>
         </div>
+        {mainTab === 'advances' && (
+          <button
+            onClick={() => setShowDirectAdvanceModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            data-testid="direct-advance-btn"
+          >
+            <Plus className="w-4 h-4" />
+            Record Direct Advance
+          </button>
+        )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Main Tabs */}
+      <div className="border-b border-slate-200">
+        <nav className="flex gap-1">
+          <button
+            onClick={() => setMainTab('expenses')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              mainTab === 'expenses'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Expense Sheets
+          </button>
+          <button
+            onClick={() => setMainTab('advances')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              mainTab === 'advances'
+                ? 'border-purple-500 text-purple-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Wallet className="w-4 h-4" />
+            Advance Management
+            {advanceStats.pending_count > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
+                {advanceStats.pending_count}
+              </span>
+            )}
+          </button>
+        </nav>
+      </div>
+
+      {/* Expense Sheets Tab Content */}
+      {mainTab === 'expenses' && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all ${filter === 'pending' ? 'border-amber-400 bg-amber-50' : 'border-slate-200'}`} onClick={() => setFilter('pending')}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 rounded-lg">
