@@ -1772,6 +1772,128 @@ Employee Workspace              HR Department              Payroll
 
 ---
 
+### Monthly Expense Claims Module ✅ COMPLETE (Feb 21, 2026)
+
+**Location:**
+- Frontend Employee: `frontend/src/pages/employee/ExpenseClaims.js`
+- Frontend Finance: `frontend/src/pages/finance/ExpenseApprovals.js`
+- Backend Employee: `backend/routes/employee_hub.py` - Lines 658-988
+- Backend Finance: `backend/routes/finance_dashboard.py` - Lines 790-920
+
+**Issue Addressed:** The Expense Claims module was incomplete. Users reported: 1) Receipt upload not working, 2) No view/edit functionality for expense items, 3) No submit button to send to finance, 4) Finance approval workflow not integrated.
+
+**Solution Implemented:**
+
+| Component | Implementation |
+|-----------|---------------|
+| **Monthly Expense Sheets** | Employees create monthly expense sheets with advance tracking and previous dues |
+| **Expense Items** | Individual line items with date, project, bill type, description, amount, place, payment mode |
+| **Receipt Attachment** | File upload for each expense item (supports jpg, png, pdf) via `/api/upload` |
+| **View/Edit/Delete** | Full CRUD operations for expense items (only on draft/rejected sheets) |
+| **Submit for Approval** | "Submit for Approval" button changes sheet status from draft to pending |
+| **Finance Verification** | Finance dept can verify pending sheets |
+| **Finance Approval** | Finance approves verified sheets |
+| **Finance Rejection** | Finance can reject with reason (employee can edit and resubmit) |
+| **Payment Recording** | Finance marks approved sheets as paid with payment details |
+
+**Workflow:**
+```
+Employee                        Finance Department
+┌──────────────────┐           ┌───────────────────────────────────┐
+│ Create Sheet     │           │                                   │
+│ (Month, Year,    │           │   Pending Sheets                  │
+│  Advance, Dues)  │           │      ↓                            │
+│       ↓          │           │   [Verify] → Verified             │
+│ Add Expense Items│           │      ↓                            │
+│ (Receipt Upload) │  ──────►  │   [Approve] → Approved            │
+│       ↓          │  Submit   │      ↓                            │
+│ Submit for       │           │   [Mark Paid] → Paid              │
+│ Approval         │           │      or                           │
+│                  │  ◄──────  │   [Reject] → Rejected (resubmit)  │
+└──────────────────┘  Rejected └───────────────────────────────────┘
+```
+
+**API Endpoints (Employee):**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/employee/expense-sheets` | POST | Create new monthly expense sheet |
+| `/api/employee/expense-sheets` | GET | Get user's expense sheets |
+| `/api/employee/expense-sheets/{id}` | GET | Get sheet details |
+| `/api/employee/expense-sheets/{id}` | PUT | Update sheet (draft only) |
+| `/api/employee/expense-sheets/{id}/add-item` | POST | Add expense item |
+| `/api/employee/expense-sheets/{id}/item/{index}` | DELETE | Delete expense item |
+| `/api/employee/expense-sheets/{id}/submit` | PUT | Submit for approval |
+| `/api/employee/expense-sheets/summary/{user_id}` | GET | Get expense summary |
+
+**API Endpoints (Finance):**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/finance/expense-sheets` | GET | Get all submitted sheets |
+| `/api/finance/expense-sheets/{id}` | GET | Get sheet details |
+| `/api/finance/expense-sheets/{id}/verify` | PUT | Verify expense sheet |
+| `/api/finance/expense-sheets/{id}/approve` | PUT | Approve verified sheet |
+| `/api/finance/expense-sheets/{id}/reject` | PUT | Reject with reason |
+| `/api/finance/expense-sheets/{id}/pay` | PUT | Mark as paid with details |
+
+**Frontend Features:**
+| Feature | Location | Description |
+|---------|----------|-------------|
+| Summary Cards | ExpenseClaims.js | Total Claimed, Total Paid, Pending, Balance Due |
+| Current Sheet | ExpenseClaims.js | Current month's sheet with items table |
+| All Sheets History | ExpenseClaims.js | Historical sheets with expandable details |
+| Status Badges | Both | Color-coded badges (draft, pending, verified, approved, rejected, paid) |
+| Receipt Upload | ExpenseClaims.js | Photo/PDF upload in add/edit item modal |
+| View Modal | ExpenseClaims.js | View expense item details |
+| Edit Modal | ExpenseClaims.js | Edit expense item (draft only) |
+| Finance Stats | ExpenseApprovals.js | Pending count, Verified count, Approved count, Paid count |
+| Approval Actions | ExpenseApprovals.js | Verify, Approve, Reject, Mark Paid buttons |
+| Payment Modal | ExpenseApprovals.js | Record payment mode, reference, amount |
+
+**Database Collection:** `expense_sheets`
+```json
+{
+  "id": "uuid",
+  "sheet_no": "EXP-2026-0001",
+  "user_id": "user_id",
+  "user_name": "Employee Name",
+  "department": "Department",
+  "month": 2,
+  "year": 2026,
+  "month_name": "February",
+  "items": [
+    {
+      "date": "2026-02-15",
+      "project_name": "Customer Project",
+      "bill_type": "Travel - Bus/Auto/Cab",
+      "description": "Site visit",
+      "amount": 500,
+      "place": "Chennai",
+      "mode": "Cash",
+      "receipt_url": "/api/uploads/expense_receipts/xxx.pdf"
+    }
+  ],
+  "total_amount": 5000,
+  "advance_received": 2000,
+  "previous_due": 500,
+  "net_claim_amount": 3500,
+  "status": "draft|pending|verified|approved|rejected|paid",
+  "submitted_at": "ISO timestamp",
+  "verified_by": "Finance Name",
+  "approved_by": "Finance Manager",
+  "paid_amount": 3500,
+  "payment_mode": "Bank Transfer",
+  "payment_reference": "TXN123456"
+}
+```
+
+**Testing:** 100% pass rate - 19/19 backend tests, all frontend workflows verified.
+
+---
+*Last Updated: February 21, 2026*
+*Status: MONTHLY EXPENSE CLAIMS MODULE COMPLETE ✅*
+
+---
+
 ## Known Issue - Production Environment
 
 ### Email Sender Name (SMTP_FROM_NAME) ⚠️
@@ -1790,4 +1912,4 @@ Employee Workspace              HR Department              Payroll
 **Note:** Preview environment is working correctly - this is a production-only issue.
 
 ---
-*Last Updated: February 20, 2026*
+*Last Updated: February 21, 2026*
