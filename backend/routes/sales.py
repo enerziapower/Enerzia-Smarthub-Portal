@@ -942,6 +942,7 @@ async def create_quotation(data: QuotationCreate):
         "id": str(uuid.uuid4()),
         "quotation_no": quotation_no,
         "enquiry_id": data.enquiry_id,
+        "customer_id": data.customer_id,  # Link to customer record
         "customer_name": data.customer_name,
         "customer_address": data.customer_address,
         "shipping_address": data.shipping_address,
