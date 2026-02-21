@@ -885,15 +885,19 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
         status = record.get("status", "")
         status_details = {}
         
-        # Check for Sunday (holiday)
+        # Check for Sunday (weekly off)
         if day_of_week == 6:  # Sunday
             status = "holiday"
             status_details = {"holiday_type": "weekly_off", "name": "Sunday"}
         
-        # Check for public holiday
+        # Check for public/company holiday from holidays collection
         elif date_str in public_holidays:
+            holiday_info = public_holidays[date_str]
             status = "holiday"
-            status_details = {"holiday_type": "public", "name": public_holidays[date_str]}
+            status_details = {
+                "holiday_type": holiday_info.get("type", "public"),
+                "name": holiday_info.get("name", "Holiday")
+            }
         
         # Check for approved leave
         elif date_str in leave_dates:
@@ -914,8 +918,8 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
                     "reason": leave_info.get("reason", "")
                 }
         
-        # If no status yet and date is in the past, mark as absent
-        elif not status and date_str < today and day_of_week != 6:
+        # If no status yet and date is in the past, mark as absent (skip holidays)
+        elif not status and date_str < today and day_of_week != 6 and date_str not in public_holidays:
             status = "absent"
             status_details = {"auto_marked": True}
         
