@@ -956,3 +956,281 @@ async def mark_expense_sheet_paid(sheet_id: str, payment: PaymentRequest):
         await db.expense_sheets.update_one({"id": sheet_id}, {"$set": update_data})
     
     return {"message": "Payment recorded successfully", "status": "paid"}
+
+
+# ============== ADVANCE MANAGEMENT (Finance Module) ==============
+# Finance department can view/approve advance requests and record payments
+# Running balance: Total advances paid - Total advances used in expense sheets
+
+class AdvancePaymentDetails(PydanticBaseModel):
+    """Payment details when Finance pays an approved advance"""
+    paid_amount: float
+    payment_date: str
+    payment_mode: str  # Cash, Bank Transfer, UPI
+    payment_reference: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+class DirectAdvancePayment(PydanticBaseModel):
+    """Direct advance payment without request (for urgent/walk-in cases)"""
+    user_id: str
+    user_name: str
+    emp_id: str
+    department: str
+    amount: float
+    purpose: str
+    project_name: Optional[str] = None
+    payment_date: str
+    payment_mode: str
+    payment_reference: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+@finance_router.get("/advance-requests")
+async def get_all_advance_requests(status: Optional[str] = None):
+    """Get all advance requests for Finance review"""
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    
+    cursor = db.advance_requests.find(query, {"_id": 0}).sort("requested_at", -1)
+    requests = await cursor.to_list(200)
+    
+    # Calculate stats
+    pending_count = sum(1 for r in requests if r.get("status") == "pending")
+    pending_amount = sum(r.get("amount", 0) for r in requests if r.get("status") == "pending")
+    approved_count = sum(1 for r in requests if r.get("status") == "approved")
+    approved_amount = sum(r.get("amount", 0) for r in requests if r.get("status") == "approved")
+    paid_count = sum(1 for r in requests if r.get("status") == "paid")
+    paid_amount = sum(r.get("paid_amount", 0) for r in requests if r.get("status") == "paid")
+    
+    return {
+        "requests": requests,
+        "stats": {
+            "pending_count": pending_count,
+            "pending_amount": pending_amount,
+            "approved_count": approved_count,
+            "approved_amount": approved_amount,
+            "paid_count": paid_count,
+            "paid_amount": paid_amount
+        }
+    }
+
+
+@finance_router.put("/advance-requests/{request_id}/approve")
+async def approve_advance_request(request_id: str, approved_by: str):
+    """
+    Approve an advance request - after approval, Finance needs to record payment
+    Status: pending -> approved
+    """
+    result = await db.advance_requests.update_one(
+        {"id": request_id, "status": "pending"},
+        {"$set": {
+            "status": "approved",
+            "approved_by": approved_by,
+            "approved_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or not in pending status")
+    
+    return {"message": "Advance request approved. Please record payment details.", "status": "approved"}
+
+
+@finance_router.put("/advance-requests/{request_id}/reject")
+async def reject_advance_request(request_id: str, rejected_by: str, reason: str = ""):
+    """Reject an advance request"""
+    result = await db.advance_requests.update_one(
+        {"id": request_id, "status": "pending"},
+        {"$set": {
+            "status": "rejected",
+            "rejected_by": rejected_by,
+            "rejected_at": datetime.now(timezone.utc).isoformat(),
+            "rejection_reason": reason
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or not in pending status")
+    
+    return {"message": "Advance request rejected", "status": "rejected"}
+
+
+@finance_router.put("/advance-requests/{request_id}/pay")
+async def record_advance_payment(request_id: str, payment: AdvancePaymentDetails, paid_by: str):
+    """
+    Record payment for an approved advance request
+    Status: approved -> paid
+    This adds to the employee's advance balance
+    """
+    # Find the request
+    request = await db.advance_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Advance request not found")
+    
+    if request.get("status") != "approved":
+        raise HTTPException(status_code=400, detail=f"Cannot pay request with status: {request.get('status')}. Must be approved first.")
+    
+    result = await db.advance_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": "paid",
+            "paid_amount": payment.paid_amount,
+            "payment_date": payment.payment_date,
+            "payment_mode": payment.payment_mode,
+            "payment_reference": payment.payment_reference,
+            "paid_by": paid_by,
+            "paid_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to update payment details")
+    
+    return {"message": "Advance payment recorded successfully", "status": "paid"}
+
+
+@finance_router.post("/advances/direct")
+async def record_direct_advance(payment: DirectAdvancePayment, paid_by: str):
+    """
+    Record a direct advance payment (without prior request)
+    For urgent/walk-in cases where employee needs advance immediately
+    """
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": payment.user_id,
+        "user_name": payment.user_name,
+        "emp_id": payment.emp_id,
+        "department": payment.department,
+        "amount": payment.amount,
+        "purpose": payment.purpose,
+        "project_name": payment.project_name,
+        "remarks": payment.remarks,
+        "status": "paid",  # Direct payment, so immediately paid
+        "requested_at": datetime.now(timezone.utc).isoformat(),
+        "approved_by": paid_by,
+        "approved_at": datetime.now(timezone.utc).isoformat(),
+        "paid_amount": payment.amount,
+        "payment_date": payment.payment_date,
+        "payment_mode": payment.payment_mode,
+        "payment_reference": payment.payment_reference,
+        "paid_by": paid_by,
+        "paid_at": datetime.now(timezone.utc).isoformat(),
+        "is_direct_payment": True  # Flag to identify direct payments vs requests
+    }
+    
+    await db.advance_requests.insert_one(doc)
+    doc.pop("_id", None)
+    
+    return {"message": "Direct advance payment recorded", "advance": doc}
+
+
+@finance_router.get("/advances/employee/{user_id}")
+async def get_employee_advance_history(user_id: str):
+    """Get complete advance history and balance for a specific employee"""
+    # All advance payments for this employee
+    advances_cursor = db.advance_requests.find(
+        {"user_id": user_id, "status": "paid"},
+        {"_id": 0}
+    ).sort("payment_date", -1)
+    advances = await advances_cursor.to_list(100)
+    
+    total_advances = sum(a.get("paid_amount", 0) for a in advances)
+    
+    # All expense sheets where advance was used
+    expenses_cursor = db.expense_sheets.find(
+        {"user_id": user_id, "status": "paid", "advance_received": {"$gt": 0}},
+        {"_id": 0, "id": 1, "sheet_no": 1, "month_name": 1, "year": 1, "advance_received": 1, "paid_at": 1}
+    ).sort([("year", -1), ("month", -1)])
+    expense_sheets = await expenses_cursor.to_list(100)
+    
+    total_advance_used = sum(e.get("advance_received", 0) for e in expense_sheets)
+    
+    # Running balance
+    running_balance = total_advances - total_advance_used
+    
+    # Pending requests
+    pending_cursor = db.advance_requests.find(
+        {"user_id": user_id, "status": {"$in": ["pending", "approved"]}},
+        {"_id": 0}
+    )
+    pending_requests = await pending_cursor.to_list(20)
+    
+    return {
+        "user_id": user_id,
+        "running_balance": running_balance,
+        "total_advances_paid": total_advances,
+        "total_advance_used": total_advance_used,
+        "advance_payments": advances,
+        "expense_sheets_with_advance": expense_sheets,
+        "pending_requests": pending_requests
+    }
+
+
+@finance_router.get("/advances/balances")
+async def get_all_employee_advance_balances():
+    """Get advance balances for all employees (summary view for Finance)"""
+    # Aggregate advances by user
+    advances_pipeline = [
+        {"$match": {"status": "paid"}},
+        {"$group": {
+            "_id": "$user_id",
+            "user_name": {"$first": "$user_name"},
+            "department": {"$first": "$department"},
+            "total_advances": {"$sum": "$paid_amount"},
+            "advance_count": {"$sum": 1},
+            "last_advance_date": {"$max": "$payment_date"}
+        }}
+    ]
+    advances_result = await db.advance_requests.aggregate(advances_pipeline).to_list(500)
+    advances_by_user = {a["_id"]: a for a in advances_result}
+    
+    # Aggregate advance usage from expense sheets
+    usage_pipeline = [
+        {"$match": {"status": "paid", "advance_received": {"$gt": 0}}},
+        {"$group": {
+            "_id": "$user_id",
+            "total_used": {"$sum": "$advance_received"}
+        }}
+    ]
+    usage_result = await db.expense_sheets.aggregate(usage_pipeline).to_list(500)
+    usage_by_user = {u["_id"]: u["total_used"] for u in usage_result}
+    
+    # Combine into balance sheet
+    balances = []
+    for user_id, adv_data in advances_by_user.items():
+        used = usage_by_user.get(user_id, 0)
+        balance = adv_data["total_advances"] - used
+        
+        # Only include employees with non-zero balances or recent activity
+        if balance != 0 or adv_data.get("last_advance_date"):
+            balances.append({
+                "user_id": user_id,
+                "user_name": adv_data.get("user_name", "Unknown"),
+                "department": adv_data.get("department", ""),
+                "total_advances": adv_data["total_advances"],
+                "total_used": used,
+                "running_balance": balance,
+                "advance_count": adv_data["advance_count"],
+                "last_advance_date": adv_data.get("last_advance_date")
+            })
+    
+    # Sort by balance (highest first)
+    balances.sort(key=lambda x: x["running_balance"], reverse=True)
+    
+    # Calculate totals
+    total_outstanding = sum(b["running_balance"] for b in balances if b["running_balance"] > 0)
+    total_advances_given = sum(b["total_advances"] for b in balances)
+    total_advances_recovered = sum(b["total_used"] for b in balances)
+    
+    return {
+        "balances": balances,
+        "summary": {
+            "total_outstanding_advances": total_outstanding,
+            "total_advances_given": total_advances_given,
+            "total_advances_recovered": total_advances_recovered,
+            "employees_with_balance": sum(1 for b in balances if b["running_balance"] > 0)
+        }
+    }
+
