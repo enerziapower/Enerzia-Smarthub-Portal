@@ -767,47 +767,98 @@ const TargetingTab = ({ data, formatCurrency, onCustomerClick }) => {
 
 // ============== ALL CUSTOMERS TAB ==============
 const CustomersTab = ({ customers, searchTerm, setSearchTerm, formatCurrency, onCustomerClick }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState('name'); // name, enquiries, orders
+  const pageSize = 30;
+  
+  // Filter customers based on search term
   const filteredCustomers = customers.filter(c => 
-    c.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.contact_person?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.phone?.includes(searchTerm)
   );
+  
+  // Sort customers
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === 'enquiries') return (b.analytics?.total_enquiries || 0) - (a.analytics?.total_enquiries || 0);
+    if (sortBy === 'orders') return (b.analytics?.won_orders || 0) - (a.analytics?.won_orders || 0);
+    return 0;
+  });
+  
+  // Pagination
+  const totalPages = Math.ceil(sortedCustomers.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedCustomers = sortedCustomers.slice(startIndex, startIndex + pageSize);
+  
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search customers..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
-        />
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, contact, email, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">Sort by:</span>
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+          >
+            <option value="name">Name (A-Z)</option>
+            <option value="enquiries">Most Enquiries</option>
+            <option value="orders">Most Orders</option>
+          </select>
+          <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+            {filteredCustomers.length} customers
+          </span>
+        </div>
       </div>
 
       {/* Customer Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredCustomers.slice(0, 50).map((c, idx) => (
+        {paginatedCustomers.map((c, idx) => (
           <div 
-            key={idx} 
-            className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+            key={c.id || idx} 
+            className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
             onClick={() => onCustomerClick(c.name)}
           >
             <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-slate-900 truncate">{c.name}</h4>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-slate-900 truncate" title={c.name}>{c.name}</h4>
                 {c.contact_person && (
                   <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                    <Users className="w-3 h-3" /> {c.contact_person}
+                    <Users className="w-3 h-3 flex-shrink-0" /> 
+                    <span className="truncate">{c.contact_person}</span>
                   </p>
                 )}
-                {(c.location || c.city) && (
+                {c.email && (
                   <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
-                    <MapPin className="w-3 h-3" /> {c.location || c.city}
+                    <Mail className="w-3 h-3 flex-shrink-0" /> 
+                    <span className="truncate">{c.email}</span>
+                  </p>
+                )}
+                {(c.location || c.city || c.address) && (
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3 flex-shrink-0" /> 
+                    <span className="truncate">{c.location || c.city || c.address?.substring(0, 30)}</span>
                   </p>
                 )}
               </div>
-              <Eye className="w-4 h-4 text-slate-400" />
+              <Eye className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" />
             </div>
             {c.analytics && (
               <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
@@ -828,6 +879,82 @@ const CustomersTab = ({ customers, searchTerm, setSearchTerm, formatCurrency, on
           </div>
         ))}
       </div>
+      
+      {/* No Results */}
+      {paginatedCustomers.length === 0 && (
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+          <p className="text-slate-500">No customers found matching "{searchTerm}"</p>
+        </div>
+      )}
+      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            First
+          </button>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          
+          <div className="flex items-center gap-1">
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-8 h-8 text-sm rounded-lg ${
+                    currentPage === pageNum 
+                      ? 'bg-slate-900 text-white' 
+                      : 'border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Last
+          </button>
+          
+          <span className="text-sm text-slate-500 ml-2">
+            Page {currentPage} of {totalPages}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
