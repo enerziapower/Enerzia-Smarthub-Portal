@@ -773,12 +773,15 @@ async def update_expense_sheet(sheet_id: str, sheet: ExpenseSheet):
     if not existing:
         raise HTTPException(status_code=404, detail="Expense sheet not found")
     
-    if existing.get("status") not in ["pending", "rejected"]:
-        raise HTTPException(status_code=400, detail="Cannot edit sheet that is already verified/approved")
+    if existing.get("status") not in ["draft", "rejected"]:
+        raise HTTPException(status_code=400, detail="Cannot edit sheet that is already submitted/approved")
     
     # Recalculate totals
     total_amount = sum(item.amount for item in sheet.items)
     net_claim = total_amount + sheet.previous_due - sheet.advance_received
+    
+    # Keep status as draft if editing, or reset to draft if it was rejected
+    new_status = "draft" if existing.get("status") == "rejected" else existing.get("status", "draft")
     
     update_data = {
         "items": [item.dict() for item in sheet.items],
@@ -789,7 +792,7 @@ async def update_expense_sheet(sheet_id: str, sheet: ExpenseSheet):
         "previous_due": sheet.previous_due,
         "net_claim_amount": net_claim,
         "remarks": sheet.remarks,
-        "status": "pending",  # Reset to pending if it was rejected
+        "status": new_status,
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
