@@ -2010,3 +2010,75 @@ Running Balance = Total Advances Paid - Total Advances Used in Expense Sheets
 
 ---
 *Last Updated: February 21, 2026*
+
+---
+
+## Sales Order to Project Integration ✅ COMPLETE (Feb 22, 2026)
+
+### Order Handoff Module
+**Location:** 
+- Frontend: `/app/frontend/src/pages/projects/OrderHandoff.js`
+- Backend: `/app/backend/routes/project_orders.py`
+- Route: `/projects/order-handoff`
+
+**Purpose:** Bridge between Sales and Projects departments - allows Projects team to view confirmed sales orders and create projects from them.
+
+**Dashboard Stats:**
+| Stat | Description |
+|------|-------------|
+| **Pending Orders** | Count and total value of confirmed orders without linked projects |
+| **Active Projects** | Number of active projects created from orders |
+| **This Week Billing** | Total weekly billing amount for order-linked projects |
+| **This Month** | Number of projects created from orders this month |
+
+**Features:**
+| Feature | Description |
+|---------|-------------|
+| **Pending Orders Tab** | List of confirmed orders waiting for project assignment with "Create Project" buttons |
+| **All Orders Status Tab** | Table view showing order-to-project mapping with PID, status, and completion % |
+| **Create Project Modal** | Pre-fills order details (customer, value, category), allows budget allocation, engineer selection, dates |
+| **Search/Filter** | Filter orders by order number, customer name, or PID |
+| **Refresh** | Manual refresh button to reload all data |
+
+**Create Project Modal Fields:**
+- Order Summary (Customer, Order Value, Category)
+- Project Budget Allocation
+- Project Type (PSS, AS, OSS, CS)
+- Engineer in Charge (from Projects team)
+- Estimated Start Date
+- Target Completion Date
+- Notes
+
+**Workflow:**
+```
+Sales Order (Confirmed) → Order Handoff Dashboard → Create Project → Project Created (PID generated)
+     ↓                                                                       ↓
+Order Status: pending  →  Order Status: processing  →  Project Status: Need to Start
+```
+
+**API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/project-orders/dashboard` | GET | Dashboard stats (pending count, active projects, billing) |
+| `/api/project-orders/pending-orders` | GET | Orders without linked projects |
+| `/api/project-orders/orders-with-projects` | GET | All orders with project assignment status |
+| `/api/project-orders/create-project-from-order` | POST | Create project from order |
+| `/api/project-orders/weekly-billing` | POST | Record weekly billing entry |
+| `/api/project-orders/weekly-billing/{project_id}` | GET | Billing history for a project |
+| `/api/project-orders/weekly-billing/summary/current-week` | GET | Current week billing summary |
+| `/api/project-orders/project/{project_id}/order-details` | GET | Project with linked order details |
+
+**Database Updates:**
+- When project is created from order:
+  - Order status updated to `processing`
+  - Order gets `project_id` and `project_pid` fields
+  - Project gets `linked_order_id` and `linked_order_no` fields
+  - `order_lifecycle` collection updated with project link
+  - Notification created for Projects department
+
+**Testing:** 100% pass rate (26/26 backend tests, all frontend workflows verified)
+
+---
+*Last Updated: February 22, 2026*
+*Status: SALES ORDER TO PROJECT INTEGRATION COMPLETE ✅*
+
