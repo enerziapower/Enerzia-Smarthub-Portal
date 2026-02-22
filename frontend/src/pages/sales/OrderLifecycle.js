@@ -140,6 +140,66 @@ const OrderLifecycle = () => {
     }
   };
 
+  // Fetch available projects for linking (unlinked projects from Projects dept)
+  const fetchAvailableProjects = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/projects`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Filter to show only projects without linked orders
+        const unlinkedProjects = data.filter(p => !p.linked_order_id);
+        setAvailableProjects(unlinkedProjects);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  // Link an existing project to this order
+  const handleLinkProject = async () => {
+    if (!selectedLinkProject || !selectedOrder) {
+      toast.error('Please select a project to link');
+      return;
+    }
+
+    setLinkingProject(true);
+    try {
+      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${selectedOrder.id}/link-project`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ project_id: selectedLinkProject })
+      });
+
+      if (response.ok) {
+        toast.success('Project linked successfully');
+        setShowLinkProjectModal(false);
+        setSelectedLinkProject('');
+        // Refresh order details
+        await fetchOrderDetails(selectedOrder.id);
+        await fetchOrders();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to link project');
+      }
+    } catch (error) {
+      console.error('Error linking project:', error);
+      toast.error('Failed to link project');
+    } finally {
+      setLinkingProject(false);
+    }
+  };
+
+  // Open link project modal
+  const openLinkProjectModal = () => {
+    fetchAvailableProjects();
+    setShowLinkProjectModal(true);
+  };
+
   useEffect(() => {
     fetchOrders();
     fetchStats();
