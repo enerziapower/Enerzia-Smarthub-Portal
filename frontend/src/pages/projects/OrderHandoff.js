@@ -590,28 +590,7 @@ const OrderHandoff = () => {
               </div>
 
               {/* Hidden fields for compatibility */}
-              <input type="hidden" value={projectForm.estimated_start_date}
-                    onChange={(e) => setProjectForm({...projectForm, estimated_completion_date: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    data-testid="end-date-input"
-                  />
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Notes
-                </label>
-                <textarea
-                  value={projectForm.notes}
-                  onChange={(e) => setProjectForm({...projectForm, notes: e.target.value})}
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Any additional notes for this project..."
-                  data-testid="notes-input"
-                />
-              </div>
+              <input type="hidden" value={projectForm.estimated_start_date} />
 
               {/* Actions */}
               <div className="flex items-center justify-end gap-3 pt-4">
