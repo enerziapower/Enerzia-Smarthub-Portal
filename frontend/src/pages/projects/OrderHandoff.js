@@ -337,8 +337,8 @@ const OrderHandoff = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Order Handoff</h1>
-          <p className="text-slate-500 mt-1">Receive orders from Sales and create projects</p>
+          <h1 className="text-2xl font-bold text-slate-900">Order Summary</h1>
+          <p className="text-slate-500 mt-1">View orders from Sales and create projects</p>
         </div>
         <button
           onClick={handleRefresh}
