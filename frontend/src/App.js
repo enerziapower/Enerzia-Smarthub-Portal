@@ -34,6 +34,8 @@ import AMCManagement from './pages/projects/AMCManagement';
 // Calibration Services Module
 import CalibrationList from './pages/projects/CalibrationList';
 import CalibrationForm from './pages/projects/CalibrationForm';
+// Order Handoff Module
+import OrderHandoff from './pages/projects/OrderHandoff';
 
 // Employee Hub Pages
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
