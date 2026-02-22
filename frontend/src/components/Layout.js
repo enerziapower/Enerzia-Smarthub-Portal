@@ -209,9 +209,11 @@ const Layout = () => {
   // Projects Department
   const projectsNavigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Order Summary', href: '/projects/order-handoff', icon: Package },
     { name: 'Projects & Services', href: '/projects', icon: FolderKanban },
     { name: 'Project Management', href: '/projects/lifecycle', icon: TrendingUp },
-    { name: 'Order Handoff', href: '/projects/order-handoff', icon: ArrowRightCircle },
+    { name: 'Weekly Billing', href: '/projects/weekly-billing', icon: DollarSign },
+    { name: 'Payment Requests', href: '/projects/payment-requests', icon: CreditCard },
     { name: 'Work Planner', href: '/projects/work-schedule', icon: Calendar },
     { name: 'AMC Management', href: '/projects/amc-management', icon: FileText },
     { name: 'Project Reports', href: '/projects/project-reports', icon: FileCheck },
