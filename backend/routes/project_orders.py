@@ -270,6 +270,10 @@ async def create_project_from_order(data: OrderHandoffCreate):
     
     next_pid = f"PID/{financial_year}/{(max_num + 1):03d}"
     
+    # Use order budget if not provided, fallback to order total
+    order_amount = order.get("total_amount", 0) or order.get("subtotal", 0)
+    budget = data.budget_allocation if data.budget_allocation else order_amount
+    
     # Create project
     project = {
         "id": str(uuid.uuid4()),
@@ -285,14 +289,14 @@ async def create_project_from_order(data: OrderHandoffCreate):
         "engineer_in_charge": data.engineer_in_charge,
         "project_date": data.estimated_start_date or datetime.now().strftime("%d/%m/%Y"),
         "completion_date": data.estimated_completion_date,
-        "po_amount": order.get("total_amount", 0),
-        "budget": data.budget_allocation,
+        "po_amount": order_amount,
+        "budget": budget,
         "actual_expenses": 0,
-        "balance": order.get("total_amount", 0),
+        "balance": order_amount,
         "invoiced_amount": 0,
         "completion_percentage": 0,
         "this_week_billing": 0,
-        "pid_savings": data.budget_allocation,
+        "pid_savings": budget,
         "weekly_actions": data.notes or "",
         "linked_order_id": data.order_id,
         "linked_order_no": order.get("order_no", ""),
