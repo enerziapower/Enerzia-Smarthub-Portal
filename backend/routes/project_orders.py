@@ -52,14 +52,23 @@ class WeeklyBillingCreate(BaseModel):
 
 
 class OrderHandoffCreate(BaseModel):
-    """Create project handoff from order"""
+    """Create project handoff from order - Enhanced"""
     order_id: str
-    budget_allocation: Optional[float] = None  # Optional - will use order budget if not provided
-    project_type: Optional[str] = None  # PSS, AS, OSS, CS
+    customer_name: Optional[str] = None
+    location: Optional[str] = None
+    category: Optional[str] = None  # PSS, AS, OSS, CS, AMC, CAL
+    project_name: Optional[str] = None
+    vendor: Optional[str] = "Enerzia"
     engineer_in_charge: str
+    team_members: Optional[List[str]] = []
+    project_actions: Optional[str] = None
+    work_items: Optional[List[dict]] = []
+    notes: Optional[str] = None
+    # Legacy fields for backward compatibility
+    budget_allocation: Optional[float] = None
+    project_type: Optional[str] = None
     estimated_start_date: Optional[str] = None
     estimated_completion_date: Optional[str] = None
-    notes: Optional[str] = None
 
 
 # ============== HELPER FUNCTIONS ==============
