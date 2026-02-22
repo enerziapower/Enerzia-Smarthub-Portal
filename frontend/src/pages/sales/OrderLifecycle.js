@@ -3,8 +3,7 @@ import {
   Package, DollarSign, TrendingUp, Clock, CheckCircle, AlertTriangle,
   Plus, Search, Filter, RefreshCw, X, Edit2, Eye, ChevronDown,
   Target, Wallet, Truck, FileText, Building2, Calendar, Percent,
-  ArrowRight, PiggyBank, Receipt, CreditCard, AlertCircle, ChevronRight, FolderKanban,
-  Link2
+  ArrowRight, PiggyBank, Receipt, CreditCard, AlertCircle, ChevronRight, FolderKanban
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AddProjectModal from '../../components/AddProjectModal';
