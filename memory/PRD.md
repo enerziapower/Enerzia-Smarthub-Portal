@@ -2181,3 +2181,101 @@ Sales → Order Details → Click "Link Project" → Select existing project →
 *Last Updated: February 22, 2026*
 *Status: WORKFLOW UPDATE COMPLETE ✅*
 
+
+---
+
+## Streamlined Sales → Projects Workflow (Feb 22, 2026) - Option D Implemented
+
+### What Changed:
+
+#### ✅ KEPT - Order Handoff (Enhanced)
+**Route:** `/projects/order-handoff`
+**Owner:** Projects Department
+
+Enhanced Create Project modal now includes:
+| Field | Description |
+|-------|-------------|
+| Customer | Editable, pre-filled from order |
+| Location | Project location |
+| Category | PSS, AS, OSS, CS, AMC, CAL |
+| Vendor | Default: Enerzia |
+| Project Name | Auto-generated, editable |
+| Engineer in Charge | Required dropdown |
+| Team Members | Add multiple team members |
+| Project Actions | Scope of work description |
+| Work Items | **Derived from quotation** - pre-filled line items with qty, unit, rate |
+| Notes | Additional notes |
+
+#### ✅ KEPT - Project Management (Accordion Style)
+**Route:** `/projects/lifecycle`
+**Owner:** Projects Department
+
+Groups by status: Need to Start → Ongoing → Completed → Invoiced → Partially Invoiced → Cancelled
+
+#### ❌ REMOVED - Link Project Button
+**From:** Order Lifecycle (Sales view)
+**Why:** Projects dept is the sole owner of project creation
+
+#### ✅ UPDATED - Order Lifecycle Project Status (Read-Only)
+**Route:** `/sales/order-lifecycle` 
+**Owner:** Sales Department (view only)
+
+Sales can now ONLY VIEW (not edit) project status:
+- PID number
+- Status badge (Need to Start, Ongoing, Completed, etc.)
+- **Completion %** with progress bar
+- **Budget vs Actual Expenses**
+- Engineer in Charge
+
+### Final Streamlined Workflow:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      STREAMLINED SALES → PROJECTS WORKFLOW                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+                  SALES DEPARTMENT                    PROJECTS DEPARTMENT
+                        │                                    │
+                        ▼                                    │
+              ┌─────────────────┐                            │
+              │ Create Order    │                            │
+              │ Configure Budget│                            │
+              └────────┬────────┘                            │
+                       │                                     │
+                       │ Order Confirmed                     │
+                       │                                     │
+                       ▼                                     ▼
+              ┌─────────────────┐               ┌─────────────────────────┐
+              │ Order Lifecycle │               │  Order Handoff          │
+              │ (Track Status)  │◄──────────────│  - View pending orders  │
+              └────────┬────────┘   Automatic   │  - Create Project       │
+                       │            Link        │  - Assign Engineer/Team │
+                       │                        │  - Set Work Items       │
+                       │                        └───────────┬─────────────┘
+                       │                                    │
+                       ▼                                    ▼
+              ┌─────────────────┐               ┌─────────────────────────┐
+              │ VIEW ONLY:      │               │  Project Management     │
+              │ - Project PID   │               │  - Update Status        │
+              │ - Completion %  │               │  - Track Progress       │
+              │ - Budget/Actual │               │  - Manage Work Items    │
+              └─────────────────┘               └───────────┬─────────────┘
+                                                           │
+                                                           ▼
+                                               ┌─────────────────────────┐
+                                               │  Payment Requests       │
+                                               │  - Raise for materials  │
+                                               │  - Finance → CEO flow   │
+                                               └─────────────────────────┘
+```
+
+### Key Metrics Tracked:
+1. **Project Completion %** - Visible in both Order Lifecycle and Project Management
+2. **Budget vs Actual Expenses** - Sales tracks in Order Lifecycle, Projects manages in Project Management
+
+**Testing:** 100% pass rate (36/36 backend tests passed, 8 skipped due to no pending orders)
+
+---
+*Last Updated: February 22, 2026*
+*Status: WORKFLOW STREAMLINED ✅*
+
