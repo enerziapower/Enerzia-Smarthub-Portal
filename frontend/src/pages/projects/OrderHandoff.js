@@ -540,41 +540,18 @@ const OrderHandoff = () => {
                     <span className="font-medium text-slate-900">{selectedOrder.category}</span>
                   </div>
                 )}
+                {selectedOrder.customer_address && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Location:</span>
+                    <span className="font-medium text-slate-900 text-right max-w-[250px]">{selectedOrder.customer_address}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Budget Allocation */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Project Budget Allocation
-                </label>
-                <input
-                  type="number"
-                  value={projectForm.budget_allocation}
-                  onChange={(e) => setProjectForm({...projectForm, budget_allocation: e.target.value})}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter budget amount"
-                  data-testid="budget-input"
-                />
-              </div>
-
-              {/* Project Type */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Project Type
-                </label>
-                <select
-                  value={projectForm.project_type}
-                  onChange={(e) => setProjectForm({...projectForm, project_type: e.target.value})}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  data-testid="project-type-select"
-                >
-                  <option value="">Select type...</option>
-                  <option value="PSS">PSS - Project & Services</option>
-                  <option value="AS">AS - Asset Services</option>
-                  <option value="OSS">OSS - Other Sales & Services</option>
-                  <option value="CS">CS - Commercial Sales</option>
-                </select>
-              </div>
+              <p className="text-sm text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <strong>Note:</strong> Budget allocation is managed by Sales in Order Management. 
+                Projects will be linked after creation.
+              </p>
 
               {/* Engineer in Charge */}
               <div>
@@ -597,27 +574,23 @@ const OrderHandoff = () => {
                 </select>
               </div>
 
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Estimated Start
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.estimated_start_date}
-                    onChange={(e) => setProjectForm({...projectForm, estimated_start_date: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    data-testid="start-date-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Target Completion
-                  </label>
-                  <input
-                    type="date"
-                    value={projectForm.estimated_completion_date}
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={projectForm.notes}
+                  onChange={(e) => setProjectForm({...projectForm, notes: e.target.value})}
+                  rows={2}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Any notes for this project..."
+                  data-testid="notes-input"
+                />
+              </div>
+
+              {/* Hidden fields for compatibility */}
+              <input type="hidden" value={projectForm.estimated_start_date}
                     onChange={(e) => setProjectForm({...projectForm, estimated_completion_date: e.target.value})}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     data-testid="end-date-input"
