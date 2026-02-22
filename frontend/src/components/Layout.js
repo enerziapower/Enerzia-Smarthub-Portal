@@ -9,7 +9,8 @@ import {
   PiggyBank, Calculator, UserCircle, BadgeCheck, Cog, Wrench,
   Package, Truck, FileCheck, Landmark, Receipt, Calendar,
   UsersRound, Store, LayoutGrid, Home, CalendarDays, Bell, Share2,
-  Boxes, Factory, CircleDollarSign, Briefcase as BriefcaseIcon, MapPin, Link2
+  Boxes, Factory, CircleDollarSign, Briefcase as BriefcaseIcon, MapPin, Link2,
+  ArrowRightCircle
 } from 'lucide-react';
 import { settingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
