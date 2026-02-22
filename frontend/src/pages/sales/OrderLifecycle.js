@@ -54,6 +54,10 @@ const OrderLifecycle = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showLinkProjectModal, setShowLinkProjectModal] = useState(false);
+  const [availableProjects, setAvailableProjects] = useState([]);
+  const [selectedLinkProject, setSelectedLinkProject] = useState('');
+  const [linkingProject, setLinkingProject] = useState(false);
   const [projectPrefillData, setProjectPrefillData] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
