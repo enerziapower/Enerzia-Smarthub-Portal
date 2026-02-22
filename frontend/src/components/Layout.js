@@ -210,6 +210,7 @@ const Layout = () => {
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Projects & Services', href: '/projects', icon: FolderKanban },
     { name: 'Project Management', href: '/projects/lifecycle', icon: TrendingUp },
+    { name: 'Order Handoff', href: '/projects/order-handoff', icon: ArrowRightCircle },
     { name: 'Work Planner', href: '/projects/work-schedule', icon: Calendar },
     { name: 'AMC Management', href: '/projects/amc-management', icon: FileText },
     { name: 'Project Reports', href: '/projects/project-reports', icon: FileCheck },
