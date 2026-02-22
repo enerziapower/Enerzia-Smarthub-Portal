@@ -278,6 +278,8 @@ function AppRoutes() {
           <Route path="calibration/new" element={<CalibrationForm />} />
           <Route path="calibration/:contractId" element={<CalibrationForm />} />
           <Route path="calibration/:contractId/edit" element={<CalibrationForm />} />
+          {/* Order Handoff - Sales to Projects Integration */}
+          <Route path="order-handoff" element={<OrderHandoff />} />
         </Route>
 
         {/* Accounts Department */}
