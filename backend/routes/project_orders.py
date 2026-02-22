@@ -54,7 +54,7 @@ class WeeklyBillingCreate(BaseModel):
 class OrderHandoffCreate(BaseModel):
     """Create project handoff from order"""
     order_id: str
-    budget_allocation: float
+    budget_allocation: Optional[float] = None  # Optional - will use order budget if not provided
     project_type: Optional[str] = None  # PSS, AS, OSS, CS
     engineer_in_charge: str
     estimated_start_date: Optional[str] = None
