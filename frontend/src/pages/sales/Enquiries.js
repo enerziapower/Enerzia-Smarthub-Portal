@@ -641,16 +641,9 @@ const Enquiries = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{formatDate(enq.date)}</td>
                     <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-slate-900">{enq.company_name}</p>
-                        {enq.location && (
-                          <p className="text-xs text-slate-500 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {enq.location}
-                          </p>
-                        )}
-                      </div>
+                      <p className="font-medium text-slate-900 truncate max-w-[200px]" title={enq.company_name}>{enq.company_name}</p>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{enq.description}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 max-w-[250px] truncate" title={enq.description}>{enq.description || '-'}</td>
                     <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">
                       {formatCurrency(enq.value)}
                     </td>
