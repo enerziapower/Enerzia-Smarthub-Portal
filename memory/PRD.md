@@ -2279,3 +2279,47 @@ Sales can now ONLY VIEW (not edit) project status:
 *Last Updated: February 22, 2026*
 *Status: WORKFLOW STREAMLINED ✅*
 
+
+---
+
+## Weekly Billing & Menu Updates (Feb 22, 2026)
+
+### 1. Weekly Billing Feature
+**Route:** `/projects/weekly-billing`
+
+**Purpose:** Project Managers submit weekly billing entries for ongoing projects.
+
+**Features:**
+| Feature | Description |
+|---------|-------------|
+| Current Week Display | Shows week date range (Mon-Sun) |
+| Stats | Ongoing Projects count, This Week Billing total, Entries count |
+| Project List | Filtered by status, search by PID/client |
+| Add Billing Modal | Amount, Completion %, Work Description, Remarks |
+
+**API Endpoints:**
+- `GET /api/project-orders/weekly-billing/summary/current-week`
+- `POST /api/project-orders/weekly-billing`
+
+### 2. Menu Updates
+**Order Summary** (renamed from Order Handoff):
+- Moved to TOP of Projects menu (below Dashboard)
+- Shows orders from Sales, allows creating projects
+
+**Payment Requests**:
+- Added to Projects menu
+- Route: `/projects/payment-requests`
+
+### 3. Payment Request Flow
+```
+Projects → New Payment Request → Finance Review → CEO Approval → Paid
+```
+
+**Categories:** Site Expenses, Material Purchase, Vendor Payment, Transport, Employee Expenses, etc.
+
+**Testing:** 100% pass rate (all backend APIs and frontend UIs verified)
+
+---
+*Last Updated: February 22, 2026*
+*Status: WEEKLY BILLING & MENU UPDATES COMPLETE ✅*
+
