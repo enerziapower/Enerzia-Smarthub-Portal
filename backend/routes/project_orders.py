@@ -283,19 +283,31 @@ async def create_project_from_order(data: OrderHandoffCreate):
     order_amount = order.get("total_amount", 0) or order.get("subtotal", 0)
     budget = data.budget_allocation if data.budget_allocation else order_amount
     
-    # Create project
+    # Use provided values or fall back to order values
+    customer_name = data.customer_name or order.get("customer_name", "")
+    location = data.location or order.get("customer_address", "")
+    category = data.category or data.project_type or order.get("category", "PSS")
+    project_name = data.project_name or f"Project for Order {order.get('order_no', '')}"
+    vendor = data.vendor or "Enerzia"
+    
+    # Work items from form or order
+    work_items = data.work_items if data.work_items else order.get("items", [])
+    
+    # Create project with enhanced fields
     project = {
         "id": str(uuid.uuid4()),
         "pid_no": next_pid,
-        "category": data.project_type or order.get("category", "PSS"),
+        "category": category,
         "department": "PROJECTS",
         "po_number": order.get("po_number") or order.get("order_no"),
-        "client": order.get("customer_name", ""),
-        "location": order.get("customer_address", ""),
-        "project_name": f"Project for Order {order.get('order_no', '')}",
-        "vendor": "Enerzia",
+        "client": customer_name,
+        "location": location,
+        "project_name": project_name,
+        "vendor": vendor,
         "status": "Need to Start",
         "engineer_in_charge": data.engineer_in_charge,
+        "team_members": data.team_members or [],
+        "project_actions": data.project_actions or "",
         "project_date": data.estimated_start_date or datetime.now().strftime("%d/%m/%Y"),
         "completion_date": data.estimated_completion_date,
         "po_amount": order_amount,
@@ -309,7 +321,7 @@ async def create_project_from_order(data: OrderHandoffCreate):
         "weekly_actions": data.notes or "",
         "linked_order_id": data.order_id,
         "linked_order_no": order.get("order_no", ""),
-        "work_items": order.get("items", []),
+        "work_items": work_items,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
