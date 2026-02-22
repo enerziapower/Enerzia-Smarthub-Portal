@@ -352,10 +352,11 @@ async def create_project_from_order(data: OrderHandoffCreate):
     )
     
     # Create notification for Projects department
+    notification_budget = budget if budget else 0
     await create_notification(
         department="PROJECTS",
         title="New Project Created from Order",
-        message=f"Project {next_pid} created from Order {order.get('order_no', '')} for {order.get('customer_name', '')}. Budget: ₹{data.budget_allocation:,.0f}",
+        message=f"Project {next_pid} created from Order {order.get('order_no', '')} for {customer_name}. Budget: ₹{notification_budget:,.0f}",
         notif_type="new_project",
         reference_id=project["id"],
         reference_type="project",
