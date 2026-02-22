@@ -592,6 +592,71 @@ async def delete_expense(expense_id: str):
     return {"message": "Expense deleted"}
 
 
+# ============== PROJECT LINKING ==============
+
+class LinkProjectRequest(BaseModel):
+    project_id: str
+
+@router.post("/orders/{order_id}/link-project")
+async def link_project_to_order(order_id: str, data: LinkProjectRequest):
+    """Link an existing project to this order (from Sales side)"""
+    # Verify order exists
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Verify project exists and is not already linked
+    project = await db.projects.find_one({"id": data.project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if project.get("linked_order_id"):
+        raise HTTPException(status_code=400, detail="Project is already linked to another order")
+    
+    # Check if order is already linked to a project
+    existing_link = await db.projects.find_one({"linked_order_id": order_id})
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Order already has a linked project")
+    
+    # Update project with order link
+    await db.projects.update_one(
+        {"id": data.project_id},
+        {"$set": {
+            "linked_order_id": order_id,
+            "linked_order_no": order.get("order_no", ""),
+            "client": order.get("customer_name", project.get("client")),
+            "po_amount": order.get("total_amount", 0) or order.get("subtotal", 0),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update order with project link
+    await db.sales_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "project_id": data.project_id,
+            "project_pid": project.get("pid_no"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Also update order_lifecycle if exists
+    await db.order_lifecycle.update_one(
+        {"sales_order_id": order_id},
+        {"$set": {
+            "project_id": data.project_id,
+            "project_pid": project.get("pid_no"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Project linked successfully",
+        "project_id": data.project_id,
+        "project_pid": project.get("pid_no")
+    }
+
+
 # ============== DASHBOARD & ANALYTICS ==============
 
 @router.get("/dashboard/stats")
