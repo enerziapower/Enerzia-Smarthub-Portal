@@ -3,20 +3,33 @@
  * 
  * Allows Projects department to:
  * - View confirmed sales orders pending project assignment
- * - Create projects from confirmed orders
- * - Record weekly billing for active projects
- * - View dashboard of orders-to-projects pipeline
+ * - Create projects from confirmed orders with full details
+ * - Track order-to-project pipeline
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Package, ArrowRight, Plus, TrendingUp, Clock, CheckCircle2, 
-  DollarSign, Calendar, User, Building2, FileText, AlertCircle,
-  ArrowRightCircle, Eye, Filter, Search, RefreshCw, X
+  Package, Plus, TrendingUp, Clock, CheckCircle2, 
+  DollarSign, Calendar, User, Building2, FileText, 
+  RefreshCw, X, Users, Briefcase, ListChecks, Trash2,
+  ChevronDown, ChevronRight, Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// Project Categories
+const PROJECT_CATEGORIES = [
+  { value: 'PSS', label: 'PSS - Project & Services' },
+  { value: 'AS', label: 'AS - Asset Services' },
+  { value: 'OSS', label: 'OSS - Other Sales & Services' },
+  { value: 'CS', label: 'CS - Commercial Sales' },
+  { value: 'AMC', label: 'AMC - Annual Maintenance' },
+  { value: 'CAL', label: 'CAL - Calibration' }
+];
+
+// Work Item Units
+const UNIT_OPTIONS = ['Nos', 'Mtr', 'Sqm', 'Set', 'Lot', 'Kg', 'Ltr', 'Box', 'Pcs', 'Unit'];
 
 // Format currency
 const formatCurrency = (amount) => {
@@ -53,16 +66,24 @@ const OrderHandoff = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [engineers, setEngineers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [creating, setCreating] = useState(false);
   
-  // Form state for project creation
+  // Enhanced form state for project creation
   const [projectForm, setProjectForm] = useState({
-    budget_allocation: 0,
-    project_type: '',
+    customer_name: '',
+    location: '',
+    category: '',
+    project_name: '',
+    vendor: 'Enerzia',
     engineer_in_charge: '',
-    estimated_start_date: '',
-    estimated_completion_date: '',
+    team_members: [],
+    project_actions: '',
+    work_items: [],
     notes: ''
   });
+
+  // New team member input
+  const [newTeamMember, setNewTeamMember] = useState('');
 
   // Fetch dashboard data
   const fetchDashboard = useCallback(async () => {
@@ -146,15 +167,84 @@ const OrderHandoff = () => {
   // Handle order selection for project creation
   const handleSelectOrder = (order) => {
     setSelectedOrder(order);
+    
+    // Extract work items from order items (derived from quotation)
+    const workItems = (order.items || []).map((item, idx) => ({
+      id: `item-${idx}-${Date.now()}`,
+      description: item.description || item.name || '',
+      quantity: item.quantity || 1,
+      unit: item.unit || 'Nos',
+      rate: item.rate || item.unit_price || 0,
+      amount: item.amount || item.total || 0
+    }));
+    
     setProjectForm({
-      budget_allocation: order.total_amount || order.subtotal || 0,
-      project_type: order.category || 'PSS',
+      customer_name: order.customer_name || '',
+      location: order.customer_address || '',
+      category: order.category || 'PSS',
+      project_name: `Project for ${order.order_no || order.po_number || 'Order'}`,
+      vendor: 'Enerzia',
       engineer_in_charge: '',
-      estimated_start_date: new Date().toISOString().split('T')[0],
-      estimated_completion_date: order.delivery_date || '',
+      team_members: [],
+      project_actions: '',
+      work_items: workItems,
       notes: ''
     });
     setShowCreateModal(true);
+  };
+
+  // Add team member
+  const addTeamMember = () => {
+    if (newTeamMember.trim()) {
+      setProjectForm(prev => ({
+        ...prev,
+        team_members: [...prev.team_members, newTeamMember.trim()]
+      }));
+      setNewTeamMember('');
+    }
+  };
+
+  // Remove team member
+  const removeTeamMember = (index) => {
+    setProjectForm(prev => ({
+      ...prev,
+      team_members: prev.team_members.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Add work item
+  const addWorkItem = () => {
+    setProjectForm(prev => ({
+      ...prev,
+      work_items: [
+        ...prev.work_items,
+        { id: `new-${Date.now()}`, description: '', quantity: 1, unit: 'Nos', rate: 0, amount: 0 }
+      ]
+    }));
+  };
+
+  // Update work item
+  const updateWorkItem = (index, field, value) => {
+    setProjectForm(prev => ({
+      ...prev,
+      work_items: prev.work_items.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item, [field]: value };
+        // Auto-calculate amount
+        if (field === 'quantity' || field === 'rate') {
+          updated.amount = (parseFloat(updated.quantity) || 0) * (parseFloat(updated.rate) || 0);
+        }
+        return updated;
+      })
+    }));
+  };
+
+  // Remove work item
+  const removeWorkItem = (index) => {
+    setProjectForm(prev => ({
+      ...prev,
+      work_items: prev.work_items.filter((_, i) => i !== index)
+    }));
   };
 
   // Create project from order
@@ -166,14 +256,24 @@ const OrderHandoff = () => {
       return;
     }
     
+    if (!projectForm.project_name.trim()) {
+      toast.error('Please enter a project name');
+      return;
+    }
+    
+    setCreating(true);
     try {
       const payload = {
         order_id: selectedOrder.id,
-        budget_allocation: parseFloat(projectForm.budget_allocation) || 0,
-        project_type: projectForm.project_type,
+        customer_name: projectForm.customer_name,
+        location: projectForm.location,
+        category: projectForm.category,
+        project_name: projectForm.project_name,
+        vendor: projectForm.vendor,
         engineer_in_charge: projectForm.engineer_in_charge,
-        estimated_start_date: projectForm.estimated_start_date,
-        estimated_completion_date: projectForm.estimated_completion_date,
+        team_members: projectForm.team_members,
+        project_actions: projectForm.project_actions,
+        work_items: projectForm.work_items,
         notes: projectForm.notes
       };
       
@@ -201,6 +301,8 @@ const OrderHandoff = () => {
     } catch (err) {
       console.error('Error creating project:', err);
       toast.error('Failed to create project');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -236,7 +338,7 @@ const OrderHandoff = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Order Handoff</h1>
-          <p className="text-slate-500 mt-1">Manage sales orders to project assignments</p>
+          <p className="text-slate-500 mt-1">Receive orders from Sales and create projects</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -378,11 +480,6 @@ const OrderHandoff = () => {
                           {order.category}
                         </span>
                       )}
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                        order.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {order.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
-                      </span>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
@@ -400,9 +497,9 @@ const OrderHandoff = () => {
                       </div>
                     </div>
                     
-                    {order.customer_address && (
-                      <p className="text-sm text-slate-500 mt-2 truncate">
-                        Location: {order.customer_address}
+                    {order.items && order.items.length > 0 && (
+                      <p className="text-sm text-slate-500 mt-2">
+                        {order.items.length} line item(s) from quotation
                       </p>
                     )}
                   </div>
@@ -437,9 +534,8 @@ const OrderHandoff = () => {
                     <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Order No</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Customer</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Amount</th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Order Status</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Project</th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Project Status</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Status</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Completion</th>
                   </tr>
                 </thead>
@@ -449,16 +545,6 @@ const OrderHandoff = () => {
                       <td className="px-4 py-3 font-medium text-slate-900">{order.order_no}</td>
                       <td className="px-4 py-3 text-slate-600">{order.customer_name}</td>
                       <td className="px-4 py-3 text-slate-900 font-medium">{formatCurrency(order.total_amount)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-xs font-medium rounded ${
-                          order.order_status === 'delivered' ? 'bg-green-100 text-green-700' :
-                          order.order_status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                          order.order_status === 'confirmed' ? 'bg-teal-100 text-teal-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {order.order_status?.replace('_', ' ').toUpperCase() || '-'}
-                        </span>
-                      </td>
                       <td className="px-4 py-3">
                         {order.has_project ? (
                           <span className="font-medium text-blue-600">{order.project_pid}</span>
@@ -473,10 +559,12 @@ const OrderHandoff = () => {
                             order.project_status === 'Ongoing' ? 'bg-blue-100 text-blue-700' :
                             'bg-amber-100 text-amber-700'
                           }`}>
-                            {order.project_status || 'Not Started'}
+                            {order.project_status || 'Need to Start'}
                           </span>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span className="px-2 py-1 text-xs font-medium rounded bg-slate-100 text-slate-600">
+                            Pending
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -503,11 +591,11 @@ const OrderHandoff = () => {
         </div>
       )}
 
-      {/* Create Project Modal */}
+      {/* Enhanced Create Project Modal */}
       {showCreateModal && selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="create-project-modal">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-200 sticky top-0 bg-white z-10">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">Create Project from Order</h2>
@@ -523,39 +611,118 @@ const OrderHandoff = () => {
               </div>
             </div>
             
-            <form onSubmit={handleCreateProject} className="p-6 space-y-5">
+            <form onSubmit={handleCreateProject} className="p-6 space-y-6">
               {/* Order Summary */}
-              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Customer:</span>
-                  <span className="font-medium text-slate-900">{selectedOrder.customer_name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Order Value:</span>
-                  <span className="font-medium text-slate-900">{formatCurrency(selectedOrder.total_amount || selectedOrder.subtotal)}</span>
-                </div>
-                {selectedOrder.category && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Category:</span>
-                    <span className="font-medium text-slate-900">{selectedOrder.category}</span>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                  <Package className="w-4 h-4" /> Order Details
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <span className="text-blue-600">Order No:</span>
+                    <span className="ml-2 font-medium text-blue-900">{selectedOrder.order_no || selectedOrder.po_number}</span>
                   </div>
-                )}
-                {selectedOrder.customer_address && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Location:</span>
-                    <span className="font-medium text-slate-900 text-right max-w-[250px]">{selectedOrder.customer_address}</span>
+                  <div>
+                    <span className="text-blue-600">Value:</span>
+                    <span className="ml-2 font-medium text-blue-900">{formatCurrency(selectedOrder.total_amount || selectedOrder.subtotal)}</span>
                   </div>
-                )}
+                  <div>
+                    <span className="text-blue-600">Category:</span>
+                    <span className="ml-2 font-medium text-blue-900">{selectedOrder.category || '-'}</span>
+                  </div>
+                </div>
               </div>
 
-              <p className="text-sm text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <strong>Note:</strong> Budget allocation is managed by Sales in Order Management. 
-                Projects will be linked after creation.
-              </p>
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Customer */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <Building2 className="w-4 h-4 inline mr-1" />
+                    Customer <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={projectForm.customer_name}
+                    onChange={(e) => setProjectForm({...projectForm, customer_name: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Customer name"
+                    required
+                    data-testid="customer-input"
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={projectForm.location}
+                    onChange={(e) => setProjectForm({...projectForm, location: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Project location"
+                    data-testid="location-input"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={projectForm.category}
+                    onChange={(e) => setProjectForm({...projectForm, category: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                    data-testid="category-select"
+                  >
+                    <option value="">Select category...</option>
+                    {PROJECT_CATEGORIES.map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Vendor */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <Briefcase className="w-4 h-4 inline mr-1" />
+                    Vendor
+                  </label>
+                  <input
+                    type="text"
+                    value={projectForm.vendor}
+                    onChange={(e) => setProjectForm({...projectForm, vendor: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Vendor name"
+                    data-testid="vendor-input"
+                  />
+                </div>
+              </div>
+
+              {/* Project Name */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Project Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={projectForm.project_name}
+                  onChange={(e) => setProjectForm({...projectForm, project_name: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter project name"
+                  required
+                  data-testid="project-name-input"
+                />
+              </div>
 
               {/* Engineer in Charge */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <User className="w-4 h-4 inline mr-1" />
                   Engineer in Charge <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -574,26 +741,160 @@ const OrderHandoff = () => {
                 </select>
               </div>
 
+              {/* Team Members */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <Users className="w-4 h-4 inline mr-1" />
+                  Team Members
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={newTeamMember}
+                    onChange={(e) => setNewTeamMember(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTeamMember())}
+                    className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Add team member name"
+                    data-testid="team-member-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={addTeamMember}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                {projectForm.team_members.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {projectForm.team_members.map((member, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                        {member}
+                        <button type="button" onClick={() => removeTeamMember(idx)} className="hover:text-blue-900">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Project Actions */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <ListChecks className="w-4 h-4 inline mr-1" />
+                  Project Actions / Scope
+                </label>
+                <textarea
+                  value={projectForm.project_actions}
+                  onChange={(e) => setProjectForm({...projectForm, project_actions: e.target.value})}
+                  rows={3}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Describe the project scope, actions to be taken..."
+                  data-testid="project-actions-input"
+                />
+              </div>
+
+              {/* Work Items (Derived from Quotation) */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-slate-700">
+                    <FileText className="w-4 h-4 inline mr-1" />
+                    Work Summary / Line Items
+                    <span className="text-slate-400 font-normal ml-2">(from quotation)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addWorkItem}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+                    data-testid="add-work-item-btn"
+                  >
+                    <Plus className="w-4 h-4" /> Add Item
+                  </button>
+                </div>
+                
+                {projectForm.work_items.length > 0 ? (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {projectForm.work_items.map((item, index) => (
+                      <div key={item.id} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <span className="text-xs font-medium text-blue-600">Item #{index + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeWorkItem(index)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateWorkItem(index, 'description', e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 text-sm"
+                          placeholder="Description"
+                        />
+                        <div className="grid grid-cols-4 gap-2">
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => updateWorkItem(index, 'quantity', e.target.value)}
+                            className="px-2 py-1.5 border border-slate-200 rounded text-sm"
+                            placeholder="Qty"
+                          />
+                          <select
+                            value={item.unit}
+                            onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
+                            className="px-2 py-1.5 border border-slate-200 rounded text-sm"
+                          >
+                            {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                          </select>
+                          <input
+                            type="number"
+                            value={item.rate}
+                            onChange={(e) => updateWorkItem(index, 'rate', e.target.value)}
+                            className="px-2 py-1.5 border border-slate-200 rounded text-sm"
+                            placeholder="Rate"
+                          />
+                          <div className="px-2 py-1.5 bg-slate-100 rounded text-sm text-right font-medium">
+                            {formatCurrency(item.amount)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                    <FileText className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500">No line items from quotation</p>
+                    <button
+                      type="button"
+                      onClick={addWorkItem}
+                      className="text-sm text-blue-600 hover:text-blue-700 mt-1"
+                    >
+                      + Add manually
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Notes (Optional)
+                  Notes
                 </label>
                 <textarea
                   value={projectForm.notes}
                   onChange={(e) => setProjectForm({...projectForm, notes: e.target.value})}
                   rows={2}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Any notes for this project..."
+                  placeholder="Additional notes..."
                   data-testid="notes-input"
                 />
               </div>
 
-              {/* Hidden fields for compatibility */}
-              <input type="hidden" value={projectForm.estimated_start_date} />
-
               {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
@@ -604,10 +905,15 @@ const OrderHandoff = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  disabled={creating}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
                   data-testid="submit-btn"
                 >
-                  <ArrowRightCircle className="h-4 w-4" />
+                  {creating ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
                   Create Project
                 </button>
               </div>
