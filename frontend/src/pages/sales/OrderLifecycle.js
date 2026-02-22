@@ -1087,7 +1087,7 @@ const OrderLifecycle = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setShowLinkProjectModal(true)}
+                      onClick={openLinkProjectModal}
                       className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                     >
                       <Link2 className="w-4 h-4" />
