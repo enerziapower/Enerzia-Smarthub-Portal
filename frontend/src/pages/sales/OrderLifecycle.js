@@ -1073,32 +1073,75 @@ const OrderLifecycle = () => {
                 </div>
               )}
 
-              {/* Linked Project / Link Existing Project */}
+              {/* Linked Project - Read Only (Projects dept creates via Order Handoff) */}
               <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FolderKanban className="w-5 h-5 text-purple-600" />
-                    <h4 className="font-medium text-purple-900">Linked Project</h4>
-                  </div>
-                  {orderDetails.linked_project ? (
-                    <div className="text-right">
-                      <p className="font-medium text-purple-900">{orderDetails.linked_project.pid_no}</p>
-                      <p className="text-sm text-purple-600">{orderDetails.linked_project.status}</p>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={openLinkProjectModal}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                    >
-                      <Link2 className="w-4 h-4" />
-                      Link Project
-                    </button>
-                  )}
+                <div className="flex items-center gap-2 mb-3">
+                  <FolderKanban className="w-5 h-5 text-purple-600" />
+                  <h4 className="font-medium text-purple-900">Project Status</h4>
                 </div>
-                {!orderDetails.linked_project && (
-                  <p className="text-sm text-purple-700 mt-2">
-                    Link an existing project created by the Projects department for this order.
-                  </p>
+                {orderDetails.linked_project ? (
+                  <div className="space-y-3">
+                    {/* Project Info */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-purple-900">{orderDetails.linked_project.pid_no}</p>
+                        <p className="text-sm text-purple-600">{orderDetails.linked_project.project_name || 'Project'}</p>
+                      </div>
+                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                        orderDetails.linked_project.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                        orderDetails.linked_project.status === 'Ongoing' ? 'bg-blue-100 text-blue-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {orderDetails.linked_project.status || 'Need to Start'}
+                      </span>
+                    </div>
+                    
+                    {/* Completion Progress */}
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-purple-700">Completion</span>
+                        <span className="font-medium text-purple-900">{orderDetails.linked_project.completion_percentage || 0}%</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-purple-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-purple-600 rounded-full transition-all"
+                          style={{ width: `${orderDetails.linked_project.completion_percentage || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Budget vs Actual */}
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-purple-200">
+                      <div>
+                        <p className="text-xs text-purple-600 mb-1">Budget</p>
+                        <p className="font-semibold text-purple-900">{formatCurrency(orderDetails.linked_project.budget || orderDetails.linked_project.po_amount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-purple-600 mb-1">Actual Expenses</p>
+                        <p className={`font-semibold ${
+                          (orderDetails.linked_project.actual_expenses || 0) > (orderDetails.linked_project.budget || 0) 
+                            ? 'text-red-600' 
+                            : 'text-purple-900'
+                        }`}>
+                          {formatCurrency(orderDetails.linked_project.actual_expenses || 0)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Engineer */}
+                    {orderDetails.linked_project.engineer_in_charge && (
+                      <p className="text-sm text-purple-600">
+                        Engineer: <span className="font-medium text-purple-900">{orderDetails.linked_project.engineer_in_charge}</span>
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-purple-700 mb-1">No project linked yet</p>
+                    <p className="text-sm text-purple-500">
+                      Projects department will create a project via Order Handoff
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
