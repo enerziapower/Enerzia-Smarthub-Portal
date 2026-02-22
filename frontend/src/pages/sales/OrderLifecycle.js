@@ -1226,6 +1226,103 @@ const OrderLifecycle = () => {
         }}
         prefillData={projectPrefillData}
       />
+
+      {/* Link Project Modal */}
+      {showLinkProjectModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="link-project-modal">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Link Project</h3>
+                <p className="text-sm text-slate-500">Order: {selectedOrder.order_no}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLinkProjectModal(false);
+                  setSelectedLinkProject('');
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-600">
+                Select an existing project from the Projects department to link with this order.
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Select Project <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedLinkProject}
+                  onChange={(e) => setSelectedLinkProject(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  data-testid="select-project"
+                >
+                  <option value="">Choose a project...</option>
+                  {availableProjects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.pid_no} - {project.client || 'No Client'} ({project.status})
+                    </option>
+                  ))}
+                </select>
+                {availableProjects.length === 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    No unlinked projects available. Projects are created via Order Handoff.
+                  </p>
+                )}
+              </div>
+
+              {selectedLinkProject && (
+                <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                  {(() => {
+                    const project = availableProjects.find(p => p.id === selectedLinkProject);
+                    if (!project) return null;
+                    return (
+                      <div className="space-y-1 text-sm">
+                        <p className="font-medium text-purple-900">{project.pid_no}</p>
+                        <p className="text-purple-700">Client: {project.client || '-'}</p>
+                        <p className="text-purple-700">Engineer: {project.engineer_in_charge || '-'}</p>
+                        <p className="text-purple-700">Status: {project.status}</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLinkProjectModal(false);
+                  setSelectedLinkProject('');
+                }}
+                className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLinkProject}
+                disabled={!selectedLinkProject || linkingProject}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                data-testid="link-project-btn"
+              >
+                {linkingProject ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Link2 className="w-4 h-4" />
+                )}
+                Link Project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
