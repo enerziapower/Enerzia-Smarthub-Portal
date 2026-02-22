@@ -1008,12 +1008,12 @@ const OrderLifecycle = () => {
                 </div>
               )}
 
-              {/* Linked Project / Create Project */}
+              {/* Linked Project / Link Existing Project */}
               <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FolderKanban className="w-5 h-5 text-purple-600" />
-                    <h4 className="font-medium text-purple-900">Project</h4>
+                    <h4 className="font-medium text-purple-900">Linked Project</h4>
                   </div>
                   {orderDetails.linked_project ? (
                     <div className="text-right">
@@ -1022,35 +1022,17 @@ const OrderLifecycle = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => {
-                        // Prepare prefill data from order
-                        const executionBudget = orderDetails.lifecycle?.execution_budget;
-                        const budget = executionBudget?.type === 'percentage' 
-                          ? orderDetails.order?.total_amount * (executionBudget?.value / 100)
-                          : executionBudget?.value || 0;
-                        
-                        setProjectPrefillData({
-                          order_id: selectedOrder.id,
-                          order_no: selectedOrder.order_no,
-                          customer_name: selectedOrder.customer_name,
-                          customer_address: selectedOrder.customer_address || '',
-                          total_amount: selectedOrder.total_amount,
-                          order_value: selectedOrder.total_amount,
-                          execution_budget: budget,
-                          project_type: orderDetails.lifecycle?.project_type || '',
-                        });
-                        setShowProjectModal(true);
-                      }}
+                      onClick={() => setShowLinkProjectModal(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                     >
-                      <Plus className="w-4 h-4" />
-                      Create Project
+                      <Link2 className="w-4 h-4" />
+                      Link Project
                     </button>
                   )}
                 </div>
                 {!orderDetails.linked_project && (
                   <p className="text-sm text-purple-700 mt-2">
-                    Create a project (PID) to track execution phase work items and progress.
+                    Link an existing project created by the Projects department for this order.
                   </p>
                 )}
               </div>
