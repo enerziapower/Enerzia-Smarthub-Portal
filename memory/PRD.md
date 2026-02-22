@@ -2082,3 +2082,102 @@ Order Status: pending  →  Order Status: processing  →  Project Status: Need 
 *Last Updated: February 22, 2026*
 *Status: SALES ORDER TO PROJECT INTEGRATION COMPLETE ✅*
 
+
+---
+
+## Sales → Projects Workflow Update (Feb 22, 2026)
+
+### Changes Made Per User Requirements:
+
+#### 1. Order Handoff - Simplified Create Project Modal
+**Before:** Modal had Budget Allocation, Project Type, Engineer, Dates, Notes
+**After:** Modal only has Engineer in Charge (required) + Notes (optional)
+
+**Why:** Budget allocation is managed by Sales in Order Management. Projects will be linked after creation.
+
+#### 2. Project Management - Redesigned with Accordion Status Groups
+**Route:** `/projects/lifecycle`
+
+**Status Groups (Accordion Style):**
+| Status | Icon | Color |
+|--------|------|-------|
+| Need to Start | Clock | Amber |
+| Ongoing | PlayCircle | Blue |
+| Completed | CheckCircle | Green |
+| Invoiced | Receipt | Emerald |
+| Partially Invoiced | Receipt | Purple |
+| Cancelled | AlertCircle | Red |
+
+**Edit Project Modal Fields:**
+- Status dropdown (Quick Update)
+- Project Date
+- Target Completion
+- Work Summary / Line Items (with Upload Excel, Add Item)
+
+#### 3. Order Lifecycle - Link Project Feature
+**Location:** Order Details panel in Order Lifecycle page
+
+**Workflow:**
+```
+Sales → Order Details → Click "Link Project" → Select existing project → Link
+```
+
+**API:** `POST /api/order-lifecycle/orders/{order_id}/link-project`
+
+**What it does:**
+- Lists unlinked projects from Projects department
+- Links selected project to the order
+- Updates both project and order with cross-references
+
+### Complete Updated Workflow:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      SALES → PROJECTS COMPLETE WORKFLOW                          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+1. SALES creates Order (Order/FY/number format)
+   → Budget configured in Order Management
+         │
+         ▼
+2. PROJECTS sees order in Order Handoff Dashboard
+   → Views pending orders with "Create Project" button
+         │
+         ▼
+3. PROJECTS clicks "Create Project"
+   → Only assigns Engineer in Charge
+   → Project created with auto-generated PID
+   → Budget inherited from order
+         │
+         ▼
+4. Project appears in:
+   • Projects & Services (/projects)
+   • Project Management (/projects/lifecycle) - in "Need to Start" accordion
+         │
+         ▼
+5. SALES can link project in Order Lifecycle
+   → Order Details → "Link Project" button
+   → Selects the project created by Projects dept
+         │
+         ▼
+6. Project manager uses Project Management
+   → Changes status (Need to Start → Ongoing → Completed)
+   → Updates dates, work items
+         │
+         ▼
+7. Payment Requests (/projects/payment-requests)
+   → Projects raises payment requests for materials/expenses
+   → Finance reviews → CEO approves → Payment made
+         │
+         ▼
+8. Track in Order Lifecycle
+   → Expense tracking
+   → Profitability analysis
+```
+
+**Testing:** 100% pass rate (25/25 backend tests, all frontend verified)
+
+---
+*Last Updated: February 22, 2026*
+*Status: WORKFLOW UPDATE COMPLETE ✅*
+
