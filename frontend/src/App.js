@@ -34,8 +34,10 @@ import AMCManagement from './pages/projects/AMCManagement';
 // Calibration Services Module
 import CalibrationList from './pages/projects/CalibrationList';
 import CalibrationForm from './pages/projects/CalibrationForm';
-// Order Handoff Module
+// Order Handoff Module (renamed to Order Summary)
 import OrderHandoff from './pages/projects/OrderHandoff';
+// Weekly Billing Module
+import WeeklyBilling from './pages/projects/WeeklyBilling';
 
 // Employee Hub Pages
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
