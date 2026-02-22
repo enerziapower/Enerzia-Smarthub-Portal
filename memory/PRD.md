@@ -2323,3 +2323,69 @@ Projects → New Payment Request → Finance Review → CEO Approval → Paid
 *Last Updated: February 22, 2026*
 *Status: WEEKLY BILLING & MENU UPDATES COMPLETE ✅*
 
+
+---
+
+## Project Management Revamp (Feb 22, 2026)
+
+### Revamped Project Management Page
+**Route:** `/projects/lifecycle`
+
+**Design:** Now matches Order Management style with:
+
+**1. Dashboard Tab:**
+| Stat | Description |
+|------|-------------|
+| Total Projects | Count of all projects |
+| Need to Start | Projects waiting to begin |
+| Ongoing | Projects in progress |
+| Completed | Finished projects (Completed, Invoiced, Paid, Closed) |
+| Budget Summary | Total Budget, Total Expenses, Budget Utilization % |
+| Profit Summary | Total Profit, Margin % |
+
+**2. Projects Tab:**
+| Feature | Description |
+|---------|-------------|
+| Pipeline Workflow | Need to Start → Ongoing → Completed → Invoiced → Paid → Closed |
+| Budget Tracking | Budget, Expenses, Balance, Profit per project |
+| Over Budget Alert | Red badge when expenses exceed budget |
+| Linked Order | Shows linked order number (from Order Summary) |
+| Completion Progress | Progress bar with percentage |
+| Action Buttons | View Details, Payment Request, Material Request, Delivery Request |
+
+**3. Action Buttons:**
+| Button | Icon | Action |
+|--------|------|--------|
+| View Details | Eye | Opens project details modal |
+| Payment Request | Credit Card | Navigates to `/projects/payment-requests?project_id=...` |
+| Material Request | Package | Navigates to `/purchase/requirements?project_id=...` |
+| Delivery Request | Truck | Future feature |
+
+**4. View Details Modal:**
+- Project info (PID, Client, Status, Category, Engineer, Location)
+- Budget & Expenses (Budget, Expenses, Balance, Invoiced)
+- Completion Progress bar
+- Quick action buttons
+
+### "+Add Project" Button Kept
+**Location:** Projects & Services (`/projects`)
+**Purpose:** Create standalone internal projects (not linked to orders)
+
+### Complete Projects Module Summary
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| **Order Summary** | `/projects/order-handoff` | View orders from Sales, create projects |
+| **Projects & Services** | `/projects` | List all projects, +Add Project for standalone |
+| **Project Management** | `/projects/lifecycle` | Track projects with pipeline, budget, actions |
+| **Weekly Billing** | `/projects/weekly-billing` | Submit weekly billing entries |
+| **Payment Requests** | `/projects/payment-requests` | Create payment requests |
+| **Work Planner** | `/projects/work-schedule` | Schedule work |
+| **AMC Management** | `/projects/amc-management` | Manage AMC contracts |
+
+**Testing:** 100% pass rate (all features verified)
+
+---
+*Last Updated: February 22, 2026*
+*Status: PROJECT MANAGEMENT REVAMP COMPLETE ✅*
+
