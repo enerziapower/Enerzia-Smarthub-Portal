@@ -1012,19 +1012,19 @@ const ProjectSchedule = () => {
                           placeholder="Phase name"
                           value={phase.name}
                           onChange={(e) => updatePhase(phaseIdx, 'name', e.target.value)}
-                          className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-sm"
+                          className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-sm min-w-[150px]"
                         />
                         <DatePicker
                           value={phase.start}
                           onChange={(val) => updatePhase(phaseIdx, 'start', val)}
                           placeholder="Start"
-                          className="w-28 h-8 border-slate-200 text-sm"
+                          className="w-36 h-8 border-slate-200 text-sm"
                         />
                         <DatePicker
                           value={phase.end}
                           onChange={(val) => updatePhase(phaseIdx, 'end', val)}
                           placeholder="End"
-                          className="w-28 h-8 border-slate-200 text-sm"
+                          className="w-36 h-8 border-slate-200 text-sm"
                         />
                         <input
                           type="number"
@@ -1035,7 +1035,7 @@ const ProjectSchedule = () => {
                           onChange={(e) => updatePhase(phaseIdx, 'progress', parseInt(e.target.value) || 0)}
                           className="w-14 px-2 py-1.5 border border-slate-200 rounded text-sm"
                         />
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 whitespace-nowrap">
                           {phase.subItems?.length || 0} items
                         </span>
                         <button
