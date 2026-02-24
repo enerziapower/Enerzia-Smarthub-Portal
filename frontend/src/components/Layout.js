@@ -453,18 +453,24 @@ const Layout = () => {
                 alt="Logo" 
                 className="w-10 h-10 object-contain rounded-lg bg-white p-1"
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  e.target.onerror = null;
+                  e.target.src = '/logo.png';
                 }}
               />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                <Boxes className="w-6 h-6 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="Smarthub Enerzia" 
+                className="w-10 h-10 object-contain rounded-lg bg-white p-1"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
             )}
             {(sidebarOpen || isMobile) && (
               <div>
                 <h1 className="text-white font-bold text-lg leading-tight">Smarthub</h1>
-                <p className="text-blue-400 text-xs font-medium">Enerzia</p>
+                <p className="text-teal-400 text-xs font-medium">Enerzia</p>
               </div>
             )}
             {/* Mobile close button */}
