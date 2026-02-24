@@ -143,7 +143,13 @@ async def update_schedule(schedule_id: str, update: ProjectScheduleUpdate):
     if not existing:
         raise HTTPException(status_code=404, detail="Schedule not found")
     
-    update_data = {k: v for k, v in update.model_dump().items() if v is not None}
+    # Include all fields that are not None, but also include empty lists
+    update_data = {}
+    for k, v in update.model_dump().items():
+        # Include the field if it's not None OR if it's an empty list (which should be saved)
+        if v is not None or (isinstance(v, list) and len(v) == 0):
+            update_data[k] = v
+    
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.project_schedules.update_one(
