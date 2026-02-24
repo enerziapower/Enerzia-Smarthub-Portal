@@ -793,6 +793,12 @@ const ProjectSchedule = () => {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg"
                 >
                   <option value="">Select a project...</option>
+                  {/* Show current value as option if it doesn't match any project */}
+                  {formData.project_id && !projects.find(p => p.id === formData.project_id) && (
+                    <option value={formData.project_id} disabled>
+                      {formData.project_id} (not found in projects list)
+                    </option>
+                  )}
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.pid_no} - {p.client} - {p.project_name}</option>
                   ))}
