@@ -1,14 +1,16 @@
 """
 Zoho Books Integration Module
-One-way sync (Read-only) from Zoho Books to Smarthub ERP
-- Customers
-- Vendors
-- Invoices
-- Sales Orders
-- Payments
+Two-way sync with Zoho Books to Smarthub ERP
+- Customers (Read)
+- Vendors (Read)
+- Invoices (Read)
+- Sales Orders (Read)
+- Payments (Read)
+- Estimates/Quotations (Full CRUD - Read, Create, Update, Delete)
 """
 from fastapi import APIRouter, HTTPException, Depends
-from typing import Optional
+from pydantic import BaseModel
+from typing import Optional, List
 from datetime import datetime, timezone
 import httpx
 import os
