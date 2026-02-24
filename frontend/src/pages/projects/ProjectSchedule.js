@@ -225,6 +225,36 @@ const ProjectSchedule = () => {
     setFormData(prev => ({ ...prev, escalation_matrix: updated }));
   };
 
+  // Handle team member selection for escalation matrix - auto-fills fields
+  const handleTeamMemberSelect = (levelIndex, memberId) => {
+    if (!memberId) {
+      // Clear all fields if no member selected
+      const updated = [...formData.escalation_matrix];
+      updated[levelIndex] = {
+        ...updated[levelIndex],
+        name: '',
+        designation: '',
+        email: '',
+        mobile: ''
+      };
+      setFormData(prev => ({ ...prev, escalation_matrix: updated }));
+      return;
+    }
+
+    const member = teamMembers.find(m => m.id === memberId);
+    if (member) {
+      const updated = [...formData.escalation_matrix];
+      updated[levelIndex] = {
+        ...updated[levelIndex],
+        name: member.name || '',
+        designation: member.designation || '',
+        email: member.email || '',
+        mobile: member.phone || ''
+      };
+      setFormData(prev => ({ ...prev, escalation_matrix: updated }));
+    }
+  };
+
   const addMilestone = () => {
     setFormData(prev => ({
       ...prev,
