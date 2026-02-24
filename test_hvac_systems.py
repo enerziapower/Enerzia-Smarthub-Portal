@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 class HVACSystemsTester:
-    def __init__(self, base_url="https://smarthub-erp-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://project-debug-erp.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
