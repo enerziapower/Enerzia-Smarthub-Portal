@@ -72,6 +72,21 @@ const ProjectSchedule = () => {
       setProjects(projectsRes.data || []);
       setSchedules(schedulesRes.data || []);
       
+      // Fetch team members from all departments for escalation matrix dropdown
+      try {
+        const departments = ['projects', 'sales', 'accounts', 'hr', 'purchase', 'finance', 'operations', 'exports'];
+        const teamPromises = departments.map(dept => api.get(`/departments/${dept}/team`).catch(() => ({ data: [] })));
+        const teamResponses = await Promise.all(teamPromises);
+        const allTeamMembers = teamResponses.flatMap(res => res.data || []);
+        // Remove duplicates by id
+        const uniqueTeamMembers = allTeamMembers.filter((member, index, self) =>
+          index === self.findIndex(m => m.id === member.id)
+        );
+        setTeamMembers(uniqueTeamMembers);
+      } catch (teamError) {
+        console.error('Error fetching team members:', teamError);
+      }
+      
       // Migrate any existing localStorage schedules to database
       const savedSchedules = localStorage.getItem('project_schedules');
       if (savedSchedules) {
