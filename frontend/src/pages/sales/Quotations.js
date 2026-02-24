@@ -848,21 +848,60 @@ const Quotations = () => {
 
   return (
     <div className="space-y-6" data-testid="quotations-page">
-      {/* Header */}
+      {/* Header with Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Quotations</h1>
           <p className="text-slate-500 mt-1">Manage sales quotations and proposals</p>
         </div>
-        <button 
-          onClick={() => { resetForm(); setEditingQuotation(null); setShowAddModal(true); fetchNextQuoteNumber(); }} 
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-          data-testid="add-quotation-btn"
-        >
-          <Plus className="w-4 h-4" /> New Quotation
-        </button>
+        {activeTab === 'erp' && (
+          <button 
+            onClick={() => { resetForm(); setEditingQuotation(null); setShowAddModal(true); fetchNextQuoteNumber(); }} 
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+            data-testid="add-quotation-btn"
+          >
+            <Plus className="w-4 h-4" /> New Quotation
+          </button>
+        )}
       </div>
 
+      {/* Tab Navigation */}
+      <div className="border-b border-slate-200">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setActiveTab('erp')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'erp'
+                ? 'border-slate-900 text-slate-900'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FileText size={16} />
+              ERP Quotations
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('zoho')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'zoho'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Cloud size={16} />
+              Zoho Books Quotations
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'zoho' ? (
+        <ZohoQuotationsTab />
+      ) : (
+        <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((card, idx) => (
