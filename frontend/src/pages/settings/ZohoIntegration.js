@@ -122,7 +122,7 @@ const ZohoIntegration = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Zoho Books Integration</h1>
-          <p className="text-slate-500">One-way sync from Zoho Books to Smarthub ERP</p>
+          <p className="text-slate-500">Two-way sync with Zoho Books (Quotations) and read-only sync for other data</p>
         </div>
         <button
           onClick={fetchStatus}
@@ -132,6 +132,28 @@ const ZohoIntegration = () => {
           Refresh Status
         </button>
       </div>
+
+      {/* Re-authorization Notice for Quotations */}
+      {status?.connected && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="text-amber-600 mt-0.5" size={20} />
+            <div className="flex-1">
+              <h3 className="font-medium text-amber-800">Quotations Two-Way Sync Enabled</h3>
+              <p className="text-sm text-amber-700 mt-1">
+                To use the new Quotations feature (create, edit, delete quotations in Zoho Books from this ERP), 
+                you may need to <strong>re-authorize</strong> with Zoho to grant the new permissions.
+              </p>
+              <button
+                onClick={handleConnect}
+                className="mt-3 text-sm px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+              >
+                Re-authorize with Zoho
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connection Status */}
       <div className={`rounded-xl border p-5 ${status?.connected ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
