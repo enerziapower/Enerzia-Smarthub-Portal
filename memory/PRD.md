@@ -2473,3 +2473,63 @@ Projects → New Payment Request → Finance Review → CEO Approval → Paid
 *Last Updated: February 24, 2026*
 *Status: PROJECT SCHEDULE ENHANCEMENTS COMPLETE ✅*
 
+
+
+---
+
+## Zoho Books Quotations - Two-Way Sync ✅ IMPLEMENTED (Feb 24, 2026)
+**Location:** 
+- Backend: `/app/backend/routes/zoho_integration.py`
+- Frontend: `/app/frontend/src/pages/sales/ZohoQuotationsTab.js`, `/app/frontend/src/pages/sales/Quotations.js`
+
+### Features Implemented
+
+| Feature | Description |
+|---------|-------------|
+| **View Zoho Quotations** | New tab in Sales > Quotations to view all synced Zoho estimates |
+| **Create Quotations** | Create new quotations directly in Zoho Books from ERP |
+| **Edit Quotations** | Modify existing Zoho quotations with line items |
+| **Delete Quotations** | Remove quotations from Zoho Books |
+| **Send via Email** | Email quotations to customers through Zoho |
+| **Mark Status** | Mark quotations as Accepted or Declined |
+| **Convert to Order** | Convert accepted Zoho quotes to ERP Sales Orders |
+
+### Technical Details
+
+**OAuth Scope Updated:**
+```
+ZohoBooks.estimates.READ
+ZohoBooks.estimates.CREATE
+ZohoBooks.estimates.UPDATE
+ZohoBooks.estimates.DELETE
+```
+
+**API Endpoints Added:**
+- `POST /api/zoho/sync/estimates` - Sync estimates from Zoho
+- `GET /api/zoho/estimates` - Get synced estimates
+- `GET /api/zoho/estimates/{id}` - Get estimate details
+- `POST /api/zoho/estimates` - Create new estimate in Zoho
+- `PUT /api/zoho/estimates/{id}` - Update estimate in Zoho
+- `DELETE /api/zoho/estimates/{id}` - Delete estimate from Zoho
+- `POST /api/zoho/estimates/{id}/send` - Send estimate via email
+- `POST /api/zoho/estimates/{id}/mark-as-accepted` - Mark as accepted
+- `POST /api/zoho/estimates/{id}/mark-as-declined` - Mark as declined
+- `POST /api/zoho/estimates/{id}/convert-to-order` - Convert to ERP order
+
+### Convert to Order Flow
+When a Zoho quotation is converted to an ERP order:
+1. Fetches full estimate details from Zoho (including line items)
+2. Creates new Sales Order in ERP with:
+   - Auto-generated order number (SO-{FY}-{seq})
+   - Customer details from Zoho
+   - Line items mapped from Zoho estimate
+   - GST calculations
+   - Zoho estimate ID linked for reference
+3. Order enters Order Lifecycle Management workflow
+
+### User Action Required
+⚠️ **Re-authorization Needed:** User must re-authorize with Zoho Books to grant new permissions for estimates. Go to Settings > Zoho Integration and click "Re-authorize with Zoho".
+
+---
+*Last Updated: February 24, 2026*
+*Status: ZOHO QUOTATIONS TWO-WAY SYNC IMPLEMENTED ✅*
