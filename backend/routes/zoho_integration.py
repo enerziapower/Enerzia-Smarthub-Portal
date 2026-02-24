@@ -1035,7 +1035,7 @@ async def convert_estimate_to_erp_order(estimate_id: str, current_user: dict = D
     if last_order and last_order.get("order_number"):
         try:
             seq = int(last_order["order_number"].split("-")[-1]) + 1
-        except:
+        except (ValueError, IndexError):
             seq = 1
     else:
         seq = 1
