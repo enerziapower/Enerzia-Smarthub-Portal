@@ -446,27 +446,12 @@ const Layout = () => {
         {/* Logo Section */}
         <div className="p-4 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            {orgSettings.logo_url ? (
-              <img 
-                key={logoKey}
-                src={orgSettings.logo_url} 
-                alt="Logo" 
-                className="w-10 h-10 object-contain rounded-lg bg-white p-1"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/logo.png';
-                }}
-              />
-            ) : (
-              <img 
-                src="/logo.png" 
-                alt="Smarthub Enerzia" 
-                className="w-10 h-10 object-contain rounded-lg bg-white p-1"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            )}
+            {/* Always use the new Smarthub logo for sidebar */}
+            <img 
+              src="/logo.png" 
+              alt="Smarthub Enerzia" 
+              className="w-10 h-10 object-contain rounded-lg bg-white p-1"
+            />
             {(sidebarOpen || isMobile) && (
               <div>
                 <h1 className="text-white font-bold text-lg leading-tight">Smarthub</h1>
