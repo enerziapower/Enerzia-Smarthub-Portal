@@ -62,7 +62,18 @@ async def get_zoho_auth_url(current_user: dict = Depends(require_auth)):
         raise HTTPException(status_code=500, detail="Zoho Client ID not configured")
     
     redirect_uri = get_redirect_uri()
-    scope = "ZohoBooks.contacts.READ,ZohoBooks.invoices.READ,ZohoBooks.salesorders.READ,ZohoBooks.bills.READ,ZohoBooks.customerpayments.READ"
+    # Updated scope to include estimates (quotations) with full CRUD permissions
+    scope = (
+        "ZohoBooks.contacts.READ,"
+        "ZohoBooks.invoices.READ,"
+        "ZohoBooks.salesorders.READ,"
+        "ZohoBooks.bills.READ,"
+        "ZohoBooks.customerpayments.READ,"
+        "ZohoBooks.estimates.READ,"
+        "ZohoBooks.estimates.CREATE,"
+        "ZohoBooks.estimates.UPDATE,"
+        "ZohoBooks.estimates.DELETE"
+    )
     
     auth_url = (
         f"{get_auth_url()}/oauth/v2/auth"
