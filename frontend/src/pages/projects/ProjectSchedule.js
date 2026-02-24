@@ -1228,18 +1228,36 @@ const ProjectSchedule = () => {
                 <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
                   {formData.escalation_matrix.map((level, idx) => (
                     <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-2 py-1 text-xs font-bold rounded ${
-                          idx === 0 ? 'bg-blue-100 text-blue-700' :
-                          idx === 1 ? 'bg-amber-100 text-amber-700' :
-                          idx === 2 ? 'bg-orange-100 text-orange-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          Level {level.level}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {idx === 0 ? '(First Contact)' : idx === 3 ? '(Final Escalation)' : ''}
-                        </span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs font-bold rounded ${
+                            idx === 0 ? 'bg-blue-100 text-blue-700' :
+                            idx === 1 ? 'bg-amber-100 text-amber-700' :
+                            idx === 2 ? 'bg-orange-100 text-orange-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            Level {level.level}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {idx === 0 ? '(First Contact)' : idx === 3 ? '(Final Escalation)' : ''}
+                          </span>
+                        </div>
+                        {/* Team Member Dropdown */}
+                        <div className="flex items-center gap-2">
+                          <User size={14} className="text-slate-400" />
+                          <select
+                            onChange={(e) => handleTeamMemberSelect(idx, e.target.value)}
+                            className="text-sm border border-slate-200 rounded px-2 py-1.5 bg-white min-w-[180px]"
+                            value=""
+                          >
+                            <option value="">Select Team Member</option>
+                            {teamMembers.map(member => (
+                              <option key={member.id} value={member.id}>
+                                {member.name} - {member.designation || 'No Designation'}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <input
