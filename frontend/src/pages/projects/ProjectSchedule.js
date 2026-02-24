@@ -372,11 +372,30 @@ const ProjectSchedule = () => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     try {
-      if (dateStr.includes('/')) {
-        return dateStr;
+      // If already in DD-MM-YYYY format, return as is
+      if (dateStr.includes('-') && dateStr.length === 10) {
+        const parts = dateStr.split('-');
+        if (parts[0].length === 2 && parts[2].length === 4) {
+          return dateStr; // Already DD-MM-YYYY
+        }
+        // YYYY-MM-DD format, convert to DD-MM-YYYY
+        if (parts[0].length === 4) {
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
       }
+      // DD/MM/YYYY format, convert to DD-MM-YYYY
+      if (dateStr.includes('/')) {
+        return dateStr.replace(/\//g, '-');
+      }
+      // Parse and format
       const date = new Date(dateStr);
-      return date.toLocaleDateString('en-GB');
+      if (!isNaN(date.getTime())) {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      }
+      return dateStr;
     } catch {
       return dateStr;
     }
