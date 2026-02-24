@@ -271,15 +271,26 @@ const ProjectSchedule = () => {
   const handleEdit = (schedule) => {
     setEditingScheduleId(schedule.id);
     
-    // Find matching project - check both by id and by pid_no
+    // Find matching project - check both by id and by pid_no (with various formats)
     let matchedProjectId = schedule.project_id || '';
-    const projectById = projects.find(p => p.id === schedule.project_id);
-    const projectByPid = projects.find(p => p.pid_no === schedule.project_id);
-    const project = projectById || projectByPid;
+    let project = projects.find(p => p.id === schedule.project_id);
     
-    if (projectByPid && !projectById) {
-      // If stored as pid_no, update to use actual id
-      matchedProjectId = projectByPid.id;
+    // If not found by id, try to find by pid_no
+    if (!project) {
+      project = projects.find(p => p.pid_no === schedule.project_id);
+    }
+    
+    // Try normalized PID matching (remove leading zeros, compare)
+    if (!project && schedule.project_id) {
+      const normalizedStoredPid = schedule.project_id.replace(/(\d+)$/, (m) => parseInt(m, 10).toString());
+      project = projects.find(p => {
+        const normalizedPid = p.pid_no?.replace(/(\d+)$/, (m) => parseInt(m, 10).toString());
+        return normalizedPid === normalizedStoredPid;
+      });
+    }
+    
+    if (project) {
+      matchedProjectId = project.id;
     }
     
     // Ensure escalation matrix has valid data
