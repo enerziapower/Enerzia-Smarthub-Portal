@@ -491,6 +491,12 @@ async def sync_all(current_user: dict = Depends(require_auth)):
     except Exception as e:
         results["payments_error"] = str(e)
     
+    try:
+        estimates = await sync_estimates(current_user)
+        results["estimates"] = estimates.get("count", 0)
+    except Exception as e:
+        results["estimates_error"] = str(e)
+    
     return {"message": "Sync completed", "results": results}
 
 
