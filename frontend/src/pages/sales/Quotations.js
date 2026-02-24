@@ -3,10 +3,11 @@ import {
   Plus, Search, Edit2, Trash2, Eye, Download, X, RefreshCw, FileText,
   ChevronDown, Filter, ArrowRight, CheckCircle, Link2, AlertCircle,
   Calendar, Building2, DollarSign, Phone, Mail, User, MapPin, FileSearch,
-  Truck, Globe
+  Truck, Globe, Cloud
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
+import ZohoQuotationsTab from './ZohoQuotationsTab';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
