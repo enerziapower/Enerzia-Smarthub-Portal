@@ -56,7 +56,7 @@ const ZohoQuotationsTab = () => {
     return statusObj?.color || 'bg-slate-100 text-slate-700';
   };
 
-  const getToken = () => localStorage.getItem('auth_token');
+  const getToken = () => localStorage.getItem('token');
 
   const checkZohoConnection = useCallback(async () => {
     try {
