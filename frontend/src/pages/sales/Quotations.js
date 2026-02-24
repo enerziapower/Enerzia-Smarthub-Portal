@@ -14,6 +14,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const Quotations = () => {
   const [searchParams] = useSearchParams();
   const enquiryId = searchParams.get('enquiry');
+  const [activeTab, setActiveTab] = useState('erp'); // 'erp' or 'zoho'
   
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
