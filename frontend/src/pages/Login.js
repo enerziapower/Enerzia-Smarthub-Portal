@@ -96,13 +96,13 @@ const Login = () => {
                   className="h-20 w-auto mx-auto mb-4 object-contain"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = '/enerzia-logo.png';
+                    e.target.src = '/logo.png';
                   }}
                 />
               ) : (
                 <img 
-                  src="/enerzia-logo.png"
-                  alt="Enerzia Logo"
+                  src="/logo.png"
+                  alt="Smarthub Enerzia Logo"
                   className="h-20 w-auto mx-auto mb-4 object-contain"
                   onError={(e) => {
                     e.target.onerror = null;
