@@ -21,6 +21,7 @@ const ProjectSchedule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [expandedPhases, setExpandedPhases] = useState({});
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const defaultPhases = [
     { name: 'Planning & Design', start: '', end: '', progress: 0, color: 'bg-blue-500', subItems: [] },
