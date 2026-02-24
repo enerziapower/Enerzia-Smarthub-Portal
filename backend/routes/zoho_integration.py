@@ -546,3 +546,558 @@ async def update_sync_log(sync_type: str, count: int):
         },
         upsert=True
     )
+
+
+
+# ==================== ESTIMATES/QUOTATIONS - FULL CRUD ====================
+
+class ZohoLineItem(BaseModel):
+    """Line item for Zoho estimate"""
+    item_id: Optional[str] = None
+    name: str
+    description: Optional[str] = ""
+    quantity: float = 1
+    rate: float = 0
+    unit: Optional[str] = ""
+    tax_id: Optional[str] = None
+    hsn_or_sac: Optional[str] = ""
+
+
+class ZohoEstimateCreate(BaseModel):
+    """Model for creating/updating Zoho estimate"""
+    customer_id: str
+    estimate_number: Optional[str] = None
+    reference_number: Optional[str] = ""
+    date: Optional[str] = None  # YYYY-MM-DD format
+    expiry_date: Optional[str] = None
+    line_items: List[ZohoLineItem] = []
+    notes: Optional[str] = ""
+    terms: Optional[str] = ""
+    discount: Optional[float] = 0
+    discount_type: Optional[str] = "entity_level"  # entity_level or item_level
+    is_discount_before_tax: Optional[bool] = True
+    subject: Optional[str] = ""
+    salesperson_name: Optional[str] = ""
+    custom_fields: Optional[List[dict]] = []
+
+
+class ZohoEstimateUpdate(BaseModel):
+    """Model for updating Zoho estimate"""
+    customer_id: Optional[str] = None
+    reference_number: Optional[str] = None
+    date: Optional[str] = None
+    expiry_date: Optional[str] = None
+    line_items: Optional[List[ZohoLineItem]] = None
+    notes: Optional[str] = None
+    terms: Optional[str] = None
+    discount: Optional[float] = None
+    subject: Optional[str] = None
+    salesperson_name: Optional[str] = None
+
+
+@router.post("/sync/estimates")
+async def sync_estimates(current_user: dict = Depends(require_auth)):
+    """Sync estimates/quotations from Zoho Books"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{api_url}/estimates",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"Zoho API error: {response.text}")
+        
+        data = response.json()
+        estimates = data.get("estimates", [])
+        
+        synced = 0
+        for estimate in estimates:
+            await db.zoho_estimates.update_one(
+                {"zoho_estimate_id": estimate.get("estimate_id")},
+                {"$set": {
+                    "zoho_estimate_id": estimate.get("estimate_id"),
+                    "estimate_number": estimate.get("estimate_number"),
+                    "reference_number": estimate.get("reference_number"),
+                    "customer_id": estimate.get("customer_id"),
+                    "customer_name": estimate.get("customer_name"),
+                    "status": estimate.get("status"),
+                    "date": estimate.get("date"),
+                    "expiry_date": estimate.get("expiry_date"),
+                    "total": estimate.get("total", 0),
+                    "sub_total": estimate.get("sub_total", 0),
+                    "tax_total": estimate.get("tax_total", 0),
+                    "discount": estimate.get("discount", 0),
+                    "currency_code": estimate.get("currency_code"),
+                    "currency_symbol": estimate.get("currency_symbol"),
+                    "created_time": estimate.get("created_time"),
+                    "last_modified_time": estimate.get("last_modified_time"),
+                    "synced_at": datetime.now(timezone.utc)
+                }},
+                upsert=True
+            )
+            synced += 1
+        
+        await update_sync_log("estimates", synced)
+        
+        return {"message": f"Synced {synced} estimates from Zoho", "count": synced}
+
+
+@router.get("/estimates")
+async def get_zoho_estimates(current_user: dict = Depends(require_auth)):
+    """Get synced estimates/quotations"""
+    estimates = await db.zoho_estimates.find({}, {"_id": 0}).sort("date", -1).to_list(500)
+    return {"estimates": estimates, "count": len(estimates)}
+
+
+@router.get("/estimates/{estimate_id}")
+async def get_zoho_estimate_detail(estimate_id: str, current_user: dict = Depends(require_auth)):
+    """Get detailed estimate from Zoho Books (includes line items)"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{api_url}/estimates/{estimate_id}",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"Zoho API error: {response.text}")
+        
+        data = response.json()
+        estimate = data.get("estimate", {})
+        
+        return {"estimate": estimate}
+
+
+@router.post("/estimates")
+async def create_zoho_estimate(estimate_data: ZohoEstimateCreate, current_user: dict = Depends(require_auth)):
+    """Create a new estimate/quotation in Zoho Books"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    # Prepare line items
+    line_items = []
+    for item in estimate_data.line_items:
+        line_item = {
+            "name": item.name,
+            "description": item.description or "",
+            "quantity": item.quantity,
+            "rate": item.rate
+        }
+        if item.item_id:
+            line_item["item_id"] = item.item_id
+        if item.unit:
+            line_item["unit"] = item.unit
+        if item.tax_id:
+            line_item["tax_id"] = item.tax_id
+        if item.hsn_or_sac:
+            line_item["hsn_or_sac"] = item.hsn_or_sac
+        line_items.append(line_item)
+    
+    # Build payload
+    payload = {
+        "customer_id": estimate_data.customer_id,
+        "line_items": line_items
+    }
+    
+    if estimate_data.estimate_number:
+        payload["estimate_number"] = estimate_data.estimate_number
+    if estimate_data.reference_number:
+        payload["reference_number"] = estimate_data.reference_number
+    if estimate_data.date:
+        payload["date"] = estimate_data.date
+    if estimate_data.expiry_date:
+        payload["expiry_date"] = estimate_data.expiry_date
+    if estimate_data.notes:
+        payload["notes"] = estimate_data.notes
+    if estimate_data.terms:
+        payload["terms"] = estimate_data.terms
+    if estimate_data.discount:
+        payload["discount"] = estimate_data.discount
+        payload["discount_type"] = estimate_data.discount_type
+        payload["is_discount_before_tax"] = estimate_data.is_discount_before_tax
+    if estimate_data.subject:
+        payload["subject"] = estimate_data.subject
+    if estimate_data.salesperson_name:
+        payload["salesperson_name"] = estimate_data.salesperson_name
+    if estimate_data.custom_fields:
+        payload["custom_fields"] = estimate_data.custom_fields
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{api_url}/estimates",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={
+                "Authorization": f"Zoho-oauthtoken {access_token}",
+                "Content-Type": "application/json"
+            },
+            json=payload
+        )
+        
+        if response.status_code not in [200, 201]:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        data = response.json()
+        estimate = data.get("estimate", {})
+        
+        # Store in local DB
+        await db.zoho_estimates.update_one(
+            {"zoho_estimate_id": estimate.get("estimate_id")},
+            {"$set": {
+                "zoho_estimate_id": estimate.get("estimate_id"),
+                "estimate_number": estimate.get("estimate_number"),
+                "reference_number": estimate.get("reference_number"),
+                "customer_id": estimate.get("customer_id"),
+                "customer_name": estimate.get("customer_name"),
+                "status": estimate.get("status"),
+                "date": estimate.get("date"),
+                "expiry_date": estimate.get("expiry_date"),
+                "total": estimate.get("total", 0),
+                "sub_total": estimate.get("sub_total", 0),
+                "tax_total": estimate.get("tax_total", 0),
+                "currency_code": estimate.get("currency_code"),
+                "created_time": estimate.get("created_time"),
+                "synced_at": datetime.now(timezone.utc),
+                "created_from_erp": True
+            }},
+            upsert=True
+        )
+        
+        return {"message": "Estimate created successfully", "estimate": estimate}
+
+
+@router.put("/estimates/{estimate_id}")
+async def update_zoho_estimate(estimate_id: str, estimate_data: ZohoEstimateUpdate, current_user: dict = Depends(require_auth)):
+    """Update an existing estimate/quotation in Zoho Books"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    # Build payload with only non-null fields
+    payload = {}
+    
+    if estimate_data.customer_id:
+        payload["customer_id"] = estimate_data.customer_id
+    if estimate_data.reference_number is not None:
+        payload["reference_number"] = estimate_data.reference_number
+    if estimate_data.date:
+        payload["date"] = estimate_data.date
+    if estimate_data.expiry_date:
+        payload["expiry_date"] = estimate_data.expiry_date
+    if estimate_data.notes is not None:
+        payload["notes"] = estimate_data.notes
+    if estimate_data.terms is not None:
+        payload["terms"] = estimate_data.terms
+    if estimate_data.discount is not None:
+        payload["discount"] = estimate_data.discount
+    if estimate_data.subject is not None:
+        payload["subject"] = estimate_data.subject
+    if estimate_data.salesperson_name is not None:
+        payload["salesperson_name"] = estimate_data.salesperson_name
+    
+    if estimate_data.line_items is not None:
+        line_items = []
+        for item in estimate_data.line_items:
+            line_item = {
+                "name": item.name,
+                "description": item.description or "",
+                "quantity": item.quantity,
+                "rate": item.rate
+            }
+            if item.item_id:
+                line_item["item_id"] = item.item_id
+            if item.unit:
+                line_item["unit"] = item.unit
+            if item.tax_id:
+                line_item["tax_id"] = item.tax_id
+            if item.hsn_or_sac:
+                line_item["hsn_or_sac"] = item.hsn_or_sac
+            line_items.append(line_item)
+        payload["line_items"] = line_items
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.put(
+            f"{api_url}/estimates/{estimate_id}",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={
+                "Authorization": f"Zoho-oauthtoken {access_token}",
+                "Content-Type": "application/json"
+            },
+            json=payload
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        data = response.json()
+        estimate = data.get("estimate", {})
+        
+        # Update local DB
+        await db.zoho_estimates.update_one(
+            {"zoho_estimate_id": estimate_id},
+            {"$set": {
+                "estimate_number": estimate.get("estimate_number"),
+                "reference_number": estimate.get("reference_number"),
+                "customer_id": estimate.get("customer_id"),
+                "customer_name": estimate.get("customer_name"),
+                "status": estimate.get("status"),
+                "date": estimate.get("date"),
+                "expiry_date": estimate.get("expiry_date"),
+                "total": estimate.get("total", 0),
+                "sub_total": estimate.get("sub_total", 0),
+                "tax_total": estimate.get("tax_total", 0),
+                "last_modified_time": estimate.get("last_modified_time"),
+                "synced_at": datetime.now(timezone.utc),
+                "updated_from_erp": True
+            }}
+        )
+        
+        return {"message": "Estimate updated successfully", "estimate": estimate}
+
+
+@router.delete("/estimates/{estimate_id}")
+async def delete_zoho_estimate(estimate_id: str, current_user: dict = Depends(require_auth)):
+    """Delete an estimate/quotation from Zoho Books"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(
+            f"{api_url}/estimates/{estimate_id}",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        # Remove from local DB
+        await db.zoho_estimates.delete_one({"zoho_estimate_id": estimate_id})
+        
+        return {"message": "Estimate deleted successfully"}
+
+
+@router.post("/estimates/{estimate_id}/send")
+async def send_zoho_estimate(estimate_id: str, to_emails: List[str], current_user: dict = Depends(require_auth)):
+    """Send estimate to customer via email through Zoho"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{api_url}/estimates/{estimate_id}/email",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={
+                "Authorization": f"Zoho-oauthtoken {access_token}",
+                "Content-Type": "application/json"
+            },
+            json={"to_mail_ids": to_emails}
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        # Update status in local DB
+        await db.zoho_estimates.update_one(
+            {"zoho_estimate_id": estimate_id},
+            {"$set": {"status": "sent", "synced_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Estimate sent successfully"}
+
+
+@router.post("/estimates/{estimate_id}/mark-as-accepted")
+async def mark_estimate_accepted(estimate_id: str, current_user: dict = Depends(require_auth)):
+    """Mark estimate as accepted in Zoho"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{api_url}/estimates/{estimate_id}/status/accepted",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        # Update local DB
+        await db.zoho_estimates.update_one(
+            {"zoho_estimate_id": estimate_id},
+            {"$set": {"status": "accepted", "synced_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Estimate marked as accepted"}
+
+
+@router.post("/estimates/{estimate_id}/mark-as-declined")
+async def mark_estimate_declined(estimate_id: str, current_user: dict = Depends(require_auth)):
+    """Mark estimate as declined in Zoho"""
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{api_url}/estimates/{estimate_id}/status/declined",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Zoho API error: {error_data.get('message', response.text)}"
+            )
+        
+        # Update local DB
+        await db.zoho_estimates.update_one(
+            {"zoho_estimate_id": estimate_id},
+            {"$set": {"status": "declined", "synced_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Estimate marked as declined"}
+
+
+@router.post("/estimates/{estimate_id}/convert-to-order")
+async def convert_estimate_to_erp_order(estimate_id: str, current_user: dict = Depends(require_auth)):
+    """Convert a Zoho estimate to an ERP Sales Order for Order Lifecycle Management"""
+    import uuid
+    
+    # First get the detailed estimate from Zoho
+    access_token, api_domain = await get_valid_token()
+    api_url = f"{api_domain}/books/v3"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{api_url}/estimates/{estimate_id}",
+            params={"organization_id": ZOHO_ORG_ID},
+            headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"Zoho API error: {response.text}")
+        
+        data = response.json()
+        estimate = data.get("estimate", {})
+    
+    # Check if already converted
+    existing_order = await db.orders.find_one({"zoho_estimate_id": estimate_id})
+    if existing_order:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"This estimate has already been converted to order {existing_order.get('order_number')}"
+        )
+    
+    # Generate new order number
+    current_year = datetime.now().year
+    next_year = current_year + 1
+    financial_year = f"{str(current_year)[-2:]}-{str(next_year)[-2:]}"
+    
+    # Get next sequence number
+    last_order = await db.orders.find_one(
+        {"order_number": {"$regex": f"^SO-{financial_year}"}},
+        sort=[("created_at", -1)]
+    )
+    
+    if last_order and last_order.get("order_number"):
+        try:
+            seq = int(last_order["order_number"].split("-")[-1]) + 1
+        except:
+            seq = 1
+    else:
+        seq = 1
+    
+    order_number = f"SO-{financial_year}-{str(seq).zfill(4)}"
+    
+    # Map line items
+    items = []
+    for item in estimate.get("line_items", []):
+        items.append({
+            "description": item.get("name", ""),
+            "hsn_sac": item.get("hsn_or_sac", ""),
+            "unit": item.get("unit", "Nos"),
+            "quantity": item.get("quantity", 1),
+            "unit_price": item.get("rate", 0),
+            "amount": item.get("item_total", 0)
+        })
+    
+    # Create the ERP order
+    new_order = {
+        "id": str(uuid.uuid4()),
+        "order_number": order_number,
+        "customer_name": estimate.get("customer_name", ""),
+        "customer_id": estimate.get("customer_id", ""),
+        "contact_person": estimate.get("contact_persons", [{}])[0].get("salutation", "") if estimate.get("contact_persons") else "",
+        "phone": estimate.get("billing_address", {}).get("phone", ""),
+        "email": estimate.get("email", ""),
+        "gst_number": estimate.get("gst_no", ""),
+        "billing_address": estimate.get("billing_address", {}).get("address", ""),
+        "shipping_address": estimate.get("shipping_address", {}).get("address", ""),
+        "order_date": estimate.get("date", datetime.now().strftime("%Y-%m-%d")),
+        "expected_delivery_date": estimate.get("expiry_date", ""),
+        "items": items,
+        "sub_total": estimate.get("sub_total", 0),
+        "gst_percent": 18,  # Default GST
+        "gst_amount": estimate.get("tax_total", 0),
+        "total_amount": estimate.get("total", 0),
+        "payment_terms": estimate.get("terms", ""),
+        "delivery_terms": "",
+        "notes": estimate.get("notes", ""),
+        "status": "confirmed",
+        "category": "PSS",  # Default category
+        "zoho_estimate_id": estimate_id,
+        "zoho_estimate_number": estimate.get("estimate_number"),
+        "source": "zoho_estimate",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user.get("id", ""),
+        "created_by_name": current_user.get("name", "")
+    }
+    
+    await db.orders.insert_one(new_order)
+    
+    # Update the estimate status in local DB
+    await db.zoho_estimates.update_one(
+        {"zoho_estimate_id": estimate_id},
+        {"$set": {
+            "converted_to_order": True,
+            "erp_order_id": new_order["id"],
+            "erp_order_number": order_number,
+            "converted_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        "message": "Estimate converted to Sales Order successfully",
+        "order": {
+            "id": new_order["id"],
+            "order_number": order_number,
+            "total_amount": new_order["total_amount"]
+        }
+    }
