@@ -2389,3 +2389,55 @@ Projects → New Payment Request → Finance Review → CEO Approval → Paid
 *Last Updated: February 22, 2026*
 *Status: PROJECT MANAGEMENT REVAMP COMPLETE ✅*
 
+
+
+---
+
+## Project Schedule Bug Fixes ✅ COMPLETE (Feb 24, 2026)
+**Location:** `/app/frontend/src/pages/projects/ProjectSchedule.js`, `/app/backend/routes/project_schedules.py`
+
+### Issues Fixed
+
+| Bug | Status | Fix Applied |
+|-----|--------|-------------|
+| **1. Date Format (DD-MM-YYYY)** | ✅ FIXED | `formatDate` function (line 401-431) correctly converts YYYY-MM-DD to DD-MM-YYYY for display |
+| **2. Data Missing on Edit (Project, Dates)** | ✅ FIXED | `handleEdit` function (line 271-325) enhanced with multi-format project matching |
+| **3. Escalation Matrix Not Saving** | ✅ FIXED | Backend PUT endpoint (line 150) now correctly saves empty arrays |
+
+### Technical Details
+
+**1. Date Format Fix:**
+- The `formatDate` function handles multiple input formats: YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY
+- Outputs dates consistently in DD-MM-YYYY format for display
+- The DatePicker component displays DD-MM-YYYY while storing YYYY-MM-DD for backend
+
+**2. Project Matching in handleEdit:**
+```javascript
+// Matches project by:
+// 1. Direct ID match (UUID)
+// 2. PID string match (e.g., 'PID-25-26-017')
+// 3. Normalized PID match (handles leading zeros)
+```
+
+**3. Escalation Matrix Persistence:**
+- Backend PUT endpoint now includes logic to save empty arrays
+- Frontend loads defaultEscalationMatrix if saved matrix is empty
+
+### Test Results
+- **Backend:** 100% (9/9 tests passed)
+- **Frontend:** 100% (all UI tests passed)
+- Test file: `/app/backend/tests/test_project_schedule_bugs.py`
+
+### Verified Features
+- ✅ Date format DD-MM-YYYY in schedule list
+- ✅ Date format DD-MM-YYYY in edit modal date pickers
+- ✅ Project dropdown selection when editing
+- ✅ Customer info fields population when editing
+- ✅ Start/End date population when editing
+- ✅ Phases data population when editing
+- ✅ Escalation matrix data persistence (create, save, reload)
+
+---
+*Last Updated: February 24, 2026*
+*Status: PROJECT SCHEDULE BUG FIXES COMPLETE ✅*
+
