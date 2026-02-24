@@ -2441,3 +2441,35 @@ Projects → New Payment Request → Finance Review → CEO Approval → Paid
 *Last Updated: February 24, 2026*
 *Status: PROJECT SCHEDULE BUG FIXES COMPLETE ✅*
 
+---
+
+## Project Schedule UI Enhancements ✅ COMPLETE (Feb 24, 2026)
+**Location:** `/app/frontend/src/pages/projects/ProjectSchedule.js`
+
+### Features Implemented
+
+| Feature | Description |
+|---------|-------------|
+| **1. Escalation Matrix Team Member Dropdown** | Each escalation level (1-4) now has a dropdown to select team members. Selecting a member auto-fills Name, Designation, Email, and Mobile fields. |
+| **2. Wider Phase Date Fields** | Increased date picker width from `w-28` (112px) to `w-36` (144px) for better visibility of DD-MM-YYYY format. |
+
+### Technical Details
+
+**Team Member Dropdown:**
+- Fetches team members from all departments (projects, sales, accounts, hr, purchase, finance, operations, exports)
+- Removes duplicates by ID
+- Shows member name and designation in dropdown options
+- `handleTeamMemberSelect()` function auto-fills: name, designation, email, phone (as mobile)
+
+**Phase Date Fields:**
+- Date pickers now have `className="w-36 h-8"` (previously `w-28`)
+- Phase name input has `min-w-[150px]` to prevent shrinking
+- Items count has `whitespace-nowrap` to prevent text wrapping
+
+### API Endpoints Used
+- `GET /api/departments/{dept}/team` - Fetches team members for each department
+
+---
+*Last Updated: February 24, 2026*
+*Status: PROJECT SCHEDULE ENHANCEMENTS COMPLETE ✅*
+
