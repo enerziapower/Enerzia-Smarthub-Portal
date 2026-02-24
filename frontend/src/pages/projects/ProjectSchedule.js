@@ -270,16 +270,34 @@ const ProjectSchedule = () => {
 
   const handleEdit = (schedule) => {
     setEditingScheduleId(schedule.id);
+    
+    // Find matching project - check both by id and by pid_no
+    let matchedProjectId = schedule.project_id || '';
+    const projectById = projects.find(p => p.id === schedule.project_id);
+    const projectByPid = projects.find(p => p.pid_no === schedule.project_id);
+    const project = projectById || projectByPid;
+    
+    if (projectByPid && !projectById) {
+      // If stored as pid_no, update to use actual id
+      matchedProjectId = projectByPid.id;
+    }
+    
+    // Ensure escalation matrix has valid data
+    let escalationMatrix = schedule.escalation_matrix;
+    if (!escalationMatrix || !Array.isArray(escalationMatrix) || escalationMatrix.length === 0) {
+      escalationMatrix = defaultEscalationMatrix;
+    }
+    
     setFormData({
-      project_id: schedule.project_id || '',
+      project_id: matchedProjectId,
       schedule_name: schedule.schedule_name || '',
       start_date: schedule.start_date || '',
       end_date: schedule.end_date || '',
       customer_info: schedule.customer_info || {
-        name: schedule.project?.client || '',
-        company: schedule.project?.client || '',
-        location: schedule.project?.location || '',
-        contact_person: '',
+        name: project?.client || '',
+        company: project?.client || '',
+        location: project?.location || '',
+        contact_person: project?.engineer_in_charge || '',
         phone: '',
         email: ''
       },
@@ -288,7 +306,7 @@ const ProjectSchedule = () => {
         subItems: p.subItems || []
       })) || defaultPhases,
       milestones: schedule.milestones || [],
-      escalation_matrix: schedule.escalation_matrix || defaultEscalationMatrix,
+      escalation_matrix: escalationMatrix,
       notes: schedule.notes || '',
       status: schedule.status || 'draft'
     });
