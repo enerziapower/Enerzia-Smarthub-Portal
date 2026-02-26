@@ -199,9 +199,12 @@ async def get_valid_token():
                     }
                 )
                 
+                print(f"DEBUG: Refresh response status={response.status_code}")
+                print(f"DEBUG: Refresh response body={response.text[:200]}")
+                
                 if response.status_code == 200:
                     new_tokens = response.json()
-                    print(f"DEBUG: Got new token, scope={new_tokens.get('scope')}")
+                    print(f"DEBUG: Got new token, scope={new_tokens.get('scope')}, access_token={new_tokens.get('access_token', '')[:30]}...")
                     if new_tokens.get("access_token"):
                         new_access_token = new_tokens.get("access_token")
                         await db.zoho_tokens.update_one(
