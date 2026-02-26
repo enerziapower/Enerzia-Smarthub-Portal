@@ -257,11 +257,11 @@ const EmployeeAttendance = () => {
           <div>
             <p className="text-blue-100 text-sm">Today - {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <h2 className="text-2xl font-bold mt-1">
-              {todayRecord ? (
+              {todayRecord?.check_in ? (
                 todayRecord.check_out ? 'Day Completed' : 'Working'
               ) : 'Not Checked In'}
             </h2>
-            {todayRecord && (
+            {todayRecord?.check_in && (
               <div className="flex items-center gap-4 mt-2 text-sm text-blue-100">
                 {todayRecord.check_in && (
                   <span className="flex items-center gap-1">
@@ -288,7 +288,7 @@ const EmployeeAttendance = () => {
             )}
           </div>
           <div className="flex gap-3">
-            {!todayRecord && (
+            {!todayRecord?.check_in && (
               <button
                 onClick={handleCheckIn}
                 disabled={checkingIn}
@@ -299,7 +299,7 @@ const EmployeeAttendance = () => {
                 Check In
               </button>
             )}
-            {todayRecord && !todayRecord.check_out && (
+            {todayRecord?.check_in && !todayRecord.check_out && (
               <button
                 onClick={handleCheckOut}
                 disabled={checkingOut}
