@@ -1070,17 +1070,34 @@ async def convert_estimate_to_erp_order(estimate_id: str, current_user: dict = D
         })
     
     # Create the ERP order
+    # Safely extract contact person info
+    contact_person_name = ""
+    if estimate.get("contact_persons") and isinstance(estimate.get("contact_persons"), list):
+        first_contact = estimate.get("contact_persons", [{}])[0]
+        if isinstance(first_contact, dict):
+            contact_person_name = first_contact.get("salutation", "") or first_contact.get("first_name", "")
+    
+    # Safely extract address info
+    billing_addr = estimate.get("billing_address") or {}
+    if isinstance(billing_addr, str):
+        billing_addr = {"address": billing_addr}
+    
+    shipping_addr = estimate.get("shipping_address") or {}
+    if isinstance(shipping_addr, str):
+        shipping_addr = {"address": shipping_addr}
+    
     new_order = {
         "id": str(uuid.uuid4()),
         "order_number": order_number,
         "customer_name": estimate.get("customer_name", ""),
         "customer_id": estimate.get("customer_id", ""),
-        "contact_person": estimate.get("contact_persons", [{}])[0].get("salutation", "") if estimate.get("contact_persons") else "",
-        "phone": estimate.get("billing_address", {}).get("phone", ""),
+        "zoho_customer_id": estimate.get("customer_id", ""),  # Store Zoho customer ID
+        "contact_person": contact_person_name,
+        "phone": billing_addr.get("phone", "") if isinstance(billing_addr, dict) else "",
         "email": estimate.get("email", ""),
-        "gst_number": estimate.get("gst_no", ""),
-        "billing_address": estimate.get("billing_address", {}).get("address", ""),
-        "shipping_address": estimate.get("shipping_address", {}).get("address", ""),
+        "gst_number": estimate.get("gst_no", "") or estimate.get("gst_treatment", ""),
+        "billing_address": billing_addr.get("address", "") if isinstance(billing_addr, dict) else str(billing_addr),
+        "shipping_address": shipping_addr.get("address", "") if isinstance(shipping_addr, dict) else str(shipping_addr),
         "order_date": estimate.get("date", datetime.now().strftime("%Y-%m-%d")),
         "expected_delivery_date": estimate.get("expiry_date", ""),
         "items": items,
