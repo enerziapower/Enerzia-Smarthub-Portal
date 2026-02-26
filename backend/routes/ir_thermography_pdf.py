@@ -25,6 +25,16 @@ from datetime import datetime
 # Import date formatter from pdf_base
 from routes.pdf_base import format_date_ddmmyyyy
 
+# Import template settings functions for cover page designs
+from routes.pdf_template_settings import (
+    get_pdf_settings_sync, 
+    get_logo_path as get_template_logo_path,
+    get_primary_color,
+    get_report_design,
+    draw_decorative_design,
+    get_company_info
+)
+
 router = APIRouter()
 
 # Company Information Constants
