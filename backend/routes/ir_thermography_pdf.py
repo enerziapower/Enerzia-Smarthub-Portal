@@ -369,8 +369,8 @@ def draw_cover_page(canvas_obj, doc, report, org_settings):
     
     subtitle_width = c.stringWidth(subtitle, 'Helvetica', 12)
     
-    # Orange accent line above subtitle - centered
-    c.setStrokeColor(primary_orange)
+    # Accent line above subtitle - centered (uses template color)
+    c.setStrokeColor(primary_color)
     c.setLineWidth(3)
     c.line((width - subtitle_width) / 2 - 15, height * 0.535, 
            (width + subtitle_width) / 2 + 15, height * 0.535)
