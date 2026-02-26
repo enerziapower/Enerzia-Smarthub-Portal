@@ -183,12 +183,11 @@ async def get_valid_token():
     else:
         auth_url = f"https://accounts.zoho.{actual_region}"
     
-    # Always refresh the token to ensure it's valid
+    # Try to refresh the token
     refresh_token = token_doc.get("refresh_token")
     if refresh_token:
         try:
             async with httpx.AsyncClient() as client:
-                print(f"DEBUG: Refreshing token with client_id={ZOHO_CLIENT_ID[:20]}...")
                 response = await client.post(
                     f"{auth_url}/oauth/v2/token",
                     data={
@@ -199,12 +198,14 @@ async def get_valid_token():
                     }
                 )
                 
-                print(f"DEBUG: Refresh response status={response.status_code}")
-                print(f"DEBUG: Refresh response body={response.text[:200]}")
-                
                 if response.status_code == 200:
                     new_tokens = response.json()
-                    print(f"DEBUG: Got new token, scope={new_tokens.get('scope')}, access_token={new_tokens.get('access_token', '')[:30]}...")
+                    # Check if response contains error
+                    if new_tokens.get("error"):
+                        print(f"Token refresh returned error: {new_tokens}")
+                        # Use existing access token instead
+                        return token_doc.get("access_token"), token_doc.get("api_domain", get_api_url())
+                    
                     if new_tokens.get("access_token"):
                         new_access_token = new_tokens.get("access_token")
                         await db.zoho_tokens.update_one(
@@ -214,13 +215,13 @@ async def get_valid_token():
                                 "updated_at": datetime.now(timezone.utc)
                             }}
                         )
-                        print(f"DEBUG: Returning new token: {new_access_token[:30]}...")
                         return new_access_token, token_doc.get("api_domain", get_api_url())
                 else:
-                    print(f"Token refresh failed: {response.text}")
+                    print(f"Token refresh failed with status {response.status_code}: {response.text}")
         except Exception as e:
             print(f"Token refresh error: {e}")
     
+    # Return existing access token if refresh didn't work
     return token_doc.get("access_token"), token_doc.get("api_domain", get_api_url())
 
 
