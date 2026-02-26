@@ -1313,10 +1313,3 @@ async def sync_zoho_customers_to_erp(
         "inserted": inserted_count,
         "total_zoho_customers": len(all_contacts)
     }
-
-
-@router.get("/customers")
-async def get_zoho_customers(current_user: dict = Depends(require_auth)):
-    """Get synced Zoho customers"""
-    customers = await db.zoho_customers.find({}, {"_id": 0}).sort("contact_name", 1).to_list(1000)
-    return {"customers": customers, "count": len(customers)}
