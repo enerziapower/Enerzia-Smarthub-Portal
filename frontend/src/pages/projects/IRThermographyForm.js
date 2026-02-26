@@ -556,33 +556,23 @@ const IRThermographyForm = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Report Prepared By</label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.document_details.report_prepared_by}
                     onChange={(e) => handleDocumentChange('report_prepared_by', e.target.value)}
+                    placeholder="Enter name"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
-                  >
-                    <option value="">Select team member</option>
-                    {teamMembers.map((member) => (
-                      <option key={member.id || member.name} value={member.name}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Report Reviewed By</label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.document_details.report_reviewed_by}
                     onChange={(e) => handleDocumentChange('report_reviewed_by', e.target.value)}
+                    placeholder="Enter name"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
-                  >
-                    <option value="">Select team member</option>
-                    {teamMembers.map((member) => (
-                      <option key={member.id || member.name} value={member.name}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -849,18 +839,13 @@ const IRThermographyForm = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Analyzed By</label>
-                            <select
+                            <input
+                              type="text"
                               value={item.analyzed_by}
                               onChange={(e) => updateInspectionItem(index, 'analyzed_by', e.target.value)}
+                              placeholder="Enter name"
                               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
-                            >
-                              <option value="">Select team member</option>
-                              {teamMembers.map((member) => (
-                                <option key={member.id || member.name} value={member.name}>
-                                  {member.name}
-                                </option>
-                              ))}
-                            </select>
+                            />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Comments</label>
