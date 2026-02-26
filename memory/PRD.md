@@ -328,7 +328,10 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 | Feature | Description |
 |---------|-------------|
 | **Thermography Inspection By** | Changed from dropdown to manual text input field |
-| **Placeholder Text** | "Enter inspector name/details" for easy data entry |
+| **Report Prepared By** | Changed from dropdown to manual text input field |
+| **Report Reviewed By** | Changed from dropdown to manual text input field |
+| **Analyzed By** | Changed from dropdown to manual text input field (in Inspection Items) |
+| **Placeholder Text** | All fields now show "Enter name" or "Enter inspector name/details" |
 
 **Route:** `/projects/project-reports/audit/ir-thermography/new`
 
