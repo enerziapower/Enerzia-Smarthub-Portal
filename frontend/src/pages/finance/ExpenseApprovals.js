@@ -83,8 +83,8 @@ const ExpenseApprovals = () => {
     try {
       setLoading(true);
       const params = filter !== 'all' ? `?status=${filter}` : '';
-      const res = await api.get(`/employee/expense-sheets${params}`);
-      setSheets(res.data.sheets || []);
+      const res = await api.get(`/finance/expense-sheets${params}`);
+      setSheets(res.data || []);
     } catch (error) {
       console.error('Error fetching expense sheets:', error);
       toast.error('Failed to load expense sheets');
