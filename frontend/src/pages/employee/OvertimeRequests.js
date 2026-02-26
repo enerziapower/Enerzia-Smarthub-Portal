@@ -211,8 +211,7 @@ const OvertimeRequests = () => {
                   </div>
                   {request.status === 'approved' && (
                     <div className="text-right">
-                      <p className="text-lg font-bold text-green-600">₹{(request.amount || (request.hours * (request.rate_per_hour || 100))).toLocaleString()}</p>
-                      <p className="text-xs text-slate-400">Added to payroll</p>
+                      <p className="text-sm text-green-600 font-medium">Added to payroll</p>
                     </div>
                   )}
                   {request.status === 'pending' && (
