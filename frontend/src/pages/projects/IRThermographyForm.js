@@ -546,18 +546,13 @@ const IRThermographyForm = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Thermography Inspection By</label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.document_details.thermography_inspection_by}
                     onChange={(e) => handleDocumentChange('thermography_inspection_by', e.target.value)}
+                    placeholder="Enter inspector name/details"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
-                  >
-                    <option value="">Select team member</option>
-                    {teamMembers.map((member) => (
-                      <option key={member.id || member.name} value={member.name}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Report Prepared By</label>
