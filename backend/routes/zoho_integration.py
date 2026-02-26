@@ -611,12 +611,16 @@ async def sync_estimates(current_user: dict = Depends(require_auth)):
     access_token, api_domain = await get_valid_token()
     api_url = f"{api_domain}/books/v3"
     
+    print(f"DEBUG sync_estimates: api_url={api_url}, org_id={ZOHO_ORG_ID}, token={access_token[:30]}...")
+    
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{api_url}/estimates",
             params={"organization_id": ZOHO_ORG_ID},
             headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
         )
+        
+        print(f"DEBUG sync_estimates: response status={response.status_code}")
         
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail=f"Zoho API error: {response.text}")
