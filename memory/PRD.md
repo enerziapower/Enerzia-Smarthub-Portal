@@ -322,6 +322,21 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 
 ### ✅ Recently Completed Features
 
+#### My Attendance Bug Fix ✅ COMPLETE (Feb 26, 2026)
+**Location:** My Workspace → My Attendance
+
+| Issue | Fix |
+|-------|-----|
+| **Check In button not showing** | Fixed condition to check `todayRecord?.check_in` instead of just `todayRecord` |
+| **Showing "Working" when not checked in** | Now correctly shows "Not Checked In" when no check_in time exists |
+
+**Root Cause:** The API returns a record object for every day (even days without check-in), causing `todayRecord` to be truthy even when user hadn't checked in.
+
+**Verified Flow:**
+- Not Checked In → Check In button visible ✅
+- Working (after check-in) → Check Out button visible ✅
+- Day Completed (after check-out) → No buttons ✅
+
 #### IR Thermography Form Enhancement ✅ COMPLETE (Feb 26, 2026)
 **Location:** Projects Dept → Project Reports → Audit Reports → IR Thermography → New/Edit
 
