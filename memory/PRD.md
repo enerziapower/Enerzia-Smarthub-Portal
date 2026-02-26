@@ -331,9 +331,10 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 | **Report Prepared By** | Changed from dropdown to manual text input field |
 | **Report Reviewed By** | Changed from dropdown to manual text input field |
 | **Analyzed By** | Changed from dropdown to manual text input field (in Inspection Items) |
+| **Load Condition** | Added new field for specifying load condition during inspection |
 | **Clone Inspection Item** | Blue copy button to duplicate an inspection item with all its data |
 | **Drag & Drop Images** | Image upload areas now support drag and drop functionality |
-| **Placeholder Text** | All fields now show "Enter name" or "Enter inspector name/details" |
+| **PDF Template Settings** | Cover page now uses design settings from PDF Template Settings |
 
 **Route:** `/projects/project-reports/audit/ir-thermography/new`
 
