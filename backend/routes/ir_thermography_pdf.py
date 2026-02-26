@@ -299,12 +299,18 @@ def create_risk_pie_chart(risk_distribution: dict, width=400, height=180):
 
 
 def draw_cover_page(canvas_obj, doc, report, org_settings):
-    """Draw a professional cover page with company logo and images"""
+    """Draw a professional cover page with company logo and images - uses PDF Template Settings"""
     c = canvas_obj
     width, height = A4
     
-    # Define colors
-    primary_orange = colors.HexColor('#F7931E')
+    # Get PDF template settings for design
+    pdf_settings = get_pdf_settings_sync()
+    report_design = get_report_design('ir_thermography', pdf_settings)
+    design_id = report_design.get('design_id', 'design_1')
+    design_color = report_design.get('design_color', '#F7931E')
+    
+    # Define colors using template settings
+    primary_color = colors.HexColor(design_color)
     dark_blue = colors.HexColor('#1e3a5f')
     text_dark = colors.HexColor('#1a1a1a')
     
@@ -315,51 +321,23 @@ def draw_cover_page(canvas_obj, doc, report, org_settings):
     c.rect(0, 0, width, height, fill=1, stroke=0)
     
     # =====================================================
-    # CURVED DECORATIVE ELEMENTS - Top Right Wave
+    # DECORATIVE DESIGN - Use template settings
     # =====================================================
-    c.saveState()
-    
-    for i, alpha in enumerate([0.10, 0.18, 0.30]):
-        c.setFillColor(colors.Color(247/255, 147/255, 30/255, alpha))
-        path = c.beginPath()
-        path.moveTo(width * (0.55 + i*0.06), height)
-        path.curveTo(width * (0.80 - i*0.03), height * (0.92 - i*0.02),
-                    width - (i * 20), height * (0.78 - i*0.02),
-                    width - (i * 20), height * (0.65 + i*0.03))
-        path.lineTo(width, height * (0.65 + i*0.03))
-        path.lineTo(width, height)
-        path.close()
-        c.drawPath(path, fill=1, stroke=0)
-    
-    # =====================================================
-    # CURVED DECORATIVE ELEMENTS - Bottom Left Wave  
-    # =====================================================
-    for i, alpha in enumerate([0.10, 0.18, 0.30]):
-        c.setFillColor(colors.Color(247/255, 147/255, 30/255, alpha))
-        bottom_path = c.beginPath()
-        bottom_path.moveTo(0, height * (0.25 - i*0.03))
-        bottom_path.curveTo(width * 0.08, height * (0.18 - i*0.02),
-                           width * 0.20, height * (0.08 - i*0.01),
-                           width * (0.35 + i*0.05), 0)
-        bottom_path.lineTo(0, 0)
-        bottom_path.close()
-        c.drawPath(bottom_path, fill=1, stroke=0)
-    
-    c.restoreState()
+    draw_decorative_design(c, width, height, design_id, design_color)
     
     # =====================================================
     # COMPANY LOGO - Top Left
     # =====================================================
     c.saveState()
     
-    logo_path = get_logo_path()
+    logo_path = get_template_logo_path(pdf_settings) or get_logo_path()
     if logo_path and os.path.exists(logo_path):
         try:
             c.drawImage(logo_path, 35, height - 90, width=180, height=60, 
                        preserveAspectRatio=True, mask='auto')
         except Exception as e:
             print(f"Error drawing cover logo: {e}")
-            c.setFillColor(primary_orange)
+            c.setFillColor(primary_color)
             c.setFont('Helvetica-Bold', 26)
             c.drawString(45, height - 55, 'enerzia')
     
