@@ -764,7 +764,11 @@ const IRThermographyForm = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Original Image</label>
-                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-rose-400 transition-colors">
+                            <div 
+                              className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-rose-400 transition-colors"
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, index, 'original')}
+                            >
                               {item.original_image ? (
                                 <div className="relative">
                                   <img 
@@ -783,7 +787,7 @@ const IRThermographyForm = () => {
                               ) : (
                                 <label className="cursor-pointer">
                                   <Image className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                                  <p className="text-sm text-slate-500">Click to upload original image</p>
+                                  <p className="text-sm text-slate-500">Click or drag & drop original image</p>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -796,7 +800,11 @@ const IRThermographyForm = () => {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Thermal Image</label>
-                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-rose-400 transition-colors">
+                            <div 
+                              className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-rose-400 transition-colors"
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, index, 'thermal')}
+                            >
                               {item.thermal_image ? (
                                 <div className="relative">
                                   <img 
@@ -815,7 +823,7 @@ const IRThermographyForm = () => {
                               ) : (
                                 <label className="cursor-pointer">
                                   <Thermometer className="w-10 h-10 text-rose-400 mx-auto mb-2" />
-                                  <p className="text-sm text-slate-500">Click to upload thermal image</p>
+                                  <p className="text-sm text-slate-500">Click or drag & drop thermal image</p>
                                   <input
                                     type="file"
                                     accept="image/*"
