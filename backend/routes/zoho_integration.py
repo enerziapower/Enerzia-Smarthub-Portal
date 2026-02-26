@@ -181,6 +181,7 @@ async def get_valid_token():
     if refresh_token:
         try:
             async with httpx.AsyncClient() as client:
+                print(f"DEBUG: Refreshing token with client_id={ZOHO_CLIENT_ID[:20]}...")
                 response = await client.post(
                     f"{auth_url}/oauth/v2/token",
                     data={
@@ -193,15 +194,18 @@ async def get_valid_token():
                 
                 if response.status_code == 200:
                     new_tokens = response.json()
+                    print(f"DEBUG: Got new token, scope={new_tokens.get('scope')}")
                     if new_tokens.get("access_token"):
+                        new_access_token = new_tokens.get("access_token")
                         await db.zoho_tokens.update_one(
                             {"type": "oauth"},
                             {"$set": {
-                                "access_token": new_tokens.get("access_token"),
+                                "access_token": new_access_token,
                                 "updated_at": datetime.now(timezone.utc)
                             }}
                         )
-                        return new_tokens.get("access_token"), token_doc.get("api_domain", get_api_url())
+                        print(f"DEBUG: Returning new token: {new_access_token[:30]}...")
+                        return new_access_token, token_doc.get("api_domain", get_api_url())
                 else:
                     print(f"Token refresh failed: {response.text}")
         except Exception as e:
