@@ -57,6 +57,7 @@ const IRThermographyForm = () => {
       date_of_ir_study: '',
       coordinating_person: '',
       thermography_inspection_by: '',
+      load_condition: '',
       report_prepared_by: '',
       report_reviewed_by: '',
       date_of_submission: ''
@@ -586,6 +587,16 @@ const IRThermographyForm = () => {
                     value={formData.document_details.thermography_inspection_by}
                     onChange={(e) => handleDocumentChange('thermography_inspection_by', e.target.value)}
                     placeholder="Enter inspector name/details"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Load Condition</label>
+                  <input
+                    type="text"
+                    value={formData.document_details.load_condition}
+                    onChange={(e) => handleDocumentChange('load_condition', e.target.value)}
+                    placeholder="e.g., Full Load, No Load, 50% Load"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
