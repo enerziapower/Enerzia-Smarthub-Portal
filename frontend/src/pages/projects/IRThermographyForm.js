@@ -706,13 +706,24 @@ const IRThermographyForm = () => {
                               {riskInfo.label}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeInspectionItem(index)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => cloneInspectionItem(index)}
+                              className="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                              title="Clone this item"
+                            >
+                              <Copy size={18} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeInspectionItem(index)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Delete this item"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Location Details */}
