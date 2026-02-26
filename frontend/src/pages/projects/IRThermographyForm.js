@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, Save, Plus, Trash2, Upload, Image, FileText,
   Thermometer, AlertTriangle, CheckCircle, Info, Users,
-  Calendar, Building2, MapPin, X, Eye
+  Calendar, Building2, MapPin, X, Eye, Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -219,6 +219,41 @@ const IRThermographyForm = () => {
       ...prev,
       inspection_items: prev.inspection_items.filter((_, i) => i !== index)
     }));
+  };
+
+  const cloneInspectionItem = (index) => {
+    setFormData(prev => {
+      const itemToClone = prev.inspection_items[index];
+      const clonedItem = {
+        ...itemToClone,
+        item_id: `item_${Date.now()}` // Generate new unique ID
+      };
+      // Insert cloned item right after the original
+      const newItems = [...prev.inspection_items];
+      newItems.splice(index, 0, clonedItem);
+      return { ...prev, inspection_items: newItems };
+    });
+    toast.success('Inspection item cloned');
+  };
+
+  // Drag and drop handlers for images
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e, index, imageType) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        handleImageUpload(index, imageType, file);
+      } else {
+        toast.error('Please drop an image file');
+      }
+    }
   };
 
   const handleImageUpload = async (index, imageType, file) => {
