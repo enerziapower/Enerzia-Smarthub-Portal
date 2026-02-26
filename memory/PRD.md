@@ -322,6 +322,16 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 
 ### ✅ Recently Completed Features
 
+#### IR Thermography Form Enhancement ✅ COMPLETE (Feb 26, 2026)
+**Location:** Projects Dept → Project Reports → Audit Reports → IR Thermography → New/Edit
+
+| Feature | Description |
+|---------|-------------|
+| **Thermography Inspection By** | Changed from dropdown to manual text input field |
+| **Placeholder Text** | "Enter inspector name/details" for easy data entry |
+
+**Route:** `/projects/project-reports/audit/ir-thermography/new`
+
 #### Calibration Services PDF Report ✅ COMPLETE (Feb 5, 2026)
 **Location:** Projects Dept → Calibration Services → Edit Contract → Download Report
 
