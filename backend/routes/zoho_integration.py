@@ -1139,3 +1139,184 @@ async def convert_estimate_to_erp_order(estimate_id: str, current_user: dict = D
             "total_amount": new_order["total_amount"]
         }
     }
+
+
+
+# ==================== CUSTOMER SYNC - ZOHO TO ERP ====================
+
+@router.post("/sync/customers-to-erp")
+async def sync_zoho_customers_to_erp(
+    delete_existing: bool = True,
+    current_user: dict = Depends(require_auth)
+):
+    """
+    Sync all Zoho customers to ERP customers collection.
+    This makes Zoho the single source of truth for customers.
+    
+    Args:
+        delete_existing: If True, deletes all existing ERP customers first
+    """
+    import uuid
+    
+    # First sync latest customers from Zoho
+    try:
+        access_token, api_domain = await get_valid_token()
+        api_url = f"{api_domain}/books/v3"
+        
+        async with httpx.AsyncClient() as client:
+            # Fetch all customers from Zoho (paginated)
+            all_contacts = []
+            page = 1
+            has_more = True
+            
+            while has_more:
+                response = await client.get(
+                    f"{api_url}/contacts",
+                    params={
+                        "organization_id": ZOHO_ORG_ID,
+                        "contact_type": "customer",
+                        "per_page": 200,
+                        "page": page
+                    },
+                    headers={"Authorization": f"Zoho-oauthtoken {access_token}"}
+                )
+                
+                if response.status_code != 200:
+                    raise HTTPException(status_code=400, detail=f"Zoho API error: {response.text}")
+                
+                data = response.json()
+                contacts = data.get("contacts", [])
+                all_contacts.extend(contacts)
+                
+                # Check if there are more pages
+                page_context = data.get("page_context", {})
+                has_more = page_context.get("has_more_page", False)
+                page += 1
+                
+                if page > 10:  # Safety limit
+                    break
+        
+        print(f"Fetched {len(all_contacts)} customers from Zoho")
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch Zoho customers: {str(e)}")
+    
+    # Delete existing ERP customers if requested
+    deleted_count = 0
+    if delete_existing:
+        result = await db.customers.delete_many({})
+        deleted_count = result.deleted_count
+        print(f"Deleted {deleted_count} existing ERP customers")
+    
+    # Insert Zoho customers as ERP customers
+    inserted_count = 0
+    for contact in all_contacts:
+        try:
+            # Extract address info safely
+            billing_addr = contact.get("billing_address") or {}
+            if isinstance(billing_addr, str):
+                billing_addr = {"address": billing_addr}
+            
+            shipping_addr = contact.get("shipping_address") or {}
+            if isinstance(shipping_addr, str):
+                shipping_addr = {"address": shipping_addr}
+            
+            # Build full address string
+            billing_address_str = ""
+            if isinstance(billing_addr, dict):
+                parts = [
+                    billing_addr.get("address", ""),
+                    billing_addr.get("street2", ""),
+                    billing_addr.get("city", ""),
+                    billing_addr.get("state", ""),
+                    billing_addr.get("zip", ""),
+                    billing_addr.get("country", "")
+                ]
+                billing_address_str = ", ".join([p for p in parts if p])
+            
+            shipping_address_str = ""
+            if isinstance(shipping_addr, dict):
+                parts = [
+                    shipping_addr.get("address", ""),
+                    shipping_addr.get("street2", ""),
+                    shipping_addr.get("city", ""),
+                    shipping_addr.get("state", ""),
+                    shipping_addr.get("zip", ""),
+                    shipping_addr.get("country", "")
+                ]
+                shipping_address_str = ", ".join([p for p in parts if p])
+            
+            # Create ERP customer record
+            erp_customer = {
+                "id": str(uuid.uuid4()),
+                "zoho_contact_id": contact.get("contact_id"),
+                "name": contact.get("contact_name", ""),
+                "company_name": contact.get("company_name", "") or contact.get("contact_name", ""),
+                "email": contact.get("email", ""),
+                "contact_number": contact.get("phone", "") or contact.get("mobile", ""),
+                "gst_number": contact.get("gst_no", ""),
+                "pan_number": contact.get("pan_no", ""),
+                "billing_address": billing_address_str,
+                "shipping_address": shipping_address_str,
+                "city": billing_addr.get("city", "") if isinstance(billing_addr, dict) else "",
+                "state": billing_addr.get("state", "") if isinstance(billing_addr, dict) else "",
+                "country": billing_addr.get("country", "") if isinstance(billing_addr, dict) else "",
+                "pincode": billing_addr.get("zip", "") if isinstance(billing_addr, dict) else "",
+                "currency_code": contact.get("currency_code", "INR"),
+                "payment_terms": contact.get("payment_terms", 0),
+                "payment_terms_label": contact.get("payment_terms_label", ""),
+                "outstanding_amount": contact.get("outstanding_receivable_amount", 0),
+                "unused_credits": contact.get("unused_credits_receivable_amount", 0),
+                "status": "active" if contact.get("status") == "active" else "inactive",
+                "is_active": contact.get("status") == "active",
+                "source": "zoho",
+                "portal_access": False,
+                "linked_amcs": [],
+                "linked_projects": [],
+                "document_access": [],
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+                "synced_from_zoho_at": datetime.now(timezone.utc)
+            }
+            
+            await db.customers.insert_one(erp_customer)
+            inserted_count += 1
+            
+        except Exception as e:
+            print(f"Error inserting customer {contact.get('contact_name')}: {e}")
+            continue
+    
+    # Also update the zoho_customers collection
+    for contact in all_contacts:
+        await db.zoho_customers.update_one(
+            {"zoho_contact_id": contact.get("contact_id")},
+            {"$set": {
+                "zoho_contact_id": contact.get("contact_id"),
+                "contact_name": contact.get("contact_name"),
+                "company_name": contact.get("company_name"),
+                "email": contact.get("email"),
+                "phone": contact.get("phone"),
+                "gst_no": contact.get("gst_no"),
+                "status": contact.get("status"),
+                "billing_address": contact.get("billing_address"),
+                "shipping_address": contact.get("shipping_address"),
+                "outstanding_receivable_amount": contact.get("outstanding_receivable_amount", 0),
+                "unused_credits_receivable_amount": contact.get("unused_credits_receivable_amount", 0),
+                "synced_at": datetime.now(timezone.utc)
+            }},
+            upsert=True
+        )
+    
+    return {
+        "message": f"Synced {inserted_count} customers from Zoho to ERP",
+        "deleted_existing": deleted_count,
+        "inserted": inserted_count,
+        "total_zoho_customers": len(all_contacts)
+    }
+
+
+@router.get("/customers")
+async def get_zoho_customers(current_user: dict = Depends(require_auth)):
+    """Get synced Zoho customers"""
+    customers = await db.zoho_customers.find({}, {"_id": 0}).sort("contact_name", 1).to_list(500)
+    return {"customers": customers, "count": len(customers)}
