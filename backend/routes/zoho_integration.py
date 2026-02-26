@@ -12,8 +12,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
+from pathlib import Path
 import httpx
 import os
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / '.env')
 
 from core.database import db
 from core.security import get_current_user, require_auth
@@ -25,6 +30,8 @@ ZOHO_CLIENT_ID = os.environ.get("ZOHO_CLIENT_ID")
 ZOHO_CLIENT_SECRET = os.environ.get("ZOHO_CLIENT_SECRET")
 ZOHO_ORG_ID = os.environ.get("ZOHO_ORG_ID")
 ZOHO_REGION = os.environ.get("ZOHO_REGION", "in")  # in, com, eu
+
+print(f"Zoho Integration loaded: CLIENT_ID={ZOHO_CLIENT_ID[:20] if ZOHO_CLIENT_ID else 'None'}..., REGION={ZOHO_REGION}")
 
 # Zoho API URLs based on region
 ZOHO_AUTH_URLS = {
