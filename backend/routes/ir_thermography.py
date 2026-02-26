@@ -79,6 +79,7 @@ class DocumentDetails(BaseModel):
     date_of_ir_study: Optional[str] = None
     coordinating_person: Optional[str] = None
     thermography_inspection_by: Optional[str] = None
+    load_condition: Optional[str] = None
     report_prepared_by: Optional[str] = None
     report_reviewed_by: Optional[str] = None
     date_of_submission: Optional[str] = None
