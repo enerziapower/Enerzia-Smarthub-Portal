@@ -173,6 +173,108 @@ const Layout = () => {
     return false;
   };
 
+  // Filter navigation items based on user permissions
+  const filterNavByPermission = (navItems, moduleId) => {
+    // Super admin sees everything
+    if (isSuperAdmin) return navItems;
+    
+    // If user has no permissions set yet, show all items for backward compatibility
+    if (!user?.permissions?.modules) return navItems;
+    
+    // If user doesn't have access to the module, return empty
+    if (!hasModuleAccess(moduleId)) return [];
+    
+    // Filter sub-modules based on permissions
+    return navItems.filter(item => {
+      // Map nav items to sub-module IDs
+      const subModuleId = getSubModuleIdFromPath(item.href, moduleId);
+      if (!subModuleId) return true; // If no mapping, show by default
+      return hasSubModuleAccess(subModuleId);
+    });
+  };
+
+  // Map navigation paths to sub-module IDs
+  const getSubModuleIdFromPath = (path, moduleId) => {
+    const pathMappings = {
+      // Company Hub
+      '/company-hub': 'company_dashboard',
+      '/domestic-customers': 'domestic_customers',
+      '/overseas-customers': 'overseas_customers',
+      '/vendors': 'vendors',
+      '/team-members': 'team_members',
+      '/company-hub/weekly-meetings': 'weekly_meetings',
+      '/company-hub/payment-requests': 'payment_requests_company',
+      // My Workspace
+      '/employee/dashboard': 'my_dashboard',
+      '/employee/attendance': 'my_attendance',
+      '/employee/travel-log': 'travel_log',
+      '/employee/overtime': 'overtime_requests',
+      '/employee/leave': 'leave_management',
+      '/employee/permission': 'permission_requests',
+      '/employee/expenses': 'expense_claims',
+      '/employee/transport': 'transport_requests',
+      '/employee/journey': 'my_journey',
+      '/employee/reports': 'my_reports',
+      '/employee/profile': 'my_profile',
+      // Projects Dept
+      '/': 'projects_dashboard',
+      '/projects/order-handoff': 'order_summary',
+      '/projects': 'projects_services',
+      '/projects/lifecycle': 'project_management',
+      '/projects/weekly-billing': 'weekly_billing',
+      '/projects/payment-requests': 'payment_requests_projects',
+      '/projects/work-schedule': 'work_planner_projects',
+      '/projects/amc-management': 'amc_management',
+      '/projects/project-reports': 'project_reports',
+      '/projects/calibration': 'calibration_services',
+      '/projects/customer-service': 'service_reports',
+      // Sales Dept
+      '/sales': 'sales_dashboard',
+      '/sales/customer-management': 'customer_management',
+      '/sales/work-planner': 'work_planner_sales',
+      '/sales/enquiries': 'enquiries',
+      '/sales/quotations': 'quotations',
+      '/sales/orders': 'orders',
+      '/sales/order-lifecycle': 'order_management',
+      '/sales/project-profit': 'project_profit',
+      // Finance Dept
+      '/finance': 'finance_dashboard',
+      '/finance/work-planner': 'work_planner_finance',
+      '/finance/budget': 'budget_management',
+      '/finance/expense-approvals': 'expense_approvals',
+      // HR Dept
+      '/hr': 'hr_dashboard',
+      '/hr/work-planner': 'work_planner_hr',
+      '/hr/attendance-management': 'attendance_management',
+      '/hr/travel-management': 'travel_management',
+      '/hr/employees': 'employee_management',
+      '/hr/payroll-dashboard': 'payroll_dashboard',
+      '/hr/payroll': 'payroll_records',
+      '/hr/statutory-reports': 'statutory_reports',
+      '/hr/advances': 'advances_loans',
+      '/hr/leave-dashboard': 'leave_dashboard',
+      '/hr/overtime': 'overtime_management',
+      '/hr/permission-approvals': 'permission_approvals',
+      // Administration
+      '/settings': 'org_settings',
+      '/admin/users': 'user_management',
+      '/admin/user-access': 'user_access_control',
+      '/admin/announcements': 'announcements',
+      '/admin/events': 'events_manager',
+      '/admin/holidays': 'holiday_calendar',
+      '/admin/pdf-templates': 'pdf_templates',
+      '/settings/zoho': 'zoho_integration',
+    };
+    return pathMappings[path];
+  };
+
+  // Check if entire section should be shown
+  const shouldShowSection = (moduleId) => {
+    if (isSuperAdmin) return true;
+    if (!user?.permissions?.modules) return true; // Backward compatibility
+    return hasModuleAccess(moduleId);
+  };
+
   // ============ COMPANY HUB ============
   const companyHubNavigation = [
     { name: 'Dashboard', href: '/company-hub', icon: LayoutDashboard },
