@@ -10,7 +10,7 @@ import {
   Package, Truck, FileCheck, Landmark, Receipt, Calendar,
   UsersRound, Store, LayoutGrid, Home, CalendarDays, Bell, Share2,
   Boxes, Factory, CircleDollarSign, Briefcase as BriefcaseIcon, MapPin, Link2,
-  ArrowRightCircle
+  ArrowRightCircle, Shield
 } from 'lucide-react';
 import { settingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
