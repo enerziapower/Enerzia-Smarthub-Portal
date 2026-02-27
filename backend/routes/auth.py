@@ -14,7 +14,7 @@ from ..core.security import (
 from ..core.config import settings
 from ..models.user import (
     User, UserCreate, UserLogin, UserResponse, UserInvite, 
-    UserRole, TokenResponse
+    UserRole, TokenResponse, UserPermissions
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
