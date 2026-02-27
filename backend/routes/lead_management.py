@@ -105,27 +105,16 @@ async def create_followup(data: FollowUpCreate):
     # Get customer info if linking to existing customer
     customer_info = None
     if data.customer_id:
-        # Try domestic customers first
-        customer = await db.domestic_customers.find_one({"id": data.customer_id})
+        # Look up customer in the clients collection
+        customer = await db.clients.find_one({"id": data.customer_id})
         if customer:
             customer_info = {
                 "customer_id": data.customer_id,
-                "customer_type": "domestic",
+                "customer_type": customer.get("customer_type", "domestic"),
                 "customer_name": customer.get("company_name") or customer.get("name"),
                 "customer_email": customer.get("email"),
                 "customer_phone": customer.get("phone"),
             }
-        else:
-            # Try overseas customers
-            customer = await db.overseas_customers.find_one({"id": data.customer_id})
-            if customer:
-                customer_info = {
-                    "customer_id": data.customer_id,
-                    "customer_type": "overseas",
-                    "customer_name": customer.get("company_name") or customer.get("name"),
-                    "customer_email": customer.get("email"),
-                    "customer_phone": customer.get("phone"),
-                }
     
     followup = {
         "id": str(uuid.uuid4()),
