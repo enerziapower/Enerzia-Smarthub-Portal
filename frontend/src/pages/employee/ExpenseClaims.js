@@ -105,19 +105,20 @@ const ExpenseClaims = () => {
       const res = await api.get(`/employee/expense-sheets?user_id=${user.id}`);
       setSheets(res.data.sheets || []);
       
+      // Find sheet for selected month/year
       const current = res.data.sheets?.find(
-        s => s.month === currentMonth && s.year === currentYear
+        s => s.month === selectedMonth && s.year === selectedYear
       );
       setCurrentSheet(current || null);
       
-      const summaryRes = await api.get(`/employee/expense-sheets/summary/${user.id}?year=${currentYear}`);
+      const summaryRes = await api.get(`/employee/expense-sheets/summary/${user.id}?year=${selectedYear}`);
       setSummary(summaryRes.data);
     } catch (error) {
       console.error('Error fetching expense sheets:', error);
     } finally {
       setLoading(false);
     }
-  }, [user, currentMonth, currentYear]);
+  }, [user, selectedMonth, selectedYear]);
 
   const fetchAdvanceBalance = useCallback(async () => {
     if (!user?.id) return;
