@@ -124,25 +124,18 @@ const FollowUpForm = () => {
     }
     
     try {
-      const [domesticRes, overseasRes] = await Promise.all([
-        api.get(`/domestic-customers?search=${query}`),
-        api.get(`/overseas-customers?search=${query}`),
-      ]);
-      
-      const domestic = (domesticRes.data.customers || []).map(c => ({
+      // Use the unified customer search endpoint
+      const res = await api.get(`/lead-management/customers/search?search=${encodeURIComponent(query)}`);
+      const customers = (res.data.customers || []).map(c => ({
         ...c,
-        type: 'domestic',
-        display_name: c.company_name || c.name
-      }));
-      const overseas = (overseasRes.data.customers || []).map(c => ({
-        ...c,
-        type: 'overseas',
+        type: c.type || 'domestic',
         display_name: c.company_name || c.name
       }));
       
-      setCustomers([...domestic, ...overseas]);
+      setCustomers(customers);
     } catch (error) {
       console.error('Error searching customers:', error);
+      setCustomers([]);
     }
   };
 
