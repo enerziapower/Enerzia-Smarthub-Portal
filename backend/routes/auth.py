@@ -101,13 +101,22 @@ async def register(user_data: UserCreate):
 
 @router.get("/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    # Get user permissions
+    user_perms = current_user.get("permissions", {})
+    permissions_obj = UserPermissions(
+        modules=user_perms.get("modules", {}),
+        sub_modules=user_perms.get("sub_modules", {})
+    ) if user_perms else None
+    
     return UserResponse(
         id=current_user["id"],
         email=current_user["email"],
         name=current_user["name"],
         role=current_user["role"],
         department=current_user.get("department"),
-        is_active=current_user.get("is_active", True)
+        can_view_departments=current_user.get("can_view_departments", []),
+        is_active=current_user.get("is_active", True),
+        permissions=permissions_obj
     )
 
 @router.get("/check")
