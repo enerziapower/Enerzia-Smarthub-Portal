@@ -73,7 +73,9 @@ async def login(user_data: UserLogin):
     logger.info(f"DEBUG: user_response.permissions: {user_response.permissions}")
     result = TokenResponse(token=token, user=user_response)
     logger.info(f"DEBUG: result.user.permissions: {result.user.permissions}")
-    return result
+    
+    # Return dict to avoid Pydantic serialization issues
+    return result.model_dump()
 
 @router.post("/register")
 async def register(user_data: UserCreate):
