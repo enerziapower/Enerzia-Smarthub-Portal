@@ -505,8 +505,8 @@ const ExpenseClaims = () => {
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
             className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
-            {monthNames.map((month, index) => (
-              <option key={index} value={index + 1}>{month}</option>
+            {monthNames.slice(1).map((month, index) => (
+              <option key={index + 1} value={index + 1}>{month}</option>
             ))}
           </select>
           <select
