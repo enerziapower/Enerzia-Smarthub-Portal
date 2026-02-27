@@ -577,6 +577,7 @@ const Layout = () => {
         <nav className="flex-1 overflow-y-auto p-3 space-y-4">
           
           {/* ============ 1. COMPANY HUB ============ */}
+          {shouldShowSection('company_hub') && (
           <div>
             <button
               onClick={() => toggleSection('companyHub')}
@@ -594,7 +595,7 @@ const Layout = () => {
             </button>
             {expandedSections.companyHub && (sidebarOpen || isMobile) && (
               <div className="mt-2 space-y-1">
-                {renderNavItems(companyHubNavigation)}
+                {renderNavItems(filterNavByPermission(companyHubNavigation, 'company_hub'))}
                 
                 {/* Customer Hub - Nested Sub-section */}
                 <div className="mt-1">
@@ -619,8 +620,10 @@ const Layout = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* ============ 2. EMPLOYEE HUB (My Workspace) ============ */}
+          {shouldShowSection('my_workspace') && (
           <div>
             <button
               onClick={() => toggleSection('employeeHub')}
