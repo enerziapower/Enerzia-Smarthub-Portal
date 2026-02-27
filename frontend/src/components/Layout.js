@@ -383,7 +383,8 @@ const Layout = () => {
   // Sales Department
   const salesNavigation = [
     { name: 'Dashboard', href: '/sales', icon: LayoutDashboard },
-    { name: 'Customer Management', href: '/sales/customer-management', icon: Users },
+    { name: 'Lead Management', href: '/sales/lead-management', icon: Users },
+    { name: 'Customer Management', href: '/sales/customer-management', icon: Building },
     { name: 'Work Planner', href: '/sales/work-planner', icon: Calendar },
     { name: 'Enquiries', href: '/sales/enquiries', icon: FileText },
     { name: 'Quotations', href: '/sales/quotations', icon: FileCheck },
