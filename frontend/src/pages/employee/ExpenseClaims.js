@@ -473,11 +473,11 @@ const ExpenseClaims = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-200">
+      {/* Month/Year Selector and Tabs */}
+      <div className="flex items-center justify-between border-b border-slate-200">
         <nav className="flex gap-1">
           {[
-            { id: 'current', label: `Current (${monthNames[currentMonth]})`, icon: FileSpreadsheet },
+            { id: 'current', label: `${monthNames[selectedMonth]} ${selectedYear}`, icon: FileSpreadsheet },
             { id: 'history', label: 'All Sheets', icon: Calendar },
           ].map(tab => (
             <button
@@ -494,6 +494,28 @@ const ExpenseClaims = () => {
             </button>
           ))}
         </nav>
+        
+        {/* Month/Year Selector */}
+        <div className="flex items-center gap-2 pr-2">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+          >
+            {monthNames.map((month, index) => (
+              <option key={index} value={index + 1}>{month}</option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+          >
+            {[currentYear - 1, currentYear, currentYear + 1].map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Current Month Sheet */}
