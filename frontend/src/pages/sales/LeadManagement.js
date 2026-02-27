@@ -12,24 +12,24 @@ import {
 
 const followupTypes = [
   { id: 'cold_call', label: 'Cold Call', icon: PhoneCall, color: 'blue' },
-  { id: 'site_visit', label: 'Site Visit', icon: Car, color: 'green' },
-  { id: 'call_back', label: 'Call Back', icon: Phone, color: 'orange' },
-  { id: 'visit_later', label: 'Visit Later', icon: MapPin, color: 'purple' },
+  { id: 'site_visit', label: 'Site Visit', icon: Car, color: 'emerald' },
+  { id: 'call_back', label: 'Call Back', icon: Phone, color: 'amber' },
+  { id: 'visit_later', label: 'Visit Later', icon: MapPin, color: 'violet' },
   { id: 'general', label: 'General', icon: MessageSquare, color: 'slate' },
 ];
 
 const statusColors = {
   scheduled: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  completed: 'bg-green-500/20 text-green-400 border-green-500/30',
+  completed: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
-  rescheduled: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  rescheduled: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
 };
 
 const priorityColors = {
   high: 'bg-red-500/20 text-red-400',
-  medium: 'bg-yellow-500/20 text-yellow-400',
-  low: 'bg-green-500/20 text-green-400',
+  medium: 'bg-amber-500/20 text-amber-400',
+  low: 'bg-emerald-500/20 text-emerald-400',
 };
 
 const LeadManagement = () => {
@@ -92,13 +92,25 @@ const LeadManagement = () => {
     
     return (
       <div 
-        className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-all cursor-pointer"
+        className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-all cursor-pointer"
         onClick={() => navigate(`/sales/lead-management/followups/${followup.id}`)}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
-            <div className={`p-2 rounded-lg bg-${typeInfo.color}-500/20`}>
-              <TypeIcon className={`w-4 h-4 text-${typeInfo.color}-400`} />
+            <div className={`p-2 rounded-lg ${
+              typeInfo.color === 'blue' ? 'bg-blue-500/20' :
+              typeInfo.color === 'emerald' ? 'bg-emerald-500/20' :
+              typeInfo.color === 'amber' ? 'bg-amber-500/20' :
+              typeInfo.color === 'violet' ? 'bg-violet-500/20' :
+              'bg-slate-500/20'
+            }`}>
+              <TypeIcon className={`w-4 h-4 ${
+                typeInfo.color === 'blue' ? 'text-blue-400' :
+                typeInfo.color === 'emerald' ? 'text-emerald-400' :
+                typeInfo.color === 'amber' ? 'text-amber-400' :
+                typeInfo.color === 'violet' ? 'text-violet-400' :
+                'text-slate-400'
+              }`} />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-white font-medium truncate">{followup.title}</h4>
@@ -141,7 +153,7 @@ const LeadManagement = () => {
                 e.stopPropagation();
                 handleMarkComplete(followup.id);
               }}
-              className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1"
+              className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
             >
               <CheckCircle2 className="w-3 h-3" />
               Complete
@@ -193,76 +205,120 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Dark Theme */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-blue-500/50 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-blue-400 text-sm">Today</span>
-            <Calendar className="w-4 h-4 text-blue-400" />
+            <span className="text-slate-400 text-sm">Today</span>
+            <div className="p-1.5 bg-blue-500/20 rounded-lg">
+              <Calendar className="w-4 h-4 text-blue-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.today || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.today || 0}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-amber-600/20 to-amber-800/20 border border-amber-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-amber-500/50 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-amber-400 text-sm">This Week</span>
-            <CalendarDays className="w-4 h-4 text-amber-400" />
+            <span className="text-slate-400 text-sm">This Week</span>
+            <div className="p-1.5 bg-amber-500/20 rounded-lg">
+              <CalendarDays className="w-4 h-4 text-amber-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.this_week || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.this_week || 0}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-red-600/20 to-red-800/20 border border-red-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-red-500/50 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-red-400 text-sm">Overdue</span>
-            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span className="text-slate-400 text-sm">Overdue</span>
+            <div className="p-1.5 bg-red-500/20 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.overdue || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.overdue || 0}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-emerald-500/50 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-green-400 text-sm">Completed</span>
-            <CheckCircle2 className="w-4 h-4 text-green-400" />
+            <span className="text-slate-400 text-sm">Completed</span>
+            <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.by_status?.completed || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.by_status?.completed || 0}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-violet-500/50 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-purple-400 text-sm">Scheduled</span>
-            <Clock className="w-4 h-4 text-purple-400" />
+            <span className="text-slate-400 text-sm">Scheduled</span>
+            <div className="p-1.5 bg-violet-500/20 rounded-lg">
+              <Clock className="w-4 h-4 text-violet-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.by_status?.scheduled || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.by_status?.scheduled || 0}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-slate-600/20 to-slate-800/20 border border-slate-500/30 rounded-xl p-4">
+        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-slate-500/50 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-slate-400 text-sm">Total</span>
-            <TrendingUp className="w-4 h-4 text-slate-400" />
+            <div className="p-1.5 bg-slate-600/50 rounded-lg">
+              <TrendingUp className="w-4 h-4 text-slate-300" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{stats?.total || 0}</p>
+          <p className="text-3xl font-bold text-white mt-2">{stats?.total || 0}</p>
         </div>
       </div>
 
-      {/* Follow-up Type Stats */}
-      <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+      {/* Follow-up Type Stats - Dark Theme */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
         <h3 className="text-white font-medium mb-4">By Type</h3>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {followupTypes.map(type => (
-            <div key={type.id} className={`bg-${type.color}-500/10 border border-${type.color}-500/20 rounded-lg p-3 text-center`}>
-              <type.icon className={`w-5 h-5 text-${type.color}-400 mx-auto mb-2`} />
-              <p className="text-xl font-bold text-white">{stats?.by_type?.[type.id] || 0}</p>
-              <p className={`text-xs text-${type.color}-400`}>{type.label}</p>
+          <div className="bg-slate-900/50 border border-slate-700 hover:border-blue-500/50 rounded-lg p-4 text-center transition-colors">
+            <div className="w-10 h-10 mx-auto mb-2 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <PhoneCall className="w-5 h-5 text-blue-400" />
             </div>
-          ))}
+            <p className="text-2xl font-bold text-white">{stats?.by_type?.cold_call || 0}</p>
+            <p className="text-xs text-slate-400 mt-1">Cold Call</p>
+          </div>
+          
+          <div className="bg-slate-900/50 border border-slate-700 hover:border-emerald-500/50 rounded-lg p-4 text-center transition-colors">
+            <div className="w-10 h-10 mx-auto mb-2 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+              <Car className="w-5 h-5 text-emerald-400" />
+            </div>
+            <p className="text-2xl font-bold text-white">{stats?.by_type?.site_visit || 0}</p>
+            <p className="text-xs text-slate-400 mt-1">Site Visit</p>
+          </div>
+          
+          <div className="bg-slate-900/50 border border-slate-700 hover:border-amber-500/50 rounded-lg p-4 text-center transition-colors">
+            <div className="w-10 h-10 mx-auto mb-2 bg-amber-500/20 rounded-lg flex items-center justify-center">
+              <Phone className="w-5 h-5 text-amber-400" />
+            </div>
+            <p className="text-2xl font-bold text-white">{stats?.by_type?.call_back || 0}</p>
+            <p className="text-xs text-slate-400 mt-1">Call Back</p>
+          </div>
+          
+          <div className="bg-slate-900/50 border border-slate-700 hover:border-violet-500/50 rounded-lg p-4 text-center transition-colors">
+            <div className="w-10 h-10 mx-auto mb-2 bg-violet-500/20 rounded-lg flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-violet-400" />
+            </div>
+            <p className="text-2xl font-bold text-white">{stats?.by_type?.visit_later || 0}</p>
+            <p className="text-xs text-slate-400 mt-1">Visit Later</p>
+          </div>
+          
+          <div className="bg-slate-900/50 border border-slate-700 hover:border-slate-500/50 rounded-lg p-4 text-center transition-colors">
+            <div className="w-10 h-10 mx-auto mb-2 bg-slate-600/50 rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-slate-300" />
+            </div>
+            <p className="text-2xl font-bold text-white">{stats?.by_type?.general || 0}</p>
+            <p className="text-xs text-slate-400 mt-1">General</p>
+          </div>
         </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Main Content Grid - Dark Theme */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Overdue */}
-        <div className="bg-slate-800/30 border border-red-500/30 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-red-500/10">
             <h3 className="text-red-400 font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               Overdue ({overdueFollowups.length})
@@ -276,7 +332,7 @@ const LeadManagement = () => {
               </button>
             )}
           </div>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
             {overdueFollowups.length === 0 ? (
               <p className="text-slate-500 text-sm text-center py-4">No overdue follow-ups</p>
             ) : (
@@ -288,8 +344,8 @@ const LeadManagement = () => {
         </div>
 
         {/* Today */}
-        <div className="bg-slate-800/30 border border-blue-500/30 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-blue-500/10">
             <h3 className="text-blue-400 font-medium flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Today ({todayFollowups.length})
@@ -303,7 +359,7 @@ const LeadManagement = () => {
               </button>
             )}
           </div>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
             {todayFollowups.length === 0 ? (
               <p className="text-slate-500 text-sm text-center py-4">No follow-ups scheduled for today</p>
             ) : (
@@ -315,8 +371,8 @@ const LeadManagement = () => {
         </div>
 
         {/* Upcoming */}
-        <div className="bg-slate-800/30 border border-amber-500/30 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-amber-500/10">
             <h3 className="text-amber-400 font-medium flex items-center gap-2">
               <CalendarDays className="w-4 h-4" />
               Upcoming 7 Days ({upcomingFollowups.length})
@@ -330,7 +386,7 @@ const LeadManagement = () => {
               </button>
             )}
           </div>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
             {upcomingFollowups.length === 0 ? (
               <p className="text-slate-500 text-sm text-center py-4">No upcoming follow-ups</p>
             ) : (
