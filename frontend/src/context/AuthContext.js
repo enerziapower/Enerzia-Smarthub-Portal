@@ -105,6 +105,32 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Check if user has access to a specific module
+  const hasModuleAccess = (moduleId) => {
+    if (!user) return false;
+    // Super admin always has access
+    if (user.role === 'super_admin') return true;
+    // Check user's permissions
+    return user.permissions?.modules?.[moduleId] === true;
+  };
+
+  // Check if user has access to a specific sub-module
+  const hasSubModuleAccess = (subModuleId) => {
+    if (!user) return false;
+    // Super admin always has access
+    if (user.role === 'super_admin') return true;
+    // Check user's permissions
+    return user.permissions?.sub_modules?.[subModuleId] === true;
+  };
+
+  // Check if user has any access in the system (for basic navigation)
+  const hasAnyAccess = () => {
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    const modules = user.permissions?.modules || {};
+    return Object.values(modules).some(v => v === true);
+  };
+
   const value = {
     user,
     loading,
@@ -118,6 +144,9 @@ export const AuthProvider = ({ children }) => {
     userDepartment: user?.department,
     canViewDepartments: user?.can_view_departments || [],
     refreshAuth: checkAuth,
+    hasModuleAccess,
+    hasSubModuleAccess,
+    hasAnyAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
