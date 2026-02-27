@@ -760,7 +760,7 @@ const Layout = () => {
               </button>
               {expandedSections.administrationHub && (sidebarOpen || isMobile) && (
                 <div className="mt-2 space-y-1">
-                  {renderNavItems(administrationNavigation)}
+                  {renderNavItems(filterNavByPermission(administrationNavigation, 'administration'))}
                 </div>
               )}
             </div>
