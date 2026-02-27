@@ -562,3 +562,41 @@ async def get_sales_team():
         team.append(user)
     
     return {"team": team}
+
+
+# ==================== CUSTOMER SEARCH FOR FOLLOW-UPS ====================
+
+@router.get("/customers/search")
+async def search_customers(search: str = "", limit: int = 20):
+    """Search all customers (domestic + overseas) for follow-up linking"""
+    
+    if not search or len(search) < 2:
+        return {"customers": [], "total": 0}
+    
+    # Search in clients collection (main customer database)
+    query = {
+        "$or": [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"company_name": {"$regex": search, "$options": "i"}},
+            {"contact_person": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+        ]
+    }
+    
+    cursor = db.clients.find(query, {"_id": 0}).limit(limit)
+    customers = []
+    async for doc in cursor:
+        customer_type = doc.get("customer_type", "domestic")
+        customers.append({
+            "id": doc.get("id"),
+            "name": doc.get("name") or doc.get("company_name"),
+            "company_name": doc.get("company_name") or doc.get("name"),
+            "contact_person": doc.get("contact_person"),
+            "email": doc.get("email"),
+            "phone": doc.get("phone"),
+            "address": doc.get("address"),
+            "type": customer_type,
+            "display_name": doc.get("company_name") or doc.get("name")
+        })
+    
+    return {"customers": customers, "total": len(customers)}
