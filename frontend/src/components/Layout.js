@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FileText, Clock, DollarSign, Percent, 
   CheckSquare, Users, FileBarChart, Settings, Menu, X, 
   LogOut, User, CreditCard, Briefcase, FolderKanban, 
-  ClipboardList, Award, ChevronDown, ChevronRight, Building2,
+  ClipboardList, Award, ChevronDown, ChevronRight, Building2, Building,
   TrendingUp, ShoppingCart, Target, Globe, Ship, Plane,
   PiggyBank, Calculator, UserCircle, BadgeCheck, Cog, Wrench,
   Package, Truck, FileCheck, Landmark, Receipt, Calendar,
