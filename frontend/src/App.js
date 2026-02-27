@@ -65,6 +65,7 @@ import AnnouncementsManager from './pages/admin/AnnouncementsManager';
 import HolidayCalendar from './pages/admin/HolidayCalendar';
 import EventsManager from './pages/admin/EventsManager';
 import UserManagement from './pages/admin/UserManagement';
+import UserAccessControl from './pages/admin/UserAccessControl';
 import PDFTemplateSettings from './pages/admin/PDFTemplateSettings';
 import SharedReports from './pages/admin/SharedReports';
 
