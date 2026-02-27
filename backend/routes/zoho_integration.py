@@ -59,7 +59,7 @@ def get_api_url():
 def get_redirect_uri():
     """Get the redirect URI for OAuth callback"""
     # Try to get from environment, fallback to preview URL
-    base_url = os.environ.get("REACT_APP_BACKEND_URL", "https://expense-workflow-fix.preview.emergentagent.com")
+    base_url = os.environ.get("REACT_APP_BACKEND_URL", "https://crm-lead-manager-6.preview.emergentagent.com")
     return f"{base_url}/api/zoho/callback"
 
 @router.get("/auth-url")

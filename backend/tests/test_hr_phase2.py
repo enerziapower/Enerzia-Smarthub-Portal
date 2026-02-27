@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://expense-workflow-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crm-lead-manager-6.preview.emergentagent.com')
 
 # Test data
 TEST_EMPLOYEE_ID = "EMP001"  # Existing employee

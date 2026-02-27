@@ -10,7 +10,7 @@ import time
 import re
 
 class ForgotPasswordTester:
-    def __init__(self, base_url="https://expense-workflow-fix.preview.emergentagent.com"):
+    def __init__(self, base_url="https://crm-lead-manager-6.preview.emergentagent.com"):
         self.base_url = base_url
         
     def test_complete_flow(self):
