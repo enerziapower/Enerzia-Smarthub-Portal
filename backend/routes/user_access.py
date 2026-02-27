@@ -204,7 +204,6 @@ async def get_available_modules():
 @router.get("/user/{user_id}")
 async def get_user_permissions(user_id: str):
     """Get permissions for a specific user"""
-    db = get_database()
     
     # Find user
     user = db.users.find_one({"id": user_id})
@@ -246,7 +245,6 @@ async def get_user_permissions(user_id: str):
 @router.put("/user/{user_id}")
 async def update_user_permissions(user_id: str, request: UpdatePermissionsRequest):
     """Update permissions for a specific user"""
-    db = get_database()
     
     # Find user
     user = db.users.find_one({"id": user_id})
@@ -286,7 +284,6 @@ async def update_user_permissions(user_id: str, request: UpdatePermissionsReques
 @router.get("/users-list")
 async def get_users_with_permissions():
     """Get all users with their current permissions"""
-    db = get_database()
     
     users = list(db.users.find({}, {
         "_id": 0,
@@ -313,7 +310,6 @@ async def get_users_with_permissions():
 @router.post("/bulk-update")
 async def bulk_update_permissions(updates: List[UpdatePermissionsRequest]):
     """Update permissions for multiple users at once"""
-    db = get_database()
     
     results = []
     for update in updates:
@@ -348,7 +344,6 @@ async def bulk_update_permissions(updates: List[UpdatePermissionsRequest]):
 @router.post("/copy-permissions")
 async def copy_permissions(source_user_id: str, target_user_ids: List[str]):
     """Copy permissions from one user to others"""
-    db = get_database()
     
     # Get source user
     source_user = db.users.find_one({"id": source_user_id})
