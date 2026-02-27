@@ -641,10 +641,11 @@ const Layout = () => {
             </button>
             {expandedSections.employeeHub && (sidebarOpen || isMobile) && (
               <div className="mt-2 space-y-1">
-                {renderNavItems(employeeHubNavigation)}
+                {renderNavItems(filterNavByPermission(employeeHubNavigation, 'my_workspace'))}
               </div>
             )}
           </div>
+          )}
 
           {/* ============ 3. DEPARTMENTS HUB ============ */}
           <div>
