@@ -47,6 +47,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserPermissions(BaseModel):
+    modules: Dict[str, bool] = {}
+    sub_modules: Dict[str, bool] = {}
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -57,6 +62,7 @@ class UserResponse(BaseModel):
     is_active: bool = True
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
+    permissions: Optional[UserPermissions] = None
 
 
 class TokenResponse(BaseModel):
