@@ -422,7 +422,7 @@ const UserAccessControl = () => {
                                 className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 last:border-0"
                               >
                                 <div className="flex items-center gap-2 pl-6">
-                                  {userPermissions.sub_modules[sub.id] ? (
+                                  {userPermissions?.sub_modules?.[sub.id] ? (
                                     <CheckCircle className="w-4 h-4 text-green-500" />
                                   ) : (
                                     <X className="w-4 h-4 text-slate-300" />
@@ -432,14 +432,14 @@ const UserAccessControl = () => {
                                 </div>
                                 
                                 <button
-                                  onClick={() => toggleSubModule(moduleId, sub.id, !userPermissions.sub_modules[sub.id])}
+                                  onClick={() => toggleSubModule(moduleId, sub.id, !userPermissions?.sub_modules?.[sub.id])}
                                   disabled={selectedUser.role === 'super_admin'}
                                   className={`w-10 h-5 rounded-full transition-colors relative ${
-                                    userPermissions.sub_modules[sub.id] ? 'bg-green-500' : 'bg-slate-300'
+                                    userPermissions?.sub_modules?.[sub.id] ? 'bg-green-500' : 'bg-slate-300'
                                   } ${selectedUser.role === 'super_admin' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                                    userPermissions.sub_modules[sub.id] ? 'right-0.5' : 'left-0.5'
+                                    userPermissions?.sub_modules?.[sub.id] ? 'right-0.5' : 'left-0.5'
                                   }`} />
                                 </button>
                               </div>
