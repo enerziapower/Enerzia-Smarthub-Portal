@@ -65,8 +65,8 @@ const ExpenseClaims = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const [sheetForm, setSheetForm] = useState({
-    month: currentMonth,
-    year: currentYear,
+    month: selectedMonth,
+    year: selectedYear,
     advance_received: 0,
     advance_received_date: '',
     previous_due: 0,
