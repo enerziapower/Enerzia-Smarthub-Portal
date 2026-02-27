@@ -713,6 +713,52 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 
 ---
 
+#### Lead Management Module ✅ COMPLETE (Feb 27, 2026)
+**Location:** Sales Department → Lead Management
+- Backend: `/app/backend/routes/lead_management.py`
+- Frontend: `/app/frontend/src/pages/sales/LeadManagement.js`, `FollowUpForm.js`, `FollowUpsList.js`, `FollowUpCalendar.js`, `FollowUpDetails.js`
+
+| Feature | Description |
+|---------|-------------|
+| **Follow-up Types** | Cold Call, Site Visit, Call Back Request, Visit Later, General |
+| **Statuses** | Scheduled, Pending, Completed, Cancelled, Rescheduled |
+| **Customer Linking** | Link to existing Domestic/Overseas customer OR create new lead entry |
+| **Priority Levels** | High, Medium, Low |
+| **Assignment** | Assign follow-ups to team members |
+| **Comments/Notes** | Add comments and activity log to each follow-up |
+| **Dashboard** | Stats cards (Today, This Week, Overdue, Completed), Type breakdown, Overdue/Today/Upcoming sections |
+| **Calendar View** | Monthly calendar with follow-ups displayed on dates |
+| **List View** | Filterable table (status, type, priority, date range, search) |
+| **Quick Actions** | Mark Complete (with outcome), Reschedule (with reason), Cancel |
+
+**API Endpoints:**
+- `GET /api/lead-management/followups` - List with filters & pagination
+- `POST /api/lead-management/followups` - Create follow-up
+- `GET /api/lead-management/followups/{id}` - Get single follow-up
+- `PUT /api/lead-management/followups/{id}` - Update follow-up
+- `DELETE /api/lead-management/followups/{id}` - Delete follow-up
+- `POST /api/lead-management/followups/{id}/complete` - Mark as complete
+- `POST /api/lead-management/followups/{id}/reschedule` - Reschedule
+- `POST /api/lead-management/followups/{id}/comments` - Add comment
+- `GET /api/lead-management/followups/stats` - Dashboard statistics
+- `GET /api/lead-management/followups/today` - Today's follow-ups
+- `GET /api/lead-management/followups/upcoming` - Upcoming (7 days)
+- `GET /api/lead-management/followups/overdue` - Overdue follow-ups
+- `GET /api/lead-management/followups/calendar` - Calendar view by month
+- `GET /api/lead-management/team-members` - Sales team for assignment
+
+**Routes:**
+- `/sales/lead-management` - Dashboard
+- `/sales/lead-management/new` - Create follow-up
+- `/sales/lead-management/edit/:id` - Edit follow-up
+- `/sales/lead-management/followups` - All follow-ups list
+- `/sales/lead-management/followups/:id` - Follow-up details
+- `/sales/lead-management/calendar` - Calendar view
+
+**Test Results:** 100% pass rate (22/22 backend tests, all UI flows working)
+
+---
+
 #### AMC Module Bug Fixes ✅ COMPLETE (Feb 12, 2026)
 **Location:** 
 - Backend: `backend/routes/amc.py`, `backend/routes/amc_pdf.py`
