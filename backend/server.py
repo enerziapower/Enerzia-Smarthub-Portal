@@ -3638,6 +3638,7 @@ from routes.data_import import router as data_import_router
 from routes.hr_payroll import router as hr_payroll_router
 from routes.hr_payslip_pdf import router as hr_payslip_pdf_router
 from routes.project_orders import router as project_orders_router
+from routes.user_access import router as user_access_router
 
 # The modular routers will handle their routes
 app.include_router(projects_router_v2, prefix="/api", tags=["Projects-V2"])
