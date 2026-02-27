@@ -19,17 +19,17 @@ const followupTypes = [
 ];
 
 const statusColors = {
-  scheduled: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  completed: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
-  rescheduled: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+  scheduled: 'bg-blue-500/20 text-blue-600 border-blue-500/30',
+  pending: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30',
+  completed: 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30',
+  cancelled: 'bg-red-500/20 text-red-600 border-red-500/30',
+  rescheduled: 'bg-violet-500/20 text-violet-600 border-violet-500/30',
 };
 
 const priorityColors = {
-  high: 'bg-red-500/20 text-red-400',
-  medium: 'bg-amber-500/20 text-amber-400',
-  low: 'bg-emerald-500/20 text-emerald-400',
+  high: 'bg-red-100 text-red-600',
+  medium: 'bg-amber-100 text-amber-600',
+  low: 'bg-emerald-100 text-emerald-600',
 };
 
 const LeadManagement = () => {
@@ -92,41 +92,41 @@ const LeadManagement = () => {
     
     return (
       <div 
-        className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-all cursor-pointer"
+        className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
         onClick={() => navigate(`/sales/lead-management/followups/${followup.id}`)}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
             <div className={`p-2 rounded-lg ${
-              typeInfo.color === 'blue' ? 'bg-blue-500/20' :
-              typeInfo.color === 'emerald' ? 'bg-emerald-500/20' :
-              typeInfo.color === 'amber' ? 'bg-amber-500/20' :
-              typeInfo.color === 'violet' ? 'bg-violet-500/20' :
-              'bg-slate-500/20'
+              typeInfo.color === 'blue' ? 'bg-blue-100' :
+              typeInfo.color === 'emerald' ? 'bg-emerald-100' :
+              typeInfo.color === 'amber' ? 'bg-amber-100' :
+              typeInfo.color === 'violet' ? 'bg-violet-100' :
+              'bg-gray-100'
             }`}>
               <TypeIcon className={`w-4 h-4 ${
-                typeInfo.color === 'blue' ? 'text-blue-400' :
-                typeInfo.color === 'emerald' ? 'text-emerald-400' :
-                typeInfo.color === 'amber' ? 'text-amber-400' :
-                typeInfo.color === 'violet' ? 'text-violet-400' :
-                'text-slate-400'
+                typeInfo.color === 'blue' ? 'text-blue-600' :
+                typeInfo.color === 'emerald' ? 'text-emerald-600' :
+                typeInfo.color === 'amber' ? 'text-amber-600' :
+                typeInfo.color === 'violet' ? 'text-violet-600' :
+                'text-gray-600'
               }`} />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-white font-medium truncate">{followup.title}</h4>
-              <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
+              <h4 className="text-gray-900 font-medium truncate">{followup.title}</h4>
+              <p className="text-gray-500 text-sm flex items-center gap-1 mt-1">
                 <Building2 className="w-3 h-3" />
                 {followup.customer_name || followup.lead_company || followup.lead_name || 'Unknown'}
               </p>
               {showDate && (
-                <p className="text-slate-500 text-xs mt-1 flex items-center gap-1">
+                <p className="text-gray-400 text-xs mt-1 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {formatDate(followup.scheduled_date)}
                   {followup.scheduled_time && ` at ${followup.scheduled_time}`}
                 </p>
               )}
               {!showDate && followup.scheduled_time && (
-                <p className="text-slate-500 text-xs mt-1 flex items-center gap-1">
+                <p className="text-gray-400 text-xs mt-1 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {followup.scheduled_time}
                 </p>
@@ -143,8 +143,8 @@ const LeadManagement = () => {
           </div>
         </div>
         {followup.assigned_to_name && (
-          <div className="mt-3 pt-3 border-t border-slate-700/50 flex items-center justify-between">
-            <span className="text-slate-500 text-xs flex items-center gap-1">
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-gray-400 text-xs flex items-center gap-1">
               <User className="w-3 h-3" />
               {followup.assigned_to_name}
             </span>
@@ -153,7 +153,7 @@ const LeadManagement = () => {
                 e.stopPropagation();
                 handleMarkComplete(followup.id);
               }}
-              className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+              className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
             >
               <CheckCircle2 className="w-3 h-3" />
               Complete
@@ -167,7 +167,7 @@ const LeadManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
@@ -177,27 +177,27 @@ const LeadManagement = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Lead Management</h1>
-          <p className="text-slate-400 mt-1">Manage customer follow-ups and leads</p>
+          <h1 className="text-2xl font-bold text-gray-900">Lead Management</h1>
+          <p className="text-gray-500 mt-1">Apply for follow-ups and track your leads</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => navigate('/sales/lead-management/calendar')}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors"
           >
             <CalendarDays className="w-4 h-4" />
             Calendar
           </button>
           <button
             onClick={() => navigate('/sales/lead-management/followups')}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Filter className="w-4 h-4" />
             All Follow-ups
           </button>
           <button
             onClick={() => navigate('/sales/lead-management/new')}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Follow-up
@@ -243,27 +243,27 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* How it Works Section */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
-        <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-blue-400" />
+      {/* How it Works Section - Light Background */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <h3 className="text-gray-900 font-medium mb-3 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-500" />
           How Follow-ups Work
         </h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
+        <ul className="space-y-2 text-gray-600 text-sm">
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-blue-500 mt-0.5">•</span>
             Schedule follow-ups for cold calls, site visits, or callbacks
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-blue-500 mt-0.5">•</span>
             Link to existing customers or create new lead entries
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-blue-500 mt-0.5">•</span>
             Track outcomes and plan next actions when completed
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-blue-500 mt-0.5">•</span>
             View calendar to see scheduled activities at a glance
           </li>
         </ul>
@@ -271,7 +271,7 @@ const LeadManagement = () => {
 
       {/* Follow-up Type Stats - Colorful Cards */}
       <div>
-        <h3 className="text-white font-medium mb-4">By Type</h3>
+        <h3 className="text-gray-900 font-medium mb-4">By Type</h3>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {/* Cold Call - Blue */}
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-lg">
@@ -320,29 +320,29 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* My Follow-ups Section */}
+      {/* My Follow-ups Section - Light Background */}
       <div>
-        <h3 className="text-white font-medium mb-4">My Follow-ups</h3>
+        <h3 className="text-gray-900 font-medium mb-4">My Follow-ups</h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Overdue */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-              <h4 className="text-red-400 font-medium flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-red-50">
+              <h4 className="text-red-600 font-medium flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 Overdue ({overdueFollowups.length})
               </h4>
               {overdueFollowups.length > 0 && (
                 <button 
                   onClick={() => navigate('/sales/lead-management/followups?status=overdue')}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                 >
                   View All <ChevronRight className="w-3 h-3" />
                 </button>
               )}
             </div>
-            <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+            <div className="p-4 space-y-3 max-h-80 overflow-y-auto bg-gray-50/50">
               {overdueFollowups.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-4">No overdue follow-ups</p>
+                <p className="text-gray-400 text-sm text-center py-4">No overdue follow-ups</p>
               ) : (
                 overdueFollowups.slice(0, 5).map(f => (
                   <FollowupCard key={f.id} followup={f} showDate />
@@ -352,24 +352,24 @@ const LeadManagement = () => {
           </div>
 
           {/* Today */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-              <h4 className="text-blue-400 font-medium flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-blue-50">
+              <h4 className="text-blue-600 font-medium flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 Today ({todayFollowups.length})
               </h4>
               {todayFollowups.length > 0 && (
                 <button 
                   onClick={() => navigate('/sales/lead-management/followups?date=today')}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                 >
                   View All <ChevronRight className="w-3 h-3" />
                 </button>
               )}
             </div>
-            <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+            <div className="p-4 space-y-3 max-h-80 overflow-y-auto bg-gray-50/50">
               {todayFollowups.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-4">No follow-ups scheduled for today</p>
+                <p className="text-gray-400 text-sm text-center py-4">No follow-ups scheduled for today</p>
               ) : (
                 todayFollowups.slice(0, 5).map(f => (
                   <FollowupCard key={f.id} followup={f} />
@@ -379,24 +379,24 @@ const LeadManagement = () => {
           </div>
 
           {/* Upcoming */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-              <h4 className="text-amber-400 font-medium flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-amber-50">
+              <h4 className="text-amber-600 font-medium flex items-center gap-2">
                 <CalendarDays className="w-4 h-4" />
                 Upcoming 7 Days ({upcomingFollowups.length})
               </h4>
               {upcomingFollowups.length > 0 && (
                 <button 
                   onClick={() => navigate('/sales/lead-management/followups')}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                 >
                   View All <ChevronRight className="w-3 h-3" />
                 </button>
               )}
             </div>
-            <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+            <div className="p-4 space-y-3 max-h-80 overflow-y-auto bg-gray-50/50">
               {upcomingFollowups.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-4">No upcoming follow-ups</p>
+                <p className="text-gray-400 text-sm text-center py-4">No upcoming follow-ups</p>
               ) : (
                 upcomingFollowups.slice(0, 5).map(f => (
                   <FollowupCard key={f.id} followup={f} showDate />
