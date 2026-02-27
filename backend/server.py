@@ -983,6 +983,18 @@ async def get_current_user_info(current_user: dict = Depends(require_auth)):
     # Include accessible departments
     accessible_depts = get_user_departments(current_user)
     current_user["accessible_departments"] = accessible_depts
+    
+    # Get fresh user data with permissions from DB
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    if user:
+        # Get user permissions
+        user_perms = user.get("permissions", {})
+        if user_perms and isinstance(user_perms, dict):
+            current_user["permissions"] = {
+                "modules": user_perms.get("modules", {}),
+                "sub_modules": user_perms.get("sub_modules", {})
+            }
+    
     return current_user
 
 
