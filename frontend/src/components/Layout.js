@@ -690,22 +690,22 @@ const Layout = () => {
             {expandedSections.departmentsHub && (sidebarOpen || isMobile) && (
               <div className="mt-2 space-y-1 ml-2">
                 {/* Projects */}
-                {(hasAccess('projects') || shouldShowSection('projects_dept')) && renderDepartmentSection('Projects', FolderKanban, filterNavByPermission(projectsNavigation, 'projects_dept'), 'projects', 'blue')}
+                {hasAccess('projects', 'projects_dept') && renderDepartmentSection('Projects', FolderKanban, filterNavByPermission(projectsNavigation, 'projects_dept'), 'projects', 'blue')}
                 
                 {/* Accounts */}
-                {(hasAccess('accounts') || shouldShowSection('accounts_dept')) && renderDepartmentSection('Accounts', Calculator, filterNavByPermission(accountsNavigation, 'accounts_dept'), 'accounts', 'emerald')}
+                {hasAccess('accounts', 'accounts_dept') && renderDepartmentSection('Accounts', Calculator, filterNavByPermission(accountsNavigation, 'accounts_dept'), 'accounts', 'emerald')}
                 
                 {/* Sales */}
-                {(hasAccess('sales') || shouldShowSection('sales_dept')) && renderDepartmentSection('Sales', TrendingUp, filterNavByPermission(salesNavigation, 'sales_dept'), 'sales', 'amber')}
+                {hasAccess('sales', 'sales_dept') && renderDepartmentSection('Sales', TrendingUp, filterNavByPermission(salesNavigation, 'sales_dept'), 'sales', 'amber')}
                 
                 {/* Purchase */}
-                {(hasAccess('purchase') || shouldShowSection('purchase_dept')) && renderDepartmentSection('Purchase', Package, filterNavByPermission(purchaseNavigation, 'purchase_dept'), 'purchase', 'cyan')}
+                {hasAccess('purchase', 'purchase_dept') && renderDepartmentSection('Purchase', Package, filterNavByPermission(purchaseNavigation, 'purchase_dept'), 'purchase', 'cyan')}
                 
                 {/* Exports */}
-                {(hasAccess('exports') || shouldShowSection('exports_dept')) && renderDepartmentSection('Exports', Ship, filterNavByPermission(exportsNavigation, 'exports_dept'), 'exports', 'indigo')}
+                {hasAccess('exports', 'exports_dept') && renderDepartmentSection('Exports', Ship, filterNavByPermission(exportsNavigation, 'exports_dept'), 'exports', 'indigo')}
                 
                 {/* Finance */}
-                {(hasAccess('finance') || shouldShowSection('finance_dept')) && renderDepartmentSection('Finance', CircleDollarSign, filterNavByPermission(financeNavigation, 'finance_dept'), 'finance', 'purple')}
+                {hasAccess('finance', 'finance_dept') && renderDepartmentSection('Finance', CircleDollarSign, filterNavByPermission(financeNavigation, 'finance_dept'), 'finance', 'purple')}
                 
                 {/* HR */}
                 {(hasAccess('hr') || shouldShowSection('hr_dept')) && renderDepartmentSection('HR & Admin', Users, filterNavByPermission(hrNavigation, 'hr_dept'), 'hr', 'rose')}
