@@ -299,6 +299,23 @@ const Layout = () => {
     return true;
   };
 
+  // Check if user has access to ANY department (for showing Departments hub)
+  const hasAnyDepartmentAccess = () => {
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    
+    const deptModules = ['projects_dept', 'accounts_dept', 'sales_dept', 'purchase_dept', 
+                         'exports_dept', 'finance_dept', 'hr_dept', 'operations_dept'];
+    
+    // If user has permissions set, check if any department module is enabled
+    if (user.permissions?.modules) {
+      return deptModules.some(moduleId => hasModuleAccess(moduleId));
+    }
+    
+    // Backward compatibility: if no permissions set, show departments
+    return true;
+  };
+
   // ============ COMPANY HUB ============
   const companyHubNavigation = [
     { name: 'Dashboard', href: '/company-hub', icon: LayoutDashboard },
