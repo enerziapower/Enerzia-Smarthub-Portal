@@ -3686,6 +3686,7 @@ app.include_router(data_import_router, tags=["Data-Import"])
 app.include_router(hr_payroll_router, tags=["HR-Payroll"])
 app.include_router(hr_payslip_pdf_router, tags=["HR-Payslip-PDF"])
 app.include_router(project_orders_router, tags=["Project-Orders-Integration"])
+app.include_router(user_access_router, tags=["User-Access-Control"])
 
 # Include the main router with remaining routes
 app.include_router(api_router)
