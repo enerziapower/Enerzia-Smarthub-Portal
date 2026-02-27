@@ -154,9 +154,11 @@ const Layout = () => {
   }, [location.pathname]);
 
   // Check if user has access to a department
-  const hasAccess = (department) => {
+  // Check if user has access to a department (legacy check - now superseded by permissions)
+  const hasLegacyDepartmentAccess = (department) => {
     if (!user) return false;
-    if (user.role === 'super_admin' || user.role === 'ceo_owner') return true;
+    // Note: We no longer bypass for ceo_owner - permissions take precedence
+    if (user.role === 'super_admin') return true;
     
     // Case-insensitive comparison for department
     const userDept = (user.department || '').toLowerCase();
@@ -171,6 +173,20 @@ const Layout = () => {
     }
     
     return false;
+  };
+
+  // Combined access check - permissions take precedence, then fall back to legacy department access
+  const hasAccess = (department, moduleId) => {
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    
+    // If user has permissions set, use permission system
+    if (user.permissions?.modules) {
+      return hasModuleAccess(moduleId);
+    }
+    
+    // Fall back to legacy department-based access
+    return hasLegacyDepartmentAccess(department);
   };
 
   // Filter navigation items based on user permissions
