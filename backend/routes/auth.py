@@ -22,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 # Store OTPs temporarily (in production, use Redis)
 otp_store = {}
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 async def login(user_data: UserLogin):
     user = await db.users.find_one({"email": user_data.email})
     if not user:
