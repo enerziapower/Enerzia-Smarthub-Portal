@@ -1555,8 +1555,11 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
 @router.post("/attendance/check-in")
 async def check_in(user_id: str, user_name: str):
     """Record check-in time"""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    check_in_time = datetime.now(timezone.utc).strftime("%H:%M")
+    # Use IST timezone (UTC+5:30) for India
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(ist)
+    today = now_ist.strftime("%Y-%m-%d")
+    check_in_time = now_ist.strftime("%H:%M")
     
     # Check if already checked in
     existing = await db.attendance.find_one({"user_id": user_id, "date": today})
@@ -1584,8 +1587,11 @@ async def check_in(user_id: str, user_name: str):
 @router.post("/attendance/check-out")
 async def check_out(user_id: str):
     """Record check-out time and calculate work hours"""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    check_out_time = datetime.now(timezone.utc).strftime("%H:%M")
+    # Use IST timezone (UTC+5:30) for India
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(ist)
+    today = now_ist.strftime("%Y-%m-%d")
+    check_out_time = now_ist.strftime("%H:%M")
     
     # Get the check-in record
     record = await db.attendance.find_one({"user_id": user_id, "date": today})
