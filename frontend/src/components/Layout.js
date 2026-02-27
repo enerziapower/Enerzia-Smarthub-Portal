@@ -708,16 +708,16 @@ const Layout = () => {
                 {hasAccess('finance', 'finance_dept') && renderDepartmentSection('Finance', CircleDollarSign, filterNavByPermission(financeNavigation, 'finance_dept'), 'finance', 'purple')}
                 
                 {/* HR */}
-                {(hasAccess('hr') || shouldShowSection('hr_dept')) && renderDepartmentSection('HR & Admin', Users, filterNavByPermission(hrNavigation, 'hr_dept'), 'hr', 'rose')}
+                {hasAccess('hr', 'hr_dept') && renderDepartmentSection('HR & Admin', Users, filterNavByPermission(hrNavigation, 'hr_dept'), 'hr', 'rose')}
                 
                 {/* Operations */}
-                {(hasAccess('operations') || shouldShowSection('operations_dept')) && renderDepartmentSection('Operations', Wrench, filterNavByPermission(operationsNavigation, 'operations_dept'), 'operations', 'orange')}
+                {hasAccess('operations', 'operations_dept') && renderDepartmentSection('Operations', Wrench, filterNavByPermission(operationsNavigation, 'operations_dept'), 'operations', 'orange')}
               </div>
             )}
           </div>
 
           {/* ============ 4. MANAGEMENT HUB ============ */}
-          {(user?.role === 'super_admin' || user?.role === 'ceo' || user?.role === 'manager') && (
+          {shouldShowSection('management_hub') && (
             <div>
               <button
                 onClick={() => toggleSection('managementHub')}
@@ -735,14 +735,14 @@ const Layout = () => {
               </button>
               {expandedSections.managementHub && (sidebarOpen || isMobile) && (
                 <div className="mt-2 space-y-1">
-                  {renderNavItems(managementHubNavigation)}
+                  {renderNavItems(filterNavByPermission(managementHubNavigation, 'management_hub'))}
                 </div>
               )}
             </div>
           )}
 
           {/* ============ 5. ADMINISTRATION HUB ============ */}
-          {(user?.role === 'super_admin' || user?.role === 'admin' || hasAccess('hr')) && (
+          {shouldShowSection('administration') && (
             <div>
               <button
                 onClick={() => toggleSection('administrationHub')}
