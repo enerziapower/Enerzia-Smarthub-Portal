@@ -322,6 +322,7 @@ const Layout = () => {
   const administrationNavigation = [
     { name: 'Organization Settings', href: '/settings', icon: Settings },
     { name: 'User Management', href: '/admin/users', icon: Users },
+    { name: 'User Access Control', href: '/admin/user-access', icon: Shield },
     { name: 'Announcements', href: '/admin/announcements', icon: Bell },
     { name: 'Events Manager', href: '/admin/events', icon: Calendar },
     { name: 'Holiday Calendar', href: '/admin/holidays', icon: CalendarDays },
