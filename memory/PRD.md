@@ -334,6 +334,8 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 | **Permission Persistence** | Saved to database and applied on user's next login |
 | **Super Admin Protection** | Cannot modify super admin permissions |
 | **Sidebar Filtering** | Sidebar dynamically shows/hides modules based on user permissions |
+| **Login Returns Permissions** | User permissions included in login response for immediate sidebar filtering |
+| **Re-login Notification** | Toast message informs admin that user must re-login for changes to take effect |
 
 **Backend API Endpoints:**
 - `GET /api/user-access/modules` - List all available modules
@@ -341,9 +343,14 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 - `PUT /api/user-access/user/{user_id}` - Update user's permissions
 - `GET /api/user-access/users-list` - List all users with permission summary
 
-**Files Created:**
-- `/app/backend/routes/user_access.py` - Backend API
+**Files Modified/Created:**
+- `/app/backend/routes/user_access.py` - Backend API for permission CRUD
+- `/app/backend/server.py` - Login & /auth/me endpoints updated to return permissions
 - `/app/frontend/src/pages/admin/UserAccessControl.js` - Admin UI
+- `/app/frontend/src/components/Layout.js` - Sidebar filtering based on permissions
+- `/app/frontend/src/context/AuthContext.js` - Permission helper functions
+
+**Bug Fix (Feb 27, 2026):** Fixed issue where permissions set via User Access Control page were not being applied. Root cause was that login and /auth/me endpoints in server.py were not returning user permissions. Fixed by adding permissions to both endpoint responses.
 
 #### My Attendance Bug Fix ✅ COMPLETE (Feb 26, 2026)
 **Location:** My Workspace → My Attendance
