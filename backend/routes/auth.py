@@ -44,15 +44,12 @@ async def login(user_data: UserLogin):
     
     # Get user permissions
     user_perms = user.get("permissions", {})
-    logger.info(f"DEBUG: User {user.get('email')} permissions from DB: {user_perms is not None}, type: {type(user_perms)}")
-    
     permissions_obj = None
     if user_perms and isinstance(user_perms, dict):
         permissions_obj = UserPermissions(
             modules=user_perms.get("modules", {}),
             sub_modules=user_perms.get("sub_modules", {})
         )
-    logger.info(f"DEBUG: permissions_obj: {permissions_obj}")
     
     user_response = UserResponse(
         id=user["id"],
@@ -67,11 +64,7 @@ async def login(user_data: UserLogin):
         permissions=permissions_obj
     )
     
-    logger.info(f"DEBUG: user_response.permissions: {user_response.permissions}")
     result = TokenResponse(token=token, user=user_response)
-    logger.info(f"DEBUG: result.user.permissions: {result.user.permissions}")
-    
-    # Return dict to avoid Pydantic serialization issues
     return result.model_dump()
 
 @router.post("/register")
