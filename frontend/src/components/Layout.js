@@ -284,11 +284,19 @@ const Layout = () => {
     return pathMappings[path];
   };
 
-  // Check if entire section should be shown
+  // Check if entire section should be shown based on permissions
   const shouldShowSection = (moduleId) => {
-    if (isSuperAdmin) return true;
-    if (!user?.permissions?.modules) return true; // Backward compatibility
-    return hasModuleAccess(moduleId);
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    
+    // If user has permissions set, use permission system strictly
+    if (user.permissions?.modules) {
+      return hasModuleAccess(moduleId);
+    }
+    
+    // Backward compatibility: if no permissions set, show all for users
+    // This allows existing users to still work until admin sets their permissions
+    return true;
   };
 
   // ============ COMPANY HUB ============
