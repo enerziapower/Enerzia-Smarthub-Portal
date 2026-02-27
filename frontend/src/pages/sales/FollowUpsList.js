@@ -10,32 +10,40 @@ import {
 
 const followupTypes = [
   { id: 'cold_call', label: 'Cold Call', icon: PhoneCall, color: 'blue' },
-  { id: 'site_visit', label: 'Site Visit', icon: Car, color: 'green' },
-  { id: 'call_back', label: 'Call Back', icon: Phone, color: 'orange' },
-  { id: 'visit_later', label: 'Visit Later', icon: MapPin, color: 'purple' },
+  { id: 'site_visit', label: 'Site Visit', icon: Car, color: 'emerald' },
+  { id: 'call_back', label: 'Call Back', icon: Phone, color: 'amber' },
+  { id: 'visit_later', label: 'Visit Later', icon: MapPin, color: 'violet' },
   { id: 'general', label: 'General', icon: MessageSquare, color: 'slate' },
 ];
 
 const statusOptions = [
   { id: 'scheduled', label: 'Scheduled', color: 'blue' },
   { id: 'pending', label: 'Pending', color: 'yellow' },
-  { id: 'completed', label: 'Completed', color: 'green' },
+  { id: 'completed', label: 'Completed', color: 'emerald' },
   { id: 'cancelled', label: 'Cancelled', color: 'red' },
-  { id: 'rescheduled', label: 'Rescheduled', color: 'purple' },
+  { id: 'rescheduled', label: 'Rescheduled', color: 'violet' },
 ];
 
 const statusColors = {
-  scheduled: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  completed: 'bg-green-500/20 text-green-400 border-green-500/30',
-  cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
-  rescheduled: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  scheduled: 'bg-blue-100 text-blue-700 border-blue-200',
+  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  cancelled: 'bg-red-100 text-red-700 border-red-200',
+  rescheduled: 'bg-violet-100 text-violet-700 border-violet-200',
 };
 
 const priorityColors = {
-  high: 'bg-red-500/20 text-red-400',
-  medium: 'bg-yellow-500/20 text-yellow-400',
-  low: 'bg-green-500/20 text-green-400',
+  high: 'bg-red-100 text-red-700',
+  medium: 'bg-amber-100 text-amber-700',
+  low: 'bg-emerald-100 text-emerald-700',
+};
+
+const typeColors = {
+  blue: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  emerald: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  amber: { bg: 'bg-amber-100', text: 'text-amber-700' },
+  violet: { bg: 'bg-violet-100', text: 'text-violet-700' },
+  slate: { bg: 'bg-gray-100', text: 'text-gray-700' },
 };
 
 const FollowUpsList = () => {
@@ -163,14 +171,14 @@ const FollowUpsList = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">All Follow-ups</h1>
-          <p className="text-slate-400 mt-1">{total} follow-ups found</p>
+          <h1 className="text-2xl font-bold text-gray-900">All Follow-ups</h1>
+          <p className="text-gray-500 mt-1">{total} follow-ups found</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-              showFilters ? 'bg-amber-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'
+              showFilters ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
             }`}
           >
             <Filter className="w-4 h-4" />
@@ -178,7 +186,7 @@ const FollowUpsList = () => {
           </button>
           <button
             onClick={() => navigate('/sales/lead-management/new')}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Follow-up
@@ -188,28 +196,28 @@ const FollowUpsList = () => {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Search</label>
+              <label className="block text-xs text-gray-500 mb-1">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                   placeholder="Search..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>
             
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Status</label>
+              <label className="block text-xs text-gray-500 mb-1">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
               >
                 <option value="">All Statuses</option>
                 {statusOptions.map(s => (
@@ -219,11 +227,11 @@ const FollowUpsList = () => {
             </div>
             
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Type</label>
+              <label className="block text-xs text-gray-500 mb-1">Type</label>
               <select
                 value={filters.followup_type}
                 onChange={(e) => handleFilterChange('followup_type', e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
               >
                 <option value="">All Types</option>
                 {followupTypes.map(t => (
@@ -233,11 +241,11 @@ const FollowUpsList = () => {
             </div>
             
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Priority</label>
+              <label className="block text-xs text-gray-500 mb-1">Priority</label>
               <select
                 value={filters.priority}
                 onChange={(e) => handleFilterChange('priority', e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
               >
                 <option value="">All Priorities</option>
                 <option value="high">High</option>
@@ -247,22 +255,22 @@ const FollowUpsList = () => {
             </div>
             
             <div>
-              <label className="block text-xs text-slate-400 mb-1">From Date</label>
+              <label className="block text-xs text-gray-500 mb-1">From Date</label>
               <input
                 type="date"
                 value={filters.date_from}
                 onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
             
             <div>
-              <label className="block text-xs text-slate-400 mb-1">To Date</label>
+              <label className="block text-xs text-gray-500 mb-1">To Date</label>
               <input
                 type="date"
                 value={filters.date_to}
                 onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -270,7 +278,7 @@ const FollowUpsList = () => {
           <div className="mt-4 flex justify-end">
             <button
               onClick={clearFilters}
-              className="text-sm text-slate-400 hover:text-white"
+              className="text-sm text-gray-500 hover:text-gray-700"
             >
               Clear all filters
             </button>
@@ -279,30 +287,30 @@ const FollowUpsList = () => {
       )}
 
       {/* Table */}
-      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-900/50">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Title / Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Scheduled</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Assigned To</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Priority</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title / Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Scheduled</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
                   </td>
                 </tr>
               ) : followups.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
                     No follow-ups found
                   </td>
                 </tr>
@@ -311,33 +319,34 @@ const FollowUpsList = () => {
                   const typeInfo = getTypeInfo(followup.followup_type);
                   const TypeIcon = typeInfo.icon;
                   const overdue = isOverdue(followup);
+                  const colors = typeColors[typeInfo.color] || typeColors.slate;
                   
                   return (
                     <tr 
                       key={followup.id} 
-                      className={`hover:bg-slate-800/50 cursor-pointer ${overdue ? 'bg-red-500/5' : ''}`}
+                      className={`hover:bg-gray-50 cursor-pointer ${overdue ? 'bg-red-50/50' : ''}`}
                       onClick={() => navigate(`/sales/lead-management/followups/${followup.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg bg-${typeInfo.color}-500/20`}>
-                          <TypeIcon className={`w-4 h-4 text-${typeInfo.color}-400`} />
-                          <span className={`text-xs text-${typeInfo.color}-400`}>{typeInfo.label}</span>
+                        <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg ${colors.bg}`}>
+                          <TypeIcon className={`w-4 h-4 ${colors.text}`} />
+                          <span className={`text-xs ${colors.text}`}>{typeInfo.label}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-white font-medium">{followup.title}</p>
-                        <p className="text-slate-400 text-sm flex items-center gap-1 mt-0.5">
+                        <p className="text-gray-900 font-medium">{followup.title}</p>
+                        <p className="text-gray-500 text-sm flex items-center gap-1 mt-0.5">
                           <Building2 className="w-3 h-3" />
                           {followup.customer_name || followup.lead_company || followup.lead_name || 'Unknown'}
                         </p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className={`text-sm flex items-center gap-1 ${overdue ? 'text-red-400' : 'text-white'}`}>
+                        <p className={`text-sm flex items-center gap-1 ${overdue ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
                           {overdue && <AlertCircle className="w-3 h-3" />}
                           {formatDate(followup.scheduled_date)}
                         </p>
                         {followup.scheduled_time && (
-                          <p className="text-slate-500 text-xs flex items-center gap-1 mt-0.5">
+                          <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
                             <Clock className="w-3 h-3" />
                             {followup.scheduled_time}
                           </p>
@@ -345,12 +354,12 @@ const FollowUpsList = () => {
                       </td>
                       <td className="px-4 py-3">
                         {followup.assigned_to_name ? (
-                          <span className="text-slate-300 text-sm flex items-center gap-1">
-                            <User className="w-3 h-3 text-slate-500" />
+                          <span className="text-gray-700 text-sm flex items-center gap-1">
+                            <User className="w-3 h-3 text-gray-400" />
                             {followup.assigned_to_name}
                           </span>
                         ) : (
-                          <span className="text-slate-500 text-sm">Unassigned</span>
+                          <span className="text-gray-400 text-sm">Unassigned</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -367,19 +376,19 @@ const FollowUpsList = () => {
                         <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => setActionMenuId(actionMenuId === followup.id ? null : followup.id)}
-                            className="p-1 hover:bg-slate-700 rounded"
+                            className="p-1 hover:bg-gray-100 rounded"
                           >
-                            <MoreVertical className="w-4 h-4 text-slate-400" />
+                            <MoreVertical className="w-4 h-4 text-gray-500" />
                           </button>
                           
                           {actionMenuId === followup.id && (
-                            <div className="absolute right-0 mt-1 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10">
+                            <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-10">
                               <button
                                 onClick={() => {
                                   navigate(`/sales/lead-management/followups/${followup.id}`);
                                   setActionMenuId(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-slate-700 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                               >
                                 <Eye className="w-4 h-4" /> View
                               </button>
@@ -388,21 +397,21 @@ const FollowUpsList = () => {
                                   navigate(`/sales/lead-management/edit/${followup.id}`);
                                   setActionMenuId(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm text-white hover:bg-slate-700 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                               >
                                 <Edit className="w-4 h-4" /> Edit
                               </button>
                               {followup.status !== 'completed' && (
                                 <button
                                   onClick={() => handleMarkComplete(followup.id)}
-                                  className="w-full px-3 py-2 text-left text-sm text-green-400 hover:bg-slate-700 flex items-center gap-2"
+                                  className="w-full px-3 py-2 text-left text-sm text-emerald-600 hover:bg-emerald-50 flex items-center gap-2"
                                 >
                                   <CheckCircle2 className="w-4 h-4" /> Complete
                                 </button>
                               )}
                               <button
                                 onClick={() => handleDelete(followup.id)}
-                                className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-slate-700 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
                                 <Trash2 className="w-4 h-4" /> Delete
                               </button>
@@ -420,22 +429,22 @@ const FollowUpsList = () => {
         
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-slate-700/50 flex items-center justify-between">
-            <p className="text-slate-400 text-sm">
+          <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+            <p className="text-gray-500 text-sm">
               Page {page} of {totalPages}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:hover:bg-slate-700 text-white rounded-lg flex items-center gap-1 text-sm"
+                className="px-3 py-1 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white text-gray-700 rounded-lg flex items-center gap-1 text-sm"
               >
                 <ChevronLeft className="w-4 h-4" /> Prev
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:hover:bg-slate-700 text-white rounded-lg flex items-center gap-1 text-sm"
+                className="px-3 py-1 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white text-gray-700 rounded-lg flex items-center gap-1 text-sm"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>
