@@ -42,15 +42,24 @@ async def login(user_data: UserLogin):
     
     token = create_access_token({"user_id": user["id"], "email": user["email"], "role": user["role"]})
     
+    # Get user permissions
+    user_perms = user.get("permissions", {})
+    permissions_obj = UserPermissions(
+        modules=user_perms.get("modules", {}),
+        sub_modules=user_perms.get("sub_modules", {})
+    ) if user_perms else None
+    
     user_response = UserResponse(
         id=user["id"],
         email=user["email"],
         name=user["name"],
         role=user["role"],
         department=user.get("department"),
+        can_view_departments=user.get("can_view_departments", []),
         is_active=user.get("is_active", True),
         created_at=user.get("created_at"),
-        last_login=datetime.now(timezone.utc)
+        last_login=datetime.now(timezone.utc),
+        permissions=permissions_obj
     )
     
     return TokenResponse(access_token=token, user=user_response)
