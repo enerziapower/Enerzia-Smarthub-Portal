@@ -62,7 +62,7 @@ async def login(user_data: UserLogin):
         permissions=permissions_obj
     )
     
-    return TokenResponse(access_token=token, user=user_response)
+    return TokenResponse(token=token, user=user_response)
 
 @router.post("/register")
 async def register(user_data: UserCreate):
@@ -97,7 +97,7 @@ async def register(user_data: UserCreate):
         created_at=user.created_at
     )
     
-    return TokenResponse(access_token=token, user=user_response)
+    return TokenResponse(token=token, user=user_response)
 
 @router.get("/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
