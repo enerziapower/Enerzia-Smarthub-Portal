@@ -325,6 +325,13 @@ function AppRoutes() {
           <Route path="project-profit" element={<ProjectProfitDashboard />} />
           <Route path="customer-management" element={<CustomerManagement />} />
           <Route path="order-lifecycle" element={<OrderLifecycle />} />
+          {/* Lead Management */}
+          <Route path="lead-management" element={<LeadManagement />} />
+          <Route path="lead-management/new" element={<FollowUpForm />} />
+          <Route path="lead-management/edit/:id" element={<FollowUpForm />} />
+          <Route path="lead-management/followups" element={<FollowUpsList />} />
+          <Route path="lead-management/followups/:id" element={<FollowUpDetails />} />
+          <Route path="lead-management/calendar" element={<FollowUpCalendar />} />
         </Route>
 
         {/* Purchase Department */}
