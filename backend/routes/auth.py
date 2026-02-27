@@ -44,10 +44,15 @@ async def login(user_data: UserLogin):
     
     # Get user permissions
     user_perms = user.get("permissions", {})
-    permissions_obj = UserPermissions(
-        modules=user_perms.get("modules", {}),
-        sub_modules=user_perms.get("sub_modules", {})
-    ) if user_perms else None
+    print(f"DEBUG: User {user.get('email')} permissions from DB: {user_perms is not None}, type: {type(user_perms)}")
+    
+    permissions_obj = None
+    if user_perms and isinstance(user_perms, dict):
+        permissions_obj = UserPermissions(
+            modules=user_perms.get("modules", {}),
+            sub_modules=user_perms.get("sub_modules", {})
+        )
+    print(f"DEBUG: permissions_obj: {permissions_obj}")
     
     user_response = UserResponse(
         id=user["id"],
@@ -62,7 +67,10 @@ async def login(user_data: UserLogin):
         permissions=permissions_obj
     )
     
-    return TokenResponse(token=token, user=user_response)
+    print(f"DEBUG: user_response.permissions: {user_response.permissions}")
+    result = TokenResponse(token=token, user=user_response)
+    print(f"DEBUG: result.user.permissions: {result.user.permissions}")
+    return result
 
 @router.post("/register")
 async def register(user_data: UserCreate):
