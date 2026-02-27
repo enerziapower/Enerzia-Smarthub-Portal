@@ -733,6 +733,7 @@ const Layout = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* ============ 4. MANAGEMENT HUB ============ */}
           {shouldShowSection('management_hub') && (
