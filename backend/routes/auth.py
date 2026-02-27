@@ -5,6 +5,9 @@ import random
 import string
 import resend
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 from ..core.database import db
 from ..core.security import (
