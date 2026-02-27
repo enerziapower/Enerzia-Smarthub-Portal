@@ -443,6 +443,7 @@ function AppRoutes() {
           <Route path="events" element={<EventsManager />} />
           <Route path="holidays" element={<HolidayCalendar />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="user-access" element={<UserAccessControl />} />
           <Route path="pdf-templates" element={<PDFTemplateSettings />} />
           <Route path="shared-reports" element={<SharedReports />} />
         </Route>
