@@ -322,6 +322,29 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 
 ### ✅ Recently Completed Features
 
+#### User Access Control System ✅ COMPLETE (Feb 27, 2026)
+**Location:** Administration → User Access Control
+
+| Feature | Description |
+|---------|-------------|
+| **User Permission Management** | Admins can assign specific module/sub-module access to individual users |
+| **12 Module Groups** | Company Hub, My Workspace, Projects, Sales, Accounts, Finance, HR, Purchase, Exports, Operations, Management, Administration |
+| **70+ Sub-modules** | Granular permission control for each page/feature |
+| **Grant/Revoke All** | Quick buttons to enable or disable all permissions |
+| **Permission Persistence** | Saved to database and applied on user's next login |
+| **Super Admin Protection** | Cannot modify super admin permissions |
+| **Sidebar Filtering** | Sidebar dynamically shows/hides modules based on user permissions |
+
+**Backend API Endpoints:**
+- `GET /api/user-access/modules` - List all available modules
+- `GET /api/user-access/user/{user_id}` - Get user's permissions
+- `PUT /api/user-access/user/{user_id}` - Update user's permissions
+- `GET /api/user-access/users-list` - List all users with permission summary
+
+**Files Created:**
+- `/app/backend/routes/user_access.py` - Backend API
+- `/app/frontend/src/pages/admin/UserAccessControl.js` - Admin UI
+
 #### My Attendance Bug Fix ✅ COMPLETE (Feb 26, 2026)
 **Location:** My Workspace → My Attendance
 
