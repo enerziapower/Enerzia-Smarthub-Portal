@@ -1,5 +1,23 @@
 # Workhub Enerzia ERP System - PRD
 
+## Latest Updates
+
+### Lead Management Customer Linking Fix ✅ COMPLETE (Feb 27, 2026)
+**Location:** Sales → Lead Management → New Follow-up Form
+
+| Feature | Description |
+|---------|-------------|
+| **Customer Search API** | Created `/api/lead-management/customers/search` endpoint to search existing customers |
+| **Frontend Integration** | Updated `FollowUpForm.js` to use the new unified search endpoint |
+| **Database Fix** | Changed backend from non-existent `db.domestic_customers`/`db.overseas_customers` to use actual `db.clients` collection |
+| **Dropdown Display** | Shows customers with type indicator (🇮🇳 Domestic / 🌍 Overseas) |
+
+**Files Modified:**
+- `/app/backend/routes/lead_management.py` - Added customer search endpoint, fixed customer lookup to use `db.clients`
+- `/app/frontend/src/pages/sales/FollowUpForm.js` - Updated to call new unified search API
+
+---
+
 ## Original Problem Statement
 Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub Enerzia"), an electrical services company. Key modules include:
 1. Equipment Test Reports
