@@ -14,7 +14,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://hub-network-erp.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://expense-workflow-fix.preview.emergentagent.com')
 
 class TestVCBReports:
     """VCB Report API Tests"""

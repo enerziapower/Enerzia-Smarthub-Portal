@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 class CustomerServiceAPITester:
-    def __init__(self, base_url="https://hub-network-erp.preview.emergentagent.com"):
+    def __init__(self, base_url="https://expense-workflow-fix.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
