@@ -188,9 +188,10 @@ const UserAccessControl = () => {
 
   const getModuleStatus = (moduleId) => {
     const moduleData = modules[moduleId];
-    if (!moduleData?.sub_modules?.length) return userPermissions.modules[moduleId] ? 'full' : 'none';
+    if (!moduleData?.sub_modules?.length) return userPermissions?.modules?.[moduleId] ? 'full' : 'none';
     
-    const enabledCount = moduleData.sub_modules.filter(sub => userPermissions.sub_modules[sub.id]).length;
+    const subModules = userPermissions?.sub_modules || {};
+    const enabledCount = moduleData.sub_modules.filter(sub => subModules[sub.id]).length;
     if (enabledCount === 0) return 'none';
     if (enabledCount === moduleData.sub_modules.length) return 'full';
     return 'partial';
