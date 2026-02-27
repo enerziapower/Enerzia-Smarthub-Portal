@@ -96,6 +96,11 @@ import SalesWorkPlanner from './pages/sales/WorkPlanner';
 import ProjectProfitDashboard from './pages/sales/ProjectProfitDashboard';
 import CustomerManagement from './pages/sales/CustomerManagement';
 import OrderLifecycle from './pages/sales/OrderLifecycle';
+import LeadManagement from './pages/sales/LeadManagement';
+import FollowUpForm from './pages/sales/FollowUpForm';
+import FollowUpsList from './pages/sales/FollowUpsList';
+import FollowUpCalendar from './pages/sales/FollowUpCalendar';
+import FollowUpDetails from './pages/sales/FollowUpDetails';
 
 // Purchase Department Pages
 import PurchaseDashboard from './pages/purchase/PurchaseDashboard';
