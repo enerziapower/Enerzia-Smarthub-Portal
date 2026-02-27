@@ -689,6 +689,7 @@ const Layout = () => {
           )}
 
           {/* ============ 3. DEPARTMENTS HUB ============ */}
+          {hasAnyDepartmentAccess() && (
           <div>
             <button
               onClick={() => toggleSection('departmentsHub')}
