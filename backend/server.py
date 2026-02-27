@@ -900,6 +900,15 @@ async def login(credentials: UserLogin):
         "can_view_departments": user.get("can_view_departments", [])
     })
     
+    # Get user permissions
+    user_perms = user.get("permissions", {})
+    permissions_data = None
+    if user_perms and isinstance(user_perms, dict):
+        permissions_data = {
+            "modules": user_perms.get("modules", {}),
+            "sub_modules": user_perms.get("sub_modules", {})
+        }
+    
     # Return user without password
     user_response = {
         "id": user["id"],
@@ -909,7 +918,8 @@ async def login(credentials: UserLogin):
         "department": user.get("department"),
         "can_view_departments": user.get("can_view_departments", []),
         "is_active": user["is_active"],
-        "created_at": user.get("created_at", datetime.now(timezone.utc).isoformat())
+        "created_at": user.get("created_at", datetime.now(timezone.utc).isoformat()),
+        "permissions": permissions_data
     }
     
     return {"token": token, "user": user_response}
