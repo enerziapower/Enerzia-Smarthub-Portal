@@ -66,5 +66,8 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    token: str
+    access_token: str = Field(alias="token")
     user: UserResponse
+    
+    class Config:
+        populate_by_name = True
