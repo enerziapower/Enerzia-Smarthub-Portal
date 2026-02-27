@@ -368,14 +368,17 @@ const ExpenseClaims = () => {
           <h1 className="text-2xl font-bold text-slate-800">Expense Claims</h1>
           <p className="text-slate-500 mt-1">Submit monthly project expenses for reimbursement</p>
         </div>
-        {!currentSheet && (
+        {(!currentSheet || currentSheet.status === 'rejected') && (
           <button
-            onClick={() => setShowSheetModal(true)}
+            onClick={() => {
+              setSheetForm(prev => ({ ...prev, month: selectedMonth, year: selectedYear }));
+              setShowSheetModal(true);
+            }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             data-testid="create-sheet-btn"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Create {monthNames[currentMonth]} Sheet
+            {currentSheet?.status === 'rejected' ? 'Edit Rejected Sheet' : `Create ${monthNames[selectedMonth]} Sheet`}
           </button>
         )}
       </div>
