@@ -128,7 +128,9 @@ const UserAccessControl = () => {
         modules: userPermissions.modules,
         sub_modules: userPermissions.sub_modules
       });
-      toast.success('Permissions saved successfully');
+      toast.success('Permissions saved successfully! User needs to re-login for changes to take effect.', {
+        duration: 5000
+      });
       setHasChanges(false);
       fetchData(); // Refresh list to update counts
     } catch (error) {
