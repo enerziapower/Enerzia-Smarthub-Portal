@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 
 const Layout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasModuleAccess, hasSubModuleAccess, isSuperAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [orgSettings, setOrgSettings] = useState({ name: 'Smarthub Enerzia', logo_url: null });
