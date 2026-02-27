@@ -77,7 +77,8 @@ def serialize_followup(doc):
     """Convert MongoDB document to JSON-serializable dict"""
     if doc is None:
         return None
-    doc["id"] = str(doc.pop("_id", ""))
+    # Remove MongoDB _id, keep the UUID id field
+    doc.pop("_id", None)
     # Convert datetime fields
     for field in ["scheduled_date", "created_at", "updated_at", "completed_at"]:
         if field in doc and doc[field]:
