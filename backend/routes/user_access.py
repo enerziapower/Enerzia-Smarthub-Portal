@@ -7,9 +7,17 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime, timezone
-from utils.database import get_database
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/api/user-access", tags=["User Access Control"])
+
+# Database connection
+client = MongoClient(os.environ.get('MONGO_URL'))
+db = client[os.environ.get('DB_NAME', 'test_database')]
 
 # Define all available modules in the system
 AVAILABLE_MODULES = {
