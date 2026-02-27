@@ -754,10 +754,13 @@ const ExpenseClaims = () => {
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
               <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600 font-medium">No expense sheet for {monthNames[currentMonth]} {currentYear}</p>
+              <p className="text-slate-600 font-medium">No expense sheet for {monthNames[selectedMonth]} {selectedYear}</p>
               <p className="text-sm text-slate-400 mt-1">Create a new expense sheet to start adding your expenses</p>
               <button
-                onClick={() => setShowSheetModal(true)}
+                onClick={() => {
+                  setSheetForm(prev => ({ ...prev, month: selectedMonth, year: selectedYear }));
+                  setShowSheetModal(true);
+                }}
                 className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4" />
