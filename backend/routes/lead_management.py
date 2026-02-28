@@ -175,9 +175,10 @@ async def get_followups(
     date_to: Optional[str] = None,
     search: Optional[str] = None,
     page: int = 1,
-    limit: int = 50
+    limit: int = 50,
+    current_user: dict = Depends(require_permission("sales_dept", "lead_management"))
 ):
-    """Get all follow-ups with filters"""
+    """Get all follow-ups with filters - Sales department only"""
     
     query = {}
     
