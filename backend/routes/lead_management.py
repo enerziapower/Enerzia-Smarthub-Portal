@@ -562,7 +562,7 @@ async def get_sales_team(current_user: dict = Depends(require_permission("sales_
 async def search_customers(search: str = "", limit: int = 20, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
     """Search all customers (domestic + overseas) for follow-up linking - Sales department only"""
     
-    if not search or len(search) < 2:
+    if not search or len(search) < 1:
         return {"customers": [], "total": 0}
     
     # Search in clients collection (main customer database)
