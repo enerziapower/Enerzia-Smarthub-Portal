@@ -1033,8 +1033,8 @@ async def delete_quotation(quotation_id: str, current_user: dict = Depends(requi
 
 
 @router.post("/quotations/{quotation_id}/convert-to-order")
-async def convert_quotation_to_order(quotation_id: str):
-    """Convert an accepted quotation to a sales order"""
+async def convert_quotation_to_order(quotation_id: str, current_user: dict = Depends(require_permission("sales_dept", "orders"))):
+    """Convert an accepted quotation to a sales order - Sales department only"""
     quotation = await db.sales_quotations.find_one({"id": quotation_id}, {"_id": 0})
     if not quotation:
         raise HTTPException(status_code=404, detail="Quotation not found")
