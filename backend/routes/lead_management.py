@@ -11,6 +11,7 @@ from bson import ObjectId
 import uuid
 
 from core.database import db
+from utils.permissions import require_permission
 
 router = APIRouter(prefix="/api/lead-management", tags=["Lead Management"])
 
