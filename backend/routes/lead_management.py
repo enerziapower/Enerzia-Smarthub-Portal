@@ -301,9 +301,10 @@ async def get_overdue_followups(assigned_to: Optional[str] = None, current_user:
 async def get_calendar_followups(
     year: int,
     month: int,
-    assigned_to: Optional[str] = None
+    assigned_to: Optional[str] = None,
+    current_user: dict = Depends(require_permission("sales_dept", "lead_management"))
 ):
-    """Get follow-ups for calendar view (by month)"""
+    """Get follow-ups for calendar view (by month) - Sales department only"""
     
     start_date = datetime(year, month, 1, tzinfo=timezone.utc)
     if month == 12:
