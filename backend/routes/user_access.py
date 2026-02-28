@@ -195,16 +195,16 @@ class UpdatePermissionsRequest(BaseModel):
 
 
 @router.get("/modules")
-async def get_available_modules():
-    """Get all available modules and sub-modules"""
+async def get_available_modules(current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Get all available modules and sub-modules - Admin only"""
     return {
         "modules": AVAILABLE_MODULES
     }
 
 
 @router.get("/user/{user_id}")
-async def get_user_permissions(user_id: str):
-    """Get permissions for a specific user"""
+async def get_user_permissions(user_id: str, current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Get permissions for a specific user - Admin only"""
     
     # Find user
     user = db.users.find_one({"id": user_id})
