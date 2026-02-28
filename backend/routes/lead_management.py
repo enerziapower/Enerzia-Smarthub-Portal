@@ -276,7 +276,7 @@ async def get_upcoming_followups(days: int = 7, assigned_to: Optional[str] = Non
 
 
 @router.get("/followups/overdue")
-async def get_overdue_followups(assigned_to: Optional[str] = None):
+async def get_overdue_followups(assigned_to: Optional[str] = None, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
     """Get overdue follow-ups"""
     
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
