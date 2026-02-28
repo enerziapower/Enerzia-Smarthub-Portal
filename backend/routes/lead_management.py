@@ -511,8 +511,8 @@ async def add_comment(followup_id: str, data: FollowUpComment, current_user: dic
 
 
 @router.delete("/followups/{followup_id}")
-async def delete_followup(followup_id: str):
-    """Delete a follow-up"""
+async def delete_followup(followup_id: str, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Delete a follow-up - Sales department only"""
     
     result = await db.followups.delete_one({"id": followup_id})
     if result.deleted_count == 0:
