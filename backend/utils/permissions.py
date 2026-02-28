@@ -203,7 +203,7 @@ def require_permission(*required_perms: str):
             raise HTTPException(status_code=401, detail="Invalid token payload")
         
         # Import here to avoid circular dependency
-        from utils.database import db
+        from core.database import db
         
         user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
         if not user:
