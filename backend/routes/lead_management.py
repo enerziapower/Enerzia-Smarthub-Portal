@@ -522,8 +522,8 @@ async def delete_followup(followup_id: str, current_user: dict = Depends(require
 
 
 @router.get("/followups/customer/{customer_id}/history")
-async def get_customer_followup_history(customer_id: str):
-    """Get follow-up history for a specific customer"""
+async def get_customer_followup_history(customer_id: str, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Get follow-up history for a specific customer - Sales department only"""
     
     cursor = db.followups.find({"customer_id": customer_id}).sort("scheduled_date", -1)
     followups = []
