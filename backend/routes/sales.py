@@ -375,8 +375,8 @@ async def get_enquiry_stats(current_user: dict = Depends(require_permission("sal
 
 
 @router.get("/enquiries/{enquiry_id}")
-async def get_enquiry(enquiry_id: str):
-    """Get a single enquiry by ID"""
+async def get_enquiry(enquiry_id: str, current_user: dict = Depends(require_permission("sales_dept", "enquiries"))):
+    """Get a single enquiry by ID - Sales department only"""
     enquiry = await db.sales_enquiries.find_one({"id": enquiry_id}, {"_id": 0})
     if not enquiry:
         raise HTTPException(status_code=404, detail="Enquiry not found")
@@ -384,8 +384,8 @@ async def get_enquiry(enquiry_id: str):
 
 
 @router.post("/enquiries")
-async def create_enquiry(data: EnquiryCreate):
-    """Create a new enquiry"""
+async def create_enquiry(data: EnquiryCreate, current_user: dict = Depends(require_permission("sales_dept", "enquiries"))):
+    """Create a new enquiry - Sales department only"""
     enquiry_no = await get_next_enquiry_number()
     
     enquiry = {
