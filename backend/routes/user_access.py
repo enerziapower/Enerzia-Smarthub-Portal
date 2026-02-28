@@ -343,8 +343,8 @@ async def bulk_update_permissions(updates: List[UpdatePermissionsRequest], curre
 
 
 @router.post("/copy-permissions")
-async def copy_permissions(source_user_id: str, target_user_ids: List[str]):
-    """Copy permissions from one user to others"""
+async def copy_permissions(source_user_id: str, target_user_ids: List[str], current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Copy permissions from one user to others - Admin only"""
     
     # Get source user
     source_user = db.users.find_one({"id": source_user_id})
