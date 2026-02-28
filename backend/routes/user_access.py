@@ -309,8 +309,8 @@ async def get_users_with_permissions(current_user: dict = Depends(require_permis
 
 
 @router.post("/bulk-update")
-async def bulk_update_permissions(updates: List[UpdatePermissionsRequest]):
-    """Update permissions for multiple users at once"""
+async def bulk_update_permissions(updates: List[UpdatePermissionsRequest], current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Update permissions for multiple users at once - Admin only"""
     
     results = []
     for update in updates:
