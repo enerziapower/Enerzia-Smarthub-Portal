@@ -484,8 +484,8 @@ async def reschedule_followup(followup_id: str, new_date: datetime, new_time: Op
 
 
 @router.post("/followups/{followup_id}/comments")
-async def add_comment(followup_id: str, data: FollowUpComment):
-    """Add a comment to a follow-up"""
+async def add_comment(followup_id: str, data: FollowUpComment, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Add a comment to a follow-up - Sales department only"""
     
     followup = await db.followups.find_one({"id": followup_id})
     if not followup:
