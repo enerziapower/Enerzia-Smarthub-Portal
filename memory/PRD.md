@@ -2,6 +2,27 @@
 
 ## Latest Updates
 
+### Backend Route Protection (P0 Security Fix) ✅ COMPLETE (Feb 27, 2026)
+**Critical Security Enhancement**
+
+| Feature | Description |
+|---------|-------------|
+| **Permission Middleware** | Created `/app/backend/utils/permissions.py` with `require_permission` decorator |
+| **Protected Routes** | Lead Management, User Access Control, Sales Enquiries, Sales Quotations |
+| **Role-Based Bypass** | Super admin and admin roles can access all endpoints |
+| **Clear Error Messages** | Returns 403 with message: "Access denied. Required permission: X, Y" |
+| **Authentication Enforcement** | Returns 401 for unauthenticated or invalid tokens |
+
+**Files Modified:**
+- `/app/backend/utils/permissions.py` - NEW: Permission middleware with require_permission decorator
+- `/app/backend/routes/lead_management.py` - All endpoints protected with sales_dept/lead_management
+- `/app/backend/routes/user_access.py` - All endpoints protected with user_access_control/administration
+- `/app/backend/routes/sales.py` - Enquiries and Quotations endpoints protected
+
+**Test Results:** 100% success rate (21/21 tests passed) - See `/app/test_reports/iteration_78.json`
+
+---
+
 ### Lead Management Customer Linking Fix ✅ COMPLETE (Feb 27, 2026)
 **Location:** Sales → Lead Management → New Follow-up Form
 
