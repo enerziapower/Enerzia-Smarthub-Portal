@@ -997,8 +997,8 @@ async def create_quotation(data: QuotationCreate, current_user: dict = Depends(r
 
 
 @router.put("/quotations/{quotation_id}")
-async def update_quotation(quotation_id: str, data: QuotationUpdate):
-    """Update a quotation"""
+async def update_quotation(quotation_id: str, data: QuotationUpdate, current_user: dict = Depends(require_permission("sales_dept", "quotations"))):
+    """Update a quotation - Sales department only"""
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
     
@@ -1015,8 +1015,8 @@ async def update_quotation(quotation_id: str, data: QuotationUpdate):
 
 
 @router.delete("/quotations/{quotation_id}")
-async def delete_quotation(quotation_id: str):
-    """Delete a quotation"""
+async def delete_quotation(quotation_id: str, current_user: dict = Depends(require_permission("sales_dept", "quotations"))):
+    """Delete a quotation - Sales department only"""
     quotation = await db.sales_quotations.find_one({"id": quotation_id})
     if not quotation:
         raise HTTPException(status_code=404, detail="Quotation not found")
