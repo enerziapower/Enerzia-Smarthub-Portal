@@ -253,7 +253,7 @@ async def get_todays_followups(assigned_to: Optional[str] = None, current_user: 
 
 
 @router.get("/followups/upcoming")
-async def get_upcoming_followups(days: int = 7, assigned_to: Optional[str] = None):
+async def get_upcoming_followups(days: int = 7, assigned_to: Optional[str] = None, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
     """Get upcoming follow-ups for next N days"""
     
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
