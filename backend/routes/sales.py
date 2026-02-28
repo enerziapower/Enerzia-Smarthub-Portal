@@ -926,8 +926,8 @@ async def get_next_quotation_number_endpoint(financial_year: str = None):
 
 
 @router.get("/quotations/{quotation_id}")
-async def get_quotation(quotation_id: str):
-    """Get a single quotation"""
+async def get_quotation(quotation_id: str, current_user: dict = Depends(require_permission("sales_dept", "quotations"))):
+    """Get a single quotation - Sales department only"""
     quotation = await db.sales_quotations.find_one({"id": quotation_id}, {"_id": 0})
     if not quotation:
         raise HTTPException(status_code=404, detail="Quotation not found")
@@ -935,8 +935,8 @@ async def get_quotation(quotation_id: str):
 
 
 @router.post("/quotations")
-async def create_quotation(data: QuotationCreate):
-    """Create a new quotation"""
+async def create_quotation(data: QuotationCreate, current_user: dict = Depends(require_permission("sales_dept", "quotations"))):
+    """Create a new quotation - Sales department only"""
     # Use provided financial_year or default to current
     quotation_no = await get_next_quotation_number(data.financial_year)
 
