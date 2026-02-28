@@ -871,8 +871,8 @@ async def get_quotations(
 
 
 @router.get("/quotations/stats")
-async def get_quotation_stats():
-    """Get quotation statistics"""
+async def get_quotation_stats(current_user: dict = Depends(require_permission("sales_dept", "quotations"))):
+    """Get quotation statistics - Sales department only"""
     total = await db.sales_quotations.count_documents({})
     draft = await db.sales_quotations.count_documents({"status": "draft"})
     sent = await db.sales_quotations.count_documents({"status": "sent"})
