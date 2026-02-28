@@ -396,8 +396,8 @@ async def get_followup_stats(assigned_to: Optional[str] = None, current_user: di
 
 
 @router.get("/followups/{followup_id}")
-async def get_followup(followup_id: str):
-    """Get a single follow-up by ID"""
+async def get_followup(followup_id: str, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Get a single follow-up by ID - Sales department only"""
     
     followup = await db.followups.find_one({"id": followup_id})
     if not followup:
