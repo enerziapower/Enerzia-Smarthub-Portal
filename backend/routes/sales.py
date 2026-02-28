@@ -420,8 +420,8 @@ async def create_enquiry(data: EnquiryCreate, current_user: dict = Depends(requi
 
 
 @router.put("/enquiries/{enquiry_id}")
-async def update_enquiry(enquiry_id: str, data: EnquiryUpdate):
-    """Update an enquiry"""
+async def update_enquiry(enquiry_id: str, data: EnquiryUpdate, current_user: dict = Depends(require_permission("sales_dept", "enquiries"))):
+    """Update an enquiry - Sales department only"""
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
     
@@ -438,8 +438,8 @@ async def update_enquiry(enquiry_id: str, data: EnquiryUpdate):
 
 
 @router.delete("/enquiries/{enquiry_id}")
-async def delete_enquiry(enquiry_id: str):
-    """Delete an enquiry"""
+async def delete_enquiry(enquiry_id: str, current_user: dict = Depends(require_permission("sales_dept", "enquiries"))):
+    """Delete an enquiry - Sales department only"""
     result = await db.sales_enquiries.delete_one({"id": enquiry_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Enquiry not found")
