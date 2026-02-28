@@ -3,13 +3,14 @@ User Access Control Module
 Manages user-specific permissions for module access
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime, timezone
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from utils.permissions import require_permission
 
 load_dotenv()
 
