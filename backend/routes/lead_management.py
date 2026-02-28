@@ -536,8 +536,8 @@ async def get_customer_followup_history(customer_id: str, current_user: dict = D
 # ==================== TEAM MEMBERS FOR ASSIGNMENT ====================
 
 @router.get("/team-members")
-async def get_sales_team():
-    """Get sales team members for assignment"""
+async def get_sales_team(current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Get sales team members for assignment - Sales department only"""
     
     # Get users from sales department or with sales access
     cursor = db.users.find(
