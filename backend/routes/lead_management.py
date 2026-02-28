@@ -230,8 +230,8 @@ async def get_followups(
 
 
 @router.get("/followups/today")
-async def get_todays_followups(assigned_to: Optional[str] = None):
-    """Get today's follow-ups"""
+async def get_todays_followups(assigned_to: Optional[str] = None, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Get today's follow-ups - Sales department only"""
     
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = today_start + timedelta(days=1)
