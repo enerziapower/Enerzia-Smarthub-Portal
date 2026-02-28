@@ -221,6 +221,35 @@ def require_permission(*required_perms: str):
     return permission_checker
 
 
+async def require_auth_only(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """
+    Simple authentication check - allows any authenticated user.
+    Use this for endpoints that should be accessible to all logged-in users.
+    """
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    
+    from core.database import db
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
+
+
 def require_module_access(module_id: str):
     """
     Dependency that checks if user has access to a specific module.
