@@ -340,8 +340,8 @@ async def get_enquiries(
 
 
 @router.get("/enquiries/stats")
-async def get_enquiry_stats():
-    """Get enquiry statistics"""
+async def get_enquiry_stats(current_user: dict = Depends(require_permission("sales_dept", "enquiries"))):
+    """Get enquiry statistics - Sales department only"""
     total = await db.sales_enquiries.count_documents({})
     new_count = await db.sales_enquiries.count_documents({"status": "new"})
     quoted = await db.sales_enquiries.count_documents({"status": "quoted"})
