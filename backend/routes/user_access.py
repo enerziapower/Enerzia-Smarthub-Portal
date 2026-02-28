@@ -244,8 +244,8 @@ async def get_user_permissions(user_id: str, current_user: dict = Depends(requir
 
 
 @router.put("/user/{user_id}")
-async def update_user_permissions(user_id: str, request: UpdatePermissionsRequest):
-    """Update permissions for a specific user"""
+async def update_user_permissions(user_id: str, request: UpdatePermissionsRequest, current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Update permissions for a specific user - Admin only"""
     
     # Find user
     user = db.users.find_one({"id": user_id})
