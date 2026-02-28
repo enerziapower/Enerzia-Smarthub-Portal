@@ -283,8 +283,8 @@ async def update_user_permissions(user_id: str, request: UpdatePermissionsReques
 
 
 @router.get("/users-list")
-async def get_users_with_permissions():
-    """Get all users with their current permissions"""
+async def get_users_with_permissions(current_user: dict = Depends(require_permission("user_access_control", "administration"))):
+    """Get all users with their current permissions - Admin only"""
     
     users = list(db.users.find({}, {
         "_id": 0,
