@@ -314,9 +314,10 @@ async def get_enquiries(
     category: Optional[str] = None,
     search: Optional[str] = None,
     limit: int = 100,
-    skip: int = 0
+    skip: int = 0,
+    current_user: dict = Depends(require_permission("sales_dept", "enquiries"))
 ):
-    """Get all enquiries with optional filters"""
+    """Get all enquiries with optional filters - Sales department only"""
     query = {}
     
     if status:
