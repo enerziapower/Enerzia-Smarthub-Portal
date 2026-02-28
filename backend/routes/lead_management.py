@@ -559,8 +559,8 @@ async def get_sales_team(current_user: dict = Depends(require_permission("sales_
 # ==================== CUSTOMER SEARCH FOR FOLLOW-UPS ====================
 
 @router.get("/customers/search")
-async def search_customers(search: str = "", limit: int = 20):
-    """Search all customers (domestic + overseas) for follow-up linking"""
+async def search_customers(search: str = "", limit: int = 20, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Search all customers (domestic + overseas) for follow-up linking - Sales department only"""
     
     if not search or len(search) < 2:
         return {"customers": [], "total": 0}
