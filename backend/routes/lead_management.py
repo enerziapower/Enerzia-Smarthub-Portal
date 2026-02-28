@@ -337,8 +337,8 @@ async def get_calendar_followups(
 
 
 @router.get("/followups/stats")
-async def get_followup_stats(assigned_to: Optional[str] = None):
-    """Get follow-up statistics"""
+async def get_followup_stats(assigned_to: Optional[str] = None, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Get follow-up statistics - Sales department only"""
     
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow = today + timedelta(days=1)
