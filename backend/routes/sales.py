@@ -16,6 +16,7 @@ import uuid
 import os
 import io
 from motor.motor_asyncio import AsyncIOMotorClient
+from utils.permissions import require_permission
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL')
