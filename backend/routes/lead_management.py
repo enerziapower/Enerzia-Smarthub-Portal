@@ -452,8 +452,8 @@ async def complete_followup(followup_id: str, outcome: str, next_action: Optiona
 
 
 @router.post("/followups/{followup_id}/reschedule")
-async def reschedule_followup(followup_id: str, new_date: datetime, new_time: Optional[str] = None, reason: Optional[str] = None):
-    """Reschedule a follow-up"""
+async def reschedule_followup(followup_id: str, new_date: datetime, new_time: Optional[str] = None, reason: Optional[str] = None, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Reschedule a follow-up - Sales department only"""
     
     followup = await db.followups.find_one({"id": followup_id})
     if not followup:
