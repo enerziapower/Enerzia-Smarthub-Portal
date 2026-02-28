@@ -849,9 +849,10 @@ async def get_quotations(
     status: Optional[str] = None,
     search: Optional[str] = None,
     limit: int = 100,
-    skip: int = 0
+    skip: int = 0,
+    current_user: dict = Depends(require_permission("sales_dept", "quotations"))
 ):
-    """Get all quotations"""
+    """Get all quotations - Sales department only"""
     query = {}
     
     if status:
