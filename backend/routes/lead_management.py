@@ -407,8 +407,8 @@ async def get_followup(followup_id: str, current_user: dict = Depends(require_pe
 
 
 @router.put("/followups/{followup_id}")
-async def update_followup(followup_id: str, data: FollowUpUpdate):
-    """Update a follow-up"""
+async def update_followup(followup_id: str, data: FollowUpUpdate, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Update a follow-up - Sales department only"""
     
     followup = await db.followups.find_one({"id": followup_id})
     if not followup:
