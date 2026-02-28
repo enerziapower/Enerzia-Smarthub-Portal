@@ -255,6 +255,6 @@ async def get_user_with_permissions(credentials: HTTPAuthorizationCredentials = 
     if not user_id:
         return None
     
-    from utils.database import db
+    from core.database import db
     user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
     return user
