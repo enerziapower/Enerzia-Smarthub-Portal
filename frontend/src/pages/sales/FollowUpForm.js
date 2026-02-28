@@ -118,7 +118,7 @@ const FollowUpForm = () => {
   };
 
   const searchCustomers = async (query) => {
-    if (!query || query.length < 2) {
+    if (!query || query.length < 1) {
       setCustomers([]);
       return;
     }
