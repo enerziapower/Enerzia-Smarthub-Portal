@@ -96,8 +96,8 @@ def serialize_followup(doc):
 # ==================== ROUTES ====================
 
 @router.post("/followups")
-async def create_followup(data: FollowUpCreate):
-    """Create a new follow-up"""
+async def create_followup(data: FollowUpCreate, current_user: dict = Depends(require_permission("sales_dept", "lead_management"))):
+    """Create a new follow-up - Sales department only"""
     
     # Validate - must have either customer_id or lead info
     if not data.customer_id and not data.lead_name:
