@@ -88,7 +88,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      let userData;
+      let result;
       if (needsSetup) {
         // Registration mode
         if (password !== confirmPassword) {
@@ -101,13 +101,14 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        userData = await register(email, name, password);
+        result = await register(email, name, password);
       } else {
         // Login mode
-        userData = await login(email, password);
+        result = await login(email, password);
       }
       
       // Redirect based on user's department
+      const userData = result?.user;
       const redirectPath = getDepartmentRoute(userData?.department, userData?.role);
       navigate(redirectPath);
     } catch (error) {
