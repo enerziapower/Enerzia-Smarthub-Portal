@@ -5,6 +5,42 @@ import { LogIn, Eye, EyeOff, AlertCircle, UserPlus } from 'lucide-react';
 import { settingsAPI, authAPI } from '../services/api';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
+// Department to Dashboard route mapping
+const DEPARTMENT_ROUTES = {
+  'SALES': '/sales',
+  'Sales': '/sales',
+  'ACCOUNTS': '/accounts',
+  'Accounts': '/accounts',
+  'HR': '/hr',
+  'Hr': '/hr',
+  'FINANCE': '/finance',
+  'Finance': '/finance',
+  'PURCHASE': '/purchase',
+  'Purchase': '/purchase',
+  'EXPORTS': '/exports',
+  'Exports': '/exports',
+  'OPERATIONS': '/operations',
+  'Operations': '/operations',
+  'PROJECTS': '/',
+  'Projects': '/',
+  'Management': '/',
+};
+
+const getDepartmentRoute = (department, role) => {
+  // Super admins and admins go to Projects dashboard (main overview)
+  if (role === 'super_admin' || role === 'admin') {
+    return '/';
+  }
+  
+  // Check department mapping
+  if (department && DEPARTMENT_ROUTES[department]) {
+    return DEPARTMENT_ROUTES[department];
+  }
+  
+  // Default to Projects dashboard
+  return '/';
+};
+
 const Login = () => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
