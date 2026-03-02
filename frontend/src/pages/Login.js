@@ -88,6 +88,7 @@ const Login = () => {
     setLoading(true);
 
     try {
+      let userData;
       if (needsSetup) {
         // Registration mode
         if (password !== confirmPassword) {
@@ -100,12 +101,15 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        await register(email, name, password);
+        userData = await register(email, name, password);
       } else {
         // Login mode
-        await login(email, password);
+        userData = await login(email, password);
       }
-      navigate('/');
+      
+      // Redirect based on user's department
+      const redirectPath = getDepartmentRoute(userData?.department, userData?.role);
+      navigate(redirectPath);
     } catch (error) {
       setError(error.response?.data?.detail || (needsSetup ? 'Registration failed.' : 'Login failed. Please try again.'));
     } finally {
