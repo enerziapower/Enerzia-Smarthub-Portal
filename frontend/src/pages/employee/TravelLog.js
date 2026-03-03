@@ -151,7 +151,7 @@ const TravelLog = () => {
   const handleStartPhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setEndTripData(prev => ({ ...prev, start_photo: file }));
+      setStartTripData(prev => ({ ...prev, start_photo: file }));
       await extractOdometerReading(file, 'start');
     }
   };
