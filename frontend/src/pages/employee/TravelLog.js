@@ -38,6 +38,7 @@ const TravelLog = () => {
     vehicle_type: 'two_wheeler',
     start_km: '',
     purpose: 'Site Visit',
+    start_photo: null,
   });
 
   // End Trip Form  
@@ -45,7 +46,6 @@ const TravelLog = () => {
     to_location: '',
     end_km: '',
     notes: '',
-    start_photo: null,
     end_photo: null
   });
 
