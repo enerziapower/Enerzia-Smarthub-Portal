@@ -311,12 +311,12 @@ async def get_today_trips(user_id: str):
 
 @router.delete("/trip/{trip_id}")
 async def delete_trip(trip_id: str):
-    """Delete a trip (only if pending)"""
+    """Delete a trip (only if pending or in_progress)"""
     trip = await db.travel_logs.find_one({"_id": ObjectId(trip_id)})
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
     
-    if trip.get("status") != "pending":
+    if trip.get("status") not in ["pending", "in_progress"]:
         raise HTTPException(status_code=400, detail="Cannot delete approved/rejected trips")
     
     # Delete photos if exist
@@ -332,6 +332,79 @@ async def delete_trip(trip_id: str):
     
     await db.travel_logs.delete_one({"_id": ObjectId(trip_id)})
     return {"message": "Trip deleted successfully"}
+
+
+@router.put("/trip/{trip_id}/complete")
+async def complete_trip(
+    trip_id: str,
+    to_location: str = Form(...),
+    end_km: float = Form(...),
+    notes: str = Form(None),
+    status: str = Form("pending"),
+    start_photo: UploadFile = File(None),
+    end_photo: UploadFile = File(None)
+):
+    """Complete an in-progress trip with destination, end KM, and photos"""
+    
+    trip = await db.travel_logs.find_one({"_id": ObjectId(trip_id)})
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    # Calculate distance
+    start_km = trip.get("start_km", 0)
+    distance = end_km - start_km
+    if distance < 0:
+        raise HTTPException(status_code=400, detail="End KM must be greater than Start KM")
+    
+    # Get rates
+    rates = await db.travel_settings.find_one({"type": "rates"})
+    two_wheeler_rate = rates.get("two_wheeler_rate", 4.25) if rates else 4.25
+    four_wheeler_rate = rates.get("four_wheeler_rate", 9.0) if rates else 9.0
+    
+    # Calculate allowance
+    vehicle_type = trip.get("vehicle_type", "two_wheeler")
+    rate = two_wheeler_rate if vehicle_type == "two_wheeler" else four_wheeler_rate
+    allowance = round(distance * rate, 2)
+    
+    # Handle photo uploads
+    start_photo_path = trip.get("start_photo")
+    end_photo_path = trip.get("end_photo")
+    
+    if start_photo:
+        file_ext = start_photo.filename.split('.')[-1] if '.' in start_photo.filename else 'jpg'
+        start_photo_filename = f"{uuid.uuid4()}_start.{file_ext}"
+        start_photo_path = f"/travel-photos/{start_photo_filename}"
+        with open(f"{UPLOADS_DIR}/{start_photo_filename}", "wb") as f:
+            shutil.copyfileobj(start_photo.file, f)
+    
+    if end_photo:
+        file_ext = end_photo.filename.split('.')[-1] if '.' in end_photo.filename else 'jpg'
+        end_photo_filename = f"{uuid.uuid4()}_end.{file_ext}"
+        end_photo_path = f"/travel-photos/{end_photo_filename}"
+        with open(f"{UPLOADS_DIR}/{end_photo_filename}", "wb") as f:
+            shutil.copyfileobj(end_photo.file, f)
+    
+    # Update trip
+    update_data = {
+        "to_location": to_location,
+        "end_km": end_km,
+        "distance": distance,
+        "allowance": allowance,
+        "rate_applied": rate,
+        "notes": notes,
+        "start_photo": start_photo_path,
+        "end_photo": end_photo_path,
+        "status": status,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.travel_logs.update_one(
+        {"_id": ObjectId(trip_id)},
+        {"$set": update_data}
+    )
+    
+    updated_trip = await db.travel_logs.find_one({"_id": ObjectId(trip_id)})
+    return {"message": "Trip completed successfully", "trip": serialize_doc(updated_trip)}
 
 
 # ============= HR MANAGEMENT =============
