@@ -635,12 +635,12 @@ const TravelLog = () => {
                     vehicle_type: 'two_wheeler',
                     start_km: '',
                     purpose: 'Site Visit',
+                    start_photo: null,
                   });
                   setEndTripData({
                     to_location: '',
                     end_km: '',
                     notes: '',
-                    start_photo: null,
                     end_photo: null
                   });
                 }} 
