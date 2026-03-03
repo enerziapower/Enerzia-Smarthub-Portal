@@ -2,36 +2,48 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, Plus, Car, Bike, Camera, Clock, Calendar,
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2,
-  ChevronDown, FileText, Download, X, Send, Scan
+  ChevronDown, FileText, Download, X, Send, Scan,
+  Play, Square, Building2, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Office address - can be fetched from org settings in future
+const OFFICE_ADDRESS = "Office";
+
 const TravelLog = () => {
   const { user } = useAuth();
   const [trips, setTrips] = useState([]);
+  const [activeTrips, setActiveTrips] = useState([]); // Trips in progress
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showAddTrip, setShowAddTrip] = useState(false);
+  const [showStartTrip, setShowStartTrip] = useState(false);
+  const [showEndTrip, setShowEndTrip] = useState(false);
+  const [selectedActiveTrip, setSelectedActiveTrip] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [rates, setRates] = useState({ two_wheeler_rate: 4.25, four_wheeler_rate: 9.0 });
   const [ocrLoading, setOcrLoading] = useState({ start: false, end: false });
-  const [editingTrip, setEditingTrip] = useState(null);  // For editing rejected trips
+  const [editingTrip, setEditingTrip] = useState(null);
 
   const startPhotoRef = useRef(null);
   const endPhotoRef = useRef(null);
 
-  const [newTrip, setNewTrip] = useState({
+  // Start Trip Form
+  const [startTripData, setStartTripData] = useState({
     from_location: '',
-    to_location: '',
     vehicle_type: 'two_wheeler',
     start_km: '',
-    end_km: '',
     purpose: 'Site Visit',
+  });
+
+  // End Trip Form  
+  const [endTripData, setEndTripData] = useState({
+    to_location: '',
+    end_km: '',
     notes: '',
     start_photo: null,
     end_photo: null
@@ -57,6 +69,7 @@ const TravelLog = () => {
 
   useEffect(() => {
     fetchTrips();
+    fetchActiveTrips();
     fetchRates();
   }, [user, currentMonth, currentYear]);
 
@@ -66,12 +79,26 @@ const TravelLog = () => {
     try {
       const res = await fetch(`${API_URL}/api/travel-log/my-trips/${user.id}?month=${currentMonth}&year=${currentYear}`);
       const data = await res.json();
-      setTrips(data.trips || []);
+      // Filter out active (in_progress) trips
+      const completedTrips = (data.trips || []).filter(t => t.status !== 'in_progress');
+      setTrips(completedTrips);
       setSummary(data.summary || {});
     } catch (error) {
       console.error('Error fetching trips:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActiveTrips = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_URL}/api/travel-log/my-trips/${user.id}?status=in_progress`);
+      const data = await res.json();
+      const inProgress = (data.trips || []).filter(t => t.status === 'in_progress');
+      setActiveTrips(inProgress);
+    } catch (error) {
+      console.error('Error fetching active trips:', error);
     }
   };
 
@@ -103,12 +130,11 @@ const TravelLog = () => {
       const data = await res.json();
       
       if (data.success && data.odometer_reading) {
-        // Update the corresponding km field
         if (type === 'start') {
-          setNewTrip(prev => ({ ...prev, start_km: data.odometer_reading.toString() }));
+          setStartTripData(prev => ({ ...prev, start_km: data.odometer_reading.toString() }));
           toast.success(`Start odometer detected: ${data.odometer_reading} km`);
         } else {
-          setNewTrip(prev => ({ ...prev, end_km: data.odometer_reading.toString() }));
+          setEndTripData(prev => ({ ...prev, end_km: data.odometer_reading.toString() }));
           toast.success(`End odometer detected: ${data.odometer_reading} km`);
         }
       } else {
@@ -122,12 +148,10 @@ const TravelLog = () => {
     }
   };
 
-  // Handle photo upload with OCR
   const handleStartPhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setNewTrip(prev => ({ ...prev, start_photo: file }));
-      // Trigger OCR
+      setEndTripData(prev => ({ ...prev, start_photo: file }));
       await extractOdometerReading(file, 'start');
     }
   };
@@ -135,20 +159,15 @@ const TravelLog = () => {
   const handleEndPhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setNewTrip(prev => ({ ...prev, end_photo: file }));
-      // Trigger OCR
+      setEndTripData(prev => ({ ...prev, end_photo: file }));
       await extractOdometerReading(file, 'end');
     }
   };
 
-  const handleSubmitTrip = async (e) => {
+  // START TRIP - Quick entry
+  const handleStartTrip = async (e) => {
     e.preventDefault();
     if (!user?.id) return;
-
-    if (parseFloat(newTrip.end_km) <= parseFloat(newTrip.start_km)) {
-      toast.error('End KM must be greater than Start KM');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -156,20 +175,14 @@ const TravelLog = () => {
       formData.append('user_id', user.id);
       formData.append('user_name', user.name || '');
       formData.append('department', user.department || '');
-      formData.append('from_location', newTrip.from_location);
-      formData.append('to_location', newTrip.to_location);
-      formData.append('vehicle_type', newTrip.vehicle_type);
-      formData.append('start_km', newTrip.start_km);
-      formData.append('end_km', newTrip.end_km);
-      formData.append('purpose', newTrip.purpose);
-      formData.append('notes', newTrip.notes || '');
-      
-      if (newTrip.start_photo) {
-        formData.append('start_photo', newTrip.start_photo);
-      }
-      if (newTrip.end_photo) {
-        formData.append('end_photo', newTrip.end_photo);
-      }
+      formData.append('from_location', startTripData.from_location);
+      formData.append('to_location', 'In Progress'); // Placeholder
+      formData.append('vehicle_type', startTripData.vehicle_type);
+      formData.append('start_km', startTripData.start_km);
+      formData.append('end_km', '0'); // Will be updated when ending trip
+      formData.append('purpose', startTripData.purpose);
+      formData.append('status', 'in_progress'); // Mark as in progress
+      formData.append('notes', '');
 
       const res = await fetch(`${API_URL}/api/travel-log/trip`, {
         method: 'POST',
@@ -177,27 +190,82 @@ const TravelLog = () => {
       });
 
       if (res.ok) {
-        toast.success('Trip logged successfully!');
-        setShowAddTrip(false);
-        setNewTrip({
+        toast.success('🚗 Trip started! Complete it when you return.');
+        setShowStartTrip(false);
+        setStartTripData({
           from_location: '',
-          to_location: '',
           vehicle_type: 'two_wheeler',
           start_km: '',
-          end_km: '',
           purpose: 'Site Visit',
+        });
+        fetchActiveTrips();
+        fetchTrips();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || 'Failed to start trip');
+      }
+    } catch (error) {
+      console.error('Error starting trip:', error);
+      toast.error('Failed to start trip');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // END TRIP - Complete with photos
+  const handleEndTrip = async (e) => {
+    e.preventDefault();
+    if (!selectedActiveTrip) return;
+
+    const startKm = parseFloat(selectedActiveTrip.start_km);
+    const endKm = parseFloat(endTripData.end_km);
+
+    if (endKm <= startKm) {
+      toast.error('End KM must be greater than Start KM');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('to_location', endTripData.to_location);
+      formData.append('end_km', endTripData.end_km);
+      formData.append('notes', endTripData.notes || '');
+      formData.append('status', 'pending'); // Change to pending for approval
+      
+      if (endTripData.start_photo) {
+        formData.append('start_photo', endTripData.start_photo);
+      }
+      if (endTripData.end_photo) {
+        formData.append('end_photo', endTripData.end_photo);
+      }
+
+      const tripId = selectedActiveTrip.id || selectedActiveTrip._id;
+      const res = await fetch(`${API_URL}/api/travel-log/trip/${tripId}/complete`, {
+        method: 'PUT',
+        body: formData
+      });
+
+      if (res.ok) {
+        toast.success('✅ Trip completed and submitted for approval!');
+        setShowEndTrip(false);
+        setSelectedActiveTrip(null);
+        setEndTripData({
+          to_location: '',
+          end_km: '',
           notes: '',
           start_photo: null,
           end_photo: null
         });
+        fetchActiveTrips();
         fetchTrips();
       } else {
         const err = await res.json();
-        toast.error(err.detail || 'Failed to log trip');
+        toast.error(err.detail || 'Failed to complete trip');
       }
     } catch (error) {
-      console.error('Error submitting trip:', error);
-      toast.error('Failed to log trip');
+      console.error('Error completing trip:', error);
+      toast.error('Failed to complete trip');
     } finally {
       setSubmitting(false);
     }
@@ -210,6 +278,7 @@ const TravelLog = () => {
       if (res.ok) {
         toast.success('Trip deleted');
         fetchTrips();
+        fetchActiveTrips();
       } else {
         toast.error('Failed to delete trip');
       }
@@ -218,29 +287,32 @@ const TravelLog = () => {
     }
   };
 
-  // Handle editing a rejected trip
   const handleEditRejectedTrip = (trip) => {
     setEditingTrip(trip);
-    setNewTrip({
-      from_location: trip.from_location || trip.start_location || '',
-      to_location: trip.to_location || trip.end_location || '',
+    setStartTripData({
+      from_location: trip.from_location || '',
       vehicle_type: trip.vehicle_type || 'two_wheeler',
       start_km: trip.start_km?.toString() || '',
-      end_km: trip.end_km?.toString() || '',
       purpose: trip.purpose || 'Site Visit',
+    });
+    setEndTripData({
+      to_location: trip.to_location || '',
+      end_km: trip.end_km?.toString() || '',
       notes: trip.notes || '',
       start_photo: null,
       end_photo: null
     });
-    setShowAddTrip(true);
+    setShowStartTrip(true);
   };
 
-  // Handle resubmitting a rejected trip
   const handleResubmitTrip = async (e) => {
     e.preventDefault();
-    if (!editingTrip?._id && !editingTrip?.id) return;
+    if (!editingTrip) return;
 
-    if (parseFloat(newTrip.end_km) <= parseFloat(newTrip.start_km)) {
+    const startKm = parseFloat(startTripData.start_km);
+    const endKm = parseFloat(endTripData.end_km);
+
+    if (endKm <= startKm) {
       toast.error('End KM must be greater than Start KM');
       return;
     }
@@ -248,22 +320,22 @@ const TravelLog = () => {
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('start_location', newTrip.from_location);
-      formData.append('end_location', newTrip.to_location);
-      formData.append('vehicle_type', newTrip.vehicle_type);
-      formData.append('start_km', newTrip.start_km);
-      formData.append('end_km', newTrip.end_km);
-      formData.append('purpose', newTrip.purpose);
-      formData.append('notes', newTrip.notes || '');
+      formData.append('from_location', startTripData.from_location);
+      formData.append('to_location', endTripData.to_location);
+      formData.append('vehicle_type', startTripData.vehicle_type);
+      formData.append('start_km', startTripData.start_km);
+      formData.append('end_km', endTripData.end_km);
+      formData.append('purpose', startTripData.purpose);
+      formData.append('notes', endTripData.notes || '');
       
-      if (newTrip.start_photo) {
-        formData.append('start_photo', newTrip.start_photo);
+      if (endTripData.start_photo) {
+        formData.append('start_photo', endTripData.start_photo);
       }
-      if (newTrip.end_photo) {
-        formData.append('end_photo', newTrip.end_photo);
+      if (endTripData.end_photo) {
+        formData.append('end_photo', endTripData.end_photo);
       }
 
-      const tripId = editingTrip._id || editingTrip.id;
+      const tripId = editingTrip.id || editingTrip._id;
       const res = await fetch(`${API_URL}/api/travel-log/trip/${tripId}/resubmit`, {
         method: 'PUT',
         body: formData
@@ -271,15 +343,17 @@ const TravelLog = () => {
 
       if (res.ok) {
         toast.success('Trip resubmitted for approval!');
-        setShowAddTrip(false);
+        setShowStartTrip(false);
         setEditingTrip(null);
-        setNewTrip({
+        setStartTripData({
           from_location: '',
-          to_location: '',
           vehicle_type: 'two_wheeler',
           start_km: '',
-          end_km: '',
           purpose: 'Site Visit',
+        });
+        setEndTripData({
+          to_location: '',
+          end_km: '',
           notes: '',
           start_photo: null,
           end_photo: null
@@ -297,104 +371,103 @@ const TravelLog = () => {
     }
   };
 
-  const downloadReport = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/travel-log/report/download/pdf/${user.id}?month=${currentMonth}&year=${currentYear}`);
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Travel_Report_${months[currentMonth - 1].label}_${currentYear}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast.success('Report downloaded');
-    } catch (error) {
-      toast.error('Failed to download report');
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      pending: { bg: 'bg-amber-100', text: 'text-amber-700', icon: AlertCircle, label: 'Pending' },
-      approved: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle, label: 'Approved' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle, label: 'Rejected' }
-    };
-    const style = styles[status] || styles.pending;
-    const Icon = style.icon;
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-        <Icon className="w-3 h-3" />
-        {style.label}
-      </span>
-    );
-  };
-
-  const groupTripsByDate = (trips) => {
-    const grouped = {};
-    trips.forEach(trip => {
-      const date = trip.date;
-      if (!grouped[date]) grouped[date] = [];
-      grouped[date].push(trip);
-    });
-    return grouped;
-  };
-
-  const groupedTrips = groupTripsByDate(trips);
-
   const calculateDistance = () => {
-    const start = parseFloat(newTrip.start_km) || 0;
-    const end = parseFloat(newTrip.end_km) || 0;
+    const start = parseFloat(startTripData.start_km || selectedActiveTrip?.start_km) || 0;
+    const end = parseFloat(endTripData.end_km) || 0;
     return Math.max(0, end - start);
   };
 
   const calculateAllowance = () => {
     const distance = calculateDistance();
-    const rate = newTrip.vehicle_type === 'two_wheeler' ? rates.two_wheeler_rate : rates.four_wheeler_rate;
+    const rate = (startTripData.vehicle_type || selectedActiveTrip?.vehicle_type) === 'two_wheeler' 
+      ? rates.two_wheeler_rate 
+      : rates.four_wheeler_rate;
     return (distance * rate).toFixed(2);
   };
 
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Pending</span>,
+      approved: <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Approved</span>,
+      rejected: <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium flex items-center gap-1"><XCircle className="w-3 h-3" /> Rejected</span>,
+      in_progress: <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1"><Play className="w-3 h-3" /> In Progress</span>
+    };
+    return badges[status] || badges.pending;
+  };
+
+  // Group trips by date
+  const groupedTrips = trips.reduce((groups, trip) => {
+    const date = trip.date || new Date().toISOString().split('T')[0];
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(trip);
+    return groups;
+  }, {});
+
+  // Office Quick Button Component
+  const OfficeButton = ({ onClick, isSelected }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
+        isSelected 
+          ? 'bg-blue-600 text-white' 
+          : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+      }`}
+    >
+      <Building2 className="w-4 h-4" />
+      Office
+    </button>
+  );
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto" data-testid="travel-log">
+    <div className="p-4 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Travel Log</h1>
-          <p className="text-slate-500 mt-1">Log your daily trips and track travel allowance</p>
+          <p className="text-slate-500">Track your business travel</p>
         </div>
-        <button
-          onClick={downloadReport}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-          data-testid="download-report-btn"
-        >
-          <Download className="w-4 h-4" />
-          Download Report
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-2xl font-bold text-slate-900">{summary.total_trips || 0}</div>
-          <div className="text-sm text-slate-500">Total Trips</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-2xl font-bold text-blue-600">{summary.total_distance?.toFixed(1) || 0} km</div>
-          <div className="text-sm text-slate-500">Total Distance</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-2xl font-bold text-emerald-600">₹{summary.approved_allowance?.toFixed(2) || 0}</div>
-          <div className="text-sm text-slate-500">Approved</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-2xl font-bold text-amber-600">{summary.pending || 0}</div>
-          <div className="text-sm text-slate-500">Pending</div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-emerald-600">₹{summary.total_allowance?.toFixed(2) || '0.00'}</div>
+          <div className="text-sm text-slate-500">{summary.total_distance?.toFixed(1) || '0'} km this month</div>
         </div>
       </div>
 
-      {/* Month Filter */}
-      <div className="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-200">
-        <Calendar className="w-5 h-5 text-slate-400" />
+      {/* Active Trips Banner */}
+      {activeTrips.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Play className="w-5 h-5" />
+            <span className="font-semibold">Trip In Progress</span>
+          </div>
+          {activeTrips.map(trip => (
+            <div key={trip.id} className="bg-white/10 rounded-lg p-3 mb-2 last:mb-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">{trip.from_location} → ...</div>
+                  <div className="text-sm text-blue-100">
+                    Started at {trip.start_km} km • {trip.purpose}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedActiveTrip(trip);
+                    setEndTripData(prev => ({ ...prev, to_location: '' }));
+                    setShowEndTrip(true);
+                  }}
+                  className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors flex items-center gap-2"
+                >
+                  <Square className="w-4 h-4" />
+                  End Trip
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Month/Year Filter */}
+      <div className="flex gap-2">
         <select
           value={currentMonth}
           onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
@@ -415,14 +488,14 @@ const TravelLog = () => {
         </select>
       </div>
 
-      {/* Add Trip Button */}
+      {/* Start Trip Button */}
       <button
-        onClick={() => setShowAddTrip(true)}
-        className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
-        data-testid="add-trip-btn"
+        onClick={() => setShowStartTrip(true)}
+        className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
+        data-testid="start-trip-btn"
       >
-        <Plus className="w-5 h-5" />
-        Add New Trip
+        <Play className="w-5 h-5" />
+        Start New Trip
       </button>
 
       {/* Trips Timeline */}
@@ -434,7 +507,6 @@ const TravelLog = () => {
         ) : Object.keys(groupedTrips).length > 0 ? (
           Object.entries(groupedTrips).map(([date, dayTrips]) => (
             <div key={date} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-              {/* Date Header */}
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
                 <div className="font-semibold text-slate-700">
                   {new Date(date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -444,13 +516,11 @@ const TravelLog = () => {
                 </div>
               </div>
 
-              {/* Trips */}
               <div className="divide-y divide-slate-100">
-                {dayTrips.map((trip, idx) => (
+                {dayTrips.map((trip) => (
                   <div key={trip.id} className="p-4 hover:bg-slate-50 transition-colors">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        {/* Route */}
                         <div className="flex items-center gap-2 mb-2">
                           <div className={`p-2 rounded-full ${trip.vehicle_type === 'two_wheeler' ? 'bg-blue-100' : 'bg-purple-100'}`}>
                             {trip.vehicle_type === 'two_wheeler' ? 
@@ -466,7 +536,6 @@ const TravelLog = () => {
                           </div>
                         </div>
 
-                        {/* Details */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 ml-10">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
@@ -478,7 +547,6 @@ const TravelLog = () => {
                           <span className="font-semibold text-emerald-600">₹{trip.allowance?.toFixed(2)}</span>
                         </div>
 
-                        {/* Photos */}
                         {(trip.start_photo || trip.end_photo) && (
                           <div className="flex gap-2 mt-2 ml-10">
                             {trip.start_photo && (
@@ -501,7 +569,6 @@ const TravelLog = () => {
                         )}
                       </div>
 
-                      {/* Status & Actions */}
                       <div className="flex flex-col items-end gap-2">
                         {getStatusBadge(trip.status)}
                         {trip.status === 'pending' && (
@@ -539,32 +606,33 @@ const TravelLog = () => {
         )}
       </div>
 
-      {/* Add Trip Modal */}
-      {showAddTrip && (
+      {/* START TRIP Modal */}
+      {showStartTrip && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {editingTrip ? 'Edit & Resubmit Trip' : 'Log New Trip'}
+                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                  <Play className="w-5 h-5 text-green-600" />
+                  {editingTrip ? 'Edit & Resubmit Trip' : 'Start Trip'}
                 </h2>
-                {editingTrip && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    This trip was rejected. Update the details and resubmit for approval.
-                  </p>
-                )}
+                <p className="text-xs text-slate-500 mt-1">
+                  {editingTrip ? 'Update trip details and resubmit' : 'Quick entry - complete photos when you return'}
+                </p>
               </div>
               <button 
                 onClick={() => {
-                  setShowAddTrip(false);
+                  setShowStartTrip(false);
                   setEditingTrip(null);
-                  setNewTrip({
+                  setStartTripData({
                     from_location: '',
-                    to_location: '',
                     vehicle_type: 'two_wheeler',
                     start_km: '',
-                    end_km: '',
                     purpose: 'Site Visit',
+                  });
+                  setEndTripData({
+                    to_location: '',
+                    end_km: '',
                     notes: '',
                     start_photo: null,
                     end_photo: null
@@ -576,7 +644,6 @@ const TravelLog = () => {
               </button>
             </div>
 
-            {/* Show rejection reason if editing */}
             {editingTrip?.rejection_reason && (
               <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
@@ -584,114 +651,79 @@ const TravelLog = () => {
               </div>
             )}
 
-            <form onSubmit={editingTrip ? handleResubmitTrip : handleSubmitTrip} className="p-4 space-y-4">
+            <form onSubmit={editingTrip ? handleResubmitTrip : handleStartTrip} className="p-4 space-y-4">
               {/* Vehicle Type */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Vehicle Type</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setNewTrip({ ...newTrip, vehicle_type: 'two_wheeler' })}
+                    onClick={() => setStartTripData({ ...startTripData, vehicle_type: 'two_wheeler' })}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                      newTrip.vehicle_type === 'two_wheeler' 
+                      startTripData.vehicle_type === 'two_wheeler' 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <Bike className={`w-8 h-8 ${newTrip.vehicle_type === 'two_wheeler' ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <Bike className={`w-8 h-8 ${startTripData.vehicle_type === 'two_wheeler' ? 'text-blue-600' : 'text-slate-400'}`} />
                     <span className="font-medium">Two Wheeler</span>
                     <span className="text-xs text-slate-500">₹{rates.two_wheeler_rate}/km</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setNewTrip({ ...newTrip, vehicle_type: 'four_wheeler' })}
+                    onClick={() => setStartTripData({ ...startTripData, vehicle_type: 'four_wheeler' })}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                      newTrip.vehicle_type === 'four_wheeler' 
+                      startTripData.vehicle_type === 'four_wheeler' 
                         ? 'border-purple-500 bg-purple-50' 
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <Car className={`w-8 h-8 ${newTrip.vehicle_type === 'four_wheeler' ? 'text-purple-600' : 'text-slate-400'}`} />
+                    <Car className={`w-8 h-8 ${startTripData.vehicle_type === 'four_wheeler' ? 'text-purple-600' : 'text-slate-400'}`} />
                     <span className="font-medium">Four Wheeler</span>
                     <span className="text-xs text-slate-500">₹{rates.four_wheeler_rate}/km</span>
                   </button>
                 </div>
               </div>
 
-              {/* From/To */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-                  <input
-                    type="text"
-                    value={newTrip.from_location}
-                    onChange={(e) => setNewTrip({ ...newTrip, from_location: e.target.value })}
-                    placeholder="e.g., Office"
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {/* From Location with Office Button */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-slate-700">From</label>
+                  <OfficeButton 
+                    onClick={() => setStartTripData({ ...startTripData, from_location: OFFICE_ADDRESS })}
+                    isSelected={startTripData.from_location === OFFICE_ADDRESS}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-                  <input
-                    type="text"
-                    value={newTrip.to_location}
-                    onChange={(e) => setNewTrip({ ...newTrip, to_location: e.target.value })}
-                    placeholder="e.g., Site ABC"
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={startTripData.from_location}
+                  onChange={(e) => setStartTripData({ ...startTripData, from_location: e.target.value })}
+                  placeholder="e.g., Office, Client Site"
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
-              {/* KM Readings */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Start KM</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={newTrip.start_km}
-                    onChange={(e) => setNewTrip({ ...newTrip, start_km: e.target.value })}
-                    placeholder="45230"
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">End KM</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={newTrip.end_km}
-                    onChange={(e) => setNewTrip({ ...newTrip, end_km: e.target.value })}
-                    placeholder="45265"
-                    required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              {/* Start KM */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Start Odometer (KM)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={startTripData.start_km}
+                  onChange={(e) => setStartTripData({ ...startTripData, start_km: e.target.value })}
+                  placeholder="e.g., 45230"
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-
-              {/* Calculated Distance & Allowance */}
-              {newTrip.start_km && newTrip.end_km && (
-                <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-500">Distance</div>
-                    <div className="text-xl font-bold text-slate-900">{calculateDistance().toFixed(1)} km</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-slate-500">Allowance</div>
-                    <div className="text-xl font-bold text-emerald-600">₹{calculateAllowance()}</div>
-                  </div>
-                </div>
-              )}
 
               {/* Purpose */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Purpose</label>
                 <select
-                  value={newTrip.purpose}
-                  onChange={(e) => setNewTrip({ ...newTrip, purpose: e.target.value })}
+                  value={startTripData.purpose}
+                  onChange={(e) => setStartTripData({ ...startTripData, purpose: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {purposeOptions.map(opt => (
@@ -700,79 +732,259 @@ const TravelLog = () => {
                 </select>
               </div>
 
-              {/* Photos with OCR */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Start Odometer Photo
-                    {ocrLoading.start && <span className="ml-2 text-blue-600 text-xs">(Reading...)</span>}
-                  </label>
-                  <input
-                    type="file"
-                    ref={startPhotoRef}
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleStartPhotoChange}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => startPhotoRef.current?.click()}
-                    disabled={ocrLoading.start}
-                    className={`w-full p-4 border-2 border-dashed rounded-xl flex flex-col items-center gap-2 transition-colors ${
-                      newTrip.start_photo ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-slate-300'
-                    } ${ocrLoading.start ? 'opacity-50' : ''}`}
-                  >
-                    {ocrLoading.start ? (
-                      <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                    ) : (
-                      <Camera className={`w-6 h-6 ${newTrip.start_photo ? 'text-green-600' : 'text-slate-400'}`} />
-                    )}
-                    <span className="text-sm text-slate-600">
-                      {ocrLoading.start ? 'Reading odometer...' : (newTrip.start_photo ? newTrip.start_photo.name : 'Capture/Upload')}
-                    </span>
-                    {newTrip.start_photo && !ocrLoading.start && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <Scan className="w-3 h-3" /> Auto-detect enabled
-                      </span>
-                    )}
-                  </button>
+              {/* If editing rejected trip, show end trip fields too */}
+              {editingTrip && (
+                <>
+                  <div className="border-t border-slate-200 pt-4 mt-4">
+                    <h3 className="text-sm font-semibold text-slate-700 mb-3">Trip End Details</h3>
+                  </div>
+
+                  {/* To Location with Office Button */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-slate-700">To</label>
+                      <OfficeButton 
+                        onClick={() => setEndTripData({ ...endTripData, to_location: OFFICE_ADDRESS })}
+                        isSelected={endTripData.to_location === OFFICE_ADDRESS}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={endTripData.to_location}
+                      onChange={(e) => setEndTripData({ ...endTripData, to_location: e.target.value })}
+                      placeholder="e.g., Office, Client Site"
+                      required
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* End KM */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">End Odometer (KM)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={endTripData.end_km}
+                      onChange={(e) => setEndTripData({ ...endTripData, end_km: e.target.value })}
+                      placeholder="e.g., 45265"
+                      required
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Photos */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Start Photo</label>
+                      <input type="file" ref={startPhotoRef} accept="image/*" onChange={handleStartPhotoChange} className="hidden" />
+                      <button
+                        type="button"
+                        onClick={() => startPhotoRef.current?.click()}
+                        className={`w-full p-3 border-2 border-dashed rounded-xl flex flex-col items-center gap-1 ${
+                          endTripData.start_photo ? 'border-green-500 bg-green-50' : 'border-slate-200'
+                        }`}
+                      >
+                        <Camera className={`w-5 h-5 ${endTripData.start_photo ? 'text-green-600' : 'text-slate-400'}`} />
+                        <span className="text-xs">{endTripData.start_photo ? '✓ Attached' : 'Optional'}</span>
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">End Photo</label>
+                      <input type="file" ref={endPhotoRef} accept="image/*" onChange={handleEndPhotoChange} className="hidden" />
+                      <button
+                        type="button"
+                        onClick={() => endPhotoRef.current?.click()}
+                        className={`w-full p-3 border-2 border-dashed rounded-xl flex flex-col items-center gap-1 ${
+                          endTripData.end_photo ? 'border-green-500 bg-green-50' : 'border-slate-200'
+                        }`}
+                      >
+                        <Camera className={`w-5 h-5 ${endTripData.end_photo ? 'text-green-600' : 'text-slate-400'}`} />
+                        <span className="text-xs">{endTripData.end_photo ? '✓ Attached' : 'Optional'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Notes (Optional)</label>
+                    <textarea
+                      value={endTripData.notes}
+                      onChange={(e) => setEndTripData({ ...endTripData, notes: e.target.value })}
+                      placeholder="Any additional notes..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+                  editingTrip 
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' 
+                    : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                }`}
+              >
+                {submitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    {editingTrip ? <Send className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                    {editingTrip ? 'Resubmit for Approval' : 'Start Trip'}
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* END TRIP Modal */}
+      {showEndTrip && selectedActiveTrip && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                  <Square className="w-5 h-5 text-red-600" />
+                  Complete Trip
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Add destination, end reading & photos
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowEndTrip(false);
+                  setSelectedActiveTrip(null);
+                  setEndTripData({
+                    to_location: '',
+                    end_km: '',
+                    notes: '',
+                    start_photo: null,
+                    end_photo: null
+                  });
+                }} 
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Trip Summary */}
+            <div className="mx-4 mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <div className={`p-1.5 rounded-full ${selectedActiveTrip.vehicle_type === 'two_wheeler' ? 'bg-blue-200' : 'bg-purple-200'}`}>
+                  {selectedActiveTrip.vehicle_type === 'two_wheeler' ? 
+                    <Bike className="w-4 h-4 text-blue-700" /> : 
+                    <Car className="w-4 h-4 text-purple-700" />
+                  }
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    End Odometer Photo
-                    {ocrLoading.end && <span className="ml-2 text-blue-600 text-xs">(Reading...)</span>}
-                  </label>
-                  <input
-                    type="file"
-                    ref={endPhotoRef}
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleEndPhotoChange}
-                    className="hidden"
+                  <div className="font-medium">{selectedActiveTrip.from_location} → ?</div>
+                  <div className="text-xs text-blue-600">Started at {selectedActiveTrip.start_km} km • {selectedActiveTrip.purpose}</div>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleEndTrip} className="p-4 space-y-4">
+              {/* To Location with Office Button */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-slate-700">Destination (To)</label>
+                  <OfficeButton 
+                    onClick={() => setEndTripData({ ...endTripData, to_location: OFFICE_ADDRESS })}
+                    isSelected={endTripData.to_location === OFFICE_ADDRESS}
                   />
-                  <button
-                    type="button"
-                    onClick={() => endPhotoRef.current?.click()}
-                    disabled={ocrLoading.end}
-                    className={`w-full p-4 border-2 border-dashed rounded-xl flex flex-col items-center gap-2 transition-colors ${
-                      newTrip.end_photo ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-slate-300'
-                    } ${ocrLoading.end ? 'opacity-50' : ''}`}
-                  >
-                    {ocrLoading.end ? (
-                      <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                    ) : (
-                      <Camera className={`w-6 h-6 ${newTrip.end_photo ? 'text-green-600' : 'text-slate-400'}`} />
-                    )}
-                    <span className="text-sm text-slate-600">
-                      {ocrLoading.end ? 'Reading odometer...' : (newTrip.end_photo ? newTrip.end_photo.name : 'Capture/Upload')}
-                    </span>
-                    {newTrip.end_photo && !ocrLoading.end && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <Scan className="w-3 h-3" /> Auto-detect enabled
+                </div>
+                <input
+                  type="text"
+                  value={endTripData.to_location}
+                  onChange={(e) => setEndTripData({ ...endTripData, to_location: e.target.value })}
+                  placeholder="e.g., Client Site, Office"
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* End KM */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">End Odometer (KM)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={endTripData.end_km}
+                  onChange={(e) => setEndTripData({ ...endTripData, end_km: e.target.value })}
+                  placeholder="e.g., 45265"
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Calculated Distance & Allowance */}
+              {endTripData.end_km && (
+                <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-slate-500">Distance</div>
+                    <div className="text-xl font-bold text-slate-900">{calculateDistance().toFixed(1)} km</div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400" />
+                  <div className="text-right">
+                    <div className="text-sm text-slate-500">Allowance</div>
+                    <div className="text-xl font-bold text-emerald-600">₹{calculateAllowance()}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Photos - Both together at end */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Odometer Photos (Optional)</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input type="file" ref={startPhotoRef} accept="image/*" onChange={handleStartPhotoChange} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => startPhotoRef.current?.click()}
+                      disabled={ocrLoading.start}
+                      className={`w-full p-4 border-2 border-dashed rounded-xl flex flex-col items-center gap-2 transition-colors ${
+                        endTripData.start_photo ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-slate-300'
+                      } ${ocrLoading.start ? 'opacity-50' : ''}`}
+                    >
+                      {ocrLoading.start ? (
+                        <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                      ) : (
+                        <Camera className={`w-6 h-6 ${endTripData.start_photo ? 'text-green-600' : 'text-slate-400'}`} />
+                      )}
+                      <span className="text-sm font-medium text-slate-700">Start Photo</span>
+                      <span className="text-xs text-slate-500">
+                        {ocrLoading.start ? 'Reading...' : (endTripData.start_photo ? '✓ ' + endTripData.start_photo.name.slice(0,15) : 'Tap to upload')}
                       </span>
-                    )}
-                  </button>
+                    </button>
+                  </div>
+                  <div>
+                    <input type="file" ref={endPhotoRef} accept="image/*" onChange={handleEndPhotoChange} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => endPhotoRef.current?.click()}
+                      disabled={ocrLoading.end}
+                      className={`w-full p-4 border-2 border-dashed rounded-xl flex flex-col items-center gap-2 transition-colors ${
+                        endTripData.end_photo ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-slate-300'
+                      } ${ocrLoading.end ? 'opacity-50' : ''}`}
+                    >
+                      {ocrLoading.end ? (
+                        <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                      ) : (
+                        <Camera className={`w-6 h-6 ${endTripData.end_photo ? 'text-green-600' : 'text-slate-400'}`} />
+                      )}
+                      <span className="text-sm font-medium text-slate-700">End Photo</span>
+                      <span className="text-xs text-slate-500">
+                        {ocrLoading.end ? 'Reading...' : (endTripData.end_photo ? '✓ ' + endTripData.end_photo.name.slice(0,15) : 'Tap to upload')}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -780,8 +992,8 @@ const TravelLog = () => {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes (Optional)</label>
                 <textarea
-                  value={newTrip.notes}
-                  onChange={(e) => setNewTrip({ ...newTrip, notes: e.target.value })}
+                  value={endTripData.notes}
+                  onChange={(e) => setEndTripData({ ...endTripData, notes: e.target.value })}
                   placeholder="Any additional notes..."
                   rows={2}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -792,18 +1004,14 @@ const TravelLog = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className={`w-full py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
-                  editingTrip 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' 
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
-                }`}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50"
               >
                 {submitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
-                    {editingTrip ? 'Resubmit for Approval' : 'Submit Trip'}
+                    <CheckCircle className="w-5 h-5" />
+                    Complete & Submit Trip
                   </>
                 )}
               </button>
