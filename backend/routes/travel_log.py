@@ -268,9 +268,12 @@ async def create_trip(
 
 
 @router.get("/my-trips/{user_id}")
-async def get_my_trips(user_id: str, date: Optional[str] = None, month: Optional[int] = None, year: Optional[int] = None):
+async def get_my_trips(user_id: str, date: Optional[str] = None, month: Optional[int] = None, year: Optional[int] = None, status: Optional[str] = None):
     """Get trips for a specific user"""
     query = {"user_id": user_id}
+    
+    if status:
+        query["status"] = status
     
     if date:
         query["date"] = date
@@ -287,24 +290,27 @@ async def get_my_trips(user_id: str, date: Optional[str] = None, month: Optional
     async for doc in cursor:
         trips.append(serialize_doc(doc))
     
-    # Calculate summary
-    total_distance = sum(t.get("distance", 0) for t in trips)
-    total_allowance = sum(t.get("allowance", 0) for t in trips)
+    # Calculate summary (exclude in_progress trips)
+    completed_trips = [t for t in trips if t.get("status") != "in_progress"]
+    total_distance = sum(t.get("distance", 0) for t in completed_trips)
+    total_allowance = sum(t.get("allowance", 0) for t in completed_trips)
     approved_allowance = sum(t.get("allowance", 0) for t in trips if t.get("status") == "approved")
     pending_count = sum(1 for t in trips if t.get("status") == "pending")
     approved_count = sum(1 for t in trips if t.get("status") == "approved")
     rejected_count = sum(1 for t in trips if t.get("status") == "rejected")
+    in_progress_count = sum(1 for t in trips if t.get("status") == "in_progress")
     
     return {
         "trips": trips,
         "summary": {
-            "total_trips": len(trips),
+            "total_trips": len(completed_trips),
             "total_distance": round(total_distance, 2),
             "total_allowance": round(total_allowance, 2),
             "approved_allowance": round(approved_allowance, 2),
             "pending": pending_count,
             "approved": approved_count,
-            "rejected": rejected_count
+            "rejected": rejected_count,
+            "in_progress": in_progress_count
         }
     }
 
