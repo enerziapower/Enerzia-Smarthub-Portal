@@ -190,24 +190,31 @@ async def create_trip(
     end_km: float = Form(...),
     purpose: str = Form(...),
     notes: str = Form(None),
+    status: str = Form("pending"),
     start_photo: UploadFile = File(None),
     end_photo: UploadFile = File(None)
 ):
-    """Create a new travel trip entry"""
+    """Create a new travel trip entry (can be in_progress for two-step flow)"""
     
-    # Calculate distance
-    distance = end_km - start_km
-    if distance < 0:
-        raise HTTPException(status_code=400, detail="End KM must be greater than Start KM")
-    
-    # Get rates
-    rates = await db.travel_settings.find_one({"type": "rates"})
-    two_wheeler_rate = rates.get("two_wheeler_rate", 4.25) if rates else 4.25
-    four_wheeler_rate = rates.get("four_wheeler_rate", 9.0) if rates else 9.0
-    
-    # Calculate allowance
-    rate = two_wheeler_rate if vehicle_type == "two_wheeler" else four_wheeler_rate
-    allowance = round(distance * rate, 2)
+    # For in_progress trips, we don't validate distance yet
+    if status == "in_progress":
+        distance = 0
+        allowance = 0
+        rate = 0
+    else:
+        # Calculate distance
+        distance = end_km - start_km
+        if distance < 0:
+            raise HTTPException(status_code=400, detail="End KM must be greater than Start KM")
+        
+        # Get rates
+        rates = await db.travel_settings.find_one({"type": "rates"})
+        two_wheeler_rate = rates.get("two_wheeler_rate", 4.25) if rates else 4.25
+        four_wheeler_rate = rates.get("four_wheeler_rate", 9.0) if rates else 9.0
+        
+        # Calculate allowance
+        rate = two_wheeler_rate if vehicle_type == "two_wheeler" else four_wheeler_rate
+        allowance = round(distance * rate, 2)
     
     # Handle photo uploads
     start_photo_path = None
@@ -245,7 +252,7 @@ async def create_trip(
         "end_photo": end_photo_path,
         "rate_applied": rate,
         "allowance": allowance,
-        "status": "pending",  # pending, approved, rejected
+        "status": status,  # pending, approved, rejected, in_progress
         "approved_by": None,
         "approved_at": None,
         "rejection_reason": None,
