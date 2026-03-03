@@ -704,6 +704,43 @@ const TravelLog = () => {
                 />
               </div>
 
+              {/* Start Odometer Photo with OCR */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Start Odometer Photo</label>
+                <input type="file" ref={startPhotoRef} accept="image/*" capture="environment" onChange={handleStartPhotoChange} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => startPhotoRef.current?.click()}
+                  disabled={ocrLoading.start}
+                  className={`w-full p-4 border-2 border-dashed rounded-xl flex items-center justify-center gap-3 transition-colors ${
+                    startTripData.start_photo ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'
+                  } ${ocrLoading.start ? 'opacity-50' : ''}`}
+                >
+                  {ocrLoading.start ? (
+                    <>
+                      <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                      <span className="text-sm font-medium text-blue-600">Reading odometer...</span>
+                    </>
+                  ) : startTripData.start_photo ? (
+                    <>
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <div className="text-left">
+                        <span className="text-sm font-medium text-green-700">Photo captured</span>
+                        <span className="text-xs text-green-600 block">{startTripData.start_photo.name?.slice(0,25) || 'Photo attached'}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 text-slate-400" />
+                      <div className="text-left">
+                        <span className="text-sm font-medium text-slate-700">Capture Start Odometer</span>
+                        <span className="text-xs text-slate-500 block">OCR will auto-detect reading</span>
+                      </div>
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Start KM */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Odometer (KM)</label>
@@ -716,6 +753,11 @@ const TravelLog = () => {
                   required
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {startTripData.start_photo && startTripData.start_km && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <Scan className="w-3 h-3" /> Auto-detected from photo
+                  </p>
+                )}
               </div>
 
               {/* Purpose */}
