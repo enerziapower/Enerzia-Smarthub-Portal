@@ -183,6 +183,11 @@ const TravelLog = () => {
       formData.append('purpose', startTripData.purpose);
       formData.append('status', 'in_progress'); // Mark as in progress
       formData.append('notes', '');
+      
+      // Include start photo if captured
+      if (startTripData.start_photo) {
+        formData.append('start_photo', startTripData.start_photo);
+      }
 
       const res = await fetch(`${API_URL}/api/travel-log/trip`, {
         method: 'POST',
@@ -197,6 +202,7 @@ const TravelLog = () => {
           vehicle_type: 'two_wheeler',
           start_km: '',
           purpose: 'Site Visit',
+          start_photo: null,
         });
         fetchActiveTrips();
         fetchTrips();
