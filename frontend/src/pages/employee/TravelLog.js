@@ -912,7 +912,6 @@ const TravelLog = () => {
                     to_location: '',
                     end_km: '',
                     notes: '',
-                    start_photo: null,
                     end_photo: null
                   });
                 }} 
