@@ -1095,15 +1095,18 @@ const TravelLog = () => {
                     <>
                       <CheckCircle className="w-6 h-6 text-green-600" />
                       <div className="text-left">
-                        <span className="text-sm font-medium text-green-700">Photo captured</span>
+                        <span className="text-sm font-medium text-green-700">Photo attached</span>
                         <span className="text-xs text-green-600 block">{endTripData.end_photo.name?.slice(0,25) || 'Photo attached'}</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <Camera className="w-6 h-6 text-slate-400" />
+                      <div className="flex gap-1">
+                        <Camera className="w-5 h-5 text-slate-400" />
+                        <Image className="w-5 h-5 text-slate-400" />
+                      </div>
                       <div className="text-left">
-                        <span className="text-sm font-medium text-slate-700">Capture End Odometer</span>
+                        <span className="text-sm font-medium text-slate-700">Take Photo or Select from Gallery</span>
                         <span className="text-xs text-slate-500 block">OCR will auto-detect reading</span>
                       </div>
                     </>
