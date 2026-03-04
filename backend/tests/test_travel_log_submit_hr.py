@@ -143,12 +143,12 @@ class TestTravelLogSubmitToHR:
     
     def test_04_submit_to_hr_success(self):
         """Test submitting draft trips to HR"""
-        trip_id = getattr(pytest, 'draft_trip_id', None)
+        trip_id = TestTravelLogSubmitToHR.shared_draft_trip_id
         if not trip_id:
             pytest.skip("No draft_trip_id from previous test")
         
         # Submit to HR
-        response = self.session.post(
+        response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": [trip_id]}
         )
@@ -161,9 +161,9 @@ class TestTravelLogSubmitToHR:
         print(f"✓ Submitted trip to HR: {data['message']}")
         
         # Verify status changed to pending
-        user_id = getattr(pytest, 'user_id', None)
+        user_id = TestTravelLogSubmitToHR.shared_user_id
         if user_id:
-            trips_response = self.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
+            trips_response = TestTravelLogSubmitToHR.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
             if trips_response.status_code == 200:
                 trips_data = trips_response.json()
                 submitted_trip = next((t for t in trips_data.get("trips", []) if t["id"] == trip_id), None)
