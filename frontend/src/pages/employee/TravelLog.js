@@ -487,13 +487,40 @@ const TravelLog = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Travel Log</h1>
-          <p className="text-slate-500">Track your business travel</p>
+          <p className="text-slate-500">Fuel/Conveyance reimbursement</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-emerald-600">₹{summary.total_allowance?.toFixed(2) || '0.00'}</div>
-          <div className="text-sm text-slate-500">{summary.total_distance?.toFixed(1) || '0'} km this month</div>
+          <div className="text-2xl font-bold text-slate-900">{summary.total_distance?.toFixed(1) || '0'} km</div>
+          <div className="text-sm text-slate-500">Total distance this month</div>
         </div>
       </div>
+
+      {/* Draft Trips Banner - Submit to HR */}
+      {draftTrips.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-5 h-5" />
+                <span className="font-semibold">Pending Submission</span>
+              </div>
+              <p className="text-sm text-amber-100">
+                {draftTrips.length} trip(s) ready to submit • {draftTrips.reduce((sum, t) => sum + (t.distance || 0), 0).toFixed(1)} km total
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedDraftTrips(draftTrips.map(t => t.id));
+                setShowSubmitWeekly(true);
+              }}
+              className="px-4 py-2 bg-white text-amber-600 rounded-lg font-semibold text-sm hover:bg-amber-50 transition-colors flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Submit to HR
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Active Trips Banner */}
       {activeTrips.length > 0 && (
