@@ -1648,52 +1648,52 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
         
         # Contact Details Style
         contact_style = ParagraphStyle(
-                'ContactDetails',
-                fontSize=12,
-                fontName='Helvetica',
-                textColor=colors.HexColor('#333333'),
-                alignment=1,  # Center
-                spaceAfter=8
-            )
-            
-            # Tel
-            back_cover_elements.append(Paragraph(
-                "<b>Tel:</b> +91 44 45487875",
-                contact_style
-            ))
-            
-            # Mobile
-            back_cover_elements.append(Paragraph(
-                "<b>Mobile:</b> +91 9789894644",
-                contact_style
-            ))
-            
-            # Email
-            back_cover_elements.append(Paragraph(
-                "<b>E-mail:</b> info@enerzia.com",
-                contact_style
-            ))
-            
-            back_cover_elements.append(Spacer(1, 40))
-            
-            # Website
-            website_style = ParagraphStyle(
-                'Website',
-                fontSize=14,
-                fontName='Helvetica-Bold',
-                textColor=colors.HexColor('#e65100'),
-                alignment=1,  # Center
-            )
-            back_cover_elements.append(Paragraph("www.enerzia.com", website_style))
-            
-            # Build back cover
-            back_cover_doc.build(back_cover_elements)
-            
-            # Add back cover page
-            back_cover_buffer.seek(0)
-            back_cover_reader = PdfReader(back_cover_buffer)
-            for page in back_cover_reader.pages:
-                writer.add_page(page)
+            'ContactDetails',
+            fontSize=12,
+            fontName='Helvetica',
+            textColor=colors.HexColor('#333333'),
+            alignment=1,  # Center
+            spaceAfter=8
+        )
+        
+        # Tel
+        back_cover_elements.append(Paragraph(
+            "<b>Tel:</b> +91 44 45487875",
+            contact_style
+        ))
+        
+        # Mobile
+        back_cover_elements.append(Paragraph(
+            "<b>Mobile:</b> +91 9789894644",
+            contact_style
+        ))
+        
+        # Email
+        back_cover_elements.append(Paragraph(
+            "<b>E-mail:</b> info@enerzia.com",
+            contact_style
+        ))
+        
+        back_cover_elements.append(Spacer(1, 40))
+        
+        # Website
+        website_style = ParagraphStyle(
+            'Website',
+            fontSize=14,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#e65100'),
+            alignment=1,  # Center
+        )
+        back_cover_elements.append(Paragraph("www.enerzia.com", website_style))
+        
+        # Build back cover
+        back_cover_doc.build(back_cover_elements)
+        
+        # Add back cover page
+        back_cover_buffer.seek(0)
+        back_cover_reader = PdfReader(back_cover_buffer)
+        for page in back_cover_reader.pages:
+            writer.add_page(page)
         
         # Write combined PDF
         output_buffer = BytesIO()
