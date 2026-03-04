@@ -206,7 +206,7 @@ class TestTravelLogSubmitToHR:
             "notes": ""
         }
         
-        response = self.session.post(
+        response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/trip",
             data=form_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -214,10 +214,10 @@ class TestTravelLogSubmitToHR:
         
         assert response.status_code == 200, f"Create trip failed: {response.text}"
         trip = response.json()["trip"]
-        self.created_trip_ids.append(trip["id"])
+        TestTravelLogSubmitToHR.created_trip_ids.append(trip["id"])
         
         # Try to submit non-draft trip to HR
-        submit_response = self.session.post(
+        submit_response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": [trip["id"]]}
         )
