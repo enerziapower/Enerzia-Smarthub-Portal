@@ -288,7 +288,7 @@ async def generate_followup_reminders(current_user: dict = Depends(require_auth)
             scheduled_time = followup.get("scheduled_time") or "Not specified"
             
             await create_department_notification(
-                target_department="Sales",
+                target_department="SALES",
                 notif_type="followup_reminder",
                 title=f"Follow-up Tomorrow: {followup.get('title', 'Untitled')}",
                 message=f"{customer_name} - {followup.get('followup_type', 'general').replace('_', ' ').title()} at {scheduled_time}",
