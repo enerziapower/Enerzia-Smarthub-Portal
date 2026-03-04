@@ -321,7 +321,7 @@ async def generate_followup_reminders(current_user: dict = Depends(require_auth)
                     scheduled_date = "Past date"
             
             await create_department_notification(
-                target_department="Sales",
+                target_department="SALES",
                 notif_type="followup_overdue",
                 title=f"Overdue: {followup.get('title', 'Untitled')}",
                 message=f"{customer_name} - Was scheduled for {scheduled_date}",
