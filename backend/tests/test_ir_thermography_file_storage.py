@@ -268,8 +268,9 @@ class TestIRThermographyFileStorage:
         if not TestIRThermographyFileStorage.created_report_id:
             pytest.skip("No report created in previous test")
         
+        # PDF endpoint is at /api/ir-thermography-report/{report_id}/pdf
         response = requests.get(
-            f"{BASE_URL}/api/ir-thermography/{TestIRThermographyFileStorage.created_report_id}/pdf",
+            f"{BASE_URL}/api/ir-thermography-report/{TestIRThermographyFileStorage.created_report_id}/pdf",
             headers=self.get_headers(),
             timeout=180  # PDF generation can take time
         )
