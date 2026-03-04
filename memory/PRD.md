@@ -2,6 +2,27 @@
 
 ## Latest Updates
 
+### Travel Log Weekly Submission Workflow ✅ COMPLETE (Mar 4, 2026)
+**Location:** My Workspace → Travel Log (`/employee/travel-log`)
+
+| Feature | Description |
+|---------|-------------|
+| **Two-Step Trip Flow** | Start Trip (from location, vehicle, start KM, purpose) → End Trip (destination, end KM, photos) |
+| **Draft Status** | Completed trips saved as 'draft' until submitted to HR |
+| **Batch Submission to HR** | `POST /api/travel-log/submit-to-hr` changes status from 'draft' to 'pending' |
+| **Office Quick Button** | One-click button to set location as "Office" |
+| **OCR Photo Integration** | Camera/gallery upload with automatic odometer reading detection |
+| **Distance Calculation** | Real-time distance shown in End Trip modal |
+| **Draft Trips Banner** | Shows pending submission count with "Submit to HR" button |
+
+**Files Modified:**
+- `/app/backend/routes/travel_log.py` - Added `POST /api/travel-log/submit-to-hr` batch submission endpoint
+- `/app/frontend/src/pages/employee/TravelLog.js` - Complete UI rework with two-step flow and batch submission modal
+
+**Test Results:** 100% success rate (10/10 backend tests, all frontend flows working) - See `/app/test_reports/iteration_79.json`
+
+---
+
 ### Backend Route Protection (P0 Security Fix) ✅ COMPLETE (Feb 27, 2026)
 **Critical Security Enhancement**
 
