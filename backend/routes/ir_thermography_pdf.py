@@ -1281,13 +1281,28 @@ def create_individual_inspection_pages(report, styles):
                     img_io = BytesIO(img_bytes)
                     return Image(img_io, width=width, height=height)
                 elif img_source.startswith('/ir-thermography-images/'):
-                    # File path - load from disk
+                    # File path - load from disk (new format)
                     file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
+                    if os.path.exists(file_path):
+                        return Image(file_path, width=width, height=height)
+                    else:
+                        print(f"Image file not found: {file_path}")
+                elif img_source.startswith('/api/uploads/') or img_source.startswith('http'):
+                    # API URL or external URL - try to load
+                    if img_source.startswith('/api/uploads/'):
+                        file_path = f"/app/uploads{img_source.replace('/api/uploads', '')}"
+                        if os.path.exists(file_path):
+                            return Image(file_path, width=width, height=height)
+                    # For HTTP URLs, we can't easily load them in PDF
+                    print(f"Cannot load external URL in PDF: {img_source}")
+                elif img_source.startswith('/'):
+                    # Other local path
+                    file_path = f"/app{img_source}" if not img_source.startswith('/app') else img_source
                     if os.path.exists(file_path):
                         return Image(file_path, width=width, height=height)
                 return None
             except Exception as e:
-                print(f"Error loading image: {e}")
+                print(f"Error loading image from {img_source}: {e}")
                 return None
         
         # Original image
