@@ -230,7 +230,7 @@ class TestTravelLogSubmitToHR:
     
     def test_07_submit_to_hr_invalid_trip_id(self):
         """Test that invalid trip IDs are handled"""
-        response = self.session.post(
+        response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": ["000000000000000000000000"]}  # Valid ObjectId format but doesn't exist
         )
