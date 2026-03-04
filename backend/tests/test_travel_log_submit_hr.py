@@ -22,17 +22,24 @@ ADMIN_USER = {"email": "admin@enerzia.com", "password": "123456"}
 class TestTravelLogSubmitToHR:
     """Test Travel Log Submit to HR workflow"""
     
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        """Setup test fixtures"""
-        self.session = requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
-        self.created_trip_ids = []
+    # Class-level storage for trip IDs across tests
+    created_trip_ids = []
+    session = None
+    shared_trip_id = None
+    shared_user_id = None
+    shared_draft_trip_id = None
+    
+    @pytest.fixture(autouse=True, scope="class")
+    def setup_class(self, request):
+        """Setup test fixtures at class level"""
+        TestTravelLogSubmitToHR.session = requests.Session()
+        TestTravelLogSubmitToHR.session.headers.update({"Content-Type": "application/json"})
+        TestTravelLogSubmitToHR.created_trip_ids = []
         yield
-        # Cleanup: Delete test trips
-        for trip_id in self.created_trip_ids:
+        # Cleanup: Delete test trips after all tests in class
+        for trip_id in TestTravelLogSubmitToHR.created_trip_ids:
             try:
-                self.session.delete(f"{BASE_URL}/api/travel-log/trip/{trip_id}")
+                TestTravelLogSubmitToHR.session.delete(f"{BASE_URL}/api/travel-log/trip/{trip_id}")
             except:
                 pass
     
