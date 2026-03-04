@@ -388,7 +388,7 @@ class TestTravelLogSubmitToHR:
         user_id = user.get("id")
         
         # Get all trips
-        response = self.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
+        response = TestTravelLogSubmitToHR.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
         assert response.status_code == 200
         data = response.json()
         
@@ -399,7 +399,7 @@ class TestTravelLogSubmitToHR:
         print(f"  Trip summary: total={summary.get('total_trips', 0)}, pending={summary.get('pending', 0)}, approved={summary.get('approved', 0)}, in_progress={summary.get('in_progress', 0)}")
         
         # Get only in_progress trips
-        in_progress_response = self.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}?status=in_progress")
+        in_progress_response = TestTravelLogSubmitToHR.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}?status=in_progress")
         assert in_progress_response.status_code == 200
         in_progress_data = in_progress_response.json()
         
