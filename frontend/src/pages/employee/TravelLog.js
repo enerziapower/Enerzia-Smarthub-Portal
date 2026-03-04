@@ -793,7 +793,7 @@ const TravelLog = () => {
               {/* Start Odometer Photo with OCR */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Start Odometer Photo</label>
-                <input type="file" ref={startPhotoRef} accept="image/*" capture="environment" onChange={handleStartPhotoChange} className="hidden" />
+                <input type="file" ref={startPhotoRef} accept="image/*" onChange={handleStartPhotoChange} className="hidden" />
                 <button
                   type="button"
                   onClick={() => startPhotoRef.current?.click()}
