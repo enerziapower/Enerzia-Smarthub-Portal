@@ -3,7 +3,7 @@ import {
   MapPin, Plus, Car, Bike, Camera, Clock, Calendar,
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2,
   ChevronDown, FileText, Download, X, Send, Scan,
-  Play, Square, Building2, ArrowRight
+  Play, Square, Building2, ArrowRight, Upload, Image
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ const TravelLog = () => {
   const { user } = useAuth();
   const [trips, setTrips] = useState([]);
   const [activeTrips, setActiveTrips] = useState([]); // Trips in progress
+  const [draftTrips, setDraftTrips] = useState([]); // Completed but not submitted to HR
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
   const [showStartTrip, setShowStartTrip] = useState(false);
@@ -28,6 +29,8 @@ const TravelLog = () => {
   const [rates, setRates] = useState({ two_wheeler_rate: 4.25, four_wheeler_rate: 9.0 });
   const [ocrLoading, setOcrLoading] = useState({ start: false, end: false });
   const [editingTrip, setEditingTrip] = useState(null);
+  const [showSubmitWeekly, setShowSubmitWeekly] = useState(false);
+  const [selectedDraftTrips, setSelectedDraftTrips] = useState([]);
 
   const startPhotoRef = useRef(null);
   const endPhotoRef = useRef(null);
