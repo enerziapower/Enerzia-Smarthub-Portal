@@ -632,8 +632,7 @@ const TravelLog = () => {
                           </span>
                           <span>Start: {trip.start_km} km</span>
                           <span>End: {trip.end_km} km</span>
-                          <span className="font-semibold text-slate-900">📏 {trip.distance?.toFixed(1)} km</span>
-                          <span className="font-semibold text-emerald-600">₹{trip.allowance?.toFixed(2)}</span>
+                          <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">📏 {trip.distance?.toFixed(1)} km</span>
                         </div>
 
                         {(trip.start_photo || trip.end_photo) && (
