@@ -1129,11 +1129,123 @@ const TravelLog = () => {
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    Complete & Submit Trip
+                    Complete Trip
                   </>
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Submit to HR Modal */}
+      {showSubmitWeekly && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-amber-600" />
+                  Submit Trips to HR
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Select trips to submit for approval
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowSubmitWeekly(false);
+                  setSelectedDraftTrips([]);
+                }} 
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Select All */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedDraftTrips.length === draftTrips.length && draftTrips.length > 0}
+                    onChange={selectAllDrafts}
+                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  <span className="font-medium text-slate-700">Select All</span>
+                </label>
+                <span className="text-sm text-slate-500">
+                  {selectedDraftTrips.length} of {draftTrips.length} selected
+                </span>
+              </div>
+
+              {/* Trip List */}
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {draftTrips.map(trip => (
+                  <label 
+                    key={trip.id} 
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedDraftTrips.includes(trip.id) 
+                        ? 'border-amber-500 bg-amber-50' 
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDraftTrips.includes(trip.id)}
+                      onChange={() => toggleTripSelection(trip.id)}
+                      className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {trip.vehicle_type === 'two_wheeler' ? 
+                          <Bike className="w-4 h-4 text-blue-600" /> : 
+                          <Car className="w-4 h-4 text-purple-600" />
+                        }
+                        <span className="font-medium text-slate-700">
+                          {trip.from_location} → {trip.to_location}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {trip.date} • {trip.distance?.toFixed(1)} km • {trip.purpose}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {/* Summary */}
+              {selectedDraftTrips.length > 0 && (
+                <div className="bg-amber-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-amber-700">Total Distance:</span>
+                    <span className="font-bold text-amber-800">
+                      {draftTrips
+                        .filter(t => selectedDraftTrips.includes(t.id))
+                        .reduce((sum, t) => sum + (t.distance || 0), 0)
+                        .toFixed(1)} km
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                onClick={handleSubmitToHR}
+                disabled={submitting || selectedDraftTrips.length === 0}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+              >
+                {submitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Submit {selectedDraftTrips.length} Trip(s) to HR
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
