@@ -755,7 +755,6 @@ const TravelLog = () => {
                   >
                     <Bike className={`w-8 h-8 ${startTripData.vehicle_type === 'two_wheeler' ? 'text-blue-600' : 'text-slate-400'}`} />
                     <span className="font-medium">Two Wheeler</span>
-                    <span className="text-xs text-slate-500">₹{rates.two_wheeler_rate}/km</span>
                   </button>
                   <button
                     type="button"
@@ -768,7 +767,6 @@ const TravelLog = () => {
                   >
                     <Car className={`w-8 h-8 ${startTripData.vehicle_type === 'four_wheeler' ? 'text-purple-600' : 'text-slate-400'}`} />
                     <span className="font-medium">Four Wheeler</span>
-                    <span className="text-xs text-slate-500">₹{rates.four_wheeler_rate}/km</span>
                   </button>
                 </div>
               </div>
