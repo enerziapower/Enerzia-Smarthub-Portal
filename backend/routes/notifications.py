@@ -354,27 +354,29 @@ async def get_todays_followups(current_user: dict = Depends(require_auth)):
     
     # Get today's follow-ups
     todays_followups = await db.followups.find({
-        "scheduled_date": {
-            "$gte": today_start.isoformat(),
-            "$lte": today_end.isoformat()
-        },
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "$and": [
+            {"scheduled_date": {"$gte": today_start}},
+            {"scheduled_date": {"$lte": today_end}},
+            {"status": {"$in": ["scheduled", "in_progress"]}}
+        ]
     }, {"_id": 0}).sort("scheduled_time", 1).to_list(50)
     
     # Get overdue follow-ups count
     overdue_count = await db.followups.count_documents({
-        "scheduled_date": {"$lt": today_start.isoformat()},
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "$and": [
+            {"scheduled_date": {"$lt": today_start}},
+            {"status": {"$in": ["scheduled", "in_progress"]}}
+        ]
     })
     
     # Get upcoming follow-ups (next 7 days)
     week_end = datetime.combine(today + timedelta(days=7), datetime.max.time())
     upcoming_count = await db.followups.count_documents({
-        "scheduled_date": {
-            "$gt": today_end.isoformat(),
-            "$lte": week_end.isoformat()
-        },
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "$and": [
+            {"scheduled_date": {"$gt": today_end}},
+            {"scheduled_date": {"$lte": week_end}},
+            {"status": {"$in": ["scheduled", "in_progress"]}}
+        ]
     })
     
     return {
