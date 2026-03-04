@@ -2,6 +2,30 @@
 
 ## Latest Updates
 
+### IR Thermography File-Based Image Storage Fix ✅ COMPLETE (Mar 4, 2026)
+**Location:** Projects → IR Thermography Reports
+
+**Problem:** Reports with 69+ inspection items with images were failing to save due to MongoDB's 16MB document size limit.
+
+| Feature | Description |
+|---------|-------------|
+| **File-Based Storage** | Images now stored as files in `/app/uploads/ir-thermography/{report_id}/` instead of base64 in MongoDB |
+| **URL-Based References** | Database stores URL paths like `/ir-thermography-images/{report_id}/{item_id}_original.jpg` |
+| **Static File Serving** | Images served via FastAPI static file mount at `/ir-thermography-images/` |
+| **Backward Compatibility** | Existing base64 images and URLs preserved, only new base64 converted to files |
+| **File Cleanup** | Deleting a report also removes associated image files |
+| **No Item Limit** | Reports can now have **unlimited inspection items** |
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography.py` - Added `save_base64_image()`, `process_inspection_items_images()`, updated create/update endpoints
+- `/app/backend/routes/ir_thermography_pdf.py` - Added `load_image_from_source()` to handle file-based images in PDF
+- `/app/frontend/src/pages/projects/IRThermographyForm.js` - Updated image display to handle URL paths
+- `/app/backend/server.py` - Added static file mount for `/ir-thermography-images/`
+
+**Test Results:** 100% success rate (15/15 tests passed) - See `/app/test_reports/iteration_80.json`
+
+---
+
 ### Travel Log Weekly Submission Workflow ✅ COMPLETE (Mar 4, 2026)
 **Location:** My Workspace → Travel Log (`/employee/travel-log`)
 
