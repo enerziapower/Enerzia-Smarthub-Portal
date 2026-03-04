@@ -215,7 +215,7 @@ const SalesDashboard = () => {
             {todaysFollowups.slice(0, 6).map((followup) => (
               <div 
                 key={followup.id} 
-                onClick={() => navigate(`/sales/lead-management/followup/${followup.id}`)}
+                onClick={() => navigate(`/sales/lead-management/followups/${followup.id}`)}
                 className="p-4 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors border border-slate-100"
               >
                 <div className="flex items-start justify-between mb-2">
