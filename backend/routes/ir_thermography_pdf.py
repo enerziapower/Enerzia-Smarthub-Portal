@@ -1585,69 +1585,69 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
             topMargin=50,
             bottomMargin=50
         )
-            
-            back_cover_elements = []
-            width, height = A4
-            
-            # Add spacer to position content
-            back_cover_elements.append(Spacer(1, 180))
-            
-            # Company Logo - centered
-            logo_path = "/app/backend/assets/enerzia_logo.jpg"
-            try:
-                if os.path.exists(logo_path):
-                    logo = Image(logo_path, width=200, height=80)
-                    logo_table = Table([[logo]], colWidths=[515])
-                    logo_table.setStyle(TableStyle([
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ]))
-                    back_cover_elements.append(logo_table)
-                    back_cover_elements.append(Spacer(1, 40))
-            except Exception as e:
-                print(f"Error adding logo to back cover: {e}")
-            
-            # Contact Us Header
-            contact_header_style = ParagraphStyle(
-                'ContactHeader',
-                fontSize=18,
-                fontName='Helvetica-Bold',
-                textColor=colors.HexColor('#1e3a5f'),
-                alignment=1,  # Center
-                spaceAfter=20
-            )
-            back_cover_elements.append(Paragraph("Contact Us", contact_header_style))
-            back_cover_elements.append(Spacer(1, 15))
-            
-            # Company Name
-            company_style = ParagraphStyle(
-                'CompanyName',
-                fontSize=16,
-                fontName='Helvetica-Bold',
-                textColor=colors.HexColor('#1e3a5f'),
-                alignment=1,  # Center
-                spaceAfter=10
-            )
-            back_cover_elements.append(Paragraph("Enerzia Power Solutions", company_style))
-            
-            # Company Address
-            address_style = ParagraphStyle(
-                'Address',
-                fontSize=11,
-                fontName='Helvetica',
-                textColor=colors.HexColor('#333333'),
-                alignment=1,  # Center
-                spaceAfter=5,
-                leading=16
-            )
-            back_cover_elements.append(Paragraph(
-                "No.9, Akshaya, Sundaresan Nagar,<br/>ELumalai Chettiar Road, Maduravoyal,<br/>Chennai, Tamil Nadu, Pincode- 600095",
-                address_style
-            ))
-            back_cover_elements.append(Spacer(1, 25))
-            
-            # Contact Details Style
-            contact_style = ParagraphStyle(
+        
+        back_cover_elements = []
+        width, height = A4
+        
+        # Add spacer to position content
+        back_cover_elements.append(Spacer(1, 180))
+        
+        # Company Logo - centered
+        logo_path = "/app/backend/assets/enerzia_logo.jpg"
+        try:
+            if os.path.exists(logo_path):
+                logo = Image(logo_path, width=200, height=80)
+                logo_table = Table([[logo]], colWidths=[515])
+                logo_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                back_cover_elements.append(logo_table)
+                back_cover_elements.append(Spacer(1, 40))
+        except Exception as e:
+            print(f"Error adding logo to back cover: {e}")
+        
+        # Contact Us Header
+        contact_header_style = ParagraphStyle(
+            'ContactHeader',
+            fontSize=18,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#1e3a5f'),
+            alignment=1,  # Center
+            spaceAfter=20
+        )
+        back_cover_elements.append(Paragraph("Contact Us", contact_header_style))
+        back_cover_elements.append(Spacer(1, 15))
+        
+        # Company Name
+        company_style = ParagraphStyle(
+            'CompanyName',
+            fontSize=16,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#1e3a5f'),
+            alignment=1,  # Center
+            spaceAfter=10
+        )
+        back_cover_elements.append(Paragraph("Enerzia Power Solutions", company_style))
+        
+        # Company Address
+        address_style = ParagraphStyle(
+            'Address',
+            fontSize=11,
+            fontName='Helvetica',
+            textColor=colors.HexColor('#333333'),
+            alignment=1,  # Center
+            spaceAfter=5,
+            leading=16
+        )
+        back_cover_elements.append(Paragraph(
+            "No.9, Akshaya, Sundaresan Nagar,<br/>ELumalai Chettiar Road, Maduravoyal,<br/>Chennai, Tamil Nadu, Pincode- 600095",
+            address_style
+        ))
+        back_cover_elements.append(Spacer(1, 25))
+        
+        # Contact Details Style
+        contact_style = ParagraphStyle(
                 'ContactDetails',
                 fontSize=12,
                 fontName='Helvetica',
