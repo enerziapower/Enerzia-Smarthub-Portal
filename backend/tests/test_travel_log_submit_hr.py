@@ -156,7 +156,7 @@ class TestTravelLogSubmitToHR:
         assert response.status_code == 200, f"Submit to HR failed: {response.text}"
         data = response.json()
         assert data["submitted_count"] == 1
-        assert "submitted to HR" in data["message"].lower()
+        assert "submitted to hr" in data["message"].lower()
         
         print(f"✓ Submitted trip to HR: {data['message']}")
         
