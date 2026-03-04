@@ -1411,9 +1411,21 @@ def create_individual_inspection_pages(report, styles):
         thermographer = doc_details.get('thermography_inspection_by', '')
         item_comments = item.get('comments', '') or ''  # Get comments from inspection item
         
+        # Create a paragraph style for comments to enable proper text wrapping
+        comments_style = ParagraphStyle(
+            'CommentsCell',
+            fontSize=9,
+            leading=12,
+            wordWrap='CJK',
+            splitLongWords=True
+        )
+        
+        # Wrap comments in Paragraph for proper text wrapping
+        comments_paragraph = Paragraph(str(item_comments) if item_comments else '', comments_style)
+        
         analysis_footer_data = [
             ['ANALYSED BY', thermographer],
-            ['COMMENTS', item_comments],
+            ['COMMENTS', comments_paragraph],
             ['SIGNATURE', ''],
         ]
         
@@ -1424,10 +1436,11 @@ def create_individual_inspection_pages(report, styles):
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f5f5f5')),  # Light grey like thermal analysis
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Changed to TOP for better paragraph display
             ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
             ('TOPPADDING', (0, 0), (-1, -1), 12),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (1, 1), (1, 1), 8),  # Add right padding for comments cell
         ]))
         elements.append(analysis_footer_table)
         
