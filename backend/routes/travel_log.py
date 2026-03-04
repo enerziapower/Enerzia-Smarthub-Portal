@@ -606,6 +606,61 @@ async def bulk_approve_trips(trip_ids: List[str], approved_by: str):
     return {"message": f"{len(trip_ids)} trips approved"}
 
 
+# ============= BATCH SUBMISSION TO HR =============
+
+class BatchSubmitRequest(BaseModel):
+    trip_ids: List[str]
+
+
+@router.post("/submit-to-hr")
+async def submit_trips_to_hr(request: BatchSubmitRequest):
+    """
+    Submit multiple draft trips to HR for approval.
+    Changes status from 'draft' to 'pending'.
+    """
+    if not request.trip_ids:
+        raise HTTPException(status_code=400, detail="No trip IDs provided")
+    
+    submitted_count = 0
+    errors = []
+    
+    for trip_id in request.trip_ids:
+        try:
+            # Verify trip exists and is in draft status
+            trip = await db.travel_logs.find_one({"_id": ObjectId(trip_id)})
+            
+            if not trip:
+                errors.append(f"Trip {trip_id} not found")
+                continue
+            
+            if trip.get("status") != "draft":
+                errors.append(f"Trip {trip_id} is not in draft status (current: {trip.get('status')})")
+                continue
+            
+            # Update status to pending
+            result = await db.travel_logs.update_one(
+                {"_id": ObjectId(trip_id)},
+                {"$set": {
+                    "status": "pending",
+                    "submitted_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            if result.modified_count > 0:
+                submitted_count += 1
+        except Exception as e:
+            errors.append(f"Error processing trip {trip_id}: {str(e)}")
+    
+    if submitted_count == 0 and errors:
+        raise HTTPException(status_code=400, detail="; ".join(errors))
+    
+    return {
+        "message": f"{submitted_count} trip(s) submitted to HR for approval",
+        "submitted_count": submitted_count,
+        "errors": errors if errors else None
+    }
+
+
 # ============= REPORTS =============
 
 @router.get("/report/user/{user_id}")
