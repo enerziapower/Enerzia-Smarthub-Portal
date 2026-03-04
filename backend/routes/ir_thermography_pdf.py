@@ -1535,32 +1535,32 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
                 # Title
                 title_style = ParagraphStyle(
                     'SectionFTitle',
-                fontSize=24,
-                fontName='Helvetica-Bold',
-                textColor=colors.HexColor('#1e3a5f'),
-                alignment=1,  # Center
-                spaceAfter=30
-            )
-            
-            section_f_elements.append(Paragraph("Statutory Documents", title_style))
-            section_f_elements.append(Paragraph("and Attachments", title_style))
-            
-            # Subtitle
-            subtitle_style = ParagraphStyle(
-                'SectionFSubtitle',
-                fontSize=12,
-                fontName='Helvetica',
-                textColor=colors.HexColor('#666666'),
-                alignment=1,  # Center
-                spaceBefore=30
-            )
-            
-            section_f_elements.append(Spacer(1, 20))
-            section_f_elements.append(Paragraph("The following pages contain calibration certificates", subtitle_style))
-            section_f_elements.append(Paragraph("and other statutory documents.", subtitle_style))
-            
-            # Build Section F page
-            section_f_doc.build(section_f_elements)
+                    fontSize=24,
+                    fontName='Helvetica-Bold',
+                    textColor=colors.HexColor('#1e3a5f'),
+                    alignment=1,  # Center
+                    spaceAfter=30
+                )
+                
+                section_f_elements.append(Paragraph("Statutory Documents", title_style))
+                section_f_elements.append(Paragraph("and Attachments", title_style))
+                
+                # Subtitle
+                subtitle_style = ParagraphStyle(
+                    'SectionFSubtitle',
+                    fontSize=12,
+                    fontName='Helvetica',
+                    textColor=colors.HexColor('#666666'),
+                    alignment=1,  # Center
+                    spaceBefore=30
+                )
+                
+                section_f_elements.append(Spacer(1, 20))
+                section_f_elements.append(Paragraph("The following pages contain calibration certificates", subtitle_style))
+                section_f_elements.append(Paragraph("and other statutory documents.", subtitle_style))
+                
+                # Build Section F page
+                section_f_doc.build(section_f_elements)
             
             # Add Section F title page
             section_f_buffer.seek(0)
