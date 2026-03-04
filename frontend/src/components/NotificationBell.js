@@ -111,10 +111,10 @@ const NotificationBell = () => {
     // Navigate based on notification type and reference
     if (notif.reference_type === 'followup' && notif.reference_id) {
       setIsOpen(false);
-      navigate(`/sales/lead-management/followup/${notif.reference_id}`);
+      navigate(`/sales/lead-management/followups/${notif.reference_id}`);
     } else if (notif.type === 'followup_reminder' || notif.type === 'followup_overdue') {
       setIsOpen(false);
-      navigate('/sales/lead-management');
+      navigate('/sales/lead-management/followups');
     }
   };
 
