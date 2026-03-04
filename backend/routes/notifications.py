@@ -244,7 +244,7 @@ async def generate_followup_reminders(current_user: dict = Depends(require_auth)
     Should be called by a scheduled job daily or on-demand.
     Creates notifications for all Sales department members.
     """
-    from datetime import date, timedelta
+    from datetime import date
     
     today = date.today()
     tomorrow = today + timedelta(days=1)
@@ -257,18 +257,21 @@ async def generate_followup_reminders(current_user: dict = Depends(require_auth)
     created_count = 0
     
     # Get all follow-ups scheduled for tomorrow (reminder 1 day before)
+    # Handle both datetime objects and ISO strings
     upcoming_followups = await db.followups.find({
-        "scheduled_date": {
-            "$gte": tomorrow_start.isoformat() if isinstance(tomorrow_start, datetime) else tomorrow_start,
-            "$lte": tomorrow_end.isoformat() if isinstance(tomorrow_end, datetime) else tomorrow_end
-        },
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "$and": [
+            {"scheduled_date": {"$gte": tomorrow_start}},
+            {"scheduled_date": {"$lte": tomorrow_end}},
+            {"status": {"$in": ["scheduled", "in_progress"]}}
+        ]
     }).to_list(100)
     
     # Get all overdue follow-ups (scheduled before today and not completed)
     overdue_followups = await db.followups.find({
-        "scheduled_date": {"$lt": today_start.isoformat() if isinstance(today_start, datetime) else today_start},
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "$and": [
+            {"scheduled_date": {"$lt": today_start}},
+            {"status": {"$in": ["scheduled", "in_progress"]}}
+        ]
     }).to_list(100)
     
     # Create notifications for upcoming follow-ups
