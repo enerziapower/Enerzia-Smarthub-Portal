@@ -94,8 +94,27 @@ const NotificationBell = () => {
         return <AlertCircle size={16} className="text-orange-500" />;
       case 'status_update':
         return <CheckCheck size={16} className="text-green-500" />;
+      case 'followup_reminder':
+        return <Calendar size={16} className="text-blue-500" />;
+      case 'followup_overdue':
+        return <AlertTriangle size={16} className="text-red-500" />;
       default:
         return <Bell size={16} className="text-slate-500" />;
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    if (!notif.is_read) {
+      await handleMarkRead(notif.id);
+    }
+    
+    // Navigate based on notification type and reference
+    if (notif.reference_type === 'followup' && notif.reference_id) {
+      setIsOpen(false);
+      navigate(`/sales/lead-management/followup/${notif.reference_id}`);
+    } else if (notif.type === 'followup_reminder' || notif.type === 'followup_overdue') {
+      setIsOpen(false);
+      navigate('/sales/lead-management');
     }
   };
 
