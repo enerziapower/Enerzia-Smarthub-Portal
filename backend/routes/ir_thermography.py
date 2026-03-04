@@ -330,7 +330,7 @@ async def get_ir_thermography_report(report_id: str):
 
 @router.post("")
 async def create_ir_thermography_report(report_data: IRThermographyCreate):
-    """Create a new IR Thermography report"""
+    """Create a new IR Thermography report. Images are stored as files to avoid size limits."""
     db = get_db()
     
     # Generate report ID and number
@@ -343,29 +343,9 @@ async def create_ir_thermography_report(report_data: IRThermographyCreate):
     })
     report_no = f"{prefix}/{year}/{count + 1:04d}"
     
-    # Process inspection items - auto-calculate risk categories
-    processed_items = []
-    for item in report_data.inspection_items:
-        item_dict = item.model_dump() if hasattr(item, 'model_dump') else item.dict()
-        
-        # Generate item ID if not provided
-        if not item_dict.get('item_id'):
-            item_dict['item_id'] = f"item_{uuid.uuid4().hex[:8]}"
-        
-        # Calculate Delta T and Risk Category
-        max_temp = item_dict.get('max_temperature')
-        min_temp = item_dict.get('min_temperature')
-        
-        if max_temp is not None and min_temp is not None:
-            delta_t = max_temp - min_temp
-            item_dict['delta_t'] = round(delta_t, 1)
-            
-            risk_info = calculate_risk_category(delta_t)
-            item_dict['risk_category'] = risk_info['category']
-            item_dict['risk_color'] = risk_info['color']
-            item_dict['recommended_action'] = risk_info['action']
-        
-        processed_items.append(item_dict)
+    # Process inspection items - save images as files and calculate risk categories
+    items_to_process = [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in report_data.inspection_items]
+    processed_items = process_inspection_items_images(items_to_process, report_id)
     
     # Calculate summary
     summary = calculate_summary(processed_items)
