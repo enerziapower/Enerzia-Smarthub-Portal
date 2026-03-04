@@ -109,7 +109,7 @@ class TestTravelLogSubmitToHR:
     
     def test_03_complete_trip_as_draft(self):
         """Test completing a trip with draft status"""
-        trip_id = getattr(pytest, 'trip_id', None)
+        trip_id = TestTravelLogSubmitToHR.shared_trip_id
         if not trip_id:
             pytest.skip("No trip_id from previous test")
         
@@ -121,7 +121,7 @@ class TestTravelLogSubmitToHR:
             "status": "draft"
         }
         
-        response = self.session.put(
+        response = TestTravelLogSubmitToHR.session.put(
             f"{BASE_URL}/api/travel-log/trip/{trip_id}/complete",
             data=form_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -139,7 +139,7 @@ class TestTravelLogSubmitToHR:
         print(f"✓ Completed trip as draft: distance={trip['distance']}km, allowance={trip['allowance']}")
         
         # Store for next test
-        pytest.draft_trip_id = trip_id
+        TestTravelLogSubmitToHR.shared_draft_trip_id = trip_id
     
     def test_04_submit_to_hr_success(self):
         """Test submitting draft trips to HR"""
