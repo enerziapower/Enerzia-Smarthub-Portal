@@ -1574,17 +1574,17 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
                 writer.add_page(page)
         
         # =====================================================
-            # CREATE BACK COVER PAGE (only when not embedding in AMC)
-            # =====================================================
-            back_cover_buffer = BytesIO()
-            back_cover_doc = SimpleDocTemplate(
-                back_cover_buffer,
-                pagesize=A4,
-                rightMargin=30,
-                leftMargin=30,
-                topMargin=50,
-                bottomMargin=50
-            )
+        # CREATE BACK COVER PAGE (only when not embedding in AMC)
+        # =====================================================
+        back_cover_buffer = BytesIO()
+        back_cover_doc = SimpleDocTemplate(
+            back_cover_buffer,
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=50,
+            bottomMargin=50
+        )
             
             back_cover_elements = []
             width, height = A4
