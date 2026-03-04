@@ -783,7 +783,9 @@ const IRThermographyForm = () => {
                               {item.original_image ? (
                                 <div className="relative">
                                   <img 
-                                    src={item.original_image} 
+                                    src={item.original_image.startsWith('data:') || item.original_image.startsWith('http') 
+                                      ? item.original_image 
+                                      : `${API}${item.original_image}`} 
                                     alt="Original" 
                                     className="max-h-40 mx-auto rounded"
                                   />
@@ -819,7 +821,9 @@ const IRThermographyForm = () => {
                               {item.thermal_image ? (
                                 <div className="relative">
                                   <img 
-                                    src={item.thermal_image} 
+                                    src={item.thermal_image.startsWith('data:') || item.thermal_image.startsWith('http') 
+                                      ? item.thermal_image 
+                                      : `${API}${item.thermal_image}`} 
                                     alt="Thermal" 
                                     className="max-h-40 mx-auto rounded"
                                   />
