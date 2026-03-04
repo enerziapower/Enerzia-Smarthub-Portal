@@ -2,6 +2,31 @@
 
 ## Latest Updates
 
+### Follow-up Reminders & Notifications ✅ COMPLETE (Mar 4, 2026)
+**Location:** Sales → Dashboard, Notification Bell (Header)
+
+| Feature | Description |
+|---------|-------------|
+| **In-App Notifications** | Bell icon in header shows unread count badge, dropdown displays recent notifications |
+| **Tomorrow's Reminders** | System generates notifications 1 day before scheduled follow-ups |
+| **Overdue Alerts** | Notifications created for follow-ups past their scheduled date |
+| **All Sales Team** | Notifications sent to SALES department (all members see them) |
+| **Today's Follow-ups Widget** | Dashboard widget showing scheduled follow-ups for today with priority, time, customer, type |
+| **Quick Navigation** | Click notification or follow-up card to jump directly to follow-up details |
+
+**New Endpoints:**
+- `POST /api/notifications/generate-followup-reminders` - Creates notifications for tomorrow & overdue follow-ups
+- `GET /api/notifications/todays-followups` - Returns today's follow-ups + overdue/upcoming counts
+
+**Files Modified:**
+- `/app/backend/routes/notifications.py` - Added reminder generation and today's follow-ups endpoints
+- `/app/frontend/src/components/NotificationBell.js` - Added follow-up notification icons & navigation
+- `/app/frontend/src/pages/sales/SalesDashboard.js` - Added Today's Follow-ups widget
+
+**Test Results:** 100% success rate (13/13 backend tests, all frontend flows verified) - See `/app/test_reports/iteration_81.json`
+
+---
+
 ### IR Thermography File-Based Image Storage Fix ✅ COMPLETE (Mar 4, 2026)
 **Location:** Projects → IR Thermography Reports
 
