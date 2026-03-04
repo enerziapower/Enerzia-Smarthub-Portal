@@ -1267,29 +1267,40 @@ def create_individual_inspection_pages(report, styles):
         
         img_cells = []
         
-        # Original image
-        if orig_img and orig_img.startswith('data:image'):
+        # Helper function to load image from base64 or file path
+        def load_image_from_source(img_source, width=230, height=170):
+            """Load image from base64 string or file path"""
+            if not img_source:
+                return None
+            
             try:
-                img_data = orig_img.split(',')[1]
-                img_bytes = base64.b64decode(img_data)
-                img_io = BytesIO(img_bytes)
-                img = Image(img_io, width=230, height=170)
-                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), img])
-            except Exception:
-                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), "Image not available"])
+                if img_source.startswith('data:image'):
+                    # Base64 encoded image
+                    img_data = img_source.split(',')[1]
+                    img_bytes = base64.b64decode(img_data)
+                    img_io = BytesIO(img_bytes)
+                    return Image(img_io, width=width, height=height)
+                elif img_source.startswith('/ir-thermography-images/'):
+                    # File path - load from disk
+                    file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
+                    if os.path.exists(file_path):
+                        return Image(file_path, width=width, height=height)
+                return None
+            except Exception as e:
+                print(f"Error loading image: {e}")
+                return None
+        
+        # Original image
+        orig_loaded = load_image_from_source(orig_img)
+        if orig_loaded:
+            img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), orig_loaded])
         else:
             img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), "No image"])
         
         # Thermal image
-        if thermal_img and thermal_img.startswith('data:image'):
-            try:
-                img_data = thermal_img.split(',')[1]
-                img_bytes = base64.b64decode(img_data)
-                img_io = BytesIO(img_bytes)
-                img = Image(img_io, width=230, height=170)
-                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), img])
-            except Exception:
-                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), "Image not available"])
+        thermal_loaded = load_image_from_source(thermal_img)
+        if thermal_loaded:
+            img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), thermal_loaded])
         else:
             img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), "No image"])
         
