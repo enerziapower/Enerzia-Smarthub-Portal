@@ -1074,7 +1074,7 @@ const TravelLog = () => {
               {/* End Odometer Photo with OCR */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">End Odometer Photo</label>
-                <input type="file" ref={endPhotoRef} accept="image/*" capture="environment" onChange={handleEndPhotoChange} className="hidden" />
+                <input type="file" ref={endPhotoRef} accept="image/*" onChange={handleEndPhotoChange} className="hidden" />
                 <button
                   type="button"
                   onClick={() => endPhotoRef.current?.click()}
