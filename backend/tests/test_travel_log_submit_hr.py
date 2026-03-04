@@ -86,7 +86,7 @@ class TestTravelLogSubmitToHR:
             "notes": ""
         }
         
-        response = self.session.post(
+        response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/trip",
             data=form_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -100,12 +100,12 @@ class TestTravelLogSubmitToHR:
         assert trip["from_location"] == "TEST_Office"
         assert float(trip["start_km"]) == 45000
         
-        self.created_trip_ids.append(trip["id"])
+        TestTravelLogSubmitToHR.created_trip_ids.append(trip["id"])
         print(f"✓ Created in_progress trip: {trip['id']}")
         
         # Store for next test
-        pytest.trip_id = trip["id"]
-        pytest.user_id = user_id
+        TestTravelLogSubmitToHR.shared_trip_id = trip["id"]
+        TestTravelLogSubmitToHR.shared_user_id = user_id
     
     def test_03_complete_trip_as_draft(self):
         """Test completing a trip with draft status"""
