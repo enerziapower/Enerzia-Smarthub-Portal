@@ -341,14 +341,14 @@ class TestTravelLogSubmitToHR:
                 "notes": ""
             }
             
-            create_response = self.session.post(
+            create_response = TestTravelLogSubmitToHR.session.post(
                 f"{BASE_URL}/api/travel-log/trip",
                 data=create_data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"}
             )
             assert create_response.status_code == 200
             trip_id = create_response.json()["trip"]["id"]
-            self.created_trip_ids.append(trip_id)
+            TestTravelLogSubmitToHR.created_trip_ids.append(trip_id)
             
             # Complete as draft
             complete_data = {
@@ -358,7 +358,7 @@ class TestTravelLogSubmitToHR:
                 "status": "draft"
             }
             
-            complete_response = self.session.put(
+            complete_response = TestTravelLogSubmitToHR.session.put(
                 f"{BASE_URL}/api/travel-log/trip/{trip_id}/complete",
                 data=complete_data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -369,7 +369,7 @@ class TestTravelLogSubmitToHR:
         print(f"  Created {len(trip_ids)} draft trips")
         
         # Submit all at once
-        submit_response = self.session.post(
+        submit_response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": trip_ids}
         )
