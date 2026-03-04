@@ -264,7 +264,7 @@ class TestTravelLogSubmitToHR:
             "notes": ""
         }
         
-        create_response = self.session.post(
+        create_response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/trip",
             data=create_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -272,7 +272,7 @@ class TestTravelLogSubmitToHR:
         assert create_response.status_code == 200
         trip = create_response.json()["trip"]
         trip_id = trip["id"]
-        self.created_trip_ids.append(trip_id)
+        TestTravelLogSubmitToHR.created_trip_ids.append(trip_id)
         assert trip["status"] == "in_progress"
         print(f"  Step 1: Created in_progress trip {trip_id}")
         
@@ -284,7 +284,7 @@ class TestTravelLogSubmitToHR:
             "status": "draft"
         }
         
-        complete_response = self.session.put(
+        complete_response = TestTravelLogSubmitToHR.session.put(
             f"{BASE_URL}/api/travel-log/trip/{trip_id}/complete",
             data=complete_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -296,7 +296,7 @@ class TestTravelLogSubmitToHR:
         print(f"  Step 2: Completed trip as draft, distance={completed_trip['distance']}km")
         
         # Step 3: Submit to HR
-        submit_response = self.session.post(
+        submit_response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": [trip_id]}
         )
@@ -306,7 +306,7 @@ class TestTravelLogSubmitToHR:
         print(f"  Step 3: Submitted to HR - {submit_data['message']}")
         
         # Verify final status
-        trips_response = self.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
+        trips_response = TestTravelLogSubmitToHR.session.get(f"{BASE_URL}/api/travel-log/my-trips/{user_id}")
         assert trips_response.status_code == 200
         trips = trips_response.json().get("trips", [])
         final_trip = next((t for t in trips if t["id"] == trip_id), None)
