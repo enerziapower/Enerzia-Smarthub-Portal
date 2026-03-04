@@ -27,6 +27,8 @@ class NotificationType(str, Enum):
     TASK_ASSIGNMENT = "task_assignment"
     APPROVAL_NEEDED = "approval_needed"
     STATUS_UPDATE = "status_update"
+    FOLLOWUP_REMINDER = "followup_reminder"
+    FOLLOWUP_OVERDUE = "followup_overdue"
 
 
 class Notification(BaseModel):
