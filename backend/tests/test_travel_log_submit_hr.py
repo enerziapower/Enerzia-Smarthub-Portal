@@ -173,7 +173,7 @@ class TestTravelLogSubmitToHR:
     
     def test_05_submit_to_hr_empty_list(self):
         """Test that empty trip_ids list is rejected"""
-        response = self.session.post(
+        response = TestTravelLogSubmitToHR.session.post(
             f"{BASE_URL}/api/travel-log/submit-to-hr",
             json={"trip_ids": []}
         )
