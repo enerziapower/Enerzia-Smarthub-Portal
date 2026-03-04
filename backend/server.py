@@ -3718,7 +3718,11 @@ app.include_router(api_router)
 # Mount static files for uploads (photos, documents)
 UPLOADS_DIR.mkdir(exist_ok=True)
 (UPLOADS_DIR / "team_photos").mkdir(exist_ok=True)
+(UPLOADS_DIR / "ir-thermography").mkdir(exist_ok=True)
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
+# Mount IR thermography images directory
+app.mount("/ir-thermography-images", StaticFiles(directory="/app/uploads/ir-thermography"), name="ir-images")
 
 app.add_middleware(
     CORSMiddleware,
