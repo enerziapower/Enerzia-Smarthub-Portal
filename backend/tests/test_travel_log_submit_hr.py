@@ -55,7 +55,7 @@ class TestTravelLogSubmitToHR:
     
     def test_01_api_health_check(self):
         """Test that travel-log API is accessible"""
-        response = self.session.get(f"{BASE_URL}/api/travel-log/rates")
+        response = TestTravelLogSubmitToHR.session.get(f"{BASE_URL}/api/travel-log/rates")
         assert response.status_code == 200, f"Travel log rates endpoint failed: {response.text}"
         data = response.json()
         assert "two_wheeler_rate" in data
