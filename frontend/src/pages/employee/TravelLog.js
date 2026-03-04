@@ -1055,17 +1055,13 @@ const TravelLog = () => {
                 )}
               </div>
 
-              {/* Calculated Distance & Allowance */}
+              {/* Calculated Distance */}
               {endTripData.end_km && (
-                <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-500">Distance</div>
-                    <div className="text-xl font-bold text-slate-900">{calculateDistance().toFixed(1)} km</div>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400" />
-                  <div className="text-right">
-                    <div className="text-sm text-slate-500">Allowance</div>
-                    <div className="text-xl font-bold text-emerald-600">₹{calculateAllowance()}</div>
+                <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-center gap-3">
+                  <MapPin className="w-6 h-6 text-blue-600" />
+                  <div className="text-center">
+                    <div className="text-sm text-blue-600">Trip Distance</div>
+                    <div className="text-2xl font-bold text-blue-700">{calculateDistance().toFixed(1)} km</div>
                   </div>
                 </div>
               )}
