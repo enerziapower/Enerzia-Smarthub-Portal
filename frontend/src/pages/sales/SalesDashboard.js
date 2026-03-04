@@ -166,6 +166,109 @@ const SalesDashboard = () => {
         ))}
       </div>
 
+      {/* Today's Follow-ups Widget */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6" data-testid="todays-followups-widget">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Today's Follow-ups</h3>
+              <p className="text-sm text-slate-500">{new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {followupStats.overdue_count > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-full">
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-medium text-red-700">{followupStats.overdue_count} Overdue</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium text-blue-700">{followupStats.upcoming_week_count} This Week</span>
+            </div>
+            <Link 
+              to="/sales/lead-management" 
+              className="text-sm text-blue-600 hover:underline font-medium"
+            >
+              View All
+            </Link>
+          </div>
+        </div>
+
+        {todaysFollowups.length === 0 ? (
+          <div className="text-center py-8 bg-slate-50 rounded-lg">
+            <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500">No follow-ups scheduled for today</p>
+            <Link 
+              to="/sales/lead-management/new" 
+              className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Schedule Follow-up
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {todaysFollowups.slice(0, 6).map((followup) => (
+              <div 
+                key={followup.id} 
+                onClick={() => navigate(`/sales/lead-management/followup/${followup.id}`)}
+                className="p-4 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors border border-slate-100"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                    followup.priority === 'high' ? 'bg-red-100 text-red-700' :
+                    followup.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {followup.priority}
+                  </span>
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {followup.scheduled_time || 'No time set'}
+                  </span>
+                </div>
+                <h4 className="font-medium text-slate-900 text-sm mb-1 truncate">{followup.title}</h4>
+                <p className="text-xs text-slate-600 mb-2 flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {followup.customer_name || followup.lead_name || 'Unknown'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    followup.followup_type === 'site_visit' ? 'bg-purple-100 text-purple-700' :
+                    followup.followup_type === 'cold_call' ? 'bg-blue-100 text-blue-700' :
+                    followup.followup_type === 'call_back' ? 'bg-orange-100 text-orange-700' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>
+                    {followup.followup_type?.replace('_', ' ') || 'general'}
+                  </span>
+                  {followup.location && (
+                    <span className="text-xs text-slate-400 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3" />
+                      {followup.location}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {todaysFollowups.length > 6 && (
+          <div className="mt-4 text-center">
+            <Link 
+              to="/sales/lead-management" 
+              className="text-sm text-blue-600 hover:underline"
+            >
+              +{todaysFollowups.length - 6} more follow-ups today
+            </Link>
+          </div>
+        )}
+      </div>
+
       {/* Quick Actions & Sales Pipeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
