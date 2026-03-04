@@ -397,29 +397,10 @@ async def update_ir_thermography_report(report_id: str, report_data: IRThermogra
     if report_data.status:
         update_data["status"] = report_data.status
     
-    # Process inspection items if provided
+    # Process inspection items if provided - save images as files
     if report_data.inspection_items is not None:
-        processed_items = []
-        for item in report_data.inspection_items:
-            item_dict = item.model_dump() if hasattr(item, 'model_dump') else item.dict()
-            
-            if not item_dict.get('item_id'):
-                item_dict['item_id'] = f"item_{uuid.uuid4().hex[:8]}"
-            
-            # Calculate Delta T and Risk Category
-            max_temp = item_dict.get('max_temperature')
-            min_temp = item_dict.get('min_temperature')
-            
-            if max_temp is not None and min_temp is not None:
-                delta_t = max_temp - min_temp
-                item_dict['delta_t'] = round(delta_t, 1)
-                
-                risk_info = calculate_risk_category(delta_t)
-                item_dict['risk_category'] = risk_info['category']
-                item_dict['risk_color'] = risk_info['color']
-                item_dict['recommended_action'] = risk_info['action']
-            
-            processed_items.append(item_dict)
+        items_to_process = [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in report_data.inspection_items]
+        processed_items = process_inspection_items_images(items_to_process, report_id)
         
         update_data["inspection_items"] = processed_items
         update_data["summary"] = calculate_summary(processed_items)
