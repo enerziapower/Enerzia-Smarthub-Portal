@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, Users, FileText, ShoppingCart, Target, 
   DollarSign, Calendar, ArrowUpRight, ArrowDownRight, RefreshCw,
-  ArrowRight, Plus, CheckCircle, Clock, AlertCircle
+  ArrowRight, Plus, CheckCircle, Clock, AlertCircle, AlertTriangle,
+  Phone, MapPin, User
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const SalesDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_enquiries: 0,
     new_enquiries: 0,
@@ -22,6 +24,8 @@ const SalesDashboard = () => {
   const [recentEnquiries, setRecentEnquiries] = useState([]);
   const [recentQuotations, setRecentQuotations] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [todaysFollowups, setTodaysFollowups] = useState([]);
+  const [followupStats, setFollowupStats] = useState({ overdue_count: 0, upcoming_week_count: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
