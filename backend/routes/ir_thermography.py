@@ -114,6 +114,86 @@ def get_db():
     return db
 
 
+def save_base64_image(base64_string: str, report_id: str, item_id: str, image_type: str) -> str:
+    """
+    Save a base64 encoded image to file and return the file path.
+    Returns URL path like /ir-thermography-images/{report_id}/{item_id}_{type}.jpg
+    """
+    if not base64_string or not base64_string.startswith('data:'):
+        return base64_string  # Return as-is if not base64 or already a URL
+    
+    try:
+        # Parse the base64 string
+        header, data = base64_string.split(',', 1)
+        
+        # Determine file extension from header
+        if 'png' in header:
+            ext = 'png'
+        elif 'gif' in header:
+            ext = 'gif'
+        else:
+            ext = 'jpg'
+        
+        # Create report directory
+        report_dir = os.path.join(IR_IMAGES_DIR, report_id)
+        os.makedirs(report_dir, exist_ok=True)
+        
+        # Generate filename
+        filename = f"{item_id}_{image_type}.{ext}"
+        filepath = os.path.join(report_dir, filename)
+        
+        # Decode and save
+        image_data = base64.b64decode(data)
+        with open(filepath, 'wb') as f:
+            f.write(image_data)
+        
+        # Return URL path (will be served by the API)
+        return f"/ir-thermography-images/{report_id}/{filename}"
+    except Exception as e:
+        print(f"Error saving image: {e}")
+        return None
+
+
+def process_inspection_items_images(items: list, report_id: str) -> list:
+    """
+    Process inspection items and save any base64 images as files.
+    Returns items with file URLs instead of base64 strings.
+    """
+    processed = []
+    for item in items:
+        item_dict = dict(item) if isinstance(item, dict) else (item.model_dump() if hasattr(item, 'model_dump') else item.dict())
+        item_id = item_dict.get('item_id') or f"item_{uuid.uuid4().hex[:8]}"
+        item_dict['item_id'] = item_id
+        
+        # Convert base64 images to file URLs
+        if item_dict.get('original_image') and item_dict['original_image'].startswith('data:'):
+            item_dict['original_image'] = save_base64_image(
+                item_dict['original_image'], report_id, item_id, 'original'
+            )
+        
+        if item_dict.get('thermal_image') and item_dict['thermal_image'].startswith('data:'):
+            item_dict['thermal_image'] = save_base64_image(
+                item_dict['thermal_image'], report_id, item_id, 'thermal'
+            )
+        
+        # Calculate Delta T and Risk Category
+        max_temp = item_dict.get('max_temperature')
+        min_temp = item_dict.get('min_temperature')
+        
+        if max_temp is not None and min_temp is not None:
+            delta_t = max_temp - min_temp
+            item_dict['delta_t'] = round(delta_t, 1)
+            
+            risk_info = calculate_risk_category(delta_t)
+            item_dict['risk_category'] = risk_info['category']
+            item_dict['risk_color'] = risk_info['color']
+            item_dict['recommended_action'] = risk_info['action']
+        
+        processed.append(item_dict)
+    
+    return processed
+
+
 def calculate_summary(inspection_items: list) -> dict:
     """Calculate executive summary statistics"""
     total_items = len(inspection_items)
