@@ -1,9 +1,10 @@
 """
 IR Thermography Report Routes
 Handles Pre-Thermography and Post-Thermography inspection reports
+Images are stored as files to avoid MongoDB's 16MB document size limit
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Any
 from datetime import datetime, timezone
@@ -11,9 +12,14 @@ from bson import ObjectId
 import uuid
 import os
 import base64
+import shutil
 from io import BytesIO
 
 router = APIRouter()
+
+# Directory for storing IR thermography images
+IR_IMAGES_DIR = "/app/uploads/ir-thermography"
+os.makedirs(IR_IMAGES_DIR, exist_ok=True)
 
 # Updated Risk Classification based on Delta T
 NETA_RISK_CATEGORIES = {
