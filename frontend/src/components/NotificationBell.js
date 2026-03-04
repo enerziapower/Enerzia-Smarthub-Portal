@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCheck, Clock, CreditCard, FileText, AlertCircle } from 'lucide-react';
+import { Bell, X, CheckCheck, Clock, CreditCard, FileText, AlertCircle, Calendar, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { notificationsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
