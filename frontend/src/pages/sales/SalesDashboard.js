@@ -65,6 +65,23 @@ const SalesDashboard = () => {
         const ordData = await ordRes.json();
         setRecentOrders(ordData.orders || []);
       }
+
+      // Fetch today's follow-ups
+      const followupRes = await fetch(`${API_URL}/api/notifications/todays-followups`, { headers });
+      if (followupRes.ok) {
+        const followupData = await followupRes.json();
+        setTodaysFollowups(followupData.todays_followups || []);
+        setFollowupStats({
+          overdue_count: followupData.overdue_count || 0,
+          upcoming_week_count: followupData.upcoming_week_count || 0
+        });
+      }
+
+      // Generate follow-up reminders (trigger daily check)
+      await fetch(`${API_URL}/api/notifications/generate-followup-reminders`, { 
+        method: 'POST',
+        headers 
+      });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
