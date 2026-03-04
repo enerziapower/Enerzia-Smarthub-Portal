@@ -293,11 +293,8 @@ const TravelLog = () => {
       formData.append('to_location', endTripData.to_location);
       formData.append('end_km', endTripData.end_km);
       formData.append('notes', endTripData.notes || '');
-      formData.append('status', 'pending'); // Change to pending for approval
+      formData.append('status', 'draft'); // Save as draft, employee will submit to HR later
       
-      if (endTripData.start_photo) {
-        formData.append('start_photo', endTripData.start_photo);
-      }
       if (endTripData.end_photo) {
         formData.append('end_photo', endTripData.end_photo);
       }
@@ -309,14 +306,13 @@ const TravelLog = () => {
       });
 
       if (res.ok) {
-        toast.success('✅ Trip completed and submitted for approval!');
+        toast.success('✅ Trip completed! Submit to HR when ready.');
         setShowEndTrip(false);
         setSelectedActiveTrip(null);
         setEndTripData({
           to_location: '',
           end_km: '',
           notes: '',
-          start_photo: null,
           end_photo: null
         });
         fetchActiveTrips();
