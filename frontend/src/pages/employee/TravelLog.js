@@ -82,9 +82,12 @@ const TravelLog = () => {
     try {
       const res = await fetch(`${API_URL}/api/travel-log/my-trips/${user.id}?month=${currentMonth}&year=${currentYear}`);
       const data = await res.json();
-      // Filter out active (in_progress) trips
-      const completedTrips = (data.trips || []).filter(t => t.status !== 'in_progress');
-      setTrips(completedTrips);
+      // Separate trips by status
+      const allTrips = data.trips || [];
+      const drafts = allTrips.filter(t => t.status === 'draft'); // Not yet submitted to HR
+      const submitted = allTrips.filter(t => t.status !== 'in_progress' && t.status !== 'draft');
+      setDraftTrips(drafts);
+      setTrips(submitted);
       setSummary(data.summary || {});
     } catch (error) {
       console.error('Error fetching trips:', error);
@@ -112,6 +115,56 @@ const TravelLog = () => {
       setRates(data);
     } catch (error) {
       console.error('Error fetching rates:', error);
+    }
+  };
+
+  // Submit selected draft trips to HR for approval
+  const handleSubmitToHR = async () => {
+    if (selectedDraftTrips.length === 0) {
+      toast.error('Please select trips to submit');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/travel-log/submit-to-hr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trip_ids: selectedDraftTrips })
+      });
+      
+      if (res.ok) {
+        toast.success(`${selectedDraftTrips.length} trip(s) submitted to HR for approval!`);
+        setShowSubmitWeekly(false);
+        setSelectedDraftTrips([]);
+        fetchTrips();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || 'Failed to submit trips');
+      }
+    } catch (error) {
+      console.error('Error submitting trips:', error);
+      toast.error('Failed to submit trips');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Toggle trip selection for batch submission
+  const toggleTripSelection = (tripId) => {
+    setSelectedDraftTrips(prev => 
+      prev.includes(tripId) 
+        ? prev.filter(id => id !== tripId)
+        : [...prev, tripId]
+    );
+  };
+
+  // Select all draft trips
+  const selectAllDrafts = () => {
+    if (selectedDraftTrips.length === draftTrips.length) {
+      setSelectedDraftTrips([]);
+    } else {
+      setSelectedDraftTrips(draftTrips.map(t => t.id));
     }
   };
 
