@@ -233,3 +233,150 @@ async def create_department_notification(
     })
     
     return notif.id
+
+
+# ==================== FOLLOW-UP REMINDER SYSTEM ====================
+
+@router.post("/generate-followup-reminders")
+async def generate_followup_reminders(current_user: dict = Depends(require_auth)):
+    """
+    Generate notifications for upcoming (tomorrow) and overdue follow-ups.
+    Should be called by a scheduled job daily or on-demand.
+    Creates notifications for all Sales department members.
+    """
+    from datetime import date, timedelta
+    
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    
+    # Convert to datetime for comparison
+    today_start = datetime.combine(today, datetime.min.time())
+    tomorrow_start = datetime.combine(tomorrow, datetime.min.time())
+    tomorrow_end = datetime.combine(tomorrow, datetime.max.time())
+    
+    created_count = 0
+    
+    # Get all follow-ups scheduled for tomorrow (reminder 1 day before)
+    upcoming_followups = await db.followups.find({
+        "scheduled_date": {
+            "$gte": tomorrow_start.isoformat() if isinstance(tomorrow_start, datetime) else tomorrow_start,
+            "$lte": tomorrow_end.isoformat() if isinstance(tomorrow_end, datetime) else tomorrow_end
+        },
+        "status": {"$in": ["scheduled", "in_progress"]}
+    }).to_list(100)
+    
+    # Get all overdue follow-ups (scheduled before today and not completed)
+    overdue_followups = await db.followups.find({
+        "scheduled_date": {"$lt": today_start.isoformat() if isinstance(today_start, datetime) else today_start},
+        "status": {"$in": ["scheduled", "in_progress"]}
+    }).to_list(100)
+    
+    # Create notifications for upcoming follow-ups
+    for followup in upcoming_followups:
+        # Check if notification already exists for this follow-up today
+        existing = await db.notifications.find_one({
+            "reference_id": followup.get("id"),
+            "type": "followup_reminder",
+            "created_at": {"$regex": f"^{today.isoformat()}"}
+        })
+        
+        if not existing:
+            customer_name = followup.get("customer_name") or followup.get("lead_name") or "Unknown"
+            scheduled_time = followup.get("scheduled_time") or "Not specified"
+            
+            await create_department_notification(
+                target_department="Sales",
+                notif_type="followup_reminder",
+                title=f"Follow-up Tomorrow: {followup.get('title', 'Untitled')}",
+                message=f"{customer_name} - {followup.get('followup_type', 'general').replace('_', ' ').title()} at {scheduled_time}",
+                from_department="System",
+                reference_id=followup.get("id"),
+                reference_type="followup",
+                created_by="System"
+            )
+            created_count += 1
+    
+    # Create notifications for overdue follow-ups
+    for followup in overdue_followups:
+        # Check if notification already exists for this follow-up today
+        existing = await db.notifications.find_one({
+            "reference_id": followup.get("id"),
+            "type": "followup_overdue",
+            "created_at": {"$regex": f"^{today.isoformat()}"}
+        })
+        
+        if not existing:
+            customer_name = followup.get("customer_name") or followup.get("lead_name") or "Unknown"
+            scheduled_date = followup.get("scheduled_date", "")
+            if scheduled_date:
+                try:
+                    if isinstance(scheduled_date, str):
+                        scheduled_date = datetime.fromisoformat(scheduled_date.replace('Z', '+00:00')).strftime('%b %d')
+                    else:
+                        scheduled_date = scheduled_date.strftime('%b %d')
+                except:
+                    scheduled_date = "Past date"
+            
+            await create_department_notification(
+                target_department="Sales",
+                notif_type="followup_overdue",
+                title=f"Overdue: {followup.get('title', 'Untitled')}",
+                message=f"{customer_name} - Was scheduled for {scheduled_date}",
+                from_department="System",
+                reference_id=followup.get("id"),
+                reference_type="followup",
+                created_by="System"
+            )
+            created_count += 1
+    
+    return {
+        "message": f"Generated {created_count} follow-up notifications",
+        "upcoming_count": len(upcoming_followups),
+        "overdue_count": len(overdue_followups),
+        "notifications_created": created_count
+    }
+
+
+@router.get("/todays-followups")
+async def get_todays_followups(current_user: dict = Depends(require_auth)):
+    """
+    Get all follow-ups scheduled for today.
+    Used for the dashboard widget.
+    """
+    from datetime import date
+    
+    today = date.today()
+    today_start = datetime.combine(today, datetime.min.time())
+    today_end = datetime.combine(today, datetime.max.time())
+    
+    # Get today's follow-ups
+    todays_followups = await db.followups.find({
+        "scheduled_date": {
+            "$gte": today_start.isoformat(),
+            "$lte": today_end.isoformat()
+        },
+        "status": {"$in": ["scheduled", "in_progress"]}
+    }, {"_id": 0}).sort("scheduled_time", 1).to_list(50)
+    
+    # Get overdue follow-ups count
+    overdue_count = await db.followups.count_documents({
+        "scheduled_date": {"$lt": today_start.isoformat()},
+        "status": {"$in": ["scheduled", "in_progress"]}
+    })
+    
+    # Get upcoming follow-ups (next 7 days)
+    week_end = datetime.combine(today + timedelta(days=7), datetime.max.time())
+    upcoming_count = await db.followups.count_documents({
+        "scheduled_date": {
+            "$gt": today_end.isoformat(),
+            "$lte": week_end.isoformat()
+        },
+        "status": {"$in": ["scheduled", "in_progress"]}
+    })
+    
+    return {
+        "todays_followups": todays_followups,
+        "todays_count": len(todays_followups),
+        "overdue_count": overdue_count,
+        "upcoming_week_count": upcoming_count
+    }
