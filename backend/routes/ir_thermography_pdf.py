@@ -1276,10 +1276,34 @@ def create_individual_inspection_pages(report, styles):
             try:
                 if img_source.startswith('data:image'):
                     # Base64 encoded image
-                    img_data = img_source.split(',')[1]
-                    img_bytes = base64.b64decode(img_data)
-                    img_io = BytesIO(img_bytes)
-                    return Image(img_io, width=width, height=height)
+                    try:
+                        img_data = img_source.split(',')[1]
+                        img_bytes = base64.b64decode(img_data)
+                        
+                        # Check if image data is valid (not all zeros/dummy data)
+                        if len(img_bytes) < 100:
+                            print(f"Image too small: {len(img_bytes)} bytes")
+                            return None
+                        
+                        # Check for valid image headers
+                        is_png = img_bytes[:8] == b'\x89PNG\r\n\x1a\n'
+                        is_jpeg = img_bytes[:2] == b'\xff\xd8'
+                        is_gif = img_bytes[:6] == b'GIF89a' or img_bytes[:6] == b'GIF87a'
+                        
+                        if not (is_png or is_jpeg or is_gif):
+                            print(f"Invalid image header: {img_bytes[:8].hex()}")
+                            return None
+                        
+                        # Additional check for dummy PNG (all zeros after header)
+                        if is_png and all(b == 0 for b in img_bytes[8:min(100, len(img_bytes))]):
+                            print("Detected dummy PNG image (all zeros)")
+                            return None
+                        
+                        img_io = BytesIO(img_bytes)
+                        return Image(img_io, width=width, height=height)
+                    except Exception as e:
+                        print(f"Error processing base64 image: {e}")
+                        return None
                 elif img_source.startswith('/ir-thermography-images/'):
                     # File path - load from disk (new format)
                     file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
@@ -1302,7 +1326,7 @@ def create_individual_inspection_pages(report, styles):
                         return Image(file_path, width=width, height=height)
                 return None
             except Exception as e:
-                print(f"Error loading image from {img_source}: {e}")
+                print(f"Error loading image from {img_source[:50]}...: {e}")
                 return None
         
         # Original image
