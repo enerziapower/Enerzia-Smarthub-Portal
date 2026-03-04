@@ -416,7 +416,7 @@ async def update_ir_thermography_report(report_id: str, report_data: IRThermogra
 
 @router.delete("/{report_id}")
 async def delete_ir_thermography_report(report_id: str):
-    """Delete an IR Thermography report"""
+    """Delete an IR Thermography report and its associated image files"""
     db = get_db()
     
     result = await db.test_reports.delete_one(
@@ -425,6 +425,11 @@ async def delete_ir_thermography_report(report_id: str):
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Clean up image files
+    report_dir = os.path.join(IR_IMAGES_DIR, report_id)
+    if os.path.exists(report_dir):
+        shutil.rmtree(report_dir)
     
     return {"message": "Report deleted successfully"}
 
