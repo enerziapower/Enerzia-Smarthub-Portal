@@ -2,6 +2,25 @@
 
 ## Latest Updates
 
+### IR Thermography Image Validation Fix ✅ COMPLETE (Mar 6, 2026)
+**Location:** Projects → IR Thermography Reports
+
+**Problem:** Users could upload corrupted/invalid image files which caused "Failed to download PDF" error (PIL.UnidentifiedImageError during PDF generation).
+
+| Feature | Description |
+|---------|-------------|
+| **Server-Side Validation** | Images validated using PIL before saving to disk |
+| **Corrupted Image Rejection** | Invalid images return HTTP 400 with user-friendly error message |
+| **Multiple Entry Points Protected** | Both base64 uploads (create/update) and file uploads validated |
+| **Clear Error Messages** | "Uploaded file is not a valid or supported image. Please upload a valid JPG, PNG, or GIF image." |
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography.py` - Added PIL validation in `save_base64_image()` and `upload_inspection_image()` endpoints
+
+**Test Results:** 100% success rate (11/11 tests passed) - See `/app/test_reports/iteration_82.json`
+
+---
+
 ### Follow-up Reminders & Notifications ✅ COMPLETE (Mar 4, 2026)
 **Location:** Sales → Dashboard, Notification Bell (Header)
 
