@@ -148,7 +148,7 @@ def save_base64_image(base64_string: str, report_id: str, item_id: str, image_ty
             f.write(image_data)
         
         # Return URL path (will be served by the API)
-        return f"/ir-thermography-images/{report_id}/{filename}"
+        return f"/api/ir-thermography-images/{report_id}/{filename}"
     except Exception as e:
         print(f"Error saving image: {e}")
         return None
