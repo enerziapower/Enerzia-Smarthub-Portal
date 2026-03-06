@@ -22,8 +22,17 @@ import os
 import requests
 from datetime import datetime
 
-# Import date formatter from pdf_base
-from routes.pdf_base import format_date_ddmmyyyy
+# Import date formatter and back cover helpers from pdf_base
+from routes.pdf_base import (
+    format_date_ddmmyyyy,
+    is_back_cover_enabled,
+    get_back_cover_settings,
+    get_pdf_company_info,
+    get_pdf_company_name,
+    get_pdf_website,
+    get_pdf_logo_path,
+    get_pdf_primary_color
+)
 
 # Import template settings functions for cover page designs
 from routes.pdf_template_settings import (
@@ -34,6 +43,9 @@ from routes.pdf_template_settings import (
     draw_decorative_design,
     get_company_info
 )
+
+# Import PyPDF2 for merging PDFs (back cover)
+from PyPDF2 import PdfReader, PdfWriter
 
 router = APIRouter()
 
