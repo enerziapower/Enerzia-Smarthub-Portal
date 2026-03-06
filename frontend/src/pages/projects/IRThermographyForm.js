@@ -10,6 +10,51 @@ import { DatePicker } from '../../components/ui/date-picker';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Helper function to check if an image is valid (not dummy/placeholder data)
+const isValidImage = (imageData) => {
+  if (!imageData) return false;
+  
+  // URL-based images are assumed valid
+  if (imageData.startsWith('/') || imageData.startsWith('http')) return true;
+  
+  // Check base64 images
+  if (imageData.startsWith('data:')) {
+    try {
+      const base64Part = imageData.split(',')[1];
+      if (!base64Part || base64Part.length < 100) return false;
+      
+      // Check for dummy data pattern (iVBORw0KAAAAAA... - PNG header with zeros)
+      // Valid PNG base64 should not have long sequences of 'A' (which represents zeros)
+      const firstChars = base64Part.substring(0, 50);
+      const zeroPattern = /AAAAAAAAAA/;  // Pattern for consecutive zeros in base64
+      
+      if (zeroPattern.test(firstChars)) {
+        return false;  // Likely dummy/placeholder image
+      }
+      
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  return false;
+};
+
+// Get image source with validation
+const getImageSrc = (imageData) => {
+  if (!imageData) return null;
+  
+  if (!isValidImage(imageData)) return null;
+  
+  if (imageData.startsWith('data:') || imageData.startsWith('http')) {
+    return imageData;
+  }
+  
+  // Server path - prepend API URL
+  return `${API}${imageData}`;
+};
+
 // Risk category colors and labels
 const RISK_CATEGORIES = {
   Critical: { label: 'Critical', color: 'bg-red-500', textColor: 'text-red-700', bgLight: 'bg-red-50' },
