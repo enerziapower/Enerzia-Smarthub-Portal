@@ -1599,125 +1599,168 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
         
         # =====================================================
         # CREATE BACK COVER PAGE (only when not embedding in AMC)
+        # Using dynamic settings from pdf_base like AMC PDF does
         # =====================================================
-        back_cover_buffer = BytesIO()
-        back_cover_doc = SimpleDocTemplate(
-            back_cover_buffer,
-            pagesize=A4,
-            rightMargin=30,
-            leftMargin=30,
-            topMargin=50,
-            bottomMargin=50
-        )
         
-        back_cover_elements = []
-        width, height = A4
-        
-        # Add spacer to position content
-        back_cover_elements.append(Spacer(1, 180))
-        
-        # Company Logo - centered
-        logo_path = "/app/backend/assets/enerzia_logo.jpg"
-        try:
-            if os.path.exists(logo_path):
-                logo = Image(logo_path, width=200, height=80)
-                logo_table = Table([[logo]], colWidths=[515])
-                logo_table.setStyle(TableStyle([
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]))
-                back_cover_elements.append(logo_table)
-                back_cover_elements.append(Spacer(1, 40))
-        except Exception as e:
-            print(f"Error adding logo to back cover: {e}")
-        
-        # Contact Us Header
-        contact_header_style = ParagraphStyle(
-            'ContactHeader',
-            fontSize=18,
-            fontName='Helvetica-Bold',
-            textColor=colors.HexColor('#1e3a5f'),
-            alignment=1,  # Center
-            spaceAfter=20
-        )
-        back_cover_elements.append(Paragraph("Contact Us", contact_header_style))
-        back_cover_elements.append(Spacer(1, 15))
-        
-        # Company Name
-        company_style = ParagraphStyle(
-            'CompanyName',
-            fontSize=16,
-            fontName='Helvetica-Bold',
-            textColor=colors.HexColor('#1e3a5f'),
-            alignment=1,  # Center
-            spaceAfter=10
-        )
-        back_cover_elements.append(Paragraph("Enerzia Power Solutions", company_style))
-        
-        # Company Address
-        address_style = ParagraphStyle(
-            'Address',
-            fontSize=11,
-            fontName='Helvetica',
-            textColor=colors.HexColor('#333333'),
-            alignment=1,  # Center
-            spaceAfter=5,
-            leading=16
-        )
-        back_cover_elements.append(Paragraph(
-            "No.9, Akshaya, Sundaresan Nagar,<br/>ELumalai Chettiar Road, Maduravoyal,<br/>Chennai, Tamil Nadu, Pincode- 600095",
-            address_style
-        ))
-        back_cover_elements.append(Spacer(1, 25))
-        
-        # Contact Details Style
-        contact_style = ParagraphStyle(
-            'ContactDetails',
-            fontSize=12,
-            fontName='Helvetica',
-            textColor=colors.HexColor('#333333'),
-            alignment=1,  # Center
-            spaceAfter=8
-        )
-        
-        # Tel
-        back_cover_elements.append(Paragraph(
-            "<b>Tel:</b> +91 44 45487875",
-            contact_style
-        ))
-        
-        # Mobile
-        back_cover_elements.append(Paragraph(
-            "<b>Mobile:</b> +91 9789894644",
-            contact_style
-        ))
-        
-        # Email
-        back_cover_elements.append(Paragraph(
-            "<b>E-mail:</b> info@enerzia.com",
-            contact_style
-        ))
-        
-        back_cover_elements.append(Spacer(1, 40))
-        
-        # Website
-        website_style = ParagraphStyle(
-            'Website',
-            fontSize=14,
-            fontName='Helvetica-Bold',
-            textColor=colors.HexColor('#e65100'),
-            alignment=1,  # Center
-        )
-        back_cover_elements.append(Paragraph("www.enerzia.com", website_style))
-        
-        # Build back cover
-        back_cover_doc.build(back_cover_elements)
-        
-        # Add back cover page
-        back_cover_buffer.seek(0)
-        back_cover_reader = PdfReader(back_cover_buffer)
-        for page in back_cover_reader.pages:
-            writer.add_page(page)
+        # Check if back cover is enabled in settings
+        if is_back_cover_enabled():
+            back_cover_buffer = BytesIO()
+            back_cover_doc = SimpleDocTemplate(
+                back_cover_buffer,
+                pagesize=A4,
+                rightMargin=30,
+                leftMargin=30,
+                topMargin=50,
+                bottomMargin=50
+            )
+            
+            back_cover_elements = []
+            width, height = A4
+            
+            # Get dynamic settings
+            back_settings = get_back_cover_settings()
+            company_info = get_pdf_company_info()
+            company_name = get_pdf_company_name()
+            website = get_pdf_website()
+            logo_path = get_pdf_logo_path()
+            primary_color = get_pdf_primary_color()
+            
+            # Add spacer to position content
+            back_cover_elements.append(Spacer(1, 180))
+            
+            # Company Logo - centered (if enabled)
+            if back_settings.get('show_logo', True) and logo_path:
+                try:
+                    if os.path.exists(logo_path):
+                        logo = Image(logo_path, width=200, height=80)
+                        logo_table = Table([[logo]], colWidths=[515])
+                        logo_table.setStyle(TableStyle([
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ]))
+                        back_cover_elements.append(logo_table)
+                        back_cover_elements.append(Spacer(1, 40))
+                except Exception as e:
+                    print(f"Error adding logo to back cover: {e}")
+            
+            # Contact Us Header
+            back_title = back_settings.get('title', 'Contact Us')
+            contact_header_style = ParagraphStyle(
+                'ContactHeader',
+                fontSize=18,
+                fontName='Helvetica-Bold',
+                textColor=colors.HexColor('#1e3a5f'),
+                alignment=1,  # Center
+                spaceAfter=20
+            )
+            back_cover_elements.append(Paragraph(back_title, contact_header_style))
+            back_cover_elements.append(Spacer(1, 15))
+            
+            # Company Name
+            company_style = ParagraphStyle(
+                'CompanyName',
+                fontSize=16,
+                fontName='Helvetica-Bold',
+                textColor=colors.HexColor('#1e3a5f'),
+                alignment=1,  # Center
+                spaceAfter=10
+            )
+            back_cover_elements.append(Paragraph(company_name, company_style))
+            
+            # Company Address (if enabled)
+            if back_settings.get('show_address', True):
+                address_style = ParagraphStyle(
+                    'Address',
+                    fontSize=11,
+                    fontName='Helvetica',
+                    textColor=colors.HexColor('#333333'),
+                    alignment=1,  # Center
+                    spaceAfter=5,
+                    leading=16
+                )
+                address_parts = []
+                if company_info.get('address_line1'):
+                    address_parts.append(company_info.get('address_line1'))
+                if company_info.get('address_line2'):
+                    address_parts.append(company_info.get('address_line2'))
+                city_state = []
+                if company_info.get('city'):
+                    city_state.append(company_info.get('city'))
+                if company_info.get('state'):
+                    city_state.append(company_info.get('state'))
+                if company_info.get('postal_code'):
+                    city_state.append(f"Pincode- {company_info.get('postal_code')}")
+                if city_state:
+                    address_parts.append(', '.join(city_state))
+                
+                if address_parts:
+                    back_cover_elements.append(Paragraph("<br/>".join(address_parts), address_style))
+                    back_cover_elements.append(Spacer(1, 25))
+            
+            # Contact Details Style
+            contact_style = ParagraphStyle(
+                'ContactDetails',
+                fontSize=12,
+                fontName='Helvetica',
+                textColor=colors.HexColor('#333333'),
+                alignment=1,  # Center
+                spaceAfter=8
+            )
+            
+            # Phone (if enabled)
+            if back_settings.get('show_phone', True) and company_info.get('phone'):
+                back_cover_elements.append(Paragraph(
+                    f"<b>Tel:</b> {company_info.get('phone')}",
+                    contact_style
+                ))
+            
+            # Mobile/Alt Phone
+            if company_info.get('alt_phone'):
+                back_cover_elements.append(Paragraph(
+                    f"<b>Mobile:</b> {company_info.get('alt_phone')}",
+                    contact_style
+                ))
+            
+            # Email (if enabled)
+            if back_settings.get('show_email', True) and company_info.get('email'):
+                back_cover_elements.append(Paragraph(
+                    f"<b>E-mail:</b> {company_info.get('email')}",
+                    contact_style
+                ))
+            
+            back_cover_elements.append(Spacer(1, 40))
+            
+            # Website (if enabled)
+            if back_settings.get('show_website', True):
+                website_style = ParagraphStyle(
+                    'Website',
+                    fontSize=14,
+                    fontName='Helvetica-Bold',
+                    textColor=primary_color,
+                    alignment=1,  # Center
+                )
+                back_cover_elements.append(Paragraph(website, website_style))
+            
+            # Additional text (if provided)
+            if back_settings.get('additional_text'):
+                additional_style = ParagraphStyle(
+                    'Additional',
+                    fontSize=10,
+                    fontName='Helvetica-Oblique',
+                    textColor=colors.HexColor('#333333'),
+                    alignment=1,  # Center
+                    spaceBefore=20
+                )
+                back_cover_elements.append(Paragraph(back_settings.get('additional_text'), additional_style))
+            
+            # Build back cover
+            back_cover_doc.build(back_cover_elements)
+            
+            # Add back cover page
+            back_cover_buffer.seek(0)
+            back_cover_reader = PdfReader(back_cover_buffer)
+            for page in back_cover_reader.pages:
+                writer.add_page(page)
         
         # Write combined PDF
         output_buffer = BytesIO()
