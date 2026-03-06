@@ -62,7 +62,17 @@ const getImageSrc = (imageData) => {
     return imageData;
   }
   
-  // Server path - prepend API URL
+  // Server path - if it doesn't have /api prefix, add the full API URL
+  if (imageData.startsWith('/api/')) {
+    return `${API}${imageData}`;
+  }
+  
+  // Old format without /api - convert to new format
+  if (imageData.startsWith('/ir-thermography-images/')) {
+    return `${API}/api${imageData}`;
+  }
+  
+  // Other server paths
   return `${API}${imageData}`;
 };
 
