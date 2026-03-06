@@ -1286,17 +1286,19 @@ def create_individual_inspection_pages(report, styles):
                             return None
                         
                         # Check for valid image headers
-                        is_png = img_bytes[:8] == b'\x89PNG\r\n\x1a\n'
+                        is_png = img_bytes[:4] == b'\x89PNG'  # Just check first 4 bytes for PNG
                         is_jpeg = img_bytes[:2] == b'\xff\xd8'
                         is_gif = img_bytes[:6] == b'GIF89a' or img_bytes[:6] == b'GIF87a'
                         
-                        if not (is_png or is_jpeg or is_gif):
-                            print(f"Invalid image header: {img_bytes[:8].hex()}")
+                        # Check for dummy/placeholder data (zeros after header)
+                        # This catches images with valid headers but no actual content
+                        non_zero_count = sum(1 for b in img_bytes[8:min(100, len(img_bytes))] if b != 0)
+                        if non_zero_count == 0:
+                            print("Detected dummy/placeholder image (all zeros after header)")
                             return None
                         
-                        # Additional check for dummy PNG (all zeros after header)
-                        if is_png and all(b == 0 for b in img_bytes[8:min(100, len(img_bytes))]):
-                            print("Detected dummy PNG image (all zeros)")
+                        if not (is_png or is_jpeg or is_gif):
+                            print(f"Invalid image header: {img_bytes[:8].hex()}")
                             return None
                         
                         img_io = BytesIO(img_bytes)
