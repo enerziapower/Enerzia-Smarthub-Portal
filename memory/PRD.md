@@ -2,6 +2,26 @@
 
 ## Latest Updates
 
+### IR Thermography PDF Back Cover Page ✅ COMPLETE (Mar 6, 2026)
+**Location:** Projects → IR Thermography Reports → PDF Download
+
+**Feature:** Added "Contact Us" back cover page to IR Thermography PDF reports, matching the AMC PDF report style.
+
+| Feature | Description |
+|---------|-------------|
+| **Back Cover Page** | Final page with company contact information |
+| **Company Logo** | Enerzia logo displayed at top |
+| **Contact Details** | Tel, Mobile, Email, Website |
+| **Full Address** | Complete company address |
+| **Dynamic Settings** | Uses `pdf_base` template settings (same as AMC PDF) |
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography_pdf.py` - Added back cover generation using dynamic settings from `pdf_base`
+
+**Test Results:** PDF successfully generates with back cover page containing all contact information
+
+---
+
 ### IR Thermography Image Validation Fix ✅ COMPLETE (Mar 6, 2026)
 **Location:** Projects → IR Thermography Reports
 
