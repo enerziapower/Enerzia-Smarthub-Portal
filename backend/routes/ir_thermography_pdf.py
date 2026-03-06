@@ -1310,7 +1310,16 @@ def create_individual_inspection_pages(report, styles):
                     # File path - load from disk (new format)
                     file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
                     if os.path.exists(file_path):
-                        return Image(file_path, width=width, height=height)
+                        # Check file size - very small files are likely invalid
+                        file_size = os.path.getsize(file_path)
+                        if file_size < 500:  # Less than 500 bytes is too small for a real image
+                            print(f"Image file too small ({file_size} bytes): {file_path}")
+                            return None
+                        try:
+                            return Image(file_path, width=width, height=height)
+                        except Exception as e:
+                            print(f"Error loading image file {file_path}: {e}")
+                            return None
                     else:
                         print(f"Image file not found: {file_path}")
                 elif img_source.startswith('/api/uploads/') or img_source.startswith('http'):
