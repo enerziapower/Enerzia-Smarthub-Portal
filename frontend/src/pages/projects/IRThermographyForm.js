@@ -14,21 +14,23 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const isValidImage = (imageData) => {
   if (!imageData) return false;
   
-  // URL-based images are assumed valid
+  // URL-based images (server paths or http URLs) are assumed valid
+  // The server has already validated these when saving
   if (imageData.startsWith('/') || imageData.startsWith('http')) return true;
   
-  // Check base64 images
+  // Check base64 images for dummy data pattern
   if (imageData.startsWith('data:')) {
     try {
       const base64Part = imageData.split(',')[1];
       if (!base64Part || base64Part.length < 100) return false;
       
-      // Check for dummy data pattern (iVBORw0KAAAAAA... - PNG header with zeros)
-      // Valid PNG base64 should not have long sequences of 'A' (which represents zeros)
-      const firstChars = base64Part.substring(0, 50);
-      const zeroPattern = /AAAAAAAAAA/;  // Pattern for consecutive zeros in base64
+      // Check for dummy data pattern (iVBORw0KAAAAAA... - PNG header followed by zeros)
+      // This specific pattern: base64 of PNG header + consecutive zeros
+      // "AAAAAAAAAA" in base64 represents 7.5 zero bytes
+      const firstChars = base64Part.substring(8, 30); // Skip the first few chars (PNG header in base64)
+      const allZerosPattern = /^A{10,}$/;  // 10+ consecutive 'A's indicates dummy data
       
-      if (zeroPattern.test(firstChars)) {
+      if (allZerosPattern.test(firstChars)) {
         return false;  // Likely dummy/placeholder image
       }
       
