@@ -3722,7 +3722,7 @@ UPLOADS_DIR.mkdir(exist_ok=True)
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Mount IR thermography images directory
-app.mount("/ir-thermography-images", StaticFiles(directory="/app/uploads/ir-thermography"), name="ir-images")
+app.mount("/api/ir-thermography-images", StaticFiles(directory="/app/uploads/ir-thermography"), name="ir-images")
 
 app.add_middleware(
     CORSMiddleware,
