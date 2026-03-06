@@ -1310,9 +1310,9 @@ def create_individual_inspection_pages(report, styles):
                     # File path - load from disk (new format)
                     file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
                     if os.path.exists(file_path):
-                        # Check file size - very small files are likely invalid
+                        # Check file size - very small files might be invalid placeholders
                         file_size = os.path.getsize(file_path)
-                        if file_size < 500:  # Less than 500 bytes is too small for a real image
+                        if file_size < 100:  # Less than 100 bytes is definitely too small
                             print(f"Image file too small ({file_size} bytes): {file_path}")
                             return None
                         try:
