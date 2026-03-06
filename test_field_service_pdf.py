@@ -10,7 +10,7 @@ import json
 import re
 
 class FieldServicePDFTester:
-    def __init__(self, base_url="https://travel-hr-approval.preview.emergentagent.com"):
+    def __init__(self, base_url="https://erp-image-validator.preview.emergentagent.com"):
         self.base_url = base_url
         self.auth_token = None
         self.tests_run = 0
