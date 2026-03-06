@@ -16,13 +16,19 @@ const isValidImage = (imageData) => {
   
   // URL-based images (server paths or http URLs) are assumed valid
   // The server has already validated these when saving
-  if (imageData.startsWith('/') || imageData.startsWith('http')) return true;
+  if (imageData.startsWith('/') || imageData.startsWith('http')) {
+    console.log('isValidImage: URL detected, returning true', imageData.substring(0, 50));
+    return true;
+  }
   
   // Check base64 images for dummy data pattern
   if (imageData.startsWith('data:')) {
     try {
       const base64Part = imageData.split(',')[1];
-      if (!base64Part || base64Part.length < 100) return false;
+      if (!base64Part || base64Part.length < 100) {
+        console.log('isValidImage: base64 too short', base64Part?.length);
+        return false;
+      }
       
       // Check for dummy data pattern (iVBORw0KAAAAAA... - PNG header followed by zeros)
       // This specific pattern: base64 of PNG header + consecutive zeros
@@ -31,15 +37,18 @@ const isValidImage = (imageData) => {
       const allZerosPattern = /^A{10,}$/;  // 10+ consecutive 'A's indicates dummy data
       
       if (allZerosPattern.test(firstChars)) {
+        console.log('isValidImage: dummy data detected', firstChars);
         return false;  // Likely dummy/placeholder image
       }
       
       return true;
-    } catch {
+    } catch (e) {
+      console.log('isValidImage: error', e);
       return false;
     }
   }
   
+  console.log('isValidImage: unknown format', imageData.substring(0, 20));
   return false;
 };
 
