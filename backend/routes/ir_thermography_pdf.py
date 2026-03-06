@@ -1585,25 +1585,25 @@ def append_calibration_certificate(buffer, report, exclude_closing_pages=False):
                 
                 # Build Section F page
                 section_f_doc.build(section_f_elements)
+                
+                # Add Section F title page
+                section_f_buffer.seek(0)
+                section_f_reader = PdfReader(section_f_buffer)
+                for page in section_f_reader.pages:
+                    writer.add_page(page)
+                
+                # Add certificate pages
+                cert_reader = PdfReader(BytesIO(cert_bytes))
+                for page in cert_reader.pages:
+                    writer.add_page(page)
             
-            # Add Section F title page
-            section_f_buffer.seek(0)
-            section_f_reader = PdfReader(section_f_buffer)
-            for page in section_f_reader.pages:
-                writer.add_page(page)
+            # =====================================================
+            # CREATE BACK COVER PAGE (only when not embedding in AMC)
+            # Using dynamic settings from pdf_base like AMC PDF does
+            # =====================================================
             
-            # Add certificate pages
-            cert_reader = PdfReader(BytesIO(cert_bytes))
-            for page in cert_reader.pages:
-                writer.add_page(page)
-        
-        # =====================================================
-        # CREATE BACK COVER PAGE (only when not embedding in AMC)
-        # Using dynamic settings from pdf_base like AMC PDF does
-        # =====================================================
-        
-        # Check if back cover is enabled in settings
-        if is_back_cover_enabled():
+            # Check if back cover is enabled in settings
+            if is_back_cover_enabled():
             back_cover_buffer = BytesIO()
             back_cover_doc = SimpleDocTemplate(
                 back_cover_buffer,
