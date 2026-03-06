@@ -473,11 +473,26 @@ async def upload_inspection_image(
     image_type: str = Form(...),  # 'original' or 'thermal'
     file: UploadFile = File(...)
 ):
-    """Upload an image for an inspection item"""
+    """Upload an image for an inspection item. Validates image integrity before saving."""
     db = get_db()
     
     # Read file content
     content = await file.read()
+    
+    # CRITICAL: Validate image integrity using PIL before proceeding
+    try:
+        img = PILImage.open(BytesIO(content))
+        img.verify()  # Verify image is not corrupted
+    except PIL.UnidentifiedImageError:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is not a valid or supported image. Please upload a valid JPG, PNG, or GIF image."
+        )
+    except Exception as img_err:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to process image: {str(img_err)}. Please ensure the file is a valid image."
+        )
     
     # Convert to base64
     base64_content = base64.b64encode(content).decode('utf-8')
