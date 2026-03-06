@@ -825,15 +825,21 @@ const IRThermographyForm = () => {
                               onDragOver={handleDragOver}
                               onDrop={(e) => handleDrop(e, index, 'original')}
                             >
-                              {item.original_image ? (
+                              {item.original_image && isValidImage(item.original_image) ? (
                                 <div className="relative">
                                   <img 
-                                    src={item.original_image.startsWith('data:') || item.original_image.startsWith('http') 
-                                      ? item.original_image 
-                                      : `${API}${item.original_image}`} 
+                                    src={getImageSrc(item.original_image)} 
                                     alt="Original" 
                                     className="max-h-40 mx-auto rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                    }}
                                   />
+                                  <div className="hidden text-amber-600 text-sm py-4">
+                                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                                    Invalid image - please re-upload
+                                  </div>
                                   <button
                                     type="button"
                                     onClick={() => updateInspectionItem(index, 'original_image', null)}
@@ -841,6 +847,30 @@ const IRThermographyForm = () => {
                                   >
                                     <X size={14} />
                                   </button>
+                                </div>
+                              ) : item.original_image && !isValidImage(item.original_image) ? (
+                                <div className="relative">
+                                  <div className="text-amber-600 text-sm py-4">
+                                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                                    <p>Invalid/placeholder image</p>
+                                    <p className="text-xs text-slate-500 mt-1">Please upload a new image</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateInspectionItem(index, 'original_image', null)}
+                                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                  <label className="cursor-pointer inline-block mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                                    Upload New
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => handleImageUpload(index, 'original', e.target.files[0])}
+                                    />
+                                  </label>
                                 </div>
                               ) : (
                                 <label className="cursor-pointer">
@@ -863,15 +893,21 @@ const IRThermographyForm = () => {
                               onDragOver={handleDragOver}
                               onDrop={(e) => handleDrop(e, index, 'thermal')}
                             >
-                              {item.thermal_image ? (
+                              {item.thermal_image && isValidImage(item.thermal_image) ? (
                                 <div className="relative">
                                   <img 
-                                    src={item.thermal_image.startsWith('data:') || item.thermal_image.startsWith('http') 
-                                      ? item.thermal_image 
-                                      : `${API}${item.thermal_image}`} 
+                                    src={getImageSrc(item.thermal_image)} 
                                     alt="Thermal" 
                                     className="max-h-40 mx-auto rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                    }}
                                   />
+                                  <div className="hidden text-amber-600 text-sm py-4">
+                                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                                    Invalid image - please re-upload
+                                  </div>
                                   <button
                                     type="button"
                                     onClick={() => updateInspectionItem(index, 'thermal_image', null)}
@@ -879,6 +915,30 @@ const IRThermographyForm = () => {
                                   >
                                     <X size={14} />
                                   </button>
+                                </div>
+                              ) : item.thermal_image && !isValidImage(item.thermal_image) ? (
+                                <div className="relative">
+                                  <div className="text-amber-600 text-sm py-4">
+                                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                                    <p>Invalid/placeholder image</p>
+                                    <p className="text-xs text-slate-500 mt-1">Please upload a new image</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateInspectionItem(index, 'thermal_image', null)}
+                                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                  <label className="cursor-pointer inline-block mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                                    Upload New
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => handleImageUpload(index, 'thermal', e.target.files[0])}
+                                    />
+                                  </label>
                                 </div>
                               ) : (
                                 <label className="cursor-pointer">
