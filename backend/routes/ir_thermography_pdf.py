@@ -1306,9 +1306,10 @@ def create_individual_inspection_pages(report, styles):
                     except Exception as e:
                         print(f"Error processing base64 image: {e}")
                         return None
-                elif img_source.startswith('/ir-thermography-images/'):
-                    # File path - load from disk (new format)
-                    file_path = f"/app/uploads{img_source.replace('/ir-thermography-images', '/ir-thermography')}"
+                elif img_source.startswith('/ir-thermography-images/') or img_source.startswith('/api/ir-thermography-images/'):
+                    # File path - load from disk (supports both old and new URL formats)
+                    file_path = img_source.replace('/api/ir-thermography-images', '/app/uploads/ir-thermography')
+                    file_path = file_path.replace('/ir-thermography-images', '/app/uploads/ir-thermography')
                     if os.path.exists(file_path):
                         # Check file size - very small files might be invalid placeholders
                         file_size = os.path.getsize(file_path)
