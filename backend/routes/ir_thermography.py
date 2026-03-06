@@ -14,6 +14,8 @@ import os
 import base64
 import shutil
 from io import BytesIO
+from PIL import Image as PILImage
+import PIL
 
 router = APIRouter()
 
