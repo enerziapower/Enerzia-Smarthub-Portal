@@ -120,6 +120,7 @@ def save_base64_image(base64_string: str, report_id: str, item_id: str, image_ty
     """
     Save a base64 encoded image to file and return the file path.
     Returns URL path like /ir-thermography-images/{report_id}/{item_id}_{type}.jpg
+    Validates image integrity using PIL before saving to prevent corrupted files.
     """
     if not base64_string or not base64_string.startswith('data:'):
         return base64_string  # Return as-is if not base64 or already a URL
@@ -128,10 +129,33 @@ def save_base64_image(base64_string: str, report_id: str, item_id: str, image_ty
         # Parse the base64 string
         header, data = base64_string.split(',', 1)
         
-        # Determine file extension from header
-        if 'png' in header:
+        # Decode image data
+        image_data = base64.b64decode(data)
+        
+        # CRITICAL: Validate image integrity using PIL before saving
+        try:
+            img = PILImage.open(BytesIO(image_data))
+            img.verify()  # Verify image is not corrupted
+            # Re-open image after verify() as it invalidates the file pointer
+            img = PILImage.open(BytesIO(image_data))
+            actual_format = img.format.lower() if img.format else 'jpeg'
+        except PIL.UnidentifiedImageError:
+            print(f"Invalid image upload: File is not a valid image or is corrupted")
+            raise HTTPException(
+                status_code=400, 
+                detail="Uploaded file is not a valid or supported image. Please upload a valid JPG, PNG, or GIF image."
+            )
+        except Exception as img_err:
+            print(f"Image validation failed: {img_err}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Failed to process image: {str(img_err)}. Please ensure the file is a valid image."
+            )
+        
+        # Determine file extension - use actual format from PIL for accuracy
+        if actual_format == 'png':
             ext = 'png'
-        elif 'gif' in header:
+        elif actual_format == 'gif':
             ext = 'gif'
         else:
             ext = 'jpg'
@@ -144,16 +168,22 @@ def save_base64_image(base64_string: str, report_id: str, item_id: str, image_ty
         filename = f"{item_id}_{image_type}.{ext}"
         filepath = os.path.join(report_dir, filename)
         
-        # Decode and save
-        image_data = base64.b64decode(data)
+        # Save validated image data
         with open(filepath, 'wb') as f:
             f.write(image_data)
         
+        print(f"Image saved successfully: {filepath} ({actual_format}, {len(image_data)} bytes)")
+        
         # Return URL path (will be served by the API)
         return f"/api/ir-thermography-images/{report_id}/{filename}"
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions without wrapping
     except Exception as e:
         print(f"Error saving image: {e}")
-        return None
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to save image: {str(e)}. Please try again with a valid image file."
+        )
 
 
 def process_inspection_items_images(items: list, report_id: str) -> list:
