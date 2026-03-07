@@ -1251,12 +1251,13 @@ const ViewCertificateModal = ({ certificate, onClose, onDownloadPDF, onEdit }) =
               <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Work Summary</h3>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[500px]">
+                <table className="w-full text-sm min-w-[600px]">
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">S.No</th>
                       <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Description</th>
-                      <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500">Qty</th>
+                      <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500">Order Qty</th>
+                      <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500">Billed Qty</th>
                       <th className="text-right py-2 px-3 text-xs font-semibold text-slate-500">Amount</th>
                       <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500">Status</th>
                     </tr>
@@ -1266,6 +1267,7 @@ const ViewCertificateModal = ({ certificate, onClose, onDownloadPDF, onEdit }) =
                       <tr key={i}>
                         <td className="py-2 px-3 font-medium">{i + 1}</td>
                         <td className="py-2 px-3">{item.description}</td>
+                        <td className="py-2 px-3 text-center">{item.order_quantity || 0} {item.unit}</td>
                         <td className="py-2 px-3 text-center">{item.billed_quantity} {item.unit}</td>
                         <td className="py-2 px-3 text-right font-medium">₹{(item.total_amount || 0).toLocaleString('en-IN')}</td>
                         <td className="py-2 px-3 text-center">
@@ -1280,7 +1282,7 @@ const ViewCertificateModal = ({ certificate, onClose, onDownloadPDF, onEdit }) =
                   </tbody>
                   <tfoot className="bg-slate-100">
                     <tr>
-                      <td colSpan="3" className="py-2 px-3 text-right font-semibold">Total:</td>
+                      <td colSpan="4" className="py-2 px-3 text-right font-semibold">Total:</td>
                       <td className="py-2 px-3 text-right font-bold text-slate-900">
                         ₹{certificate.work_items.reduce((sum, item) => sum + (item.total_amount || 0), 0).toLocaleString('en-IN')}
                       </td>
