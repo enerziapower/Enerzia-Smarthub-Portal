@@ -194,19 +194,20 @@ const Layout = () => {
     // Super admin sees everything
     if (isSuperAdmin) return navItems;
     
-    // If user has no permissions set yet, show all items for backward compatibility
-    if (!user?.permissions?.modules) return navItems;
+    // If user doesn't have module access, return empty
+    if (!shouldShowSection(moduleId)) return [];
     
-    // If user doesn't have access to the module, return empty
-    if (!hasModuleAccess(moduleId)) return [];
+    // If user has permissions set, filter sub-modules
+    if (user?.permissions?.sub_modules) {
+      return navItems.filter(item => {
+        const subModuleId = getSubModuleIdFromPath(item.href, moduleId);
+        if (!subModuleId) return true; // If no mapping, show by default
+        return hasSubModuleAccess(subModuleId);
+      });
+    }
     
-    // Filter sub-modules based on permissions
-    return navItems.filter(item => {
-      // Map nav items to sub-module IDs
-      const subModuleId = getSubModuleIdFromPath(item.href, moduleId);
-      if (!subModuleId) return true; // If no mapping, show by default
-      return hasSubModuleAccess(subModuleId);
-    });
+    // If no sub-module permissions set but has module access, show all items in module
+    return navItems;
   };
 
   // Map navigation paths to sub-module IDs
