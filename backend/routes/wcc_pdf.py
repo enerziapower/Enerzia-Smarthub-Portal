@@ -28,17 +28,27 @@ def get_styles():
 
 
 def get_logo_image(org_settings, width=100):
-    """Fetch and create logo image element."""
+    """Fetch and create logo image element using centralized logo path."""
     try:
+        # First try the centralized PDF logo path from template settings
+        logo_path = get_pdf_logo_path()
+        if logo_path and os.path.exists(logo_path):
+            img = Image(logo_path, width=width, height=width*0.35)
+            return img
+        
+        # Fallback to local paths
         local_paths = [
             '/app/backend/uploads/company_logo.png',
-            '/app/backend/uploads/enerzia_logo_2025.png'
+            '/app/backend/uploads/enerzia_logo_2025.png',
+            '/app/backend/assets/enerzia_logo.jpg',
+            '/app/backend/assets/enerzia_logo.png'
         ]
         for local_path in local_paths:
             if os.path.exists(local_path):
                 img = Image(local_path, width=width, height=width*0.35)
                 return img
         
+        # Finally try URL from org settings
         logo_url = org_settings.get('logo_url', '') if org_settings else ''
         if logo_url and logo_url.startswith('http'):
             response = requests.get(logo_url, timeout=5)
