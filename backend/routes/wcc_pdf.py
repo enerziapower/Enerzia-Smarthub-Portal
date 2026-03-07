@@ -500,9 +500,9 @@ def generate_wcc_pdf_buffer(certificate: dict, org_settings: dict):
     elements.append(sig_header)
     
     sig_data = [
-        ['Prepared By', '', 'Approved By', ''],
+        ['Prepared By', '', 'Approved By (Customer Representative)', ''],
         ['', '', '', ''],
-        [f"Name: {certificate.get('executed_by', '-')}", '', f"Name: {certificate.get('supervised_by', '-')}", ''],
+        [f"Name: {certificate.get('executed_by', '-')}", '', f"Name: {certificate.get('customer_representative', '-')}", ''],
         [f"Date: {format_date_ddmmyyyy(certificate.get('completed_on', '-'))}", '', f"Date: {format_date_ddmmyyyy(certificate.get('certificate_date', '-'))}", ''],
     ]
     
