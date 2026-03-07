@@ -811,7 +811,8 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-12">S.No</th>
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 min-w-[200px]">Description</th>
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-20">Unit</th>
-                          <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-20">Qty</th>
+                          <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-20">Order Qty</th>
+                          <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-20">Billed Qty</th>
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-24">Rate (₹)</th>
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-28">Amount (₹)</th>
                           <th className="py-2 px-3 text-left text-xs font-semibold text-slate-500 w-24">Status</th>
@@ -850,6 +851,14 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
                                 <option value="MT">MT</option>
                                 <option value="SET">SET</option>
                               </select>
+                            </td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="number"
+                                value={item.order_quantity}
+                                onChange={(e) => updateWorkItem(index, 'order_quantity', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm text-right"
+                              />
                             </td>
                             <td className="py-2 px-3">
                               <input
@@ -900,7 +909,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
                       </tbody>
                       <tfoot className="bg-slate-100 border-t-2 border-slate-300">
                         <tr>
-                          <td colSpan="5" className="py-3 px-3 text-right font-semibold text-slate-700">
+                          <td colSpan="6" className="py-3 px-3 text-right font-semibold text-slate-700">
                             TOTAL AMOUNT:
                           </td>
                           <td className="py-3 px-3 font-bold text-slate-900 text-right">
