@@ -289,14 +289,15 @@ const Layout = () => {
     if (!user) return false;
     if (user.role === 'super_admin') return true;
     
-    // If user has permissions set, use permission system strictly
+    // Use permission system - if user has permissions set
     if (user.permissions?.modules) {
       return hasModuleAccess(moduleId);
     }
     
-    // Backward compatibility: if no permissions set, show all for users
-    // This allows existing users to still work until admin sets their permissions
-    return true;
+    // If no permissions set yet, restrict by default for security
+    // Only allow basic modules that all users should have access to
+    const basicModules = ['my_workspace']; // Only My Workspace is accessible by default
+    return basicModules.includes(moduleId);
   };
 
   // Check if user has access to ANY department (for showing Departments hub)
