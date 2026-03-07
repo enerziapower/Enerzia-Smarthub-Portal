@@ -17,7 +17,8 @@ import requests
 # Import shared PDF components
 from routes.pdf_base import (
     BORDER_COLOR, LIGHT_GRAY, DARK_TEXT, GRAY_TEXT,
-    create_base_styles, BaseNumberedCanvas, format_date_ddmmyyyy
+    create_base_styles, BaseNumberedCanvas, format_date_ddmmyyyy,
+    get_pdf_logo_path
 )
 
 
