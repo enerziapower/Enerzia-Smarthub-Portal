@@ -252,6 +252,13 @@ async def get_employee(emp_id: str):
     return employee
 
 
+@router.get("/next-emp-id")
+async def get_next_emp_id():
+    """Get the next available employee ID for display in form"""
+    next_id = await generate_next_emp_id()
+    return {"next_emp_id": next_id}
+
+
 async def generate_next_emp_id():
     """Generate the next consecutive employee ID (EMP001, EMP002, etc.)"""
     # Find the highest existing employee ID
