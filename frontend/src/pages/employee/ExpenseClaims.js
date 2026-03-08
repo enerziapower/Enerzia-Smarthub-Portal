@@ -783,14 +783,14 @@ const ExpenseClaims = () => {
                     <FileSpreadsheet className="w-5 h-5 text-slate-400" />
                     <div>
                       <h3 className="font-medium text-slate-800">
-                        Week {sheet.week_number} {sheet.year}
+                        Expense Sheet - {new Date(sheet.sheet_date).toLocaleDateString('en-IN', { 
+                          day: '2-digit', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        })}
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Sheet No: {sheet.sheet_no} • {sheet.item_count} items •
-                        {(() => {
-                          const weekRange = getWeekDateRange(sheet.year, sheet.week_number);
-                          return ` ${weekRange.startFormatted} - ${weekRange.endFormatted}`;
-                        })()}
+                        Sheet No: {sheet.sheet_no} • {sheet.item_count} items
                       </p>
                     </div>
                   </div>
