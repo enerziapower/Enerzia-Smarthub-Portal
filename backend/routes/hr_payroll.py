@@ -80,7 +80,7 @@ class SalaryComponent(BaseModel):
 
 class EmployeeCreate(BaseModel):
     # Basic Information
-    emp_id: str
+    emp_id: str = ""  # Optional - will be auto-generated if empty
     name: str
     email: str = ""
     phone: str = ""
