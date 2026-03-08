@@ -200,12 +200,21 @@ def generate_attendance_pdf(records, user, org_settings, month, year, hr_employe
         spaceAfter=20
     )))
     
-    # Employee Details
+    # Employee Details - Use HR employee data if available for proper emp_id
     if user:
         emp_name = user.get('name', 'N/A')
         emp_email = user.get('email', 'N/A')
         emp_dept = user.get('department', 'N/A')
-        emp_id = user.get('id', 'N/A')[:8]
+        
+        # Get proper employee ID from HR records, fallback to user ID
+        if hr_employee and hr_employee.get('emp_id'):
+            emp_id = hr_employee.get('emp_id')
+            # Also use HR department and designation if available
+            if hr_employee.get('department'):
+                emp_dept = hr_employee.get('department')
+        else:
+            # Fallback to truncated user ID if no HR record found
+            emp_id = user.get('id', 'N/A')[:8]
         
         emp_data = [
             ['Employee Name:', emp_name, 'Employee ID:', emp_id],
