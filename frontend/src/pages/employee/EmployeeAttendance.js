@@ -78,12 +78,24 @@ const EmployeeAttendance = () => {
   const handleCheckIn = async () => {
     try {
       setCheckingIn(true);
-      await employeeHubAPI.checkIn(user?.id, user?.name || 'User');
+      const response = await employeeHubAPI.checkIn(user?.id, user?.name || 'User');
+      
+      // Check if blocked due to leave
+      if (response.data?.error) {
+        toast.error(response.data.message);
+        return;
+      }
+      
       toast.success('Checked in successfully');
       fetchAttendance();
     } catch (error) {
       console.error('Error checking in:', error);
-      toast.error('Failed to check in');
+      // Check if error response contains leave info
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to check in');
+      }
     } finally {
       setCheckingIn(false);
     }
@@ -92,12 +104,28 @@ const EmployeeAttendance = () => {
   const handleCheckOut = async () => {
     try {
       setCheckingOut(true);
-      await employeeHubAPI.checkOut(user?.id);
+      const response = await employeeHubAPI.checkOut(user?.id);
+      
+      // Check if blocked due to leave
+      if (response.data?.error) {
+        toast.error(response.data.message);
+        return;
+      }
+      
+      // Show overtime note if present
+      if (response.data?.overtime_note) {
+        toast.info(response.data.overtime_note);
+      }
+      
       toast.success('Checked out successfully');
       fetchAttendance();
     } catch (error) {
       console.error('Error checking out:', error);
-      toast.error('Failed to check out');
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to check out');
+      }
     } finally {
       setCheckingOut(false);
     }
