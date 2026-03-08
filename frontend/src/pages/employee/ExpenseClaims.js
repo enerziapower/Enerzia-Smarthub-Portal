@@ -810,11 +810,20 @@ const ExpenseClaims = () => {
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
               <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600 font-medium">No expense sheet for {monthNames[selectedMonth]} {selectedYear}</p>
+              <p className="text-slate-600 font-medium">
+                No expense sheet for Week {selectedWeek} {selectedYear}
+              </p>
+              <p className="text-sm text-slate-400 mt-1">
+                {(() => {
+                  const weekRange = getWeekDateRange(selectedYear, selectedWeek);
+                  return `${weekRange.startFormatted} - ${weekRange.endFormatted}`;
+                })()}
+              </p>
               <p className="text-sm text-slate-400 mt-1">Create a new expense sheet to start adding your expenses</p>
               <button
                 onClick={() => {
-                  setSheetForm(prev => ({ ...prev, month: selectedMonth, year: selectedYear }));
+                  const weekRange = getWeekDateRange(selectedYear, selectedWeek);
+                  setSheetForm(prev => ({ ...prev, week_number: selectedWeek, year: selectedYear }));
                   setShowSheetModal(true);
                 }}
                 className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
