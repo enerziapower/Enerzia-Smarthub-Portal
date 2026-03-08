@@ -516,11 +516,15 @@ const ExpenseClaims = () => {
         </div>
       </div>
 
-      {/* Month/Year Selector and Tabs */}
+      {/* Week/Year Selector and Tabs */}
       <div className="flex items-center justify-between border-b border-slate-200">
         <nav className="flex gap-1">
           {[
-            { id: 'current', label: `${monthNames[selectedMonth]} ${selectedYear}`, icon: FileSpreadsheet },
+            { 
+              id: 'current', 
+              label: `Week ${selectedWeek} ${selectedYear}`, 
+              icon: FileSpreadsheet 
+            },
             { id: 'history', label: 'All Sheets', icon: Calendar },
           ].map(tab => (
             <button
@@ -538,16 +542,22 @@ const ExpenseClaims = () => {
           ))}
         </nav>
         
-        {/* Month/Year Selector */}
+        {/* Week/Year Selector */}
         <div className="flex items-center gap-2 pr-2">
           <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            value={selectedWeek}
+            onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
             className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
-            {monthNames.slice(1).map((month, index) => (
-              <option key={index + 1} value={index + 1}>{month}</option>
-            ))}
+            {Array.from({ length: getWeeksInYear(selectedYear) }, (_, i) => {
+              const weekNum = i + 1;
+              const weekRange = getWeekDateRange(selectedYear, weekNum);
+              return (
+                <option key={weekNum} value={weekNum}>
+                  Week {weekNum} ({weekRange.startFormatted} - {weekRange.endFormatted})
+                </option>
+              );
+            })}
           </select>
           <select
             value={selectedYear}
