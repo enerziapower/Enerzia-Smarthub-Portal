@@ -341,8 +341,8 @@ def generate_attendance_pdf(records, user, org_settings, month, year, hr_employe
     return buffer
 
 
-def generate_attendance_excel(records, user, org_settings, month, year):
-    """Generate Excel attendance report"""
+def generate_attendance_excel(records, user, org_settings, month, year, hr_employee=None):
+    """Generate Excel attendance report with proper employee ID from HR records"""
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Attendance Report"
@@ -386,15 +386,25 @@ def generate_attendance_excel(records, user, org_settings, month, year):
     ws['A4'].font = Font(bold=True, size=12)
     ws['A4'].alignment = Alignment(horizontal='center')
     
-    # Employee Details
+    # Employee Details - Use HR employee data for proper emp_id
     if user:
+        emp_dept = user.get('department', 'N/A')
+        
+        # Get proper employee ID from HR records
+        if hr_employee and hr_employee.get('emp_id'):
+            emp_id = hr_employee.get('emp_id')
+            if hr_employee.get('department'):
+                emp_dept = hr_employee.get('department')
+        else:
+            emp_id = user.get('id', 'N/A')[:8]
+        
         ws['A6'] = "Employee Name:"
         ws['A6'].font = Font(bold=True)
         ws['B6'] = user.get('name', 'N/A')
         
         ws['D6'] = "Employee ID:"
         ws['D6'].font = Font(bold=True)
-        ws['E6'] = user.get('id', 'N/A')[:8]
+        ws['E6'] = emp_id
         
         ws['A7'] = "Email:"
         ws['A7'].font = Font(bold=True)
@@ -402,7 +412,7 @@ def generate_attendance_excel(records, user, org_settings, month, year):
         
         ws['D7'] = "Department:"
         ws['D7'].font = Font(bold=True)
-        ws['E7'] = user.get('department', 'N/A')
+        ws['E7'] = emp_dept
     
     # Table Headers
     headers = ['#', 'Date', 'Day', 'Check In', 'Check Out', 'Status']
