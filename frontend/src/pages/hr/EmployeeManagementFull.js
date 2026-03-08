@@ -420,11 +420,13 @@ const EmployeeManagementFull = () => {
                         type="text"
                         required
                         value={formData.emp_id}
-                        onChange={(e) => setFormData({...formData, emp_id: e.target.value})}
+                        onChange={(e) => setFormData({...formData, emp_id: e.target.value.toUpperCase()})}
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg"
-                        placeholder="EMP001"
-                        disabled={editingEmployee}
+                        placeholder="Auto-generated or enter manually"
                       />
+                      {!editingEmployee && (
+                        <p className="text-xs text-slate-500 mt-1">Leave empty to auto-generate</p>
+                      )}
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
