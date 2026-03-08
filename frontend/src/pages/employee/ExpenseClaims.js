@@ -849,8 +849,16 @@ const ExpenseClaims = () => {
                   <div className="flex items-center gap-4">
                     <FileSpreadsheet className="w-5 h-5 text-slate-400" />
                     <div>
-                      <h3 className="font-medium text-slate-800">{sheet.month_name} {sheet.year}</h3>
-                      <p className="text-xs text-slate-500">Sheet No: {sheet.sheet_no} • {sheet.item_count} items</p>
+                      <h3 className="font-medium text-slate-800">
+                        Week {sheet.week_number} {sheet.year}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Sheet No: {sheet.sheet_no} • {sheet.item_count} items •
+                        {(() => {
+                          const weekRange = getWeekDateRange(sheet.year, sheet.week_number);
+                          return ` ${weekRange.startFormatted} - ${weekRange.endFormatted}`;
+                        })()}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
