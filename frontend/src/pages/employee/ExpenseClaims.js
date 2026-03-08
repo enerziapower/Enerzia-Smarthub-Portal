@@ -521,14 +521,14 @@ const ExpenseClaims = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-semibold text-slate-800">
-                      Week {currentSheet.week_number} {currentSheet.year} Expense Sheet
+                      Expense Sheet - {new Date(currentSheet.sheet_date).toLocaleDateString('en-IN', { 
+                        day: '2-digit', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })}
                     </h2>
                     <p className="text-sm text-slate-500">
-                      Sheet No: {currentSheet.sheet_no} • 
-                      {(() => {
-                        const weekRange = getWeekDateRange(currentSheet.year, currentSheet.week_number);
-                        return ` ${weekRange.startFormatted} - ${weekRange.endFormatted}`;
-                      })()}
+                      Sheet No: {currentSheet.sheet_no}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
