@@ -101,12 +101,11 @@ const ExpenseClaims = () => {
     if (!user?.id) return;
     try {
       setLoading(true);
-      const res = await api.get(`/employee/expense-sheets?user_id=${user.id}`);
+      const res = await api.get(`/employee/expense-sheets?user_id=${user.id}&year=${selectedYear}`);
       setSheets(res.data.sheets || []);
       
-      // Find current sheet (most recent or draft)
-      const current = res.data.sheets?.find(s => s.status === 'draft') || 
-                     res.data.sheets?.[0] || null;
+      // Find most recent draft sheet as current sheet
+      const current = res.data.sheets?.find(s => s.status === 'draft') || null;
       setCurrentSheet(current);
       
       const summaryRes = await api.get(`/employee/expense-sheets/summary/${user.id}?year=${selectedYear}`);
