@@ -524,7 +524,12 @@ async def download_attendance_pdf(user_id: str, month: Optional[int] = None, yea
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    pdf_buffer = generate_attendance_pdf(records, user, org_settings, month, year)
+    # Get HR employee record for proper emp_id
+    hr_employee = await get_hr_employee_by_email(user.get('email'))
+    if not hr_employee:
+        hr_employee = await get_hr_employee_by_user_id(user_id)
+    
+    pdf_buffer = generate_attendance_pdf(records, user, org_settings, month, year, hr_employee)
     
     month_name = calendar.month_name[month]
     filename = f"Attendance_{user.get('name', 'Employee')}_{month_name}_{year}.pdf"
