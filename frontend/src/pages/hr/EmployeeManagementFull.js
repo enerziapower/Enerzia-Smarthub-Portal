@@ -157,6 +157,18 @@ const EmployeeManagementFull = () => {
     setActiveTab('basic');
   };
 
+  const openAddModal = async () => {
+    resetForm();
+    // Fetch next employee ID
+    try {
+      const response = await api.get('/hr/next-emp-id');
+      setFormData(prev => ({ ...prev, emp_id: response.data.next_emp_id }));
+    } catch (err) {
+      console.error('Error fetching next emp_id:', err);
+    }
+    setShowModal(true);
+  };
+
   const openEditModal = (employee) => {
     setEditingEmployee(employee);
     setFormData({
