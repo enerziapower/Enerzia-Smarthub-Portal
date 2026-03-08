@@ -866,39 +866,15 @@ const ExpenseClaims = () => {
               <button onClick={() => setShowSheetModal(false)} className="p-1 hover:bg-slate-100 rounded"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleCreateSheet} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Week *</label>
-                  <select 
-                    value={sheetForm.week_number} 
-                    onChange={(e) => setSheetForm({ ...sheetForm, week_number: parseInt(e.target.value) })} 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg" 
-                    required
-                  >
-                    {Array.from({ length: getWeeksInYear(sheetForm.year) }, (_, i) => {
-                      const weekNum = i + 1;
-                      const weekRange = getWeekDateRange(sheetForm.year, weekNum);
-                      return (
-                        <option key={weekNum} value={weekNum}>
-                          Week {weekNum} ({weekRange.startFormatted} - {weekRange.endFormatted})
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Year *</label>
-                  <select 
-                    value={sheetForm.year} 
-                    onChange={(e) => setSheetForm({ ...sheetForm, year: parseInt(e.target.value) })} 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg" 
-                    required
-                  >
-                    {[currentYear - 1, currentYear, currentYear + 1].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sheet Date *</label>
+                <input 
+                  type="date"
+                  value={sheetForm.sheet_date} 
+                  onChange={(e) => setSheetForm({ ...sheetForm, sheet_date: e.target.value })} 
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg" 
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Advance Received (₹)</label>
