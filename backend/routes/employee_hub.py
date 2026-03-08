@@ -1450,22 +1450,25 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
         # Determine status
         status = record.get("status", "")
         status_details = {}
+        is_sunday = day_of_week == 6
+        is_public_holiday = date_str in public_holidays
         
-        # Check for Sunday (weekly off)
-        if day_of_week == 6:  # Sunday
-            status = "holiday"
-            status_details = {"holiday_type": "weekly_off", "name": "Sunday"}
+        # Priority 1: If user has attendance record (checked in), show as present/working
+        # This allows project team to work on Sundays/holidays
+        if record.get("check_in"):
+            status = record.get("status", "present")
+            # Add holiday info if it's a Sunday or holiday but user worked
+            if is_sunday:
+                status_details["worked_on_holiday"] = True
+                status_details["holiday_type"] = "weekly_off"
+                status_details["holiday_name"] = "Sunday"
+            elif is_public_holiday:
+                holiday_info = public_holidays[date_str]
+                status_details["worked_on_holiday"] = True
+                status_details["holiday_type"] = holiday_info.get("type", "public")
+                status_details["holiday_name"] = holiday_info.get("name", "Holiday")
         
-        # Check for public/company holiday from holidays collection
-        elif date_str in public_holidays:
-            holiday_info = public_holidays[date_str]
-            status = "holiday"
-            status_details = {
-                "holiday_type": holiday_info.get("type", "public"),
-                "name": holiday_info.get("name", "Holiday")
-            }
-        
-        # Check for approved leave
+        # Priority 2: Check for approved leave (blocks attendance)
         elif date_str in leave_dates:
             leave_info = leave_dates[date_str]
             if leave_info.get("is_half_day"):
@@ -1484,8 +1487,23 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
                     "reason": leave_info.get("reason", "")
                 }
         
-        # If no status yet and date is in the past, mark as absent (skip holidays)
-        elif not status and date_str < today and day_of_week != 6 and date_str not in public_holidays:
+        # Priority 3: Sunday (but allow check-in - just show as holiday if no attendance)
+        elif is_sunday:
+            status = "holiday"
+            status_details = {"holiday_type": "weekly_off", "name": "Sunday", "can_check_in": True}
+        
+        # Priority 4: Public/company holiday (but allow check-in)
+        elif is_public_holiday:
+            holiday_info = public_holidays[date_str]
+            status = "holiday"
+            status_details = {
+                "holiday_type": holiday_info.get("type", "public"),
+                "name": holiday_info.get("name", "Holiday"),
+                "can_check_in": True
+            }
+        
+        # Priority 5: If no status yet and date is in the past (not Sunday/holiday), mark as absent
+        elif not status and date_str < today:
             status = "absent"
             status_details = {"auto_marked": True}
         
