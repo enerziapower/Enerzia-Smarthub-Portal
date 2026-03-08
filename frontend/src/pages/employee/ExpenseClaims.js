@@ -1334,13 +1334,6 @@ const ExpenseClaims = () => {
             <li><strong>Weekly Cycle:</strong> Submit expenses weekly for faster processing and better cash flow</li>
           </ul>
         </div>
-      </div>heet:</strong> Create a monthly expense sheet</li>
-            <li><strong>Add Items:</strong> Add each expense with project name, bill type, amount, and receipt</li>
-            <li><strong>Report Advance:</strong> Enter the advance amount received when creating/editing sheet</li>
-            <li><strong>Submit:</strong> Click "Submit for Approval" to send to Finance</li>
-            <li><strong>Approval:</strong> Finance dept. verifies and processes payment</li>
-          </ul>
-        </div>
       </div>
     </div>
   );
