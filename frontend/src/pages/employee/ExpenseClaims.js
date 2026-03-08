@@ -72,7 +72,12 @@ const PAYMENT_MODES = ['Cash', 'UPI/GPay', 'Paytm', 'Card', 'Bank Transfer', 'Ot
 
 const ExpenseClaims = () => {
   const { user } = useAuth();
+  const currentYear = new Date().getFullYear();
+  const currentWeek = getCurrentWeekNumber();
+  
   const [activeTab, setActiveTab] = useState('current');
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedWeek, setSelectedWeek] = useState(currentWeek);
   const [sheets, setSheets] = useState([]);
   const [currentSheet, setCurrentSheet] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,14 +103,9 @@ const ExpenseClaims = () => {
     remarks: ''
   });
 
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-
   const [sheetForm, setSheetForm] = useState({
-    month: selectedMonth,
-    year: selectedYear,
+    week_number: currentWeek,
+    year: currentYear,
     advance_received: 0,
     advance_received_date: '',
     previous_due: 0,
