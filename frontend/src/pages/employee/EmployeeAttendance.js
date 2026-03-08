@@ -291,15 +291,17 @@ const EmployeeAttendance = () => {
                   <Plane size={24} />
                   On Leave ({todayRecord?.details?.leave_type || 'Leave'})
                 </span>
-              ) : todayRecord?.status === 'holiday' ? (
-                <span className="flex items-center gap-2">
-                  <Sun size={24} />
-                  {todayRecord?.details?.name || 'Holiday'}
-                </span>
               ) : todayRecord?.check_in ? (
                 todayRecord.check_out ? 'Day Completed' : 'Working'
               ) : 'Not Checked In'}
             </h2>
+            {/* Show holiday info if it's a holiday but allow check-in */}
+            {todayRecord?.status === 'holiday' && !todayRecord?.check_in && (
+              <p className="text-blue-100 text-sm mt-1 flex items-center gap-1">
+                <Sun size={14} />
+                {todayRecord?.details?.name || 'Holiday'} - Check-in available for work
+              </p>
+            )}
             {todayRecord?.check_in && todayRecord?.status !== 'on-leave' && (
               <div className="flex items-center gap-4 mt-2 text-sm text-blue-100">
                 {todayRecord.check_in && (
@@ -325,18 +327,16 @@ const EmployeeAttendance = () => {
                 )}
               </div>
             )}
-            {/* Leave/Holiday info message */}
-            {(todayRecord?.status === 'on-leave' || todayRecord?.status === 'holiday') && (
+            {/* Only show disabled message for leave days */}
+            {todayRecord?.status === 'on-leave' && (
               <p className="text-blue-100 text-sm mt-2">
-                {todayRecord?.status === 'on-leave' 
-                  ? 'Check-in/out is disabled for leave days' 
-                  : 'Enjoy your day off!'}
+                Check-in/out is disabled for leave days
               </p>
             )}
           </div>
           <div className="flex gap-3">
-            {/* Hide check-in/out buttons if on leave or holiday */}
-            {todayRecord?.status !== 'on-leave' && todayRecord?.status !== 'holiday' && (
+            {/* Only hide check-in/out buttons if on approved leave */}
+            {todayRecord?.status !== 'on-leave' && (
               <>
                 {!todayRecord?.check_in && (
                   <button
