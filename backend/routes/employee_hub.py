@@ -1627,12 +1627,33 @@ async def check_in(user_id: str, user_name: str):
 
 @router.post("/attendance/check-out")
 async def check_out(user_id: str):
-    """Record check-out time and calculate work hours"""
+    """Record check-out time and calculate work hours. Overtime only counts if > 2 hours beyond 6 PM."""
     # Use IST timezone (UTC+5:30) for India
     ist = timezone(timedelta(hours=5, minutes=30))
     now_ist = datetime.now(ist)
     today = now_ist.strftime("%Y-%m-%d")
     check_out_time = now_ist.strftime("%H:%M")
+    
+    # Check if user has approved full-day leave for today
+    leave_today = await db.leave_requests.find_one({
+        "user_id": user_id,
+        "status": "approved",
+        "is_half_day": {"$ne": True},
+        "from_date": {"$lte": today},
+        "to_date": {"$gte": today}
+    })
+    
+    if leave_today:
+        leave_type = leave_today.get("type", "Leave")
+        return {
+            "error": True,
+            "message": f"Cannot check out - You have approved {leave_type} today",
+            "leave_info": {
+                "type": leave_type,
+                "from_date": leave_today.get("from_date"),
+                "to_date": leave_today.get("to_date")
+            }
+        }
     
     # Get the check-in record
     record = await db.attendance.find_one({"user_id": user_id, "date": today})
@@ -1641,7 +1662,7 @@ async def check_out(user_id: str):
     
     check_in_time = record.get("check_in")
     
-    # Calculate work hours and overtime
+    # Calculate work hours and overtime (overtime only if > 2 hours after 6 PM)
     status_info = determine_attendance_status(check_in_time, check_out_time, record.get("manual_status"))
     
     result = await db.attendance.update_one(
@@ -1657,13 +1678,19 @@ async def check_out(user_id: str):
     if result.modified_count == 0:
         return {"message": "Failed to update record"}
     
-    return {
+    response = {
         "message": "Checked out successfully", 
         "check_out": check_out_time,
         "work_hours": status_info["work_hours"],
         "overtime": status_info["overtime"],
         "status": status_info["status"]
     }
+    
+    # Add overtime note if no overtime counted
+    if status_info["overtime"] == 0:
+        response["overtime_note"] = f"Overtime only counted if worked more than {OVERTIME_THRESHOLD} hours after {OFFICE_END_TIME}"
+    
+    return response
 
 
 # ============= MY JOURNEY / ACHIEVEMENTS =============
