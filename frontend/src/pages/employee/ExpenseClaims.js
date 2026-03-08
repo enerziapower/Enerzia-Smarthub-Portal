@@ -361,20 +361,19 @@ const ExpenseClaims = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Expense Claims</h1>
-          <p className="text-slate-500 mt-1">Submit weekly project expenses for reimbursement</p>
+          <p className="text-slate-500 mt-1">Submit project expenses for reimbursement</p>
         </div>
         {(!currentSheet || currentSheet.status === 'rejected') && (
           <button
             onClick={() => {
-              const weekRange = getWeekDateRange(selectedYear, selectedWeek);
-              setSheetForm(prev => ({ ...prev, week_number: selectedWeek, year: selectedYear }));
+              setSheetForm(prev => ({ ...prev, sheet_date: new Date().toISOString().split('T')[0] }));
               setShowSheetModal(true);
             }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             data-testid="create-sheet-btn"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            {currentSheet?.status === 'rejected' ? 'Edit Rejected Sheet' : `Create Week ${selectedWeek} Sheet`}
+            {currentSheet?.status === 'rejected' ? 'Edit Rejected Sheet' : 'Create Expense Sheet'}
           </button>
         )}
       </div>
