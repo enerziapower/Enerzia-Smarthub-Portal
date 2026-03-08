@@ -285,11 +285,22 @@ const EmployeeAttendance = () => {
           <div>
             <p className="text-blue-100 text-sm">Today - {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <h2 className="text-2xl font-bold mt-1">
-              {todayRecord?.check_in ? (
+              {/* Show leave status if on leave */}
+              {todayRecord?.status === 'on-leave' ? (
+                <span className="flex items-center gap-2">
+                  <Plane size={24} />
+                  On Leave ({todayRecord?.details?.leave_type || 'Leave'})
+                </span>
+              ) : todayRecord?.status === 'holiday' ? (
+                <span className="flex items-center gap-2">
+                  <Sun size={24} />
+                  {todayRecord?.details?.name || 'Holiday'}
+                </span>
+              ) : todayRecord?.check_in ? (
                 todayRecord.check_out ? 'Day Completed' : 'Working'
               ) : 'Not Checked In'}
             </h2>
-            {todayRecord?.check_in && (
+            {todayRecord?.check_in && todayRecord?.status !== 'on-leave' && (
               <div className="flex items-center gap-4 mt-2 text-sm text-blue-100">
                 {todayRecord.check_in && (
                   <span className="flex items-center gap-1">
@@ -314,29 +325,42 @@ const EmployeeAttendance = () => {
                 )}
               </div>
             )}
+            {/* Leave/Holiday info message */}
+            {(todayRecord?.status === 'on-leave' || todayRecord?.status === 'holiday') && (
+              <p className="text-blue-100 text-sm mt-2">
+                {todayRecord?.status === 'on-leave' 
+                  ? 'Check-in/out is disabled for leave days' 
+                  : 'Enjoy your day off!'}
+              </p>
+            )}
           </div>
           <div className="flex gap-3">
-            {!todayRecord?.check_in && (
-              <button
-                onClick={handleCheckIn}
-                disabled={checkingIn}
-                className="flex items-center gap-2 px-5 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 disabled:opacity-50"
-                data-testid="check-in-btn"
-              >
-                {checkingIn ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
-                Check In
-              </button>
-            )}
-            {todayRecord?.check_in && !todayRecord.check_out && (
-              <button
-                onClick={handleCheckOut}
-                disabled={checkingOut}
-                className="flex items-center gap-2 px-5 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 disabled:opacity-50"
-                data-testid="check-out-btn"
-              >
-                {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} />}
-                Check Out
-              </button>
+            {/* Hide check-in/out buttons if on leave or holiday */}
+            {todayRecord?.status !== 'on-leave' && todayRecord?.status !== 'holiday' && (
+              <>
+                {!todayRecord?.check_in && (
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={checkingIn}
+                    className="flex items-center gap-2 px-5 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 disabled:opacity-50"
+                    data-testid="check-in-btn"
+                  >
+                    {checkingIn ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
+                    Check In
+                  </button>
+                )}
+                {todayRecord?.check_in && !todayRecord.check_out && (
+                  <button
+                    onClick={handleCheckOut}
+                    disabled={checkingOut}
+                    className="flex items-center gap-2 px-5 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 disabled:opacity-50"
+                    data-testid="check-out-btn"
+                  >
+                    {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} />}
+                    Check Out
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
