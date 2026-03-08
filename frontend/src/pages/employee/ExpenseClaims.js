@@ -388,9 +388,6 @@ const ExpenseClaims = () => {
     return sheet?.status === 'draft' || sheet?.status === 'rejected';
   };
 
-  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
-                      'July', 'August', 'September', 'October', 'November', 'December'];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
