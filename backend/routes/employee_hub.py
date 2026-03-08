@@ -696,11 +696,14 @@ async def reject_expense_claim(claim_id: str, approved_by: str):
 
 @router.get("/expense-sheets")
 async def get_expense_sheets(user_id: Optional[str] = None, month: Optional[int] = None, 
+                             week_number: Optional[int] = None,
                              year: Optional[int] = None, status: Optional[str] = None):
-    """Get expense sheets with optional filters"""
+    """Get expense sheets with optional filters (supports both weekly and legacy monthly)"""
     query = {}
     if user_id:
         query["user_id"] = user_id
+    if week_number:
+        query["week_number"] = week_number
     if month:
         query["month"] = month
     if year:
@@ -708,7 +711,7 @@ async def get_expense_sheets(user_id: Optional[str] = None, month: Optional[int]
     if status:
         query["status"] = status
     
-    cursor = db.expense_sheets.find(query).sort([("year", -1), ("month", -1), ("created_at", -1)])
+    cursor = db.expense_sheets.find(query).sort([("year", -1), ("week_number", -1), ("month", -1), ("created_at", -1)])
     sheets = []
     async for doc in cursor:
         sheets.append(serialize_doc(doc))
