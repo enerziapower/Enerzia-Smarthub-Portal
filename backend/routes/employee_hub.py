@@ -1573,12 +1573,34 @@ async def get_attendance(user_id: str, month: Optional[int] = None, year: Option
 
 @router.post("/attendance/check-in")
 async def check_in(user_id: str, user_name: str):
-    """Record check-in time"""
+    """Record check-in time - blocked if user has approved leave for today"""
     # Use IST timezone (UTC+5:30) for India
     ist = timezone(timedelta(hours=5, minutes=30))
     now_ist = datetime.now(ist)
     today = now_ist.strftime("%Y-%m-%d")
     check_in_time = now_ist.strftime("%H:%M")
+    
+    # Check if user has approved full-day leave for today
+    leave_today = await db.leave_requests.find_one({
+        "user_id": user_id,
+        "status": "approved",
+        "is_half_day": {"$ne": True},  # Not a half-day leave
+        "from_date": {"$lte": today},
+        "to_date": {"$gte": today}
+    })
+    
+    if leave_today:
+        leave_type = leave_today.get("type", "Leave")
+        return {
+            "error": True,
+            "message": f"Cannot check in - You have approved {leave_type} today",
+            "leave_info": {
+                "type": leave_type,
+                "from_date": leave_today.get("from_date"),
+                "to_date": leave_today.get("to_date"),
+                "reason": leave_today.get("reason", "")
+            }
+        }
     
     # Check if already checked in
     existing = await db.attendance.find_one({"user_id": user_id, "date": today})
