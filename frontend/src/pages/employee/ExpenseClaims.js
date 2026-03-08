@@ -510,7 +510,7 @@ const ExpenseClaims = () => {
         </div>
       </div>
 
-      {/* Current Week Sheet */}
+      {/* Current Sheet */}
       {activeTab === 'current' && (
         <div className="space-y-4">
           {currentSheet ? (
