@@ -736,11 +736,11 @@ async def get_expense_sheet(sheet_id: str):
 @router.post("/expense-sheets")
 async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str, 
                                department: str, emp_id: Optional[str] = None, designation: Optional[str] = None):
-    """Create a new monthly expense sheet"""
-    # Check if sheet already exists for this month (including rejected ones)
+    """Create a new weekly expense sheet"""
+    # Check if sheet already exists for this week (including rejected ones)
     existing = await db.expense_sheets.find_one({
         "user_id": user_id,
-        "month": sheet.month,
+        "week_number": sheet.week_number,
         "year": sheet.year
     })
     
@@ -748,18 +748,35 @@ async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str
         if existing.get("status") == "rejected":
             raise HTTPException(
                 status_code=400, 
-                detail=f"A rejected expense sheet for {sheet.month}/{sheet.year} already exists. Please edit and resubmit that sheet instead of creating a new one."
+                detail=f"A rejected expense sheet for Week {sheet.week_number}/{sheet.year} already exists. Please edit and resubmit that sheet instead of creating a new one."
             )
         else:
-            raise HTTPException(status_code=400, detail=f"Expense sheet for {sheet.month}/{sheet.year} already exists")
+            raise HTTPException(status_code=400, detail=f"Expense sheet for Week {sheet.week_number}/{sheet.year} already exists")
     
     # Calculate totals
     total_amount = sum(item.amount for item in sheet.items)
     net_claim = total_amount + sheet.previous_due - sheet.advance_received
     
-    # Generate sheet number
+    # Generate sheet number with week
     count = await db.expense_sheets.count_documents({"year": sheet.year})
-    sheet_no = f"EXP-{sheet.year}-{count + 1:04d}"
+    sheet_no = f"EXP-{sheet.year}-W{sheet.week_number:02d}-{count + 1:04d}"
+    
+    # Determine week date range if not provided
+    week_start = sheet.week_start_date
+    week_end = sheet.week_end_date
+    if not week_start or not week_end:
+        # Calculate from week number
+        first_day_of_year = datetime(sheet.year, 1, 1)
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()) % 7)
+        if first_day_of_year.weekday() <= 3:  # Thursday or earlier
+            first_monday -= timedelta(days=7)
+        week_start_date = first_monday + timedelta(weeks=sheet.week_number - 1)
+        week_end_date = week_start_date + timedelta(days=6)
+        week_start = week_start_date.strftime("%Y-%m-%d")
+        week_end = week_end_date.strftime("%Y-%m-%d")
+    
+    # Determine month from week start date
+    month = datetime.strptime(week_start, "%Y-%m-%d").month if week_start else sheet.month
     
     doc = {
         "id": str(uuid.uuid4()),
@@ -769,9 +786,13 @@ async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str
         "emp_id": emp_id or user_id,
         "designation": designation or "Employee",
         "department": department,
-        "month": sheet.month,
+        "week_number": sheet.week_number,
+        "week_start_date": week_start,
+        "week_end_date": week_end,
+        "week_label": f"Week {sheet.week_number} ({week_start} to {week_end})",
+        "month": month,
         "year": sheet.year,
-        "month_name": calendar.month_name[sheet.month],
+        "month_name": calendar.month_name[month] if month else "",
         "items": [item.dict() for item in sheet.items],
         "item_count": len(sheet.items),
         "total_amount": total_amount,
@@ -795,7 +816,7 @@ async def create_expense_sheet(sheet: ExpenseSheet, user_id: str, user_name: str
     
     await db.expense_sheets.insert_one(doc)
     doc.pop("_id", None)
-    return {"message": "Expense sheet created successfully", "sheet": doc}
+    return {"message": "Weekly expense sheet created successfully", "sheet": doc}
 
 
 @router.put("/expense-sheets/{sheet_id}")
