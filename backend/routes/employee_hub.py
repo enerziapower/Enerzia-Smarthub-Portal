@@ -111,8 +111,11 @@ class ExpenseItem(BaseModel):
 
 
 class ExpenseSheet(BaseModel):
-    """Monthly expense sheet submission"""
-    month: int  # 1-12
+    """Weekly expense sheet submission"""
+    week_number: int  # 1-53 (ISO week number)
+    week_start_date: Optional[str] = None  # Start date of the week (Monday)
+    week_end_date: Optional[str] = None  # End date of the week (Sunday)
+    month: Optional[int] = None  # 1-12 (for reference/filtering)
     year: int
     items: List[ExpenseItem] = []
     advance_received: float = 0  # Advance amount received
