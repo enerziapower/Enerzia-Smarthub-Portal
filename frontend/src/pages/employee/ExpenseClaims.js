@@ -977,7 +977,7 @@ const ExpenseClaims = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Previous Due (₹)</label>
-                <input type="number" value={sheetForm.previous_due} onChange={(e) => setSheetForm({ ...sheetForm, previous_due: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg" placeholder="Carry forward from previous month" min="0" />
+                <input type="number" value={sheetForm.previous_due} onChange={(e) => setSheetForm({ ...sheetForm, previous_due: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg" placeholder="Carry forward from previous week" min="0" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
