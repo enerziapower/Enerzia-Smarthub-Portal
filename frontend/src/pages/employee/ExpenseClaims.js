@@ -212,8 +212,7 @@ const ExpenseClaims = () => {
         };
         
         await api.put(`/employee/expense-sheets/${currentSheet.id}`, {
-          week_number: currentSheet.week_number,
-          year: currentSheet.year,
+          sheet_date: currentSheet.sheet_date,
           items: updatedItems,
           advance_received: currentSheet.advance_received,
           advance_received_date: currentSheet.advance_received_date,
