@@ -12,6 +12,45 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Helper function to get week number from date
+const getWeekNumber = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return weekNo;
+};
+
+// Helper function to get week date range
+const getWeekDateRange = (year, weekNumber) => {
+  const simple = new Date(year, 0, 1 + (weekNumber - 1) * 7);
+  const dow = simple.getDay();
+  const ISOweekStart = new Date(simple);
+  if (dow <= 4)
+    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+  else
+    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+  const ISOweekEnd = new Date(ISOweekStart);
+  ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
+  return {
+    start: ISOweekStart.toISOString().split('T')[0],
+    end: ISOweekEnd.toISOString().split('T')[0],
+    startFormatted: ISOweekStart.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+    endFormatted: ISOweekEnd.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+  };
+};
+
+// Get current week number
+const getCurrentWeekNumber = () => getWeekNumber(new Date());
+
+// Get weeks in a year
+const getWeeksInYear = (year) => {
+  const dec31 = new Date(year, 11, 31);
+  const week = getWeekNumber(dec31);
+  return week === 1 ? 52 : week;
+};
+
 const BILL_TYPES = [
   'Travel - Bus/Auto/Cab',
   'Travel - Train/Flight',
