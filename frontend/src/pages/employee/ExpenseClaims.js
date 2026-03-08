@@ -571,7 +571,7 @@ const ExpenseClaims = () => {
         </div>
       </div>
 
-      {/* Current Month Sheet */}
+      {/* Current Week Sheet */}
       {activeTab === 'current' && (
         <div className="space-y-4">
           {currentSheet ? (
@@ -581,9 +581,15 @@ const ExpenseClaims = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-semibold text-slate-800">
-                      {currentSheet.month_name} {currentSheet.year} Expense Sheet
+                      Week {currentSheet.week_number} {currentSheet.year} Expense Sheet
                     </h2>
-                    <p className="text-sm text-slate-500">Sheet No: {currentSheet.sheet_no}</p>
+                    <p className="text-sm text-slate-500">
+                      Sheet No: {currentSheet.sheet_no} • 
+                      {(() => {
+                        const weekRange = getWeekDateRange(currentSheet.year, currentSheet.week_number);
+                        return ` ${weekRange.startFormatted} - ${weekRange.endFormatted}`;
+                      })()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {(() => {
