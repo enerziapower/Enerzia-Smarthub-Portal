@@ -1242,6 +1242,7 @@ OFFICE_START_TIME = "09:30"  # 9:30 AM
 OFFICE_END_TIME = "18:00"    # 6:00 PM
 STANDARD_WORK_HOURS = 8.5    # 8.5 hours (9:30 AM to 6:00 PM)
 HALF_DAY_THRESHOLD = 4.0     # Less than 4 hours = Half Day
+OVERTIME_THRESHOLD = 2.0     # Minimum 2 hours beyond office end time to count as overtime
 
 
 def calculate_work_hours(check_in: str, check_out: str) -> float:
@@ -1258,11 +1259,29 @@ def calculate_work_hours(check_in: str, check_out: str) -> float:
 
 
 def calculate_overtime(check_in: str, check_out: str) -> float:
-    """Calculate overtime hours beyond standard work hours"""
-    work_hours = calculate_work_hours(check_in, check_out)
-    if work_hours > STANDARD_WORK_HOURS:
-        return round(work_hours - STANDARD_WORK_HOURS, 2)
-    return 0.0
+    """
+    Calculate overtime hours beyond standard work hours.
+    Overtime only counts if the employee works MORE than 2 hours after 6:00 PM (office end time).
+    If overtime is >= 2 hours threshold, calculate from office end time.
+    """
+    if not check_in or not check_out:
+        return 0.0
+    
+    try:
+        out_time = datetime.strptime(check_out, "%H:%M")
+        office_end = datetime.strptime(OFFICE_END_TIME, "%H:%M")  # 6:00 PM
+        
+        # Calculate hours worked beyond office end time
+        if out_time > office_end:
+            hours_beyond_office_end = (out_time - office_end).total_seconds() / 3600
+            
+            # Only count overtime if more than 2 hours threshold
+            if hours_beyond_office_end >= OVERTIME_THRESHOLD:
+                return round(hours_beyond_office_end, 2)
+        
+        return 0.0
+    except (ValueError, TypeError):
+        return 0.0
 
 
 def determine_attendance_status(check_in: str, check_out: str, manual_status: str = None) -> dict:
