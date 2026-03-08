@@ -410,14 +410,15 @@ const ExpenseClaims = () => {
         {(!currentSheet || currentSheet.status === 'rejected') && (
           <button
             onClick={() => {
-              setSheetForm(prev => ({ ...prev, month: selectedMonth, year: selectedYear }));
+              const weekRange = getWeekDateRange(selectedYear, selectedWeek);
+              setSheetForm(prev => ({ ...prev, week_number: selectedWeek, year: selectedYear }));
               setShowSheetModal(true);
             }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             data-testid="create-sheet-btn"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            {currentSheet?.status === 'rejected' ? 'Edit Rejected Sheet' : `Create ${monthNames[selectedMonth]} Sheet`}
+            {currentSheet?.status === 'rejected' ? 'Edit Rejected Sheet' : `Create Week ${selectedWeek} Sheet`}
           </button>
         )}
       </div>
