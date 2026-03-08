@@ -135,8 +135,8 @@ async def get_all_users_attendance(month: int, year: int, department: Optional[s
     return all_data
 
 
-def generate_attendance_pdf(records, user, org_settings, month, year):
-    """Generate PDF attendance report"""
+def generate_attendance_pdf(records, user, org_settings, month, year, hr_employee=None):
+    """Generate PDF attendance report with proper employee ID from HR records"""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=20*mm, bottomMargin=20*mm)
     elements = []
