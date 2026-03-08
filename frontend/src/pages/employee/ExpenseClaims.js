@@ -935,15 +935,35 @@ const ExpenseClaims = () => {
             <form onSubmit={handleCreateSheet} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Month *</label>
-                  <select value={sheetForm.month} onChange={(e) => setSheetForm({ ...sheetForm, month: parseInt(e.target.value) })} className="w-full px-3 py-2 border border-slate-200 rounded-lg" required>
-                    {monthNames.slice(1).map((name, idx) => (<option key={idx + 1} value={idx + 1}>{name}</option>))}
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Week *</label>
+                  <select 
+                    value={sheetForm.week_number} 
+                    onChange={(e) => setSheetForm({ ...sheetForm, week_number: parseInt(e.target.value) })} 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg" 
+                    required
+                  >
+                    {Array.from({ length: getWeeksInYear(sheetForm.year) }, (_, i) => {
+                      const weekNum = i + 1;
+                      const weekRange = getWeekDateRange(sheetForm.year, weekNum);
+                      return (
+                        <option key={weekNum} value={weekNum}>
+                          Week {weekNum} ({weekRange.startFormatted} - {weekRange.endFormatted})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Year *</label>
-                  <select value={sheetForm.year} onChange={(e) => setSheetForm({ ...sheetForm, year: parseInt(e.target.value) })} className="w-full px-3 py-2 border border-slate-200 rounded-lg" required>
-                    {[currentYear - 1, currentYear, currentYear + 1].map(y => (<option key={y} value={y}>{y}</option>))}
+                  <select 
+                    value={sheetForm.year} 
+                    onChange={(e) => setSheetForm({ ...sheetForm, year: parseInt(e.target.value) })} 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg" 
+                    required
+                  >
+                    {[currentYear - 1, currentYear, currentYear + 1].map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
                   </select>
                 </div>
               </div>
