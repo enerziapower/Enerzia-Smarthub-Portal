@@ -252,15 +252,42 @@ async def get_employee(emp_id: str):
     return employee
 
 
+async def generate_next_emp_id():
+    """Generate the next consecutive employee ID (EMP001, EMP002, etc.)"""
+    # Find the highest existing employee ID
+    pipeline = [
+        {"$match": {"emp_id": {"$regex": "^EMP\\d+$", "$options": "i"}}},
+        {"$project": {
+            "num": {"$toInt": {"$substr": ["$emp_id", 3, -1]}}
+        }},
+        {"$sort": {"num": -1}},
+        {"$limit": 1}
+    ]
+    
+    result = await db.hr_employees.aggregate(pipeline).to_list(1)
+    
+    if result:
+        next_num = result[0]["num"] + 1
+    else:
+        next_num = 1
+    
+    return f"EMP{next_num:03d}"
+
+
 @router.post("/employees")
 async def create_employee(employee: EmployeeCreate):
-    """Create new employee"""
-    # Check if emp_id already exists
-    existing = await db.hr_employees.find_one({"emp_id": employee.emp_id})
-    if existing:
-        raise HTTPException(status_code=400, detail="Employee ID already exists")
-    
+    """Create new employee with auto-generated or custom Employee ID"""
     doc = employee.dict()
+    
+    # Auto-generate emp_id if not provided or empty
+    if not doc.get("emp_id") or doc["emp_id"].strip() == "":
+        doc["emp_id"] = await generate_next_emp_id()
+    else:
+        # Check if custom emp_id already exists
+        existing = await db.hr_employees.find_one({"emp_id": doc["emp_id"]})
+        if existing:
+            raise HTTPException(status_code=400, detail="Employee ID already exists")
+    
     doc["id"] = str(uuid.uuid4())
     doc["created_at"] = datetime.now(timezone.utc).isoformat()
     doc["updated_at"] = datetime.now(timezone.utc).isoformat()
