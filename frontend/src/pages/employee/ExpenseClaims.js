@@ -104,11 +104,10 @@ const ExpenseClaims = () => {
       const res = await api.get(`/employee/expense-sheets?user_id=${user.id}`);
       setSheets(res.data.sheets || []);
       
-      // Find sheet for selected week/year
-      const current = res.data.sheets?.find(
-        s => s.week_number === selectedWeek && s.year === selectedYear
-      );
-      setCurrentSheet(current || null);
+      // Find current sheet (most recent or draft)
+      const current = res.data.sheets?.find(s => s.status === 'draft') || 
+                     res.data.sheets?.[0] || null;
+      setCurrentSheet(current);
       
       const summaryRes = await api.get(`/employee/expense-sheets/summary/${user.id}?year=${selectedYear}`);
       setSummary(summaryRes.data);
@@ -117,7 +116,7 @@ const ExpenseClaims = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedWeek, selectedYear]);
+  }, [user, selectedYear]);
 
   const fetchAdvanceBalance = useCallback(async () => {
     if (!user?.id) return;
