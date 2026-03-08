@@ -1235,14 +1235,14 @@ const ExpenseClaims = () => {
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="text-sm text-blue-800">
-          <p className="font-medium mb-2">📋 How Weekly Expense Claims Work</p>
+          <p className="font-medium mb-2">📋 How Expense Claims Work</p>
           <ul className="list-disc list-inside space-y-1 text-blue-700">
             <li><strong>Request Advance:</strong> Request advance from Finance for project expenses</li>
-            <li><strong>Create Weekly Sheet:</strong> Create expense sheet for each week (Monday-Sunday)</li>
+            <li><strong>Create Sheet:</strong> Create expense sheet for your project expenses</li>
             <li><strong>Add Expenses:</strong> Add daily expenses with receipts and project details</li>
             <li><strong>Submit for Approval:</strong> Submit completed sheet to your manager</li>
             <li><strong>Track Status:</strong> Monitor approval status and payment processing</li>
-            <li><strong>Weekly Cycle:</strong> Submit expenses weekly for faster processing and better cash flow</li>
+            <li><strong>Regular Submission:</strong> Submit expenses regularly for faster processing and better cash flow</li>
           </ul>
         </div>
       </div>
