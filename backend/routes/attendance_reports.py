@@ -44,6 +44,28 @@ def serialize_doc(doc):
     return doc
 
 
+async def get_hr_employee_by_email(email: str):
+    """Get HR employee record by email to retrieve proper emp_id"""
+    if not email:
+        return None
+    employee = await db.hr_employees.find_one(
+        {"email": {"$regex": f"^{email}$", "$options": "i"}},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1, "designation": 1}
+    )
+    return employee
+
+
+async def get_hr_employee_by_user_id(user_id: str):
+    """Get HR employee record by linked user_id"""
+    if not user_id:
+        return None
+    employee = await db.hr_employees.find_one(
+        {"$or": [{"user_id": user_id}, {"linked_user_id": user_id}]},
+        {"_id": 0, "emp_id": 1, "name": 1, "department": 1, "designation": 1}
+    )
+    return employee
+
+
 async def get_org_settings():
     """Get organization settings for report header"""
     settings = await db.organization_settings.find_one({})
