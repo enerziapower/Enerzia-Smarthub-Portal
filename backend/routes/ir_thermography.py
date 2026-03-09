@@ -591,10 +591,10 @@ async def update_ir_thermography_report(report_id: str, report_data: IRThermogra
     if report_data.status:
         update_data["status"] = report_data.status
     
-    # Process inspection items if provided - save images as files
+    # Process inspection items if provided - save images to MongoDB
     if report_data.inspection_items is not None:
         items_to_process = [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in report_data.inspection_items]
-        processed_items = process_inspection_items_images(items_to_process, report_id)
+        processed_items = await process_inspection_items_images_to_db(items_to_process, report_id, db)
         
         update_data["inspection_items"] = processed_items
         update_data["summary"] = calculate_summary(processed_items)
@@ -610,7 +610,7 @@ async def update_ir_thermography_report(report_id: str, report_data: IRThermogra
 
 @router.delete("/{report_id}")
 async def delete_ir_thermography_report(report_id: str):
-    """Delete an IR Thermography report and its associated image files"""
+    """Delete an IR Thermography report and its associated images from MongoDB"""
     db = get_db()
     
     result = await db.test_reports.delete_one(
@@ -620,7 +620,10 @@ async def delete_ir_thermography_report(report_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Report not found")
     
-    # Clean up image files
+    # Clean up images from MongoDB
+    await db.ir_thermography_images.delete_many({"report_id": report_id})
+    
+    # Also clean up legacy file storage if exists
     report_dir = os.path.join(IR_IMAGES_DIR, report_id)
     if os.path.exists(report_dir):
         shutil.rmtree(report_dir)
