@@ -1,10 +1,10 @@
 """
 IR Thermography Report Routes
 Handles Pre-Thermography and Post-Thermography inspection reports
-Images are stored as files to avoid MongoDB's 16MB document size limit
+Images are stored in MongoDB (GridFS-like approach) for persistence across pod restarts
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, Response
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Any
 from datetime import datetime, timezone
@@ -19,7 +19,7 @@ import PIL
 
 router = APIRouter()
 
-# Directory for storing IR thermography images
+# Legacy directory for backward compatibility (will be deprecated)
 IR_IMAGES_DIR = "/app/uploads/ir-thermography"
 os.makedirs(IR_IMAGES_DIR, exist_ok=True)
 
