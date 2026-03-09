@@ -758,12 +758,11 @@ const AMCManagement = () => {
                               {statusInfo.label}
                             </span>
                           </div>
-                          {inspection.customer_name && (
-                            <p className="text-sm text-slate-600 font-medium flex items-center gap-1 mb-1">
-                              <Building2 size={14} className="text-slate-400" />
-                              {inspection.customer_name}
-                            </p>
-                          )}
+                          {/* Customer Name - Always show */}
+                          <p className="text-sm text-blue-700 font-semibold flex items-center gap-1 mb-1">
+                            <Building2 size={14} className="text-blue-500" />
+                            {inspection.customer_name || inspection.project_name || 'No Customer Assigned'}
+                          </p>
                           <div className="flex items-center gap-4 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
                               <Repeat size={14} />
