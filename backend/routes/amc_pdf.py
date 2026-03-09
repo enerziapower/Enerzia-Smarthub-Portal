@@ -886,13 +886,25 @@ def create_equipment_list_section(amc, styles):
     equipment_list = amc.get('equipment_list', [])
     
     if equipment_list:
+        # Create cell style for text wrapping
+        cell_style = ParagraphStyle(
+            'CellText',
+            parent=styles['Normal'],
+            fontSize=8,
+            leading=10,
+            alignment=0  # Left aligned
+        )
+        
         eq_data = [['S.No', 'EQUIPMENT TYPE', 'EQUIPMENT NAME', 'QTY', 'SERVICE FREQ.', 'LAST SERVICE', 'NEXT SERVICE']]
         
         for i, eq in enumerate(equipment_list):
+            eq_type = eq.get('equipment_type', '').upper()
+            eq_name = eq.get('equipment_name', '').upper()
+            
             eq_data.append([
                 str(i + 1),
-                eq.get('equipment_type', '').upper(),
-                eq.get('equipment_name', '').upper(),
+                Paragraph(eq_type, cell_style),
+                Paragraph(eq_name, cell_style),
                 str(eq.get('quantity', 1)),
                 eq.get('service_frequency', '').upper(),
                 format_date_ddmmyyyy(eq.get('last_service_date', '-')),
@@ -913,7 +925,6 @@ def create_equipment_list_section(amc, styles):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('WORDWRAP', (1, 1), (2, -1), True),  # Enable word wrap for Type and Name columns
         ]))
         elements.append(eq_table)
     else:
