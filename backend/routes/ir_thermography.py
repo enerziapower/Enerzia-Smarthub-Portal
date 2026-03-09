@@ -116,8 +116,95 @@ def get_db():
     return db
 
 
+async def save_base64_image_to_db(base64_string: str, report_id: str, item_id: str, image_type: str, db) -> str:
+    """
+    Save a base64 encoded image to MongoDB for persistent storage.
+    Returns a unique image ID that can be used to retrieve the image.
+    Images are stored in 'ir_thermography_images' collection.
+    """
+    if not base64_string or not base64_string.startswith('data:'):
+        return base64_string  # Return as-is if not base64 or already a URL/ID
+    
+    try:
+        # Parse the base64 string
+        header, data = base64_string.split(',', 1)
+        
+        # Decode image data
+        image_data = base64.b64decode(data)
+        
+        # CRITICAL: Validate image integrity using PIL before saving
+        try:
+            img = PILImage.open(BytesIO(image_data))
+            img.verify()  # Verify image is not corrupted
+            # Re-open image after verify() as it invalidates the file pointer
+            img = PILImage.open(BytesIO(image_data))
+            actual_format = img.format.lower() if img.format else 'jpeg'
+            width, height = img.size
+        except PIL.UnidentifiedImageError:
+            print(f"Invalid image upload: File is not a valid image or is corrupted")
+            raise HTTPException(
+                status_code=400, 
+                detail="Uploaded file is not a valid or supported image. Please upload a valid JPG, PNG, or GIF image."
+            )
+        except Exception as img_err:
+            print(f"Image validation failed: {img_err}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Failed to process image: {str(img_err)}. Please ensure the file is a valid image."
+            )
+        
+        # Determine content type
+        content_types = {
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'jpeg': 'image/jpeg',
+            'jpg': 'image/jpeg'
+        }
+        content_type = content_types.get(actual_format, 'image/jpeg')
+        
+        # Generate unique image ID
+        image_id = f"{report_id}_{item_id}_{image_type}"
+        
+        # Store image in MongoDB
+        image_doc = {
+            "image_id": image_id,
+            "report_id": report_id,
+            "item_id": item_id,
+            "image_type": image_type,
+            "content_type": content_type,
+            "format": actual_format,
+            "width": width,
+            "height": height,
+            "size_bytes": len(image_data),
+            "data": base64.b64encode(image_data).decode('utf-8'),  # Store as base64 string
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Upsert - replace if exists, insert if not
+        await db.ir_thermography_images.update_one(
+            {"image_id": image_id},
+            {"$set": image_doc},
+            upsert=True
+        )
+        
+        print(f"Image saved to MongoDB: {image_id} ({actual_format}, {len(image_data)} bytes)")
+        
+        # Return URL path that will serve from MongoDB
+        return f"/api/ir-thermography-db-images/{image_id}"
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions without wrapping
+    except Exception as e:
+        print(f"Error saving image to MongoDB: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to save image: {str(e)}. Please try again with a valid image file."
+        )
+
+
 def save_base64_image(base64_string: str, report_id: str, item_id: str, image_type: str) -> str:
     """
+    DEPRECATED: Use save_base64_image_to_db instead.
     Save a base64 encoded image to file and return the file path.
     Returns URL path like /ir-thermography-images/{report_id}/{item_id}_{type}.jpg
     Validates image integrity using PIL before saving to prevent corrupted files.
