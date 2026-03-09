@@ -758,11 +758,13 @@ const AMCManagement = () => {
                               {statusInfo.label}
                             </span>
                           </div>
+                          {inspection.customer_name && (
+                            <p className="text-sm text-slate-600 font-medium flex items-center gap-1 mb-1">
+                              <Building2 size={14} className="text-slate-400" />
+                              {inspection.customer_name}
+                            </p>
+                          )}
                           <div className="flex items-center gap-4 text-sm text-slate-500">
-                            <span className="flex items-center gap-1">
-                              <MapPin size={14} />
-                              {inspection.location}
-                            </span>
                             <span className="flex items-center gap-1">
                               <Repeat size={14} />
                               {getFrequencyLabel(inspection.frequency)}
