@@ -1038,7 +1038,14 @@ const EquipmentServiceReport = () => {
         
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Failed to load template. Please try again.');
+        // Provide more specific error message
+        if (err.response?.status === 401 || err.message?.includes('unauthorized')) {
+          setError('Your session has expired. Please log in again.');
+        } else if (err.response?.status === 404) {
+          setError(`Template not found for equipment type: ${equipmentType}. Please check the equipment type.`);
+        } else {
+          setError(`Failed to load template. ${err.message || 'Please try again.'}`);
+        }
       } finally {
         setLoading(false);
       }
