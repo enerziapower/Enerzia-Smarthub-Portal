@@ -1786,16 +1786,22 @@ const AMCForm = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Equipment Type</label>
-                          <select
-                            value={equipment.equipment_type}
-                            onChange={(e) => updateEquipment(index, 'equipment_type', e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Select type...</option>
-                            {EQUIPMENT_TYPES.map((type) => (
-                              <option key={type.id} value={type.id}>{type.name}</option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              list={`equipment-types-${index}`}
+                              value={equipment.equipment_type}
+                              onChange={(e) => updateEquipment(index, 'equipment_type', e.target.value)}
+                              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              placeholder="Select or type equipment type..."
+                            />
+                            <datalist id={`equipment-types-${index}`}>
+                              {EQUIPMENT_TYPES.map((type) => (
+                                <option key={type.id} value={type.name}>{type.name}</option>
+                              ))}
+                            </datalist>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">Select from list or type custom</p>
                         </div>
                         
                         <div>
