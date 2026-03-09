@@ -1328,25 +1328,12 @@ def create_individual_inspection_pages(report, styles):
                         print(f"Error processing base64 image: {e}")
                         return None
                 elif img_source.startswith('/api/ir-thermography-db-images/'):
-                    # NEW: MongoDB-stored images - fetch directly from database
+                    # MongoDB-stored images - fetch directly from database using sync client
                     try:
                         image_id = img_source.replace('/api/ir-thermography-db-images/', '')
-                        db = get_db()
+                        sync_db = get_sync_db()
                         
-                        # Synchronous DB access - use motor's sync wrapper or direct pymongo
-                        import asyncio
-                        
-                        async def fetch_image():
-                            return await db.ir_thermography_images.find_one({"image_id": image_id})
-                        
-                        # Get or create event loop
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                        
-                        image_doc = loop.run_until_complete(fetch_image())
+                        image_doc = sync_db.ir_thermography_images.find_one({"image_id": image_id})
                         
                         if image_doc and image_doc.get("data"):
                             img_bytes = base64.b64decode(image_doc["data"])
@@ -1358,6 +1345,7 @@ def create_individual_inspection_pages(report, styles):
                         return None
                     except Exception as e:
                         print(f"Error loading image from MongoDB: {e}")
+                        return None
                         return None
                 elif img_source.startswith('/ir-thermography-images/') or img_source.startswith('/api/ir-thermography-images/'):
                     # File path - load from disk (supports both old and new URL formats)
