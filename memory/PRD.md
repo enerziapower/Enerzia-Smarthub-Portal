@@ -2,6 +2,47 @@
 
 ## Latest Updates
 
+### IR Thermography MongoDB Image Storage Migration ✅ COMPLETE (Mar 9, 2026)
+**Location:** Projects → IR Thermography Reports
+
+**Problem:** Uploaded images were disappearing after a few hours because they were stored on the server's ephemeral filesystem (`/app/uploads/ir-thermography/`). In a Kubernetes environment, this storage is not persistent across pod restarts.
+
+| Feature | Description |
+|---------|-------------|
+| **MongoDB Storage** | Images now stored in `ir_thermography_images` MongoDB collection for persistence |
+| **Unique Image IDs** | Format: `{report_id}_{item_id}_{type}` (e.g., `abc123_item1_original`) |
+| **Image Serving Endpoint** | `GET /api/ir-thermography/db-images/{image_id}` serves images from MongoDB |
+| **PDF Generation Updated** | Uses synchronous PyMongo client (`get_sync_db()`) to fetch images |
+| **Backward Compatibility** | PDF generation handles both old file-based and new MongoDB URLs |
+| **Automatic Image Cleanup** | Deleting a report removes associated images from MongoDB |
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography.py` - Added `save_base64_image_to_db()`, `get_image_from_db()`, MongoDB image endpoints
+- `/app/backend/routes/ir_thermography_pdf.py` - Added `get_sync_db()`, updated `load_image_from_source()` for MongoDB
+- `/app/frontend/src/pages/projects/IRThermographyForm.js` - Already handles `/api/` prefixed URLs correctly
+
+**MongoDB Collection Schema:**
+```javascript
+{
+  "image_id": "report-id_item-id_type",
+  "report_id": "uuid",
+  "item_id": "string",
+  "image_type": "original|thermal",
+  "content_type": "image/png|image/jpeg",
+  "format": "png|jpeg|jpg",
+  "width": 100,
+  "height": 100,
+  "size_bytes": 289,
+  "data": "base64-encoded-image-data",
+  "created_at": "ISO-timestamp",
+  "updated_at": "ISO-timestamp"
+}
+```
+
+**Test Results:** 100% success rate (7/7 backend tests, frontend verified) - See `/app/test_reports/iteration_83.json`
+
+---
+
 ### IR Thermography PDF Back Cover Page ✅ COMPLETE (Mar 6, 2026)
 **Location:** Projects → IR Thermography Reports → PDF Download
 
