@@ -1327,10 +1327,11 @@ def create_individual_inspection_pages(report, styles):
                     except Exception as e:
                         print(f"Error processing base64 image: {e}")
                         return None
-                elif img_source.startswith('/api/ir-thermography-db-images/'):
+                elif img_source.startswith('/api/ir-thermography/db-images/') or img_source.startswith('/api/ir-thermography-db-images/'):
                     # MongoDB-stored images - fetch directly from database using sync client
+                    # Supports both new format (/api/ir-thermography/db-images/) and old format (/api/ir-thermography-db-images/)
                     try:
-                        image_id = img_source.replace('/api/ir-thermography-db-images/', '')
+                        image_id = img_source.replace('/api/ir-thermography/db-images/', '').replace('/api/ir-thermography-db-images/', '')
                         sync_db = get_sync_db()
                         
                         image_doc = sync_db.ir_thermography_images.find_one({"image_id": image_id})
@@ -1345,7 +1346,6 @@ def create_individual_inspection_pages(report, styles):
                         return None
                     except Exception as e:
                         print(f"Error loading image from MongoDB: {e}")
-                        return None
                         return None
                 elif img_source.startswith('/ir-thermography-images/') or img_source.startswith('/api/ir-thermography-images/'):
                     # File path - load from disk (supports both old and new URL formats)
