@@ -341,16 +341,16 @@ const EquipmentReportsList = () => {
       
       if (response.data) {
         alert(`Report cloned successfully! New report: ${response.data.report_no}`);
-        // Navigate to edit the cloned report - use response's equipment_type
-        const reportEquipmentType = response.data.equipment_type || equipmentId;
-        const normalizedType = reportEquipmentType === 'electrical-panel' ? 'panel' : reportEquipmentType;
+        // Navigate to edit the cloned report - use the current equipmentId from URL
+        // Don't normalize 'electrical-panel' to 'panel' as EQUIPMENT_TYPES uses 'electrical-panel'
+        const navigationType = equipmentId;
         
-        if (normalizedType === 'transformer') {
+        if (navigationType === 'transformer') {
           navigate(`/projects/project-reports/equipment/transformer/${response.data.id}/edit`);
-        } else if (SERVICE_REPORT_EQUIPMENT.includes(normalizedType) || SERVICE_REPORT_EQUIPMENT.includes(reportEquipmentType)) {
-          navigate(`/projects/project-reports/service/${normalizedType}/${response.data.id}/edit`);
+        } else if (SERVICE_REPORT_EQUIPMENT.includes(navigationType) || SERVICE_REPORT_EQUIPMENT.includes(response.data.equipment_type)) {
+          navigate(`/projects/project-reports/service/${navigationType}/${response.data.id}/edit`);
         } else {
-          navigate(`/projects/project-reports/equipment/${normalizedType}/${response.data.id}/edit`);
+          navigate(`/projects/project-reports/equipment/${navigationType}/${response.data.id}/edit`);
         }
       }
     } catch (error) {
