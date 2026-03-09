@@ -273,8 +273,49 @@ def save_base64_image(base64_string: str, report_id: str, item_id: str, image_ty
         )
 
 
+async def process_inspection_items_images_to_db(items: list, report_id: str, db) -> list:
+    """
+    Process inspection items and save any base64 images to MongoDB.
+    Returns items with MongoDB image URLs instead of base64 strings.
+    """
+    processed = []
+    for item in items:
+        item_dict = dict(item) if isinstance(item, dict) else (item.model_dump() if hasattr(item, 'model_dump') else item.dict())
+        item_id = item_dict.get('item_id') or f"item_{uuid.uuid4().hex[:8]}"
+        item_dict['item_id'] = item_id
+        
+        # Convert base64 images to MongoDB URLs
+        if item_dict.get('original_image') and item_dict['original_image'].startswith('data:'):
+            item_dict['original_image'] = await save_base64_image_to_db(
+                item_dict['original_image'], report_id, item_id, 'original', db
+            )
+        
+        if item_dict.get('thermal_image') and item_dict['thermal_image'].startswith('data:'):
+            item_dict['thermal_image'] = await save_base64_image_to_db(
+                item_dict['thermal_image'], report_id, item_id, 'thermal', db
+            )
+        
+        # Calculate Delta T and Risk Category
+        max_temp = item_dict.get('max_temperature')
+        min_temp = item_dict.get('min_temperature')
+        
+        if max_temp is not None and min_temp is not None:
+            delta_t = max_temp - min_temp
+            item_dict['delta_t'] = round(delta_t, 1)
+            
+            risk_info = calculate_risk_category(delta_t)
+            item_dict['risk_category'] = risk_info['category']
+            item_dict['risk_color'] = risk_info['color']
+            item_dict['recommended_action'] = risk_info['action']
+        
+        processed.append(item_dict)
+    
+    return processed
+
+
 def process_inspection_items_images(items: list, report_id: str) -> list:
     """
+    DEPRECATED: Use process_inspection_items_images_to_db instead.
     Process inspection items and save any base64 images as files.
     Returns items with file URLs instead of base64 strings.
     """
