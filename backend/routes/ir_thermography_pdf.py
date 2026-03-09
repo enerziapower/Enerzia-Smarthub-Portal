@@ -1281,7 +1281,7 @@ def create_individual_inspection_pages(report, styles):
         
         # Helper function to load image from base64 or file path
         def load_image_from_source(img_source, width=230, height=170):
-            """Load image from base64 string or file path"""
+            """Load image from base64 string, file path, or MongoDB"""
             if not img_source:
                 return None
             
@@ -1317,6 +1317,38 @@ def create_individual_inspection_pages(report, styles):
                         return Image(img_io, width=width, height=height)
                     except Exception as e:
                         print(f"Error processing base64 image: {e}")
+                        return None
+                elif img_source.startswith('/api/ir-thermography-db-images/'):
+                    # NEW: MongoDB-stored images - fetch directly from database
+                    try:
+                        image_id = img_source.replace('/api/ir-thermography-db-images/', '')
+                        db = get_db()
+                        
+                        # Synchronous DB access - use motor's sync wrapper or direct pymongo
+                        import asyncio
+                        
+                        async def fetch_image():
+                            return await db.ir_thermography_images.find_one({"image_id": image_id})
+                        
+                        # Get or create event loop
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                        
+                        image_doc = loop.run_until_complete(fetch_image())
+                        
+                        if image_doc and image_doc.get("data"):
+                            img_bytes = base64.b64decode(image_doc["data"])
+                            if len(img_bytes) > 100:
+                                img_io = BytesIO(img_bytes)
+                                print(f"Successfully loaded image from MongoDB: {image_id}")
+                                return Image(img_io, width=width, height=height)
+                        print(f"Image not found in MongoDB: {image_id}")
+                        return None
+                    except Exception as e:
+                        print(f"Error loading image from MongoDB: {e}")
                         return None
                 elif img_source.startswith('/ir-thermography-images/') or img_source.startswith('/api/ir-thermography-images/'):
                     # File path - load from disk (supports both old and new URL formats)
