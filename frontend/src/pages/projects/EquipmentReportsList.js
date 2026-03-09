@@ -439,10 +439,12 @@ const EquipmentReportsList = () => {
 
   if (!equipment) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-slate-500">Equipment type not found</p>
-        <Link to="/projects/project-reports/equipment" className="text-blue-600 hover:underline mt-2 inline-block">
-          Back to Equipment Test Reports
+      <div className="p-8 text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
+        <p className="text-slate-700 font-medium">Equipment type "{equipmentId}" not found</p>
+        <p className="text-slate-500 text-sm">This equipment type may not be configured in the system.</p>
+        <Link to="/projects/project-reports/equipment" className="text-blue-600 hover:underline inline-block">
+          ← Back to Equipment Test Reports
         </Link>
       </div>
     );
