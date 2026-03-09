@@ -788,7 +788,8 @@ const EquipmentServiceReport = () => {
                 // Basic fields
                 report_no: reportData.report_no || prev.report_no,
                 report_type: reportData.report_type || prev.report_type,
-                equipment_type: reportData.equipment_type || prev.equipment_type,
+                // Keep the URL's equipmentType, not the normalized one from DB
+                equipment_type: equipmentType,
                 report_category: reportData.report_category || prev.report_category,
                 project_id: reportData.project_id || prev.project_id,
                 project_name: reportData.project_name || prev.project_name,
