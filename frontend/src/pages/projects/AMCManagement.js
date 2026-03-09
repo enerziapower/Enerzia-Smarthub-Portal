@@ -666,7 +666,7 @@ const AMCManagement = () => {
                             <Eye size={18} className="text-slate-500" />
                           </button>
                           <button
-                            onClick={() => navigate(`/projects/amc/${amc.id}?edit=true`)}
+                            onClick={() => navigate(`/projects/amc/${amc.id}`)}
                             className="p-2 hover:bg-blue-50 rounded-lg"
                             title="Edit"
                           >
