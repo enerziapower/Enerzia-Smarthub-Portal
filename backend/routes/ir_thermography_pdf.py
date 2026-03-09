@@ -21,6 +21,7 @@ import base64
 import os
 import requests
 from datetime import datetime
+from pymongo import MongoClient
 
 # Import date formatter and back cover helpers from pdf_base
 from routes.pdf_base import (
