@@ -644,17 +644,16 @@ const EquipmentReportsList = () => {
                         {/* Edit Button */}
                         <button
                           onClick={() => {
-                            // Use the report's actual equipment_type for navigation
-                            const reportEquipmentType = report.equipment_type || equipmentId;
-                            // Normalize equipment type for URL
-                            const normalizedType = reportEquipmentType === 'electrical-panel' ? 'panel' : reportEquipmentType;
+                            // Use the URL's equipmentId consistently for navigation
+                            // Don't normalize to 'panel' as EQUIPMENT_TYPES uses 'electrical-panel'
+                            const navigationType = equipmentId;
                             
-                            if (normalizedType === 'transformer') {
+                            if (navigationType === 'transformer') {
                               navigate(`/projects/project-reports/equipment/transformer/${report.id}/edit`);
-                            } else if (SERVICE_REPORT_EQUIPMENT.includes(normalizedType) || SERVICE_REPORT_EQUIPMENT.includes(reportEquipmentType)) {
-                              navigate(`/projects/project-reports/service/${normalizedType}/${report.id}/edit`);
+                            } else if (SERVICE_REPORT_EQUIPMENT.includes(navigationType)) {
+                              navigate(`/projects/project-reports/service/${navigationType}/${report.id}/edit`);
                             } else {
-                              navigate(`/projects/project-reports/equipment/${normalizedType}/${report.id}/edit`);
+                              navigate(`/projects/project-reports/equipment/${navigationType}/${report.id}/edit`);
                             }
                           }}
                           className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
