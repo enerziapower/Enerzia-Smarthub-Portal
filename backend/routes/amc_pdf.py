@@ -899,7 +899,8 @@ def create_equipment_list_section(amc, styles):
                 format_date_ddmmyyyy(eq.get('next_service_date', '-'))
             ])
         
-        eq_table = Table(eq_data, colWidths=[35, 80, 120, 35, 80, 75, 75])
+        # Adjusted column widths: S.No=30, Type=70, Name=165, Qty=30, Freq=70, Last=75, Next=75 = 515
+        eq_table = Table(eq_data, colWidths=[30, 70, 165, 30, 70, 75, 75])
         eq_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), PRIMARY_BLUE),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -912,6 +913,7 @@ def create_equipment_list_section(amc, styles):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('WORDWRAP', (1, 1), (2, -1), True),  # Enable word wrap for Type and Name columns
         ]))
         elements.append(eq_table)
     else:
