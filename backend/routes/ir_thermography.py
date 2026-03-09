@@ -524,7 +524,7 @@ async def get_ir_thermography_report(report_id: str):
 
 @router.post("")
 async def create_ir_thermography_report(report_data: IRThermographyCreate):
-    """Create a new IR Thermography report. Images are stored as files to avoid size limits."""
+    """Create a new IR Thermography report. Images are stored in MongoDB for persistence."""
     db = get_db()
     
     # Generate report ID and number
@@ -537,9 +537,9 @@ async def create_ir_thermography_report(report_data: IRThermographyCreate):
     })
     report_no = f"{prefix}/{year}/{count + 1:04d}"
     
-    # Process inspection items - save images as files and calculate risk categories
+    # Process inspection items - save images to MongoDB and calculate risk categories
     items_to_process = [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in report_data.inspection_items]
-    processed_items = process_inspection_items_images(items_to_process, report_id)
+    processed_items = await process_inspection_items_images_to_db(items_to_process, report_id, db)
     
     # Calculate summary
     summary = calculate_summary(processed_items)
