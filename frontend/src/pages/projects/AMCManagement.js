@@ -243,6 +243,60 @@ const AMCManagement = () => {
     }
   };
 
+  // Clone AMC contract
+  const handleCloneContract = async (amcId) => {
+    if (!window.confirm('Clone this AMC contract? A new copy will be created.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      // Fetch the existing AMC
+      const response = await fetch(`${API}/api/amc/${amcId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        alert('Failed to fetch AMC data for cloning');
+        return;
+      }
+      const amcData = await response.json();
+      
+      // Remove fields that should be unique
+      delete amcData.id;
+      delete amcData._id;
+      delete amcData.amc_no;
+      delete amcData.created_at;
+      delete amcData.updated_at;
+      
+      // Update some fields for the clone
+      amcData.status = 'draft';
+      if (amcData.customer_info) {
+        amcData.customer_info.customer_name = (amcData.customer_info.customer_name || '') + ' (Copy)';
+      }
+      
+      // Create the clone
+      const createResponse = await fetch(`${API}/api/amc`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(amcData)
+      });
+      
+      if (createResponse.ok) {
+        const newAmc = await createResponse.json();
+        alert(`AMC cloned successfully! New AMC: ${newAmc.amc_no || newAmc.id}`);
+        loadContractsData();
+        // Navigate to edit the cloned AMC
+        navigate(`/projects/amc/${newAmc.id}`);
+      } else {
+        const errorData = await createResponse.json().catch(() => ({}));
+        alert(errorData.detail || 'Failed to clone AMC');
+      }
+    } catch (error) {
+      console.error('Error cloning AMC:', error);
+      alert('Error cloning AMC. Please try again.');
+    }
+  };
+
   // Calendar handlers
   const handleCompleteInspection = async (inspection) => {
     try {
