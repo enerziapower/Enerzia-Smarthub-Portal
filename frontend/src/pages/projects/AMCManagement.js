@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   AlertTriangle, Calendar, Clock, CheckCircle, XCircle, 
   Building2, Phone, Mail, FileText, ChevronRight, RefreshCw,
-  TrendingUp, Bell, Download, Eye, Edit, Trash2,
+  TrendingUp, Bell, Download, Eye, Edit, Trash2, Copy,
   Filter, Search, Plus, CalendarClock, Repeat, User, MapPin,
   Play, Pause, MoreVertical, ArrowUpRight
 } from 'lucide-react';
