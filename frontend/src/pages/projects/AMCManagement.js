@@ -851,9 +851,12 @@ const CreateInspectionModal = ({ onClose, onCreated, projects, user }) => {
       if (project) {
         setFormData(prev => ({
           ...prev,
-          project_name: project.project_name,
-          customer_name: project.customer_name || '',
-          location: project.location || ''
+          project_id: value,
+          project_name: project.project_name || project.name || '',
+          customer_name: project.customer_name || project.client || '',
+          location: project.location || project.site_location || '',
+          // Auto-fill assigned team member from project if available
+          assigned_to: project.project_manager || project.assigned_to || prev.assigned_to || ''
         }));
       }
     }
@@ -861,8 +864,8 @@ const CreateInspectionModal = ({ onClose, onCreated, projects, user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.location) {
-      alert('Please fill in all required fields');
+    if (!formData.title || !formData.location || !formData.customer_name) {
+      alert('Please fill in all required fields (Title, Customer Name, Location)');
       return;
     }
 
