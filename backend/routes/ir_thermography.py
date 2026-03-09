@@ -393,6 +393,40 @@ def calculate_summary(inspection_items: list) -> dict:
     }
 
 
+
+@router.get("/db-images/{image_id}")
+async def get_image_from_db(image_id: str):
+    """
+    Serve images stored in MongoDB.
+    This endpoint provides persistent image storage that survives pod restarts.
+    """
+    db = get_db()
+    
+    # Find image in MongoDB
+    image_doc = await db.ir_thermography_images.find_one({"image_id": image_id})
+    
+    if not image_doc:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    try:
+        # Decode base64 data
+        image_data = base64.b64decode(image_doc.get("data", ""))
+        content_type = image_doc.get("content_type", "image/jpeg")
+        
+        return Response(
+            content=image_data,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"inline; filename={image_id}.{image_doc.get('format', 'jpg')}",
+                "Cache-Control": "public, max-age=31536000"  # Cache for 1 year
+            }
+        )
+    except Exception as e:
+        print(f"Error serving image from MongoDB: {e}")
+        raise HTTPException(status_code=500, detail="Failed to serve image")
+
+
+
 @router.get("")
 async def get_ir_thermography_reports(
     report_type: Optional[str] = None,
