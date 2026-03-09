@@ -191,7 +191,8 @@ async def save_base64_image_to_db(base64_string: str, report_id: str, item_id: s
         print(f"Image saved to MongoDB: {image_id} ({actual_format}, {len(image_data)} bytes)")
         
         # Return URL path that will serve from MongoDB
-        return f"/api/ir-thermography-db-images/{image_id}"
+        # Note: The router is mounted at /api/ir-thermography, so the full path is /api/ir-thermography/db-images/{image_id}
+        return f"/api/ir-thermography/db-images/{image_id}"
     except HTTPException:
         raise  # Re-raise HTTP exceptions without wrapping
     except Exception as e:
