@@ -62,6 +62,14 @@ def get_db():
     return db
 
 
+def get_sync_db():
+    """Get synchronous MongoDB connection for PDF generation"""
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'test_database')
+    client = MongoClient(mongo_url)
+    return client[db_name]
+
+
 def get_styles():
     """Get custom styles for the PDF"""
     styles = getSampleStyleSheet()
