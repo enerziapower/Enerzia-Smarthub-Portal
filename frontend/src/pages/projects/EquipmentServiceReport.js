@@ -1714,6 +1714,8 @@ const EquipmentServiceReport = () => {
     try {
       const dataToSave = {
         ...formData,
+        // Ensure we save with the original equipment type from URL
+        equipment_type: equipmentType,
         updated_at: new Date().toISOString()
       };
       
@@ -1723,6 +1725,7 @@ const EquipmentServiceReport = () => {
         await testReportsAPI.create(dataToSave);
       }
       
+      // Navigate using the original equipmentType from URL params (not the normalized one)
       navigate(`/projects/project-reports/equipment/${equipmentType}`);
     } catch (err) {
       console.error('Error saving report:', err);
