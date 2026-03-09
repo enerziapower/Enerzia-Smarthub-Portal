@@ -666,6 +666,20 @@ const AMCManagement = () => {
                             <Eye size={18} className="text-slate-500" />
                           </button>
                           <button
+                            onClick={() => navigate(`/projects/amc/${amc.id}?edit=true`)}
+                            className="p-2 hover:bg-blue-50 rounded-lg"
+                            title="Edit"
+                          >
+                            <Edit size={18} className="text-blue-500" />
+                          </button>
+                          <button
+                            onClick={() => handleCloneContract(amc.id)}
+                            className="p-2 hover:bg-green-50 rounded-lg"
+                            title="Clone"
+                          >
+                            <Copy size={18} className="text-green-500" />
+                          </button>
+                          <button
                             onClick={() => handleDownloadPDF(amc.id)}
                             className="p-2 hover:bg-slate-200 rounded-lg"
                             title="Download PDF"
