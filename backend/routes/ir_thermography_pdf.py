@@ -4,9 +4,11 @@ Generates comprehensive thermography inspection reports with professional cover 
 Includes company logo in header, proper footer with www.enerzia.com on all pages
 Contains: Cover Page, Document Details, Table of Contents, Executive Summary,
 Fundamentals & Methodology, Risk Categorization Procedure, Inspection Summary, and Thermal Images
+
+Supports background PDF generation for large reports to avoid timeout issues.
 """
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse, JSONResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -20,7 +22,9 @@ from io import BytesIO
 import base64
 import os
 import requests
-from datetime import datetime
+import uuid
+import asyncio
+from datetime import datetime, timezone
 from pymongo import MongoClient
 
 # Import date formatter and back cover helpers from pdf_base
