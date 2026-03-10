@@ -1412,14 +1412,24 @@ def create_individual_inspection_pages(report, styles):
         if orig_loaded:
             img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), orig_loaded])
         else:
-            img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), "No image"])
+            # Use placeholder for missing image
+            placeholder = create_placeholder_image(230, 170, "Image Not\nAvailable")
+            if placeholder:
+                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), placeholder])
+            else:
+                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
         
         # Thermal image
         thermal_loaded = load_image_from_source(thermal_img)
         if thermal_loaded:
             img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), thermal_loaded])
         else:
-            img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), "No image"])
+            # Use placeholder for missing image
+            placeholder = create_placeholder_image(230, 170, "Image Not\nAvailable")
+            if placeholder:
+                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), placeholder])
+            else:
+                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
         
         if len(img_cells) == 2:
             img_table = Table([[img_cells[0][1], img_cells[1][1]]], colWidths=[255, 255])
