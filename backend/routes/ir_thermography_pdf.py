@@ -2435,7 +2435,7 @@ async def download_generated_pdf(report_id: str, job_id: str):
     if job_id in pdf_jobs and pdf_jobs[job_id].get('status') != 'completed':
         raise HTTPException(status_code=400, detail="PDF generation not yet completed")
     
-    # Get PDF from database
+    # Get PDF metadata from database
     sync_db = get_sync_db()
     job_doc = sync_db.pdf_jobs.find_one({"job_id": job_id})
     
@@ -2445,14 +2445,37 @@ async def download_generated_pdf(report_id: str, job_id: str):
     if job_doc.get('status') != 'completed':
         raise HTTPException(status_code=400, detail="PDF generation not yet completed")
     
-    # Decode PDF data
-    pdf_data = base64.b64decode(job_doc['pdf_data'])
-    buffer = BytesIO(pdf_data)
-    
     filename = job_doc.get('filename', 'IR_Thermography_Report.pdf')
     
-    return StreamingResponse(
-        buffer,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    # Check if PDF is stored in GridFS (new method)
+    if job_doc.get('gridfs_id'):
+        from bson import ObjectId
+        fs = GridFS(sync_db)
+        try:
+            gridfs_id = ObjectId(job_doc['gridfs_id'])
+            gridfs_file = fs.get(gridfs_id)
+            pdf_data = gridfs_file.read()
+            buffer = BytesIO(pdf_data)
+            
+            return StreamingResponse(
+                buffer,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        except Exception as e:
+            print(f"Error retrieving PDF from GridFS: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving PDF file")
+    
+    # Fallback: Check if PDF is stored directly in document (old method - for backward compatibility)
+    if job_doc.get('pdf_data'):
+        pdf_data = base64.b64decode(job_doc['pdf_data'])
+        buffer = BytesIO(pdf_data)
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    
+    raise HTTPException(status_code=404, detail="PDF data not found")
     )
