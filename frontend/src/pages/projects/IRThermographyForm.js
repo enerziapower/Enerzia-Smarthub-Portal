@@ -408,10 +408,16 @@ const IRThermographyForm = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+      } else {
+        // Get detailed error message from response
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.detail || `Server error: ${response.status}`;
+        console.error('PDF download failed:', errorMessage);
+        toast.error(`Failed to download PDF: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF');
+      toast.error(`Failed to download PDF: ${error.message || 'Network error'}`);
     }
   };
 
