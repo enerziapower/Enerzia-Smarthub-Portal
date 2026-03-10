@@ -2478,4 +2478,3 @@ async def download_generated_pdf(report_id: str, job_id: str):
         )
     
     raise HTTPException(status_code=404, detail="PDF data not found")
-    )
