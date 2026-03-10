@@ -2,6 +2,31 @@
 
 ## Latest Updates
 
+### IR Thermography Full Image Migration to MongoDB ✅ COMPLETE (Mar 10, 2026)
+**Location:** Projects → IR Thermography Reports
+
+**CRITICAL FIX FOR PRODUCTION:** Images were disappearing because they were stored on ephemeral filesystem. All existing images have now been migrated to MongoDB.
+
+| Item | Before | After |
+|------|--------|-------|
+| **Storage** | File-based (`/app/uploads/`) | MongoDB (`ir_thermography_images`) |
+| **Images Migrated** | 0 | **397 images** |
+| **URL Format** | `/api/ir-thermography-images/...` | `/api/ir-thermography/db-images/...` |
+| **Persistence** | Lost on pod restart | **Permanent in MongoDB** |
+
+**Migration Script:** `/app/backend/scripts/migrate_images_to_mongodb.py`
+- Migrates base64 inline images to MongoDB
+- Migrates file-based images to MongoDB
+- Updates report URLs to new MongoDB format
+- Run on new deployments to ensure data persistence
+
+**DEPLOYMENT NOTE:** After deploying, run the migration script to migrate any existing images:
+```bash
+cd /app/backend && python scripts/migrate_images_to_mongodb.py
+```
+
+---
+
 ### IR Thermography MongoDB Image Storage Migration ✅ COMPLETE (Mar 9, 2026)
 **Location:** Projects → IR Thermography Reports
 
