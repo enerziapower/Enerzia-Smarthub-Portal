@@ -2316,8 +2316,7 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
     item_count = len(report.get('inspection_items', []))
     estimated_time = max(30, item_count * 0.3)  # ~0.3 seconds per item
     
-    # Initialize job status
-    pdf_jobs[job_id] = {
+    job_data = {
         'job_id': job_id,
         'report_id': report_id,
         'report_no': report.get('report_no', 'Unknown'),
@@ -2327,6 +2326,16 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
         'estimated_seconds': estimated_time,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
+    
+    # Initialize job status in memory
+    pdf_jobs[job_id] = job_data
+    
+    # Also persist to MongoDB for resilience across restarts
+    await db.pdf_jobs.update_one(
+        {"job_id": job_id},
+        {"$set": job_data},
+        upsert=True
+    )
     
     # Start background task
     background_tasks.add_task(generate_pdf_sync, report_id, job_id)
