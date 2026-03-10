@@ -2301,6 +2301,15 @@ def generate_pdf_sync(report_id: str, job_id: str):
         traceback.print_exc()
         pdf_jobs[job_id]['status'] = 'failed'
         pdf_jobs[job_id]['error'] = str(e)
+        # Also persist failure to MongoDB
+        try:
+            sync_db = get_sync_db()
+            sync_db.pdf_jobs.update_one(
+                {"job_id": job_id},
+                {"$set": {"status": "failed", "error": str(e)}}
+            )
+        except:
+            pass  # Best effort persistence
 
 
 @router.post("/{report_id}/pdf/generate")
