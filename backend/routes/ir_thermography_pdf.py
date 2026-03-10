@@ -1952,108 +1952,143 @@ async def generate_ir_thermography_pdf(report_id: str):
     """Generate PDF for IR Thermography report"""
     db = get_db()
     
-    # First try test_reports collection
-    report = await db.test_reports.find_one({"id": report_id})
-    
-    # If not found, try ir_thermography_reports collection
-    if not report:
-        report = await db.ir_thermography_reports.find_one({"id": report_id})
-    
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
-    
-    # Get organization settings
-    org_settings = await db.settings.find_one({"type": "organization"}) or {}
-    
-    # Create buffer
-    buffer = BytesIO()
-    
-    # Get styles
-    styles = get_styles()
-    
-    # Calculate summary if not present
-    if 'summary' not in report or not report['summary']:
-        inspection_items = report.get('inspection_items', [])
-        summary = {
-            'total_items': len(inspection_items),
-            'critical': 0,
-            'warning': 0,
-            'check_monitor': 0,
-            'normal': 0
-        }
+    try:
+        # First try test_reports collection
+        report = await db.test_reports.find_one({"id": report_id})
         
-        for item in inspection_items:
-            risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
-            if 'critical' in risk:
-                summary['critical'] += 1
-            elif 'warning' in risk:
-                summary['warning'] += 1
-            elif 'check' in risk or 'monitor' in risk:
-                summary['check_monitor'] += 1
-            else:
-                summary['normal'] += 1
+        # If not found, try ir_thermography_reports collection
+        if not report:
+            report = await db.ir_thermography_reports.find_one({"id": report_id})
         
-        report['summary'] = summary
-    
-    # Create custom canvas class
-    def make_canvas(*args, **kwargs):
-        return IRThermographyCanvas(*args, report_data=report, **kwargs)
-    
-    # Create document with increased top margin
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=70,  # Increased for header
-        bottomMargin=50
-    )
-    
-    # Build elements
-    elements = []
-    
-    # 1. Cover page
-    elements.extend(create_cover_page(report, org_settings, styles))
-    
-    # 2. Document details (Page 2)
-    elements.extend(create_document_details_section(report, styles))
-    
-    # 3. Table of Contents (Page 3)
-    elements.extend(create_table_of_contents(report, styles))
-    
-    # 4. Executive Summary (Section A - Page 4)
-    elements.extend(create_executive_summary(report, styles))
-    
-    # 5. Inspection Summary Table (Section B - Page 5)
-    elements.extend(create_inspection_summary_table(report, styles))
-    
-    # 6. Fundamentals & Methodology (Section C - Page 6-7)
-    elements.extend(create_fundamentals_methodology_section(report, styles))
-    
-    # 7. Risk Categorization Procedure (Section D - Page 8-9)
-    elements.extend(create_risk_categorization_section(styles))
-    
-    # 8. Individual inspection pages (Section E - Page 10+)
-    elements.extend(create_individual_inspection_pages(report, styles))
-    
-    # Build PDF with cover page handler
-    doc.build(
-        elements,
-        onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, report, org_settings),
-        canvasmaker=make_canvas
-    )
-    
-    # Append calibration certificate if present
-    buffer = append_calibration_certificate(buffer, report)
-    
-    buffer.seek(0)
-    
-    # Generate filename
-    report_no = report.get('report_no', 'IR_Report')
-    filename = f"{report_no.replace('/', '_')}.pdf"
-    
-    return StreamingResponse(
-        buffer,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+        if not report:
+            raise HTTPException(status_code=404, detail="Report not found")
+        
+        # Get organization settings
+        org_settings = await db.settings.find_one({"type": "organization"}) or {}
+        
+        # Create buffer
+        buffer = BytesIO()
+        
+        # Get styles
+        styles = get_styles()
+        
+        # Calculate summary if not present
+        if 'summary' not in report or not report['summary']:
+            inspection_items = report.get('inspection_items', [])
+            summary = {
+                'total_items': len(inspection_items),
+                'critical': 0,
+                'warning': 0,
+                'check_monitor': 0,
+                'normal': 0
+            }
+            
+            for item in inspection_items:
+                risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
+                if 'critical' in risk:
+                    summary['critical'] += 1
+                elif 'warning' in risk:
+                    summary['warning'] += 1
+                elif 'check' in risk or 'monitor' in risk:
+                    summary['check_monitor'] += 1
+                else:
+                    summary['normal'] += 1
+            
+            report['summary'] = summary
+        
+        # Create custom canvas class
+        def make_canvas(*args, **kwargs):
+            return IRThermographyCanvas(*args, report_data=report, **kwargs)
+        
+        # Create document with increased top margin
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=70,  # Increased for header
+            bottomMargin=50
+        )
+        
+        # Build elements with error handling for each section
+        elements = []
+        
+        try:
+            # 1. Cover page
+            elements.extend(create_cover_page(report, org_settings, styles))
+        except Exception as e:
+            print(f"Error creating cover page: {e}")
+        
+        try:
+            # 2. Document details (Page 2)
+            elements.extend(create_document_details_section(report, styles))
+        except Exception as e:
+            print(f"Error creating document details: {e}")
+        
+        try:
+            # 3. Table of Contents (Page 3)
+            elements.extend(create_table_of_contents(report, styles))
+        except Exception as e:
+            print(f"Error creating table of contents: {e}")
+        
+        try:
+            # 4. Executive Summary (Section A - Page 4)
+            elements.extend(create_executive_summary(report, styles))
+        except Exception as e:
+            print(f"Error creating executive summary: {e}")
+        
+        try:
+            # 5. Inspection Summary Table (Section B - Page 5)
+            elements.extend(create_inspection_summary_table(report, styles))
+        except Exception as e:
+            print(f"Error creating inspection summary: {e}")
+        
+        try:
+            # 6. Fundamentals & Methodology (Section C - Page 6-7)
+            elements.extend(create_fundamentals_methodology_section(report, styles))
+        except Exception as e:
+            print(f"Error creating fundamentals section: {e}")
+        
+        try:
+            # 7. Risk Categorization Procedure (Section D - Page 8-9)
+            elements.extend(create_risk_categorization_section(styles))
+        except Exception as e:
+            print(f"Error creating risk categorization section: {e}")
+        
+        try:
+            # 8. Individual inspection pages (Section E - Page 10+)
+            elements.extend(create_individual_inspection_pages(report, styles))
+        except Exception as e:
+            print(f"Error creating inspection pages: {e}")
+        
+        # Build PDF with cover page handler
+        doc.build(
+            elements,
+            onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, report, org_settings),
+            canvasmaker=make_canvas
+        )
+        
+        # Append calibration certificate if present
+        try:
+            buffer = append_calibration_certificate(buffer, report)
+        except Exception as e:
+            print(f"Error appending calibration certificate: {e}")
+        
+        buffer.seek(0)
+        
+        # Generate filename
+        report_no = report.get('report_no', 'IR_Report')
+        filename = f"{report_no.replace('/', '_')}.pdf"
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Critical error generating PDF for report {report_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
