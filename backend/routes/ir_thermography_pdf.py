@@ -2270,11 +2270,31 @@ def generate_pdf_sync(report_id: str, job_id: str):
         buffer.seek(0)
         pdf_data = buffer.getvalue()
         
-        # Store PDF data in MongoDB for retrieval
+        # Store PDF data in GridFS (handles files larger than 16MB)
         report_no = report.get('report_no', 'IR_Report')
         filename = f"{report_no.replace('/', '_')}.pdf"
         
-        # Store in pdf_jobs collection
+        # Use GridFS to store the PDF
+        fs = GridFS(db)
+        
+        # Delete any existing file with same job_id
+        existing_file = db.fs.files.find_one({"metadata.job_id": job_id})
+        if existing_file:
+            fs.delete(existing_file["_id"])
+        
+        # Store PDF in GridFS
+        gridfs_id = fs.put(
+            pdf_data,
+            filename=filename,
+            content_type="application/pdf",
+            metadata={
+                "job_id": job_id,
+                "report_id": report_id,
+                "report_no": report_no
+            }
+        )
+        
+        # Store job metadata in pdf_jobs collection (without the PDF data)
         db.pdf_jobs.update_one(
             {"job_id": job_id},
             {"$set": {
@@ -2282,7 +2302,7 @@ def generate_pdf_sync(report_id: str, job_id: str):
                 "report_id": report_id,
                 "report_no": report_no,
                 "filename": filename,
-                "pdf_data": base64.b64encode(pdf_data).decode('utf-8'),
+                "gridfs_id": str(gridfs_id),
                 "size_bytes": len(pdf_data),
                 "status": "completed",
                 "completed_at": datetime.now(timezone.utc).isoformat()
@@ -2294,8 +2314,9 @@ def generate_pdf_sync(report_id: str, job_id: str):
         pdf_jobs[job_id]['progress'] = 'PDF ready for download'
         pdf_jobs[job_id]['filename'] = filename
         pdf_jobs[job_id]['size_bytes'] = len(pdf_data)
+        pdf_jobs[job_id]['gridfs_id'] = str(gridfs_id)
         
-        print(f"Background PDF generation completed for {report_no}: {len(pdf_data)} bytes")
+        print(f"Background PDF generation completed for {report_no}: {len(pdf_data)} bytes, GridFS ID: {gridfs_id}")
         
     except Exception as e:
         print(f"Background PDF generation failed: {e}")
