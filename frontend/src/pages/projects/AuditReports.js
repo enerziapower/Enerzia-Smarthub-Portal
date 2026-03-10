@@ -6,6 +6,7 @@ import {
   CheckCircle, Clock, AlertCircle, Shield, Flame
 } from 'lucide-react';
 import { testReportsAPI } from '../../services/api';
+import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
