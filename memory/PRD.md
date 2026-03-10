@@ -2,6 +2,50 @@
 
 ## Latest Updates
 
+### IR Thermography Background PDF Generation ✅ COMPLETE (Mar 10, 2026)
+**Location:** Projects → IR Thermography Reports → PDF Download
+
+**CRITICAL FIX FOR PRODUCTION:** PDF downloads were failing with Cloudflare 524 timeout errors for large reports. Implemented background PDF generation system to solve this.
+
+| Feature | Description |
+|---------|-------------|
+| **Background Generation** | Large PDFs are generated asynchronously in the background |
+| **Job Tracking** | Returns job_id immediately, client polls for status |
+| **MongoDB Persistence** | Jobs stored in `pdf_jobs` collection for resilience |
+| **Progress Feedback** | Frontend shows generation progress in the download button |
+| **Automatic Fallback** | Reports with >=20 items or timeout use background generation |
+
+**API Endpoints:**
+- `POST /api/ir-thermography-report/{report_id}/pdf/generate` - Start background generation
+- `GET /api/ir-thermography-report/{report_id}/pdf/status/{job_id}` - Check job status
+- `GET /api/ir-thermography-report/{report_id}/pdf/download/{job_id}` - Download completed PDF
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography_pdf.py` - Added background generation functions and endpoints
+- `/app/frontend/src/pages/projects/IRThermographyForm.js` - Added loading state and polling for background jobs
+
+**MongoDB Collection Schema (pdf_jobs):**
+```javascript
+{
+  "job_id": "uuid",
+  "report_id": "uuid",
+  "report_no": "string",
+  "status": "queued|processing|completed|failed",
+  "progress": "string",
+  "total_items": number,
+  "filename": "string",
+  "pdf_data": "base64-encoded-pdf",
+  "size_bytes": number,
+  "created_at": "ISO-timestamp",
+  "completed_at": "ISO-timestamp",
+  "error": "string (if failed)"
+}
+```
+
+**Test Results:** 100% success rate (8/8 backend tests, frontend verified) - See `/app/test_reports/iteration_84.json`
+
+---
+
 ### IR Thermography Full Image Migration to MongoDB ✅ COMPLETE (Mar 10, 2026)
 **Location:** Projects → IR Thermography Reports
 
