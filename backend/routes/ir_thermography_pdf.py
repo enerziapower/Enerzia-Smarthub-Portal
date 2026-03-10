@@ -1288,6 +1288,24 @@ def create_individual_inspection_pages(report, styles):
         
         img_cells = []
         
+        # Create placeholder for missing images
+        def create_placeholder_image(width=230, height=170, text="Image Not Available"):
+            """Create a placeholder image when actual image can't be loaded"""
+            try:
+                # Create a simple drawing with border and text
+                from reportlab.graphics.shapes import Drawing, Rect, String
+                from reportlab.lib.colors import lightgrey, grey
+                
+                d = Drawing(width, height)
+                # Background
+                d.add(Rect(0, 0, width, height, fillColor=lightgrey, strokeColor=grey, strokeWidth=1))
+                # Text
+                d.add(String(width/2, height/2, text, textAnchor='middle', fontSize=12, fillColor=grey))
+                return d
+            except Exception as e:
+                print(f"Error creating placeholder: {e}")
+                return None
+        
         # Helper function to load image from base64 or file path
         def load_image_from_source(img_source, width=230, height=170):
             """Load image from base64 string, file path, or MongoDB"""
@@ -1349,6 +1367,7 @@ def create_individual_inspection_pages(report, styles):
                         return None
                 elif img_source.startswith('/ir-thermography-images/') or img_source.startswith('/api/ir-thermography-images/'):
                     # File path - load from disk (supports both old and new URL formats)
+                    # NOTE: These files are on ephemeral storage and may not exist after pod restart
                     file_path = img_source.replace('/api/ir-thermography-images', '/app/uploads/ir-thermography')
                     file_path = file_path.replace('/ir-thermography-images', '/app/uploads/ir-thermography')
                     if os.path.exists(file_path):
@@ -1363,7 +1382,8 @@ def create_individual_inspection_pages(report, styles):
                             print(f"Error loading image file {file_path}: {e}")
                             return None
                     else:
-                        print(f"Image file not found: {file_path}")
+                        print(f"Image file not found (ephemeral storage cleared): {file_path}")
+                        return None
                 elif img_source.startswith('/api/uploads/') or img_source.startswith('http'):
                     # API URL or external URL - try to load
                     if img_source.startswith('/api/uploads/'):
@@ -1372,14 +1392,19 @@ def create_individual_inspection_pages(report, styles):
                             return Image(file_path, width=width, height=height)
                     # For HTTP URLs, we can't easily load them in PDF
                     print(f"Cannot load external URL in PDF: {img_source}")
+                    return None
                 elif img_source.startswith('/'):
                     # Other local path
                     file_path = f"/app{img_source}" if not img_source.startswith('/app') else img_source
                     if os.path.exists(file_path):
                         return Image(file_path, width=width, height=height)
-                return None
+                    print(f"Local file not found: {file_path}")
+                    return None
+                else:
+                    print(f"Unknown image source format: {img_source[:50]}...")
+                    return None
             except Exception as e:
-                print(f"Error loading image from {img_source[:50]}...: {e}")
+                print(f"Error loading image from {img_source[:50] if img_source else 'None'}...: {e}")
                 return None
         
         # Original image
