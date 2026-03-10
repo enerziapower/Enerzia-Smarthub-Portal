@@ -593,10 +593,21 @@ const IRThermographyForm = () => {
           {isEdit && (
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-2 px-4 py-2 text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors"
+              disabled={pdfGenerating}
+              className="flex items-center gap-2 px-4 py-2 text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="download-pdf-btn"
             >
-              <FileText size={20} />
-              Download PDF
+              {pdfGenerating ? (
+                <>
+                  <div className="animate-spin w-5 h-5 border-2 border-rose-600 border-t-transparent rounded-full" />
+                  {pdfProgress || 'Generating...'}
+                </>
+              ) : (
+                <>
+                  <FileText size={20} />
+                  Download PDF
+                </>
+              )}
             </button>
           )}
           <button
