@@ -1,51 +1,63 @@
 <analysis>**original_problem_statement:**
-The user initially reported that customer dropdowns were not working in the Lead Management and Enquiries pages. After those were fixed, the user requested that non-admin users were facing permission issues and incorrect login redirects. After resolving those security and UX issues, the user requested a comprehensive overhaul of the Travel Log module to simplify the trip submission process, moving from a single-step to a two-step flow with weekly batch submissions to HR.
+The user initially reported that customer dropdowns were not working, followed by permission issues and incorrect login redirects for non-admin users. After these were fixed, the user requested a complete rework of the Travel Log module to a two-step weekly submission process, which was completed.
+
+Subsequently, the user reported that the IR Thermography report could not be saved with more than 69 inspection items. The root cause was identified as MongoDB's 16MB document size limit due to large embedded base64 images. A major refactor was performed to store images as files on the server instead. This led to a series of cascading bugs, including login failures, static file routing errors, and issues with dummy/corrupted image data.
+
+The most recent and critical issue reported is that uploaded images for IR Thermography reports disappear after a few hours. This is a recurrence of a data persistence problem, caused by storing images on an ephemeral filesystem in the Kubernetes environment. After a migration to MongoDB storage, the issue evolved into a **Cloudflare 524 timeout error** on the production server when downloading large PDF reports, as the generation process takes too long.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The ERP application is in a stable state. Several key fixes and features were completed in the last session:
--   **Customer Linking:** The customer search/dropdown functionality in the Lead Management and Enquiries pages is now fixed and works for all authenticated users.
--   **Backend Route Protection:** A robust, centralized permission system has been implemented in  and applied to critical API routes. Unauthorized access is now correctly blocked.
--   **Department-Based Redirects:** Users are now automatically redirected to their respective department's dashboard upon login, improving user experience.
--   **Travel Log Rework (Partial):** The frontend for the Travel Log page has been completely redesigned into a two-step process (Start Trip then End Trip), with OCR photo capture and gallery upload options. Trips are now saved as drafts.
+- A full-stack ERP application with multiple modules (Sales, HR, Projects, etc.).
+- The IR Thermography module has been refactored to save images to a persistent MongoDB collection. A migration script () and a diagnostic script () were created.
+- The PDF generation logic was enhanced to show a placeholder for missing images instead of crashing, but this was not enough to prevent timeouts on production for large reports.
+- **Background PDF Generation (Backend-only):** To solve the production timeout issue, new backend endpoints have been created in  to handle PDF generation as a background task. This includes endpoints to start the job, check its status, and download the completed file. The job store is currently a temporary in-memory dictionary.
+- Numerous UI/UX enhancements and bug fixes have been completed, including editable equipment types, improved date pickers, better customer name display in AMC Management, and fixing a bug with saving Electrical Panel reports.
 
 **Last working item**:
--   **Last item agent was working:** Implementing a weekly submission flow for the Travel Log, where an employee can submit all their 'draft' trips to HR in a single batch for approval.
+-   **Last item agent was working:** Implementing a background PDF generation system for IR Thermography reports to resolve a critical Cloudflare 524 timeout error on the production server.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. The task requires a new backend endpoint and significant frontend logic to connect to it.
+-   **Which testing method agent to use?** both. The full end-to-end flow needs to be tested. This involves triggering the background job from the frontend, polling for status, and downloading the final PDF. The  should be used after the frontend implementation is complete.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Complete and Test Travel Log Weekly Submission Flow (P0)**
-    -   **Description:** The frontend for the Travel Log was heavily modified to support a new weekly submission workflow, but the backend implementation is missing. The UI includes a Submit to HR button and modal, but they are not functional.
+-   **Issue 1: (P0) The in-memory background job store is not production-ready.**
+    -   **Description:** The current implementation for background PDF generation in  uses a simple Python dictionary () to store job statuses. This is not persistent and will be wiped on every server restart, leading to lost jobs and a broken user experience.
     -   **Next debug checklist:**
-        1.  In , create a new batch submission endpoint (e.g., ). This endpoint should accept a list of draft trip IDs and change their status from  to .
-        2.  In , implement the  function to call the new backend endpoint with the IDs of all selected draft trips.
-        3.  Ensure the Submit Weekly Trips button only appears when there are draft trips to submit.
-        4.  Thoroughly test the entire flow: create multiple draft trips, use the batch submission feature, and verify that the trips' statuses are updated correctly for both the employee and HR views.
-    -   **Status:** IN PROGRESS
+        1.  Create a new MongoDB collection (e.g., ).
+        2.  Define a Pydantic model for the job schema (e.g., , , , , ).
+        3.  Refactor the background task endpoints in  to use this new MongoDB collection for creating, updating, and fetching job statuses instead of the in-memory dictionary.
+    -   **Why fix this issue and what will be achieved with the fix?** To make the background PDF generation feature reliable and robust for a production environment.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on other issue:** None
+    -   **Should Test frontend/backend/both after fix?** Backend
+    -   **Blocked on other issue:** None. (Can be done in parallel with or after Task 1).
 
 **In progress Task List**:
--   **Task 1: Implement Backend for Travel Log Batch Submission**
-    -   **Where to resume:** .
-    -   **What will be achieved:** This will complete the user-requested weekly submission workflow, allowing employees to submit multiple draft trips to HR for approval at once.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Backend
+-   **Task 1: (P0) Complete the frontend implementation for background PDF generation.**
+    -   **Where to resume:**  and .
+    -   **What will be achieved with this?** This will complete the user-facing part of the fix for the critical production timeout issue, allowing users to download large reports without errors.
+    -   **Next Steps:**
+        1.  Modify the  functions in all relevant components.
+        2.  Call the new  endpoint to start the job and get a .
+        3.  Use  toasts to notify the user that generation has started.
+        4.  Implement a polling mechanism (e.g., ) to periodically call the  status endpoint.
+        5.  Update the UI based on the job status (e.g., Generating..., Ready, Failed).
+        6.  Once status is completed, enable a download button linking to the  endpoint.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P0) **Verify UI Consistency in Lead Management Sub-Pages:** Confirm that all pages (, , , ) have a consistent light theme.
-    -   (P1) **Implement Follow-up Reminders/Notifications:** For the sales team's lead management module.
-    -   (P1) **Resolve Redundant + Add Project Button:** Decide on the fate of the button on the  page.
     -   (P1) **New Equipment Reports:** Add test reports for Pressure Gauge and Water Flow Meter.
     -   (P1) **Project Completion Report:** Create a new module based on a user-provided sample PDF.
+    -   (P1) **Clarify Sales/Projects/Profile/Expenses connection issues:** User reported vague connection issues that need more detail.
+    -   (P1) **Verify UI Consistency in Lead Management Sub-Pages:** Confirm consistent theme across all related pages.
+    -   (P1) **Resolve Redundant + Add Project Button:** Decide on the fate of the button on the  page.
 -   **Future Tasks:**
+    -   Automate Follow-up Reminders.
     -   Refine Sidebar Filtering.
     -   Implement Material/Delivery Requests.
     -   HR Notifications (for leave/overtime).
@@ -54,95 +66,105 @@ The ERP application is in a stable state. Several key fixes and features were co
     -   Group team member selection by department in the Project Schedule's Escalation Matrix.
 
 **Completed work in this session**
--   **Lead Management Customer Linking Fix:** Fixed the customer search functionality in  by creating a new unified search endpoint () that works for all authenticated users.
--   **Backend Route Protection Implemented:** Created a robust permission-checking utility () and secured sensitive API endpoints across the application. Verified with the testing agent (21/21 tests passed).
--   **Department-Based Login Redirects:** Implemented logic in  to redirect users to their specific department dashboard after login, enhancing user experience.
--   **Travel Log UX Overhaul:** Refactored  into a two-step flow (Start Trip and End Trip) with OCR photo capture, gallery upload, and an Office quick-fill button, as requested by the user.
--   **Generated ERP Analysis Report:** Created a comprehensive system analysis document at .
+-   **P0 Bug Fix & Assessment (IR Thermography):**
+    -   Created a migration script () to move file-based images to MongoDB.
+    -   Created a diagnostic script () to analyze the state of IR reports.
+    -   Made PDF generation robust by adding placeholders for missing images, preventing crashes.
+    -   Identified the production issue as a Cloudflare 524 timeout and began implementing a background job system as a solution.
+-   **UI/UX Enhancements:**
+    -   **AMC Form:** The Equipment Type field is now a combobox allowing both selection and manual entry.
+    -   **Date Pickers:** The  component was enhanced with year/month dropdowns and direct text input.
+    -   **AMC Management:** The Service Calendar now shows the customer name, the Schedule Service Visit modal auto-fills data from selected projects, and Clone/Edit buttons were added to the contract list.
+-   **Bug Fixes:**
+    -   **AMC PDF:** Fixed text overlapping in the PDF report by adjusting column widths.
+    -   **Electrical Panel Reports:** Corrected an ID normalization issue ( vs ) that caused errors after saving reports.
 
 **Earlier issues found/mentioned but not fixed**
--   **Architectural Flaw in Equipment Reports:** The underlying cause of data missing on edit bugs in monolithic form components has not been addressed. This points to a need for refactoring how forms handle data loading for editing.
--   ** Refactoring:** This large, monolithic file has not been broken down into smaller, more manageable modules.
+-   **Architectural Flaw in Equipment Reports:** A recurring data missing on edit bug pattern in large, monolithic forms points to a need for architectural refactoring.
+-   ** Refactoring:** This large, monolithic file has not yet been broken down into smaller, more manageable modules.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Data missing on edit.
--   **Recurrence count:** 4+
--   **Status:** RESOLVED (for specific instances). The underlying architectural issue that causes this pattern persists and may lead to future bugs.
+-   **Issue recurrence in previous fork:** Data persistence and performance for uploaded images.
+-   **Recurrence count:** 4 (BSON size limit -> Corrupted file saves -> Ephemeral file storage -> Production Timeout).
+-   **Status:** IN PROGRESS. The background processing feature is the latest attempt to permanently solve the operational problems caused by this architectural issue.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **FastAPI Dependencies for Authorization:** A flexible system in  uses FastAPI's  to protect routes with different levels of access (, , ).
--   **Frontend State Management for Multi-Step Modals:** The  component now manages a complex UI flow with multiple states (, , , ) and modals using React .
--   **Dynamic Login Redirects:**  parses the user's department from the auth context to dynamically navigate them to the correct dashboard.
+-   **Background Job Processing:** An architecture to handle long-running tasks by returning a job ID immediately and allowing the client to poll for status. This is crucial for avoiding HTTP timeouts.
+-   **Cloudflare Timeout (HTTP 524):** The specific production error being solved. It occurs when a synchronous request to the origin server takes longer than Cloudflare's timeout limit (typically 100 seconds).
+-   **Data Migration & Diagnostics:** Using one-off scripts to analyze and repair data integrity issues in a production environment (e.g., moving images from an ephemeral file system to a persistent database).
+-   **Graceful Degradation:** Designing a system to handle failures without crashing. In this case, generating PDFs with placeholders for missing images.
 
 **key DB schema**
--   **travel_logs:** The schema now supports a  field which includes  (for trips completed by the employee but not yet submitted) and  (for trips submitted to HR). It also stores  separately.
--   **users:** The  object and  string are actively used for backend authorization and frontend navigation, respectively.
+-   **ir_thermography_images:** (Existing) Stores raw image data for IR reports.
+-   **pdf_generation_jobs (Required):** A new MongoDB collection is needed to replace the temporary in-memory job store.
+    -   : (string)
+    -   : (string, e.g., 'pending', 'completed', 'failed')
+    -   : (string, path to the generated PDF on the server)
+    -   : (string)
 
 **All files of reference**
--   : The primary file for the current task. It has been heavily rewritten and needs its submission logic completed.
--   : The backend file that requires a new endpoint for batch trip submission.
--   : The central file for all backend authorization logic.
--   : A newly created comprehensive report on the application's architecture.
+-   : Contains the backend logic for background PDF generation. Needs refactoring to use a persistent job store.
+-   : Needs frontend logic to trigger and monitor background jobs.
+-   : Also needs frontend logic for its download functionality.
+-   : Completed migration script.
+-   : Completed diagnostic script.
 
 **Areas that need refactoring**:
--   **:** This component has grown to over 1100 lines. It should be decomposed into smaller, specialized components (e.g., , , , ) to improve maintainability.
--   **Monolithic Form Components:** The architectural pattern causing data loss on edit bugs in large forms still exists and should be addressed.
+-   The background job store in  is currently an in-memory dictionary (). This is **not suitable for production** and must be replaced with a persistent solution, like a dedicated MongoDB collection.
 
 **key api endpoints**
--   : **New** endpoint that saves a completed trip with a  status.
--   **Required:** : A **new endpoint** needs to be created to handle the weekly submission of multiple  trips to HR.
+-   : **(NEW)** Starts background PDF generation.
+-   : **(NEW)** Checks the status of a background job.
+-   : **(NEW)** Downloads the completed PDF.
 
 **Critical Info for New Agent**
--   Your immediate priority is to complete the Travel Log rework. You must create a backend endpoint () in  to handle the batch submission of draft trips. Then, you need to connect the Submit to HR modal in  to this new endpoint.
--   The user was repeatedly confused by accessing an old preview URL. If they report an issue that you cannot reproduce, confirm they are using the correct URL from .
--   The new Travel Log workflow is:
-    1.  Employees create multiple  trips throughout the week using the two-step flow.
-    2.  They click a Submit Weekly Trips button.
-    3.  A modal shows all draft trips for confirmation.
-    4.  Upon confirmation, the frontend calls the new batch endpoint, changing the trips' status from  to  for HR approval.
+-   Your P0 priority is to fix the production timeout issue. This requires completing the **frontend implementation** for the background PDF generation feature.
+-   After the frontend is working, you **must refactor the backend's in-memory job store** ( dictionary) to use a persistent MongoDB collection. Without this, the feature will break every time the server restarts.
+-   The user is experiencing significant disruption from this issue. It is critical to deliver a robust and permanent solution.
 
 **documents and test reports created in this job**
+-   
 -   
 -   
 -    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User Request (Pending):** A list of 5 changes for the Travel Log, including hiding rates, showing distance, a weekly submission flow, gallery uploads for photos, and a new page title. (Status: IN PROGRESS)
-- **User Request:** Add OCR photo capture to both the start and end of a trip. (Status: COMPLETED)
-- **User Choice:** Selected Option A for the Travel Log rework and requested an Office quick-fill button. (Status: COMPLETED)
-- **User Request:** Initial request to overhaul the Travel Log page. (Status: IN PROGRESS)
-- **User Request:** Asked for a complete analysis of the ERP. (Status: COMPLETED)
-- **User Report:** All department dashboards were pointing to the Project dashboard. (Status: RESOLVED - user was on wrong URL)
-- **User Report:** A non-admin user couldn't see customers and was redirected to the wrong dashboard. (Status: RESOLVED)
-- **User Request:** Asked agent to check for deployment errors. (Status: COMPLETED)
-- **User Report:** Customer dropdowns were not working in Enquiries and Lead Management. (Status: RESOLVED)
-- **User Confirmation:** Approved proceeding with the Backend Route Protection task. (Status: COMPLETED)
+-   **User:** Reports continuous problems with IR Thermography on the deployed app: images disappearing, audit report values being zero, and PDFs failing to download. This is a critical P0 issue.
+-   **User:** Asks to run the migration and diagnostic scripts. Agent runs them in the preview environment.
+-   **User:** Confirms the PDF download issue still persists on production after a previous fix attempt.
+-   **User:** Asks what steps to take next. Agent provides deployment and script execution guidance.
+-   **User:** Shares a screenshot of the failed PDF download from the production UI.
+-   **User:** Provides the specific report URL/ID causing the failure.
+-   **User:** Shares a screenshot of a  command output which clearly shows a **Cloudflare 524 timeout error**, identifying the root cause.
+-   **User:** When presented with options, explicitly requests **option C implement** – to build a background generation feature to solve the timeout.
 
 **Project Health Check:**
--   **Broken:** None
--   **Mocked:** None
+-   **Broken:**
+    -   **IR Thermography PDF Download:** Critically broken on production for large reports due to HTTP timeouts. The fix (background generation) is in progress but incomplete.
+-   **Mocked:**
+    -   The background PDF job store is a temporary, non-persistent in-memory dictionary.
 
 **3rd Party Integrations**
 -   Zoho Books
 -   ReportLab
 -   openpyxl
--   Emergent LLM Key (Available, not actively used in last session)
+-   Pillow
+-   Cloudflare (as a proxy, which is the source of the timeout error)
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (for backend route protection)
+-   **Testing agent used after significant changes:** YES (for the initial MongoDB migration)
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** None
+-   **Test files created:** 
+-   **Known regressions:** None from the recent work, but the main feature (PDF download) is failing on production under specific conditions (large reports).
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Sales User:**  / 
 -   **HR User:**  / 
--   **Regular User:**  / 
--   **CEO (No Permissions):**  / 
 
 **What agent forgot to execute**
--   The agent implemented the entire frontend UI for the weekly submission feature in the Travel Log but did not create the corresponding backend API endpoint () required to make it functional.</analysis>
+-   The agent started implementing the background PDF generation feature by creating the backend endpoints but did not complete the corresponding frontend implementation.
+-   The agent implemented the backend job store using a non-persistent in-memory dictionary, which is not a production-ready solution and was not flagged for immediate refactoring.</analysis>
