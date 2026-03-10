@@ -389,14 +389,36 @@ const IRThermographyForm = () => {
     }
   };
 
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState('');
+  const [pdfJobId, setPdfJobId] = useState(null);
+
   const handleDownloadPDF = async () => {
     if (!reportId) return;
     
+    const itemCount = formData.inspection_items?.length || 0;
+    
+    // For large reports (20+ items), use background generation
+    if (itemCount >= 20) {
+      await handleBackgroundPdfGeneration();
+      return;
+    }
+    
+    // For smaller reports, try direct download first
     try {
+      setPdfGenerating(true);
+      setPdfProgress('Generating PDF...');
+      
       const token = localStorage.getItem('token');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+      
       const response = await fetch(`${API}/api/ir-thermography-report/${reportId}/pdf`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const blob = await response.blob();
@@ -408,16 +430,113 @@ const IRThermographyForm = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        toast.success('PDF downloaded successfully!');
       } else {
-        // Get detailed error message from response
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.detail || `Server error: ${response.status}`;
         console.error('PDF download failed:', errorMessage);
         toast.error(`Failed to download PDF: ${errorMessage}`);
       }
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error(`Failed to download PDF: ${error.message || 'Network error'}`);
+      if (error.name === 'AbortError') {
+        // Timeout - switch to background generation
+        toast.info('Report is large. Switching to background generation...');
+        await handleBackgroundPdfGeneration();
+      } else {
+        console.error('Error downloading PDF:', error);
+        toast.error(`Failed to download PDF: ${error.message || 'Network error'}`);
+      }
+    } finally {
+      setPdfGenerating(false);
+      setPdfProgress('');
+    }
+  };
+
+  const handleBackgroundPdfGeneration = async () => {
+    try {
+      setPdfGenerating(true);
+      setPdfProgress('Starting background PDF generation...');
+      
+      const token = localStorage.getItem('token');
+      
+      // Start background generation
+      const startResponse = await fetch(`${API}/api/ir-thermography-report/${reportId}/pdf/generate`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!startResponse.ok) {
+        const errorData = await startResponse.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to start PDF generation');
+      }
+      
+      const startData = await startResponse.json();
+      const jobId = startData.job_id;
+      setPdfJobId(jobId);
+      
+      const estimatedTime = startData.estimated_seconds || 60;
+      toast.info(`Generating PDF for ${startData.message?.match(/\d+/)?.[0] || 'multiple'} items. This may take up to ${Math.ceil(estimatedTime)} seconds...`);
+      
+      // Poll for completion
+      let attempts = 0;
+      const maxAttempts = 120; // 2 minutes max
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Check every 2 seconds
+        attempts++;
+        
+        const statusResponse = await fetch(`${API}/api/ir-thermography-report/${reportId}/pdf/status/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!statusResponse.ok) {
+          continue;
+        }
+        
+        const statusData = await statusResponse.json();
+        setPdfProgress(statusData.progress || 'Processing...');
+        
+        if (statusData.status === 'completed') {
+          // Download the PDF
+          const downloadResponse = await fetch(`${API}/api/ir-thermography-report/${reportId}/pdf/download/${jobId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (downloadResponse.ok) {
+            const blob = await downloadResponse.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = statusData.filename || `IR_Thermography_Report_${reportId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success(`PDF downloaded successfully! (${(statusData.size_bytes / 1024 / 1024).toFixed(1)} MB)`);
+          } else {
+            toast.error('Failed to download generated PDF');
+          }
+          break;
+        } else if (statusData.status === 'failed') {
+          toast.error(`PDF generation failed: ${statusData.error || 'Unknown error'}`);
+          break;
+        }
+      }
+      
+      if (attempts >= maxAttempts) {
+        toast.error('PDF generation timed out. Please try again.');
+      }
+      
+    } catch (error) {
+      console.error('Background PDF generation error:', error);
+      toast.error(`PDF generation failed: ${error.message}`);
+    } finally {
+      setPdfGenerating(false);
+      setPdfProgress('');
+      setPdfJobId(null);
     }
   };
 
