@@ -2101,3 +2101,307 @@ async def generate_ir_thermography_pdf(report_id: str):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
+
+
+# ============================================================================
+# BACKGROUND PDF GENERATION
+# For large reports that may timeout, generate PDF in background
+# ============================================================================
+
+# In-memory storage for PDF jobs (in production, use Redis or database)
+pdf_jobs = {}
+
+
+def generate_pdf_sync(report_id: str, job_id: str):
+    """Synchronous PDF generation for background task."""
+    from motor.motor_asyncio import AsyncIOMotorClient
+    import asyncio
+    
+    try:
+        pdf_jobs[job_id]['status'] = 'processing'
+        pdf_jobs[job_id]['progress'] = 'Starting PDF generation...'
+        
+        # Get database connection
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+        db_name = os.environ.get('DB_NAME', 'test_database')
+        sync_client = MongoClient(mongo_url)
+        db = sync_client[db_name]
+        
+        # Get report
+        report = db.test_reports.find_one({"id": report_id})
+        if not report:
+            report = db.ir_thermography_reports.find_one({"id": report_id})
+        
+        if not report:
+            pdf_jobs[job_id]['status'] = 'failed'
+            pdf_jobs[job_id]['error'] = 'Report not found'
+            return
+        
+        inspection_items = report.get('inspection_items', [])
+        item_count = len(inspection_items)
+        pdf_jobs[job_id]['progress'] = f'Processing {item_count} inspection items...'
+        pdf_jobs[job_id]['total_items'] = item_count
+        
+        # Get organization settings
+        org_settings = db.settings.find_one({"type": "organization"}) or {}
+        
+        # Create buffer
+        buffer = BytesIO()
+        
+        # Get styles
+        styles = get_styles()
+        
+        # Calculate summary if not present
+        if 'summary' not in report or not report['summary']:
+            summary = {
+                'total_items': item_count,
+                'critical': 0,
+                'warning': 0,
+                'check_monitor': 0,
+                'normal': 0
+            }
+            
+            for item in inspection_items:
+                risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
+                if 'critical' in risk:
+                    summary['critical'] += 1
+                elif 'warning' in risk:
+                    summary['warning'] += 1
+                elif 'check' in risk or 'monitor' in risk:
+                    summary['check_monitor'] += 1
+                else:
+                    summary['normal'] += 1
+            
+            report['summary'] = summary
+        
+        # Create custom canvas class
+        def make_canvas(*args, **kwargs):
+            return IRThermographyCanvas(*args, report_data=report, **kwargs)
+        
+        # Create document
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=70,
+            bottomMargin=50
+        )
+        
+        # Build elements
+        elements = []
+        
+        pdf_jobs[job_id]['progress'] = 'Creating cover page...'
+        try:
+            elements.extend(create_cover_page(report, org_settings, styles))
+        except Exception as e:
+            print(f"Error creating cover page: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating document details...'
+        try:
+            elements.extend(create_document_details_section(report, styles))
+        except Exception as e:
+            print(f"Error creating document details: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating table of contents...'
+        try:
+            elements.extend(create_table_of_contents(report, styles))
+        except Exception as e:
+            print(f"Error creating table of contents: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating executive summary...'
+        try:
+            elements.extend(create_executive_summary(report, styles))
+        except Exception as e:
+            print(f"Error creating executive summary: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating inspection summary...'
+        try:
+            elements.extend(create_inspection_summary_table(report, styles))
+        except Exception as e:
+            print(f"Error creating inspection summary: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating methodology section...'
+        try:
+            elements.extend(create_fundamentals_methodology_section(report, styles))
+        except Exception as e:
+            print(f"Error creating fundamentals section: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Creating risk categorization...'
+        try:
+            elements.extend(create_risk_categorization_section(styles))
+        except Exception as e:
+            print(f"Error creating risk categorization: {e}")
+        
+        pdf_jobs[job_id]['progress'] = f'Creating {item_count} inspection pages...'
+        try:
+            elements.extend(create_individual_inspection_pages(report, styles))
+        except Exception as e:
+            print(f"Error creating inspection pages: {e}")
+        
+        pdf_jobs[job_id]['progress'] = 'Building PDF document...'
+        
+        # Build PDF
+        doc.build(
+            elements,
+            onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, report, org_settings),
+            canvasmaker=make_canvas
+        )
+        
+        # Append calibration certificate
+        try:
+            buffer = append_calibration_certificate(buffer, report)
+        except Exception as e:
+            print(f"Error appending calibration certificate: {e}")
+        
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        
+        # Store PDF data in MongoDB for retrieval
+        report_no = report.get('report_no', 'IR_Report')
+        filename = f"{report_no.replace('/', '_')}.pdf"
+        
+        # Store in pdf_jobs collection
+        db.pdf_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {
+                "job_id": job_id,
+                "report_id": report_id,
+                "report_no": report_no,
+                "filename": filename,
+                "pdf_data": base64.b64encode(pdf_data).decode('utf-8'),
+                "size_bytes": len(pdf_data),
+                "status": "completed",
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        pdf_jobs[job_id]['status'] = 'completed'
+        pdf_jobs[job_id]['progress'] = 'PDF ready for download'
+        pdf_jobs[job_id]['filename'] = filename
+        pdf_jobs[job_id]['size_bytes'] = len(pdf_data)
+        
+        print(f"Background PDF generation completed for {report_no}: {len(pdf_data)} bytes")
+        
+    except Exception as e:
+        print(f"Background PDF generation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        pdf_jobs[job_id]['status'] = 'failed'
+        pdf_jobs[job_id]['error'] = str(e)
+
+
+@router.post("/{report_id}/pdf/generate")
+async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks):
+    """
+    Start background PDF generation for large reports.
+    Returns a job ID that can be used to check status and download.
+    """
+    db = get_db()
+    
+    # Verify report exists
+    report = await db.test_reports.find_one({"id": report_id})
+    if not report:
+        report = await db.ir_thermography_reports.find_one({"id": report_id})
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Create job ID
+    job_id = str(uuid.uuid4())
+    
+    # Get item count for estimation
+    item_count = len(report.get('inspection_items', []))
+    estimated_time = max(30, item_count * 0.3)  # ~0.3 seconds per item
+    
+    # Initialize job status
+    pdf_jobs[job_id] = {
+        'job_id': job_id,
+        'report_id': report_id,
+        'report_no': report.get('report_no', 'Unknown'),
+        'status': 'queued',
+        'progress': 'Queued for processing...',
+        'total_items': item_count,
+        'estimated_seconds': estimated_time,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Start background task
+    background_tasks.add_task(generate_pdf_sync, report_id, job_id)
+    
+    return {
+        'job_id': job_id,
+        'status': 'queued',
+        'message': f'PDF generation started for {item_count} inspection items',
+        'estimated_seconds': estimated_time,
+        'check_status_url': f'/api/ir-thermography-report/{report_id}/pdf/status/{job_id}'
+    }
+
+
+@router.get("/{report_id}/pdf/status/{job_id}")
+async def check_pdf_status(report_id: str, job_id: str):
+    """Check the status of a background PDF generation job."""
+    
+    # Check in-memory status first
+    if job_id in pdf_jobs:
+        job = pdf_jobs[job_id]
+        return {
+            'job_id': job_id,
+            'status': job.get('status', 'unknown'),
+            'progress': job.get('progress', ''),
+            'total_items': job.get('total_items', 0),
+            'filename': job.get('filename'),
+            'size_bytes': job.get('size_bytes'),
+            'error': job.get('error'),
+            'download_url': f'/api/ir-thermography-report/{report_id}/pdf/download/{job_id}' if job.get('status') == 'completed' else None
+        }
+    
+    # Check database
+    db = get_db()
+    sync_db = get_sync_db()
+    job_doc = sync_db.pdf_jobs.find_one({"job_id": job_id})
+    
+    if job_doc:
+        return {
+            'job_id': job_id,
+            'status': job_doc.get('status', 'unknown'),
+            'progress': 'PDF ready for download' if job_doc.get('status') == 'completed' else '',
+            'filename': job_doc.get('filename'),
+            'size_bytes': job_doc.get('size_bytes'),
+            'download_url': f'/api/ir-thermography-report/{report_id}/pdf/download/{job_id}' if job_doc.get('status') == 'completed' else None
+        }
+    
+    raise HTTPException(status_code=404, detail="Job not found")
+
+
+@router.get("/{report_id}/pdf/download/{job_id}")
+async def download_generated_pdf(report_id: str, job_id: str):
+    """Download a PDF that was generated in the background."""
+    
+    # Check if job is completed
+    if job_id in pdf_jobs and pdf_jobs[job_id].get('status') != 'completed':
+        raise HTTPException(status_code=400, detail="PDF generation not yet completed")
+    
+    # Get PDF from database
+    sync_db = get_sync_db()
+    job_doc = sync_db.pdf_jobs.find_one({"job_id": job_id})
+    
+    if not job_doc:
+        raise HTTPException(status_code=404, detail="PDF not found. It may have expired.")
+    
+    if job_doc.get('status') != 'completed':
+        raise HTTPException(status_code=400, detail="PDF generation not yet completed")
+    
+    # Decode PDF data
+    pdf_data = base64.b64decode(job_doc['pdf_data'])
+    buffer = BytesIO(pdf_data)
+    
+    filename = job_doc.get('filename', 'IR_Thermography_Report.pdf')
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
