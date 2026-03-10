@@ -2128,6 +2128,12 @@ def generate_pdf_sync(report_id: str, job_id: str):
         sync_client = MongoClient(mongo_url)
         db = sync_client[db_name]
         
+        # Update MongoDB with processing status
+        db.pdf_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {"status": "processing", "progress": "Starting PDF generation..."}}
+        )
+        
         # Get report
         report = db.test_reports.find_one({"id": report_id})
         if not report:
@@ -2136,6 +2142,10 @@ def generate_pdf_sync(report_id: str, job_id: str):
         if not report:
             pdf_jobs[job_id]['status'] = 'failed'
             pdf_jobs[job_id]['error'] = 'Report not found'
+            db.pdf_jobs.update_one(
+                {"job_id": job_id},
+                {"$set": {"status": "failed", "error": "Report not found"}}
+            )
             return
         
         inspection_items = report.get('inspection_items', [])
