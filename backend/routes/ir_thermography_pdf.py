@@ -1358,9 +1358,7 @@ def create_individual_inspection_pages(report, styles):
                             img_bytes = base64.b64decode(image_doc["data"])
                             if len(img_bytes) > 100:
                                 img_io = BytesIO(img_bytes)
-                                print(f"Successfully loaded image from MongoDB: {image_id}")
                                 return Image(img_io, width=width, height=height)
-                        print(f"Image not found in MongoDB: {image_id}")
                         return None
                     except Exception as e:
                         print(f"Error loading image from MongoDB: {e}")
