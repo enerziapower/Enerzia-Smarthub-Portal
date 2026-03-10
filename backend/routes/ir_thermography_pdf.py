@@ -1963,6 +1963,11 @@ async def generate_ir_thermography_pdf(report_id: str):
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
         
+        # Check inspection items count and warn about large reports
+        inspection_items = report.get('inspection_items', [])
+        item_count = len(inspection_items)
+        print(f"Generating PDF for report {report.get('report_no')} with {item_count} inspection items...")
+        
         # Get organization settings
         org_settings = await db.settings.find_one({"type": "organization"}) or {}
         
@@ -1974,9 +1979,8 @@ async def generate_ir_thermography_pdf(report_id: str):
         
         # Calculate summary if not present
         if 'summary' not in report or not report['summary']:
-            inspection_items = report.get('inspection_items', [])
             summary = {
-                'total_items': len(inspection_items),
+                'total_items': item_count,
                 'critical': 0,
                 'warning': 0,
                 'check_monitor': 0,
@@ -2015,18 +2019,21 @@ async def generate_ir_thermography_pdf(report_id: str):
         
         try:
             # 1. Cover page
+            print("  Creating cover page...")
             elements.extend(create_cover_page(report, org_settings, styles))
         except Exception as e:
             print(f"Error creating cover page: {e}")
         
         try:
             # 2. Document details (Page 2)
+            print("  Creating document details...")
             elements.extend(create_document_details_section(report, styles))
         except Exception as e:
             print(f"Error creating document details: {e}")
         
         try:
             # 3. Table of Contents (Page 3)
+            print("  Creating table of contents...")
             elements.extend(create_table_of_contents(report, styles))
         except Exception as e:
             print(f"Error creating table of contents: {e}")
