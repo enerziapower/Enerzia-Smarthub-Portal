@@ -6,6 +6,7 @@ Contains: Cover Page, Document Details, Table of Contents, Executive Summary,
 Fundamentals & Methodology, Risk Categorization Procedure, Inspection Summary, and Thermal Images
 
 Supports background PDF generation for large reports to avoid timeout issues.
+Uses GridFS for storing large PDFs to avoid MongoDB 16MB document limit.
 """
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -26,6 +27,7 @@ import uuid
 import asyncio
 from datetime import datetime, timezone
 from pymongo import MongoClient
+from gridfs import GridFS
 
 # Import date formatter and back cover helpers from pdf_base
 from routes.pdf_base import (
