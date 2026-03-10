@@ -254,13 +254,14 @@ const AuditReports = () => {
       const token = localStorage.getItem('token');
       const equipmentType = report.equipment_type || report.audit_type || 'audit';
       
-      // Use correct PDF endpoint based on report type
-      let pdfUrl;
+      // For IR Thermography, use background PDF generation to avoid timeouts
       if (equipmentType === 'ir-thermography' || report.report_category === 'ir-thermography') {
-        pdfUrl = `${API_URL}/api/ir-thermography-report/${report.id}/pdf`;
-      } else {
-        pdfUrl = `${API_URL}/api/equipment-report/${equipmentType}/${report.id}/pdf`;
+        await handleIRThermographyPDF(report, token);
+        return;
       }
+      
+      // For other report types, use direct download
+      const pdfUrl = `${API_URL}/api/equipment-report/${equipmentType}/${report.id}/pdf`;
       
       const response = await fetch(pdfUrl, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -279,10 +280,96 @@ const AuditReports = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF');
+      toast.error('Failed to download PDF');
     } finally {
       setActionLoading(prev => ({ ...prev, [report.id]: null }));
     }
+  };
+
+  // Background PDF generation for IR Thermography reports
+  const handleIRThermographyPDF = async (report, token) => {
+    try {
+      toast.info('Starting PDF generation... This may take a moment for large reports.');
+      
+      // Start background generation
+      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!startResponse.ok) {
+        // Fallback to direct download for smaller reports
+        const directResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!directResponse.ok) throw new Error('Failed to generate PDF');
+        
+        const blob = await directResponse.blob();
+        downloadBlob(blob, report.report_no);
+        return;
+      }
+      
+      const startData = await startResponse.json();
+      const jobId = startData.job_id;
+      
+      // Poll for completion
+      let attempts = 0;
+      const maxAttempts = 120; // 2 minutes max
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Check every 2 seconds
+        attempts++;
+        
+        const statusResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/status/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!statusResponse.ok) continue;
+        
+        const statusData = await statusResponse.json();
+        
+        if (statusData.status === 'completed') {
+          // Download the PDF
+          const downloadResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/download/${jobId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (downloadResponse.ok) {
+            const blob = await downloadResponse.blob();
+            downloadBlob(blob, report.report_no || statusData.filename);
+            toast.success('PDF downloaded successfully!');
+          } else {
+            throw new Error('Failed to download generated PDF');
+          }
+          return;
+        } else if (statusData.status === 'failed') {
+          throw new Error(statusData.error || 'PDF generation failed');
+        }
+      }
+      
+      throw new Error('PDF generation timed out. Please try again.');
+      
+    } catch (error) {
+      console.error('IR Thermography PDF error:', error);
+      toast.error(`Failed to download PDF: ${error.message}`);
+      throw error;
+    }
+  };
+
+  // Helper function to download blob
+  const downloadBlob = (blob, reportNo) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `IR_Thermography_${reportNo?.replace(/\//g, '_') || 'report'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const handleDelete = async (report) => {
