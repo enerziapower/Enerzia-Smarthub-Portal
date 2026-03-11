@@ -1210,7 +1210,6 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         no_images: If True, skips all images for fastest generation
     """
     import gc
-    import tempfile
     elements = []
     
     inspection_items = report.get('inspection_items', [])
