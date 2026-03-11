@@ -2531,6 +2531,46 @@ async def reset_stuck_jobs(report_id: str):
     Reset all stuck 'processing' jobs for a report so they can be retried.
     """
     db = get_db()
+
+@router.get("/job-details/{job_id}")
+async def get_job_details(job_id: str):
+    """
+    Get detailed information about a PDF generation job.
+    """
+    db = get_db()
+    
+    # Check in-memory first
+    in_memory = pdf_jobs.get(job_id, {})
+    
+    # Check database
+    job_doc = await db.pdf_jobs.find_one({"job_id": job_id}, {"_id": 0})
+    
+    # Check GridFS
+    gridfs_info = None
+    if job_doc and job_doc.get('gridfs_id'):
+        try:
+            from bson import ObjectId
+            gridfs_file = await db.fs.files.find_one({"_id": ObjectId(job_doc['gridfs_id'])})
+            if gridfs_file:
+                gridfs_info = {
+                    "filename": gridfs_file.get("filename"),
+                    "length": gridfs_file.get("length"),
+                    "upload_date": str(gridfs_file.get("uploadDate"))
+                }
+        except:
+            pass
+    
+    return {
+        "job_id": job_id,
+        "in_memory_status": in_memory.get('status', 'not_in_memory'),
+        "in_memory_progress": in_memory.get('progress', ''),
+        "database_status": job_doc.get('status') if job_doc else 'not_in_db',
+        "database_error": job_doc.get('error') if job_doc else None,
+        "gridfs_info": gridfs_info,
+        "full_job_doc": job_doc
+    }
+
+
     
     # Find and reset all stuck jobs for this report
     result = await db.pdf_jobs.update_many(
