@@ -2460,7 +2460,20 @@ async def start_pdf_generation(
     
     # Get item count for estimation
     item_count = len(report.get('inspection_items', []))
-    estimated_time = max(30, item_count * 0.3)  # ~0.3 seconds per item
+    
+    # Calculate part information
+    total_parts = (item_count + items_per_part - 1) // items_per_part if item_count > items_per_part else 1
+    
+    if part > 0:
+        # Phased generation - only generate specific part
+        start_idx = (part - 1) * items_per_part
+        end_idx = min(part * items_per_part, item_count)
+        items_in_part = end_idx - start_idx
+        estimated_time = max(30, items_in_part * 0.5)
+    else:
+        # Full report
+        items_in_part = item_count
+        estimated_time = max(30, item_count * 0.5)
     
     job_data = {
         'job_id': job_id,
@@ -2469,6 +2482,9 @@ async def start_pdf_generation(
         'status': 'queued',
         'progress': 'Queued for processing...',
         'total_items': item_count,
+        'items_in_part': items_in_part,
+        'part': part,
+        'total_parts': total_parts,
         'estimated_seconds': estimated_time,
         'lite_mode': lite_mode,
         'no_images': no_images,
@@ -2485,17 +2501,21 @@ async def start_pdf_generation(
         upsert=True
     )
     
-    # Start background task
-    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode, no_images)
+    # Start background task with part information
+    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode, no_images, part, items_per_part)
     
-    mode_str = ' (no images)' if no_images else (' (lite mode)' if lite_mode else '')
+    part_str = f' (Part {part} of {total_parts})' if part > 0 else ''
+    mode_str = ' - no images' if no_images else (' - lite mode' if lite_mode else '')
+    
     return {
         'job_id': job_id,
         'status': 'queued',
-        'message': f'PDF generation started for {item_count} inspection items{mode_str}',
+        'message': f'PDF generation started for {items_in_part} items{part_str}{mode_str}',
+        'total_items': item_count,
+        'items_in_part': items_in_part,
+        'part': part,
+        'total_parts': total_parts,
         'estimated_seconds': estimated_time,
-        'lite_mode': lite_mode,
-        'no_images': no_images,
         'check_status_url': f'/api/ir-thermography-report/{report_id}/pdf/status/{job_id}'
     }
 
