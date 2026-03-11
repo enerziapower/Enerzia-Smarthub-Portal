@@ -77,6 +77,5 @@ uvicorn==0.25.0
 watchfiles==1.1.1
 websocket-client==1.9.0
 websockets==15.0.1
-redis==7.1.0
 httpx
 openpyxl==3.1.5
