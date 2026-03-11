@@ -103,6 +103,7 @@ MCCB_TEMPLATE = {
         {"name": "rated_current", "label": "Rated Current (A)", "type": "text"},
         {"name": "breaking_capacity", "label": "Breaking Capacity (kA)", "type": "text"},
         {"name": "frame_size", "label": "Frame Size", "type": "text"},
+        {"name": "next_due_date", "label": "Next Due Date", "type": "date"},
     ],
     "bulk_entry": True,  # MCCB supports bulk entry for multiple feeders
     
