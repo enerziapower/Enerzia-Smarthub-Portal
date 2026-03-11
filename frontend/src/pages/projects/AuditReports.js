@@ -289,10 +289,10 @@ const AuditReports = () => {
   // Background PDF generation for IR Thermography reports
   const handleIRThermographyPDF = async (report, token) => {
     try {
-      toast.info('Starting PDF generation... This may take a moment for large reports.');
+      // Use no_images mode for faster generation (images are the main memory hog)
+      toast.info('Starting PDF generation (optimized mode)... Please wait.');
       
-      // Use lite_mode=true for faster generation (smaller images)
-      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true`, {
+      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true&no_images=true`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
