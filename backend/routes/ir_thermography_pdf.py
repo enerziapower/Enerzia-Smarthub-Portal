@@ -2481,12 +2481,15 @@ async def download_generated_pdf(report_id: str, job_id: str):
 
 
 
-@router.get("/diagnostic/{report_id}")
+@router.get("/diagnostic/{report_id:path}")
 async def diagnose_report(report_id: str):
     """
     Diagnostic endpoint to check the health of an IR Thermography report.
     Can accept either report ID or report_no (like IR/2026/0002).
     """
+    from urllib.parse import unquote
+    report_id = unquote(report_id)  # Handle URL-encoded report numbers
+    
     db = get_db()
     
     # Try to find by ID first
