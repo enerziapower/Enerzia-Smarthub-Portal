@@ -2182,14 +2182,17 @@ async def generate_ir_thermography_pdf(report_id: str):
 pdf_jobs = {}
 
 
-def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_images: bool = False):
+def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_images: bool = False, part: int = 0, items_per_part: int = 50):
     """Synchronous PDF generation for background task.
     
     Memory-optimized version with aggressive garbage collection.
+    Supports phased generation for large reports.
     
     Args:
         lite_mode: If True, uses smaller images and skips some elements for faster generation
         no_images: If True, skips all images for fastest generation
+        part: Part number for phased generation (0 = full report, 1+ = specific part)
+        items_per_part: Number of items per part (default 50)
     """
     from motor.motor_asyncio import AsyncIOMotorClient
     import asyncio
@@ -2197,8 +2200,9 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
     
     try:
         mode_str = ' (no images)' if no_images else (' (lite mode)' if lite_mode else '')
+        part_str = f' Part {part}' if part > 0 else ''
         pdf_jobs[job_id]['status'] = 'processing'
-        pdf_jobs[job_id]['progress'] = f'Starting PDF generation...{mode_str}'
+        pdf_jobs[job_id]['progress'] = f'Starting PDF generation...{mode_str}{part_str}'
         
         # Force garbage collection at start
         gc.collect()
@@ -2212,7 +2216,7 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         # Update MongoDB with processing status
         db.pdf_jobs.update_one(
             {"job_id": job_id},
-            {"$set": {"status": "processing", "progress": "Starting PDF generation..."}}
+            {"$set": {"status": "processing", "progress": f"Starting PDF generation...{part_str}"}}
         )
         
         # Get report
@@ -2229,10 +2233,27 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
             )
             return
         
-        inspection_items = report.get('inspection_items', [])
-        item_count = len(inspection_items)
-        pdf_jobs[job_id]['progress'] = f'Processing {item_count} inspection items...'
-        pdf_jobs[job_id]['total_items'] = item_count
+        # Get all inspection items
+        all_inspection_items = report.get('inspection_items', [])
+        total_item_count = len(all_inspection_items)
+        
+        # PHASED GENERATION: Slice items based on part number
+        if part > 0:
+            start_idx = (part - 1) * items_per_part
+            end_idx = min(part * items_per_part, total_item_count)
+            inspection_items = all_inspection_items[start_idx:end_idx]
+            item_count = len(inspection_items)
+            total_parts = (total_item_count + items_per_part - 1) // items_per_part
+            pdf_jobs[job_id]['progress'] = f'Processing Part {part} of {total_parts} ({item_count} items: {start_idx + 1}-{end_idx})...'
+            print(f"Phased generation: Part {part}/{total_parts}, items {start_idx + 1}-{end_idx}")
+        else:
+            # Full report
+            inspection_items = all_inspection_items
+            item_count = total_item_count
+            pdf_jobs[job_id]['progress'] = f'Processing {item_count} inspection items...'
+        
+        pdf_jobs[job_id]['total_items'] = total_item_count
+        pdf_jobs[job_id]['items_in_part'] = item_count
         
         # Get organization settings
         org_settings = db.settings.find_one({"type": "organization"}) or {}
