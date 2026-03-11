@@ -1238,7 +1238,7 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
             
             # Item header - truncate long panel/feeder names
             panel_name = item.get('panel', '')
-        feeder_name = item.get('feeder', '')
+            feeder_name = item.get('feeder', '')
         
         # Truncate if combined text is too long
         header_text = f"INSPECTION ITEM {i}: {panel_name} - {feeder_name}"
