@@ -2443,6 +2443,7 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
         'total_items': item_count,
         'estimated_seconds': estimated_time,
         'lite_mode': lite_mode,
+        'no_images': no_images,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -2457,14 +2458,16 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
     )
     
     # Start background task
-    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode)
+    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode, no_images)
     
+    mode_str = ' (no images)' if no_images else (' (lite mode)' if lite_mode else '')
     return {
         'job_id': job_id,
         'status': 'queued',
-        'message': f'PDF generation started for {item_count} inspection items' + (' (lite mode)' if lite_mode else ''),
+        'message': f'PDF generation started for {item_count} inspection items{mode_str}',
         'estimated_seconds': estimated_time,
         'lite_mode': lite_mode,
+        'no_images': no_images,
         'check_status_url': f'/api/ir-thermography-report/{report_id}/pdf/status/{job_id}'
     }
 
