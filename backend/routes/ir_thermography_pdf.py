@@ -1197,13 +1197,14 @@ def create_risk_categorization_section(styles):
     return elements
 
 
-def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None, lite_mode=False):
+def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None, lite_mode=False, no_images=False):
     """Create detailed pages for each inspection item - SECTION E
     
     Memory-optimized version that processes items in batches to avoid OOM kills.
     
     Args:
-        lite_mode: If True, uses smaller images (150x100 instead of 230x170) for faster generation
+        lite_mode: If True, uses smaller images (120x80 instead of 180x120) for faster generation
+        no_images: If True, skips all images for fastest generation
     """
     import gc
     elements = []
@@ -1211,8 +1212,13 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
     inspection_items = report.get('inspection_items', [])
     total_items = len(inspection_items)
     
-    # In lite mode, use even smaller image dimensions and lower quality
-    if lite_mode:
+    # Image settings based on mode
+    if no_images:
+        img_width = 0
+        img_height = 0
+        max_image_dim = 0
+        jpeg_quality = 0
+    elif lite_mode:
         img_width = 120
         img_height = 80
         max_image_dim = 400  # Maximum dimension for image compression
