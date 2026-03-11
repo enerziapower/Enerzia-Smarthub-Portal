@@ -1353,23 +1353,18 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                 return None
         
         # Helper function to load image from base64 or file path
-        def load_image_from_source(img_source, width=180, height=120):
-            """Load image from base64 string, file path, or MongoDB - with AGGRESSIVE compression for memory efficiency"""
+        def load_image_from_source(img_source, width=100, height=70):
+            """Load image with VERY AGGRESSIVE compression to stay within memory limits"""
             if not img_source:
                 return None
             
             try:
-                # Use smaller max dimension based on lite_mode
-                max_dim = max_image_dim if 'max_image_dim' in dir() else 500
-                quality = jpeg_quality if 'jpeg_quality' in dir() else 50
-                
                 if img_source.startswith('data:image'):
-                    # Base64 encoded image
                     try:
                         img_data = img_source.split(',')[1]
                         img_bytes = base64.b64decode(img_data)
                         
-                        # Check if image data is valid (not all zeros/dummy data)
+                        # Skip small/invalid images
                         if len(img_bytes) < 100:
                             return None
                         
@@ -1378,35 +1373,42 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         is_jpeg = img_bytes[:2] == b'\xff\xd8'
                         is_gif = img_bytes[:6] == b'GIF89a' or img_bytes[:6] == b'GIF87a'
                         
-                        # Check for dummy/placeholder data
+                        if not (is_png or is_jpeg or is_gif):
+                            return None
+                        
+                        # Check for dummy data
                         non_zero_count = sum(1 for b in img_bytes[8:min(100, len(img_bytes))] if b != 0)
                         if non_zero_count == 0:
                             return None
                         
-                        if not (is_png or is_jpeg or is_gif):
-                            return None
-                        
-                        # AGGRESSIVE compression to reduce memory
+                        # VERY AGGRESSIVE compression
                         try:
                             from PIL import Image as PILImage
                             pil_img = PILImage.open(BytesIO(img_bytes))
-                            # Resize aggressively
-                            if pil_img.width > max_dim or pil_img.height > max_dim:
-                                pil_img.thumbnail((max_dim, max_dim), PILImage.Resampling.LANCZOS)
-                            # Convert to JPEG with low quality
+                            
+                            # Aggressive resize - use max_image_dim from outer scope
+                            target_dim = max_image_dim if max_image_dim > 0 else 300
+                            if pil_img.width > target_dim or pil_img.height > target_dim:
+                                pil_img.thumbnail((target_dim, target_dim), PILImage.Resampling.LANCZOS)
+                            
+                            # Convert and compress heavily
                             compressed_io = BytesIO()
                             if pil_img.mode in ('RGBA', 'LA', 'P'):
                                 pil_img = pil_img.convert('RGB')
+                            
+                            # Use jpeg_quality from outer scope
+                            quality = jpeg_quality if jpeg_quality > 0 else 35
                             pil_img.save(compressed_io, format='JPEG', quality=quality, optimize=True)
                             compressed_io.seek(0)
-                            # Clear original image from memory
+                            
+                            # IMPORTANT: Clear memory immediately
                             del pil_img
                             del img_bytes
+                            gc.collect()
+                            
                             return Image(compressed_io, width=width, height=height)
                         except Exception:
-                            # Fall back to original image
-                            img_io = BytesIO(img_bytes)
-                            return Image(img_io, width=width, height=height)
+                            return None
                     except Exception:
                         return None
                 elif img_source.startswith('/api/ir-thermography/db-images/') or img_source.startswith('/api/ir-thermography-db-images/'):
