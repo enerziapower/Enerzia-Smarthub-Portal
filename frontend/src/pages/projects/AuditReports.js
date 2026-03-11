@@ -707,14 +707,79 @@ const AuditReports = () => {
                         >
                           <Mail size={16} />
                         </button>
-                        <button 
-                          onClick={() => handleDownloadPDF(report)}
-                          disabled={actionLoading[report.id] === 'download'}
-                          className="p-2 hover:bg-green-100 rounded-lg text-slate-500 hover:text-green-600"
-                          title="Download PDF"
-                        >
-                          {actionLoading[report.id] === 'download' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                        </button>
+                        
+                        {/* Download button - shows dropdown for large IR Thermography reports */}
+                        {(() => {
+                          const equipmentType = report.equipment_type || report.audit_type;
+                          const isIRThermography = equipmentType === 'ir-thermography';
+                          const partsInfo = isIRThermography ? getPartsInfo(report) : null;
+                          
+                          if (partsInfo) {
+                            // Large IR Thermography report - show dropdown
+                            return (
+                              <div className="relative" ref={downloadDropdownOpen === report.id ? dropdownRef : null}>
+                                <button 
+                                  onClick={() => setDownloadDropdownOpen(downloadDropdownOpen === report.id ? null : report.id)}
+                                  disabled={actionLoading[report.id] === 'download'}
+                                  className="flex items-center gap-1 p-2 hover:bg-green-100 rounded-lg text-slate-500 hover:text-green-600"
+                                  title={`Download PDF (${partsInfo.totalItems} items - ${partsInfo.totalParts} parts)`}
+                                >
+                                  {actionLoading[report.id] === 'download' ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                  ) : (
+                                    <>
+                                      <Download size={16} />
+                                      <ChevronDown size={12} />
+                                    </>
+                                  )}
+                                </button>
+                                
+                                {downloadDropdownOpen === report.id && (
+                                  <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 border-b border-slate-100">
+                                      {partsInfo.totalItems} items • Download in parts
+                                    </div>
+                                    {partsInfo.parts.map((p) => (
+                                      <button
+                                        key={p.part}
+                                        onClick={() => handleDownloadPart(report, p.part)}
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-green-50 hover:text-green-700"
+                                      >
+                                        <Download size={14} className="inline mr-2" />
+                                        {p.label}
+                                      </button>
+                                    ))}
+                                    <div className="border-t border-slate-100 mt-1 pt-1">
+                                      <button
+                                        onClick={() => {
+                                          setDownloadDropdownOpen(null);
+                                          handleDownloadPDF(report);
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm text-amber-600 hover:bg-amber-50"
+                                      >
+                                        <Download size={14} className="inline mr-2" />
+                                        Full Report (may fail)
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          
+                          // Regular download button for smaller reports
+                          return (
+                            <button 
+                              onClick={() => handleDownloadPDF(report)}
+                              disabled={actionLoading[report.id] === 'download'}
+                              className="p-2 hover:bg-green-100 rounded-lg text-slate-500 hover:text-green-600"
+                              title="Download PDF"
+                            >
+                              {actionLoading[report.id] === 'download' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                            </button>
+                          );
+                        })()}
+                        
                         <button 
                           onClick={() => handleDelete(report)}
                           disabled={actionLoading[report.id] === 'delete'}
@@ -722,6 +787,7 @@ const AuditReports = () => {
                           title="Delete"
                         >
                           {actionLoading[report.id] === 'delete' ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                        </button>
                         </button>
                       </div>
                     </td>
