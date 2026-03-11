@@ -2396,13 +2396,14 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False):
 
 
 @router.post("/{report_id}/pdf/generate")
-async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks, lite_mode: bool = False):
+async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks, lite_mode: bool = False, no_images: bool = False):
     """
     Start background PDF generation for large reports.
     Returns a job ID that can be used to check status and download.
     
     Args:
         lite_mode: If True, generates a smaller PDF with reduced image quality (faster for large reports)
+        no_images: If True, generates PDF without images (fastest, for very large reports)
     """
     db = get_db()
     
