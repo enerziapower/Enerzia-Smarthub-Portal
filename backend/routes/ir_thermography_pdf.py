@@ -2125,10 +2125,14 @@ def generate_pdf_sync(report_id: str, job_id: str):
     """Synchronous PDF generation for background task."""
     from motor.motor_asyncio import AsyncIOMotorClient
     import asyncio
+    import gc  # Import garbage collector
     
     try:
         pdf_jobs[job_id]['status'] = 'processing'
         pdf_jobs[job_id]['progress'] = 'Starting PDF generation...'
+        
+        # Force garbage collection at start
+        gc.collect()
         
         # Get database connection
         mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
