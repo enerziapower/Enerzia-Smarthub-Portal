@@ -2141,15 +2141,19 @@ async def generate_ir_thermography_pdf(report_id: str):
 pdf_jobs = {}
 
 
-def generate_pdf_sync(report_id: str, job_id: str):
-    """Synchronous PDF generation for background task."""
+def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False):
+    """Synchronous PDF generation for background task.
+    
+    Args:
+        lite_mode: If True, uses smaller images and skips some elements for faster generation
+    """
     from motor.motor_asyncio import AsyncIOMotorClient
     import asyncio
     import gc  # Import garbage collector
     
     try:
         pdf_jobs[job_id]['status'] = 'processing'
-        pdf_jobs[job_id]['progress'] = 'Starting PDF generation...'
+        pdf_jobs[job_id]['progress'] = 'Starting PDF generation...' + (' (lite mode)' if lite_mode else '')
         
         # Force garbage collection at start
         gc.collect()
