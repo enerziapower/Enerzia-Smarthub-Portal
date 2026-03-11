@@ -2,6 +2,35 @@
 
 ## Latest Updates
 
+### IR Thermography PDF Generation ✅ FIXED (Mar 11, 2026)
+**Location:** Projects → IR Thermography Reports → PDF Download
+
+**CRITICAL 2-DAY BUG FIX:** PDF downloads were failing for large reports (199 items) due to:
+1. MongoDB 16MB document size limit (fixed with GridFS)
+2. Production memory limits causing OOM kills (fixed with no_images mode)
+3. Frontend CORS issues (fixed with redeployment)
+
+| Feature | Description |
+|---------|-------------|
+| **Background Generation** | Large PDFs generated asynchronously |
+| **GridFS Storage** | PDFs stored in GridFS to bypass 16MB limit |
+| **No-Images Mode** | Fast generation without images for large reports |
+| **Lite Mode** | Reduced image quality for medium reports |
+| **Memory Optimization** | Garbage collection every 5 items |
+
+**API Endpoints:**
+- `POST /api/ir-thermography-report/{report_id}/pdf/generate?lite_mode=true&no_images=true`
+- `GET /api/ir-thermography-report/{report_id}/pdf/status/{job_id}`
+- `GET /api/ir-thermography-report/{report_id}/pdf/download/{job_id}`
+- `GET /api/ir-thermography-report/diagnostic/{report_id}` - Health check
+- `GET /api/ir-thermography-report/reset-stuck-jobs/{report_id}` - Reset stuck jobs
+
+**Test Results:** 
+- Preview: 167 items → 1.1MB PDF in 20 seconds ✅
+- Production: 199 items → 1.9MB PDF in 50 seconds ✅
+
+---
+
 ### IR Thermography Background PDF Generation ✅ COMPLETE (Mar 10, 2026)
 **Location:** Projects → IR Thermography Reports → PDF Download
 
