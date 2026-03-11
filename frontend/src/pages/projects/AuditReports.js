@@ -174,19 +174,6 @@ const AuditReports = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
-  const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(null);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDownloadDropdownOpen(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     fetchReports();
