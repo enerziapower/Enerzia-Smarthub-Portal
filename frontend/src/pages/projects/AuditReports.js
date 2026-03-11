@@ -300,12 +300,22 @@ const AuditReports = () => {
   };
 
   // Background PDF generation for IR Thermography reports
-  const handleIRThermographyPDF = async (report, token) => {
+  const handleIRThermographyPDF = async (report, token, part = 0) => {
     try {
-      // Use lite_mode=true for optimized images (smaller size, lower quality)
-      toast.info('Starting PDF generation with optimized images... This may take 2-3 minutes for large reports.');
+      const ITEMS_PER_PART = 50;
+      const itemCount = report.inspection_items?.length || 0;
+      const totalParts = Math.ceil(itemCount / ITEMS_PER_PART);
       
-      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true`, {
+      // Build the URL with part parameter if specified
+      let generateUrl = `${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true`;
+      if (part > 0) {
+        generateUrl += `&part=${part}&items_per_part=${ITEMS_PER_PART}`;
+        toast.info(`Starting PDF generation for Part ${part} of ${totalParts}...`);
+      } else {
+        toast.info('Starting PDF generation with optimized images... This may take 2-3 minutes for large reports.');
+      }
+      
+      const startResponse = await fetch(generateUrl, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -352,15 +362,20 @@ const AuditReports = () => {
         
         if (statusData.status === 'completed') {
           // Download the PDF
-          toast.info('PDF ready! Starting download...');
+          const partMsg = part > 0 ? ` Part ${part}` : '';
+          toast.info(`PDF${partMsg} ready! Starting download...`);
           const downloadResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/download/${jobId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           
           if (downloadResponse.ok) {
             const blob = await downloadResponse.blob();
-            downloadBlob(blob, report.report_no || statusData.filename);
-            toast.success('PDF downloaded successfully!');
+            // Use filename from server (includes part number if applicable)
+            const filename = statusData.filename || (part > 0 
+              ? `${report.report_no}_Part_${part}_of_${totalParts}` 
+              : report.report_no);
+            downloadBlob(blob, filename);
+            toast.success(`PDF${partMsg} downloaded successfully!`);
           } else {
             throw new Error('Failed to download generated PDF');
           }
@@ -377,6 +392,36 @@ const AuditReports = () => {
       toast.error(`Failed to download PDF: ${error.message}`);
       throw error;
     }
+  };
+
+  // Handle phased download for specific part
+  const handleDownloadPart = async (report, part) => {
+    setDownloadDropdownOpen(null);
+    setActionLoading(prev => ({ ...prev, [report.id]: 'download' }));
+    try {
+      const token = localStorage.getItem('token');
+      await handleIRThermographyPDF(report, token, part);
+    } catch (error) {
+      // Error already handled in handleIRThermographyPDF
+    } finally {
+      setActionLoading(prev => ({ ...prev, [report.id]: null }));
+    }
+  };
+
+  // Calculate parts info for a report
+  const getPartsInfo = (report) => {
+    const ITEMS_PER_PART = 50;
+    const itemCount = report.inspection_items?.length || 0;
+    if (itemCount <= ITEMS_PER_PART) return null;
+    
+    const totalParts = Math.ceil(itemCount / ITEMS_PER_PART);
+    const parts = [];
+    for (let i = 1; i <= totalParts; i++) {
+      const start = (i - 1) * ITEMS_PER_PART + 1;
+      const end = Math.min(i * ITEMS_PER_PART, itemCount);
+      parts.push({ part: i, start, end, label: `Part ${i}: Items ${start}-${end}` });
+    }
+    return { totalParts, parts, totalItems: itemCount };
   };
 
   // Helper function to download blob
