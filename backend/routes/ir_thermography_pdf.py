@@ -2412,6 +2412,7 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
         'progress': 'Queued for processing...',
         'total_items': item_count,
         'estimated_seconds': estimated_time,
+        'lite_mode': lite_mode,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -2426,13 +2427,14 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
     )
     
     # Start background task
-    background_tasks.add_task(generate_pdf_sync, report_id, job_id)
+    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode)
     
     return {
         'job_id': job_id,
         'status': 'queued',
-        'message': f'PDF generation started for {item_count} inspection items',
+        'message': f'PDF generation started for {item_count} inspection items' + (' (lite mode)' if lite_mode else ''),
         'estimated_seconds': estimated_time,
+        'lite_mode': lite_mode,
         'check_status_url': f'/api/ir-thermography-report/{report_id}/pdf/status/{job_id}'
     }
 
