@@ -1419,7 +1419,6 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         return None
                 elif img_source.startswith('/api/ir-thermography/db-images/') or img_source.startswith('/api/ir-thermography-db-images/'):
                     # MongoDB-stored images - fetch directly from database using sync client
-                    # Supports both new format (/api/ir-thermography/db-images/) and old format (/api/ir-thermography-db-images/)
                     try:
                         image_id = img_source.replace('/api/ir-thermography/db-images/', '').replace('/api/ir-thermography-db-images/', '')
                         sync_db = get_sync_db()
@@ -1429,26 +1428,11 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         if image_doc and image_doc.get("data"):
                             img_bytes = base64.b64decode(image_doc["data"])
                             if len(img_bytes) > 100:
-                                # Use temp file for memory efficiency
-                                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
-                                    tmp_file.write(img_bytes)
-                                    tmp_path = tmp_file.name
-                                
+                                # Load into BytesIO for ReportLab
+                                img_io = BytesIO(img_bytes)
                                 del img_bytes
                                 gc.collect()
-                                
-                                result = Image(tmp_path, width=width, height=height)
-                                
-                                try:
-                                    os.unlink(tmp_path)
-                                except:
-                                    pass
-                                
-                                return result
-                        return None
-                    except Exception as e:
-                        print(f"Error loading image from MongoDB: {e}")
-                        return None
+                                return Image(img_io, width=width, height=height)
                         return None
                     except Exception as e:
                         print(f"Error loading image from MongoDB: {e}")
