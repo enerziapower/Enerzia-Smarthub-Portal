@@ -1357,7 +1357,7 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         
         # Helper function to load image from base64 or file path
         def load_image_from_source(img_source, width=100, height=70):
-            """Load image with VERY AGGRESSIVE compression to stay within memory limits"""
+            """Load image with memory-optimized processing using temp files"""
             if not img_source:
                 return None
             
@@ -1384,33 +1384,45 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         if non_zero_count == 0:
                             return None
                         
-                        # VERY AGGRESSIVE compression
+                        # MEMORY-OPTIMIZED: Use temp file to avoid keeping large images in memory
                         try:
                             from PIL import Image as PILImage
                             pil_img = PILImage.open(BytesIO(img_bytes))
                             
-                            # Aggressive resize - use max_image_dim from outer scope
-                            target_dim = max_image_dim if max_image_dim > 0 else 300
+                            # Clear original bytes immediately
+                            del img_bytes
+                            
+                            # Resize if needed - use max_image_dim from outer scope
+                            target_dim = max_image_dim if max_image_dim > 0 else 800
                             if pil_img.width > target_dim or pil_img.height > target_dim:
                                 pil_img.thumbnail((target_dim, target_dim), PILImage.Resampling.LANCZOS)
                             
-                            # Convert and compress heavily
-                            compressed_io = BytesIO()
-                            if pil_img.mode in ('RGBA', 'LA', 'P'):
-                                pil_img = pil_img.convert('RGB')
+                            # Write to temp file instead of keeping in memory
+                            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+                                if pil_img.mode in ('RGBA', 'LA', 'P'):
+                                    pil_img = pil_img.convert('RGB')
+                                
+                                # Use jpeg_quality from outer scope
+                                quality = jpeg_quality if jpeg_quality > 0 else 75
+                                pil_img.save(tmp_file, format='JPEG', quality=quality, optimize=True)
+                                tmp_path = tmp_file.name
                             
-                            # Use jpeg_quality from outer scope
-                            quality = jpeg_quality if jpeg_quality > 0 else 35
-                            pil_img.save(compressed_io, format='JPEG', quality=quality, optimize=True)
-                            compressed_io.seek(0)
-                            
-                            # IMPORTANT: Clear memory immediately
+                            # Clear PIL image from memory immediately
                             del pil_img
-                            del img_bytes
                             gc.collect()
                             
-                            return Image(compressed_io, width=width, height=height)
-                        except Exception:
+                            # Load from temp file (much more memory efficient)
+                            result = Image(tmp_path, width=width, height=height)
+                            
+                            # Clean up temp file after loading
+                            try:
+                                os.unlink(tmp_path)
+                            except:
+                                pass
+                            
+                            return result
+                        except Exception as e:
+                            print(f"Error processing base64 image: {e}")
                             return None
                     except Exception:
                         return None
@@ -1426,8 +1438,26 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         if image_doc and image_doc.get("data"):
                             img_bytes = base64.b64decode(image_doc["data"])
                             if len(img_bytes) > 100:
-                                img_io = BytesIO(img_bytes)
-                                return Image(img_io, width=width, height=height)
+                                # Use temp file for memory efficiency
+                                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+                                    tmp_file.write(img_bytes)
+                                    tmp_path = tmp_file.name
+                                
+                                del img_bytes
+                                gc.collect()
+                                
+                                result = Image(tmp_path, width=width, height=height)
+                                
+                                try:
+                                    os.unlink(tmp_path)
+                                except:
+                                    pass
+                                
+                                return result
+                        return None
+                    except Exception as e:
+                        print(f"Error loading image from MongoDB: {e}")
+                        return None
                         return None
                     except Exception as e:
                         print(f"Error loading image from MongoDB: {e}")
