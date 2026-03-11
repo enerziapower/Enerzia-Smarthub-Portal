@@ -2774,19 +2774,6 @@ async def get_job_details(job_id: str):
     }
 
 
-    
-    # Find and reset all stuck jobs for this report
-    result = await db.pdf_jobs.update_many(
-        {"report_id": report_id, "status": "processing"},
-        {"$set": {"status": "failed", "error": "Job was stuck - reset by user"}}
-    )
-    
-    return {
-        "message": f"Reset {result.modified_count} stuck jobs",
-        "report_id": report_id
-    }
-
-
 @router.get("/diagnostic/{report_id:path}")
 async def diagnose_report(report_id: str):
     """
