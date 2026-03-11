@@ -1227,16 +1227,17 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         elements.append(Spacer(1, 15))
     
     for i, item in enumerate(inspection_items_for_pdf, 1):
-        # Update progress every 10 items and do garbage collection
-        if job_id and pdf_jobs and i % 10 == 0:
-            pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
-            print(f"PDF Generation progress: item {i}/{total_items}")
-            # Free memory periodically for large reports
-            import gc
-            gc.collect()
-        
-        # Item header - truncate long panel/feeder names
-        panel_name = item.get('panel', '')
+        try:
+            # Update progress every 10 items and do garbage collection
+            if job_id and pdf_jobs and i % 10 == 0:
+                pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
+                print(f"PDF Generation progress: item {i}/{total_items}")
+                # Free memory periodically for large reports
+                import gc
+                gc.collect()
+            
+            # Item header - truncate long panel/feeder names
+            panel_name = item.get('panel', '')
         feeder_name = item.get('feeder', '')
         
         # Truncate if combined text is too long
