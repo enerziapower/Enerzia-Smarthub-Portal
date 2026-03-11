@@ -2264,28 +2264,45 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         # Get styles
         styles = get_styles()
         
-        # Calculate summary if not present
-        if 'summary' not in report or not report['summary']:
-            summary = {
-                'total_items': item_count,
-                'critical': 0,
-                'warning': 0,
-                'check_monitor': 0,
-                'normal': 0
+        # Create a modified report object with only the sliced items for this part
+        # This ensures create_individual_inspection_pages only processes the correct items
+        report_for_pdf = dict(report)
+        report_for_pdf['inspection_items'] = inspection_items
+        
+        # Calculate summary for THIS part only
+        summary = {
+            'total_items': item_count,
+            'critical': 0,
+            'warning': 0,
+            'check_monitor': 0,
+            'normal': 0
+        }
+        
+        for item in inspection_items:
+            risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
+            if 'critical' in risk:
+                summary['critical'] += 1
+            elif 'warning' in risk:
+                summary['warning'] += 1
+            elif 'check' in risk or 'monitor' in risk:
+                summary['check_monitor'] += 1
+            else:
+                summary['normal'] += 1
+        
+        report_for_pdf['summary'] = summary
+        
+        # Add part info to report for display in PDF
+        if part > 0:
+            total_parts = (total_item_count + items_per_part - 1) // items_per_part
+            start_idx = (part - 1) * items_per_part
+            end_idx = min(part * items_per_part, total_item_count)
+            report_for_pdf['part_info'] = {
+                'part': part,
+                'total_parts': total_parts,
+                'start_item': start_idx + 1,
+                'end_item': end_idx,
+                'total_items_in_full_report': total_item_count
             }
-            
-            for item in inspection_items:
-                risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
-                if 'critical' in risk:
-                    summary['critical'] += 1
-                elif 'warning' in risk:
-                    summary['warning'] += 1
-                elif 'check' in risk or 'monitor' in risk:
-                    summary['check_monitor'] += 1
-                else:
-                    summary['normal'] += 1
-            
-            report['summary'] = summary
         
         # Create custom canvas class
         def make_canvas(*args, **kwargs):
