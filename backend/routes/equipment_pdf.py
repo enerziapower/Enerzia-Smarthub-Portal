@@ -541,14 +541,24 @@ def create_equipment_details_section(report, styles, width, equipment_type):
                 ['Date of Testing:', format_date_ddmmyyyy(report.get('test_date', '') or report.get('visit_date', '')), 'Next Due Date:', format_date_ddmmyyyy(report.get('next_due_date', ''))],
             ]
         elif equipment_type == 'mccb':
-            # MCCB has similar fields to ACB
-            make = report.get('make', '')
-            model = report.get('model', '')
+            # MCCB equipment details - matching UI fields exactly
+            eq_details = report.get('equipment_details', {})
+            
+            # Get fields from either equipment_details object or root level
+            feeder_name = eq_details.get('feeder_name', '') or report.get('feeder_name', '')
+            make = eq_details.get('make', '') or report.get('make', '')
+            type_model = eq_details.get('type_model', '') or report.get('type_model', '') or report.get('model', '')
+            serial_no = eq_details.get('serial_no', '') or report.get('serial_no', '')
+            poles = eq_details.get('poles', '') or report.get('poles', '')
+            rated_current = eq_details.get('rated_current', '') or report.get('rated_current', '')
+            breaking_capacity = eq_details.get('breaking_capacity', '') or report.get('breaking_capacity', '')
+            frame_size = eq_details.get('frame_size', '') or report.get('frame_size', '')
+            
             data = [
-                ['Equipment Name:', report.get('equipment_name', 'MCCB'), 'Equipment Location:', report.get('equipment_location', '') or report.get('location', '')],
-                ['Make:', make, 'Model:', model],
-                ['Rated Current (A):', report.get('rated_current', ''), 'Breaking Capacity:', report.get('breaking_capacity', '')],
-                ['No. of Poles:', report.get('poles', ''), 'Trip Setting:', report.get('trip_setting', '')],
+                ['Feeder Name:', feeder_name, 'Make:', make],
+                ['Type / Model:', type_model, 'Serial No.:', serial_no],
+                ['Pole:', poles, 'Rated Current (A):', rated_current],
+                ['Breaking Capacity (kA):', breaking_capacity, 'Frame Size:', frame_size],
                 ['Date of Testing:', format_date_ddmmyyyy(report.get('test_date', '') or report.get('visit_date', '')), 'Next Due Date:', format_date_ddmmyyyy(report.get('next_due_date', ''))],
             ]
         else:
