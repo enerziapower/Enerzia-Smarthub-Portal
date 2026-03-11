@@ -1203,7 +1203,7 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
     Memory-optimized version that processes items in batches to avoid OOM kills.
     
     Args:
-        lite_mode: If True, uses smaller images (120x80 instead of 180x120) for faster generation
+        lite_mode: If True, uses smaller images (100x70) with heavy compression
         no_images: If True, skips all images for fastest generation
     """
     import gc
@@ -1212,22 +1212,23 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
     inspection_items = report.get('inspection_items', [])
     total_items = len(inspection_items)
     
-    # Image settings based on mode
+    # AGGRESSIVE image settings to stay within memory limits
     if no_images:
         img_width = 0
         img_height = 0
         max_image_dim = 0
         jpeg_quality = 0
     elif lite_mode:
-        img_width = 120
-        img_height = 80
-        max_image_dim = 400  # Maximum dimension for image compression
-        jpeg_quality = 50
+        # Very small images with heavy compression for large reports
+        img_width = 100  # Reduced from 120
+        img_height = 70   # Reduced from 80
+        max_image_dim = 300  # Very aggressive compression
+        jpeg_quality = 35    # Low quality to save memory
     else:
-        img_width = 180  # Reduced from 230
-        img_height = 120  # Reduced from 170
-        max_image_dim = 600
-        jpeg_quality = 60
+        img_width = 150  # Reduced from 180
+        img_height = 100  # Reduced from 120
+        max_image_dim = 400
+        jpeg_quality = 45
     
     # Reverse the items so oldest (Item #1) comes first in PDF
     # Frontend stores newest first, PDF should show oldest first
