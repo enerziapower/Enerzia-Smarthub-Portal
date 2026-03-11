@@ -2413,7 +2413,9 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
             metadata={
                 "job_id": job_id,
                 "report_id": report_id,
-                "report_no": report_no
+                "report_no": report_no,
+                "part": part,
+                "total_parts": total_parts
             }
         )
         
@@ -2427,6 +2429,9 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
                 "filename": filename,
                 "gridfs_id": str(gridfs_id),
                 "size_bytes": len(pdf_data),
+                "part": part,
+                "total_parts": total_parts,
+                "items_in_part": item_count,
                 "status": "completed",
                 "completed_at": datetime.now(timezone.utc).isoformat()
             }},
@@ -2434,12 +2439,14 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         )
         
         pdf_jobs[job_id]['status'] = 'completed'
-        pdf_jobs[job_id]['progress'] = 'PDF ready for download'
+        part_msg = f' (Part {part}/{total_parts})' if part > 0 else ''
+        pdf_jobs[job_id]['progress'] = f'PDF ready for download{part_msg}'
         pdf_jobs[job_id]['filename'] = filename
         pdf_jobs[job_id]['size_bytes'] = len(pdf_data)
         pdf_jobs[job_id]['gridfs_id'] = str(gridfs_id)
         
-        print(f"Background PDF generation completed for {report_no}: {len(pdf_data)} bytes, GridFS ID: {gridfs_id}")
+        part_log = f' Part {part}/{total_parts}' if part > 0 else ''
+        print(f"Background PDF generation completed for {report_no}{part_log}: {len(pdf_data)} bytes, GridFS ID: {gridfs_id}")
         
     except Exception as e:
         print(f"Background PDF generation failed: {e}")
