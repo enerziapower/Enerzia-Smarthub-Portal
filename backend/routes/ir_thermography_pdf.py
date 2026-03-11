@@ -2478,3 +2478,113 @@ async def download_generated_pdf(report_id: str, job_id: str):
         )
     
     raise HTTPException(status_code=404, detail="PDF data not found")
+
+
+
+@router.get("/diagnostic/{report_id}")
+async def diagnose_report(report_id: str):
+    """
+    Diagnostic endpoint to check the health of an IR Thermography report.
+    Can accept either report ID or report_no (like IR/2026/0002).
+    """
+    db = get_db()
+    
+    # Try to find by ID first
+    report = await db.test_reports.find_one({"id": report_id})
+    if not report:
+        report = await db.ir_thermography_reports.find_one({"id": report_id})
+    
+    # If not found, try by report_no
+    if not report:
+        report = await db.test_reports.find_one({"report_no": report_id})
+    if not report:
+        report = await db.ir_thermography_reports.find_one({"report_no": report_id})
+    
+    # Also try with different formats of report_no
+    if not report and "/" in report_id:
+        # Try replacing / with different formats
+        alt_report_no = report_id.replace("/", "-")
+        report = await db.test_reports.find_one({"report_no": alt_report_no})
+        if not report:
+            report = await db.ir_thermography_reports.find_one({"report_no": alt_report_no})
+    
+    if not report:
+        return {
+            "status": "not_found",
+            "error": f"Report not found with ID or report_no: {report_id}",
+            "searched_collections": ["test_reports", "ir_thermography_reports"]
+        }
+    
+    inspection_items = report.get('inspection_items', [])
+    
+    # Check images
+    image_stats = {
+        "total_items": len(inspection_items),
+        "items_with_thermal_image": 0,
+        "items_with_visual_image": 0,
+        "items_missing_thermal": 0,
+        "items_missing_visual": 0,
+        "thermal_image_sizes": [],
+        "visual_image_sizes": []
+    }
+    
+    # Check each item
+    for idx, item in enumerate(inspection_items):
+        thermal = item.get('thermal_image', '')
+        visual = item.get('visual_image', '')
+        
+        if thermal:
+            image_stats["items_with_thermal_image"] += 1
+            # Get approximate size (base64 length * 0.75 for actual bytes)
+            size_kb = int(len(thermal) * 0.75 / 1024) if isinstance(thermal, str) else 0
+            image_stats["thermal_image_sizes"].append(size_kb)
+        else:
+            image_stats["items_missing_thermal"] += 1
+            
+        if visual:
+            image_stats["items_with_visual_image"] += 1
+            size_kb = int(len(visual) * 0.75 / 1024) if isinstance(visual, str) else 0
+            image_stats["visual_image_sizes"].append(size_kb)
+        else:
+            image_stats["items_missing_visual"] += 1
+    
+    # Calculate totals
+    total_thermal_kb = sum(image_stats["thermal_image_sizes"])
+    total_visual_kb = sum(image_stats["visual_image_sizes"])
+    total_size_mb = (total_thermal_kb + total_visual_kb) / 1024
+    
+    # Check for images in MongoDB storage
+    images_in_db = await db.ir_thermography_images.count_documents({"report_id": report.get('id')})
+    
+    # Get recent PDF jobs for this report
+    recent_jobs = await db.pdf_jobs.find(
+        {"report_id": report.get('id')},
+        {"_id": 0, "job_id": 1, "status": 1, "error": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    return {
+        "status": "found",
+        "report_id": report.get('id'),
+        "report_no": report.get('report_no'),
+        "report_type": report.get('report_type'),
+        "customer_name": report.get('customer_name'),
+        "inspection_items_count": len(inspection_items),
+        "image_stats": {
+            "total_items": image_stats["total_items"],
+            "items_with_thermal_image": image_stats["items_with_thermal_image"],
+            "items_with_visual_image": image_stats["items_with_visual_image"],
+            "items_missing_thermal": image_stats["items_missing_thermal"],
+            "items_missing_visual": image_stats["items_missing_visual"],
+            "total_thermal_size_kb": total_thermal_kb,
+            "total_visual_size_kb": total_visual_kb,
+            "estimated_total_size_mb": round(total_size_mb, 2)
+        },
+        "images_in_separate_collection": images_in_db,
+        "recent_pdf_jobs": recent_jobs,
+        "health_check": {
+            "has_all_thermal_images": image_stats["items_missing_thermal"] == 0,
+            "has_all_visual_images": image_stats["items_missing_visual"] == 0,
+            "estimated_pdf_size_ok": total_size_mb < 50,  # Warn if > 50MB
+            "recommendation": "OK" if image_stats["items_missing_thermal"] == 0 else "Some thermal images are missing"
+        }
+    }
