@@ -788,7 +788,6 @@ const AuditReports = () => {
                         >
                           {actionLoading[report.id] === 'delete' ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                         </button>
-                        </button>
                       </div>
                     </td>
                   </tr>
