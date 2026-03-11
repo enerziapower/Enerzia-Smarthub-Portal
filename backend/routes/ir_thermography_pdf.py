@@ -2306,7 +2306,7 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         
         # Create custom canvas class
         def make_canvas(*args, **kwargs):
-            return IRThermographyCanvas(*args, report_data=report, **kwargs)
+            return IRThermographyCanvas(*args, report_data=report_for_pdf, **kwargs)
         
         # Create document
         doc = SimpleDocTemplate(
@@ -2323,37 +2323,37 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         
         pdf_jobs[job_id]['progress'] = 'Creating cover page...'
         try:
-            elements.extend(create_cover_page(report, org_settings, styles))
+            elements.extend(create_cover_page(report_for_pdf, org_settings, styles))
         except Exception as e:
             print(f"Error creating cover page: {e}")
         
         pdf_jobs[job_id]['progress'] = 'Creating document details...'
         try:
-            elements.extend(create_document_details_section(report, styles))
+            elements.extend(create_document_details_section(report_for_pdf, styles))
         except Exception as e:
             print(f"Error creating document details: {e}")
         
         pdf_jobs[job_id]['progress'] = 'Creating table of contents...'
         try:
-            elements.extend(create_table_of_contents(report, styles))
+            elements.extend(create_table_of_contents(report_for_pdf, styles))
         except Exception as e:
             print(f"Error creating table of contents: {e}")
         
         pdf_jobs[job_id]['progress'] = 'Creating executive summary...'
         try:
-            elements.extend(create_executive_summary(report, styles))
+            elements.extend(create_executive_summary(report_for_pdf, styles))
         except Exception as e:
             print(f"Error creating executive summary: {e}")
         
         pdf_jobs[job_id]['progress'] = 'Creating inspection summary...'
         try:
-            elements.extend(create_inspection_summary_table(report, styles))
+            elements.extend(create_inspection_summary_table(report_for_pdf, styles))
         except Exception as e:
             print(f"Error creating inspection summary: {e}")
         
         pdf_jobs[job_id]['progress'] = 'Creating methodology section...'
         try:
-            elements.extend(create_fundamentals_methodology_section(report, styles))
+            elements.extend(create_fundamentals_methodology_section(report_for_pdf, styles))
         except Exception as e:
             print(f"Error creating fundamentals section: {e}")
         
@@ -2363,10 +2363,10 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         except Exception as e:
             print(f"Error creating risk categorization: {e}")
         
-        pdf_jobs[job_id]['progress'] = f'Creating {item_count} inspection pages...'
-        pdf_jobs[job_id]['progress'] = 'Creating inspection pages...'
+        part_progress = f' (Part {part})' if part > 0 else ''
+        pdf_jobs[job_id]['progress'] = f'Creating {item_count} inspection pages{part_progress}...'
         try:
-            elements.extend(create_individual_inspection_pages(report, styles, job_id=job_id, pdf_jobs=pdf_jobs, lite_mode=lite_mode, no_images=no_images))
+            elements.extend(create_individual_inspection_pages(report_for_pdf, styles, job_id=job_id, pdf_jobs=pdf_jobs, lite_mode=lite_mode, no_images=no_images))
         except Exception as e:
             print(f"Error creating inspection pages: {e}")
         
@@ -2375,22 +2375,27 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         # Build PDF
         doc.build(
             elements,
-            onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, report, org_settings),
+            onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, report_for_pdf, org_settings),
             canvasmaker=make_canvas
         )
         
-        # Append calibration certificate
-        try:
-            buffer = append_calibration_certificate(buffer, report)
-        except Exception as e:
-            print(f"Error appending calibration certificate: {e}")
+        # Append calibration certificate (only for full report or last part)
+        total_parts = (total_item_count + items_per_part - 1) // items_per_part if total_item_count > items_per_part else 1
+        if part == 0 or part == total_parts:
+            try:
+                buffer = append_calibration_certificate(buffer, report_for_pdf)
+            except Exception as e:
+                print(f"Error appending calibration certificate: {e}")
         
         buffer.seek(0)
         pdf_data = buffer.getvalue()
         
-        # Store PDF data in GridFS (handles files larger than 16MB)
+        # Generate filename with part number if phased
         report_no = report.get('report_no', 'IR_Report')
-        filename = f"{report_no.replace('/', '_')}.pdf"
+        if part > 0:
+            filename = f"{report_no.replace('/', '_')}_Part_{part}_of_{total_parts}.pdf"
+        else:
+            filename = f"{report_no.replace('/', '_')}.pdf"
         
         # Use GridFS to store the PDF
         fs = GridFS(db)
