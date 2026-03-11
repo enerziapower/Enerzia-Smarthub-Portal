@@ -318,10 +318,10 @@ const AuditReports = () => {
       
       // Poll for completion
       let attempts = 0;
-      const maxAttempts = 120; // 2 minutes max
+      const maxAttempts = 300; // 10 minutes max for very large reports (199+ items)
       
       while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Check every 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
         attempts++;
         
         const statusResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/status/${jobId}`, {
@@ -332,8 +332,14 @@ const AuditReports = () => {
         
         const statusData = await statusResponse.json();
         
+        // Show progress updates
+        if (statusData.progress && attempts % 5 === 0) {
+          toast.info(statusData.progress, { duration: 2000 });
+        }
+        
         if (statusData.status === 'completed') {
           // Download the PDF
+          toast.info('PDF ready! Starting download...');
           const downloadResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/download/${jobId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
@@ -351,7 +357,7 @@ const AuditReports = () => {
         }
       }
       
-      throw new Error('PDF generation timed out. Please try again.');
+      throw new Error('PDF generation timed out after 10 minutes. The report may be too large.');
       
     } catch (error) {
       console.error('IR Thermography PDF error:', error);
