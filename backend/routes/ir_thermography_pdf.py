@@ -1446,24 +1446,24 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                 return None
         
         # Original image
-        orig_loaded = load_image_from_source(orig_img)
+        orig_loaded = load_image_from_source(orig_img, width=img_width, height=img_height)
         if orig_loaded:
             img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), orig_loaded])
         else:
             # Use placeholder for missing image
-            placeholder = create_placeholder_image(230, 170, "Image Not\nAvailable")
+            placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
             if placeholder:
                 img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), placeholder])
             else:
                 img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
         
         # Thermal image
-        thermal_loaded = load_image_from_source(thermal_img)
+        thermal_loaded = load_image_from_source(thermal_img, width=img_width, height=img_height)
         if thermal_loaded:
             img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), thermal_loaded])
         else:
             # Use placeholder for missing image
-            placeholder = create_placeholder_image(230, 170, "Image Not\nAvailable")
+            placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
             if placeholder:
                 img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), placeholder])
             else:
