@@ -2481,6 +2481,43 @@ async def download_generated_pdf(report_id: str, job_id: str):
 
 
 
+
+@router.get("/diagnostic-list")
+async def list_all_reports():
+    """
+    List all IR Thermography reports for diagnostic purposes.
+    """
+    db = get_db()
+    
+    reports = []
+    
+    # Get from test_reports
+    test_reports = await db.test_reports.find(
+        {"equipment_type": "ir-thermography"},
+        {"_id": 0, "id": 1, "report_no": 1, "customer_name": 1}
+    ).to_list(100)
+    reports.extend(test_reports)
+    
+    # Get from ir_thermography_reports
+    ir_reports = await db.ir_thermography_reports.find(
+        {},
+        {"_id": 0, "id": 1, "report_no": 1, "customer_name": 1}
+    ).to_list(100)
+    reports.extend(ir_reports)
+    
+    return {
+        "total_reports": len(reports),
+        "reports": [
+            {
+                "id": r.get("id"),
+                "report_no": r.get("report_no"),
+                "customer": r.get("customer_name", "N/A")
+            }
+            for r in reports
+        ]
+    }
+
+
 @router.get("/diagnostic/{report_id:path}")
 async def diagnose_report(report_id: str):
     """
