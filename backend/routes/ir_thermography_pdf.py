@@ -1200,17 +1200,28 @@ def create_risk_categorization_section(styles):
 def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None, lite_mode=False):
     """Create detailed pages for each inspection item - SECTION E
     
+    Memory-optimized version that processes items in batches to avoid OOM kills.
+    
     Args:
         lite_mode: If True, uses smaller images (150x100 instead of 230x170) for faster generation
     """
+    import gc
     elements = []
     
     inspection_items = report.get('inspection_items', [])
     total_items = len(inspection_items)
     
-    # In lite mode, use smaller image dimensions
-    img_width = 150 if lite_mode else 230
-    img_height = 100 if lite_mode else 170
+    # In lite mode, use even smaller image dimensions and lower quality
+    if lite_mode:
+        img_width = 120
+        img_height = 80
+        max_image_dim = 400  # Maximum dimension for image compression
+        jpeg_quality = 50
+    else:
+        img_width = 180  # Reduced from 230
+        img_height = 120  # Reduced from 170
+        max_image_dim = 600
+        jpeg_quality = 60
     
     # Reverse the items so oldest (Item #1) comes first in PDF
     # Frontend stores newest first, PDF should show oldest first
@@ -1234,13 +1245,18 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         elements.append(header_table)
         elements.append(Spacer(1, 15))
     
+    # Process in batches of 20 items to control memory
+    BATCH_SIZE = 20
+    
     for i, item in enumerate(inspection_items_for_pdf, 1):
-        # Update progress every 10 items and do garbage collection
-        if job_id and pdf_jobs and i % 10 == 0:
+        # Update progress and do garbage collection every 5 items
+        if job_id and pdf_jobs and i % 5 == 0:
             pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
             print(f"PDF Generation progress: item {i}/{total_items}")
-            # Free memory periodically for large reports
-            import gc
+            gc.collect()  # Force garbage collection frequently
+        
+        # More aggressive garbage collection every batch
+        if i % BATCH_SIZE == 0:
             gc.collect()
         
         # Item header - truncate long panel/feeder names
