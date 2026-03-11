@@ -291,8 +291,8 @@ const AuditReports = () => {
     try {
       toast.info('Starting PDF generation... This may take a moment for large reports.');
       
-      // Start background generation
-      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate`, {
+      // Use lite_mode=true for faster generation (smaller images)
+      const startResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
