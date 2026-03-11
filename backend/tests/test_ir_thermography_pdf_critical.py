@@ -178,7 +178,8 @@ class TestIRThermographyDirectPDF:
         if response.status_code != 200:
             pytest.skip("Could not fetch reports list")
         
-        reports = response.json().get("data", [])
+        data = response.json()
+        reports = data.get("data", []) if isinstance(data, dict) else data
         if not reports:
             pytest.skip("No IR Thermography reports found")
         
