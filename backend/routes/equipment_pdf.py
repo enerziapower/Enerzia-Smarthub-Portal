@@ -542,7 +542,6 @@ def create_equipment_details_section(report, styles, width, equipment_type):
             ]
         elif equipment_type == 'mccb':
             # MCCB equipment details - matching UI fields exactly
-            # Note: MCCB does NOT have Next Due Date in UI equipment_fields
             eq_details = report.get('equipment_details', {})
             
             # Get fields from either equipment_details object or root level
@@ -554,13 +553,14 @@ def create_equipment_details_section(report, styles, width, equipment_type):
             rated_current = eq_details.get('rated_current', '') or report.get('rated_current', '')
             breaking_capacity = eq_details.get('breaking_capacity', '') or report.get('breaking_capacity', '')
             frame_size = eq_details.get('frame_size', '') or report.get('frame_size', '')
+            next_due_date = eq_details.get('next_due_date', '') or report.get('next_due_date', '')
             
             data = [
                 ['Feeder Name:', feeder_name, 'Make:', make],
                 ['Type / Model:', type_model, 'Serial No.:', serial_no],
                 ['Pole:', poles, 'Rated Current (A):', rated_current],
                 ['Breaking Capacity (kA):', breaking_capacity, 'Frame Size:', frame_size],
-                ['Date of Testing:', format_date_ddmmyyyy(report.get('test_date', '') or report.get('visit_date', '')), '', ''],
+                ['Date of Testing:', format_date_ddmmyyyy(report.get('test_date', '') or report.get('visit_date', '')), 'Next Due Date:', format_date_ddmmyyyy(next_due_date)],
             ]
         else:
             # Common fields for other equipment types
