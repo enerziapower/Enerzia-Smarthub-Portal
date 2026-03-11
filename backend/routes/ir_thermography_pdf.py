@@ -1200,35 +1200,40 @@ def create_risk_categorization_section(styles):
 def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None, lite_mode=False, no_images=False):
     """Create detailed pages for each inspection item - SECTION E
     
-    Memory-optimized version that processes items in batches to avoid OOM kills.
+    Memory-optimized version with streaming approach:
+    - Processes ONE item at a time with immediate garbage collection
+    - Uses disk-based temp files for image processing
+    - Clears image data from memory immediately after use
     
     Args:
-        lite_mode: If True, uses smaller images (100x70) with heavy compression
+        lite_mode: If True, uses medium images (180x120) with moderate compression
         no_images: If True, skips all images for fastest generation
     """
     import gc
+    import tempfile
     elements = []
     
     inspection_items = report.get('inspection_items', [])
     total_items = len(inspection_items)
     
-    # AGGRESSIVE image settings to stay within memory limits
+    # IMAGE SETTINGS - Restored to larger professional sizes
     if no_images:
         img_width = 0
         img_height = 0
         max_image_dim = 0
         jpeg_quality = 0
     elif lite_mode:
-        # Very small images with heavy compression for large reports
-        img_width = 100  # Reduced from 120
-        img_height = 70   # Reduced from 80
-        max_image_dim = 300  # Very aggressive compression
-        jpeg_quality = 35    # Low quality to save memory
+        # Medium images with moderate compression for large reports
+        img_width = 180   # Restored from 100
+        img_height = 120  # Restored from 70
+        max_image_dim = 500  # Better quality
+        jpeg_quality = 55    # Moderate quality
     else:
-        img_width = 150  # Reduced from 180
-        img_height = 100  # Reduced from 120
-        max_image_dim = 400
-        jpeg_quality = 45
+        # FULL SIZE - Professional quality images
+        img_width = 230   # Original large size
+        img_height = 170  # Original large size
+        max_image_dim = 800  # High quality
+        jpeg_quality = 75    # Good quality
     
     # Reverse the items so oldest (Item #1) comes first in PDF
     # Frontend stores newest first, PDF should show oldest first
