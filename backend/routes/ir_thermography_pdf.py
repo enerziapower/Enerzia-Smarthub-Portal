@@ -1256,14 +1256,16 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
     BATCH_SIZE = 20
     
     for i, item in enumerate(inspection_items_for_pdf, 1):
-        # Update progress and do garbage collection every 5 items
-        if job_id and pdf_jobs and i % 5 == 0:
-            pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
-            print(f"PDF Generation progress: item {i}/{total_items}")
-            gc.collect()  # Force garbage collection frequently
+        # Update progress and do garbage collection EVERY 3 items for memory safety
+        if job_id and pdf_jobs:
+            if i % 3 == 0:
+                pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
+                gc.collect()  # Frequent garbage collection
+            if i % 10 == 0:
+                print(f"PDF Generation progress: item {i}/{total_items}")
         
-        # More aggressive garbage collection every batch
-        if i % BATCH_SIZE == 0:
+        # Force garbage collection every 5 items
+        if i % 5 == 0:
             gc.collect()
         
         # Item header - truncate long panel/feeder names
