@@ -2525,6 +2525,25 @@ async def list_all_reports():
     }
 
 
+@router.post("/reset-stuck-jobs/{report_id}")
+async def reset_stuck_jobs(report_id: str):
+    """
+    Reset all stuck 'processing' jobs for a report so they can be retried.
+    """
+    db = get_db()
+    
+    # Find and reset all stuck jobs for this report
+    result = await db.pdf_jobs.update_many(
+        {"report_id": report_id, "status": "processing"},
+        {"$set": {"status": "failed", "error": "Job was stuck - reset by user"}}
+    )
+    
+    return {
+        "message": f"Reset {result.modified_count} stuck jobs",
+        "report_id": report_id
+    }
+
+
 @router.get("/diagnostic/{report_id:path}")
 async def diagnose_report(report_id: str):
     """
