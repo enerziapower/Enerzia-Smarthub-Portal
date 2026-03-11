@@ -1323,7 +1323,7 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         
         # Helper function to load image from base64 or file path
         def load_image_from_source(img_source, width=230, height=170):
-            """Load image from base64 string, file path, or MongoDB"""
+            """Load image from base64 string, file path, or MongoDB - with compression for memory efficiency"""
             if not img_source:
                 return None
             
@@ -1355,8 +1355,25 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                             print(f"Invalid image header: {img_bytes[:8].hex()}")
                             return None
                         
-                        img_io = BytesIO(img_bytes)
-                        return Image(img_io, width=width, height=height)
+                        # Compress image to reduce memory usage for large reports
+                        try:
+                            from PIL import Image as PILImage
+                            pil_img = PILImage.open(BytesIO(img_bytes))
+                            # Resize if too large
+                            max_dim = 800
+                            if pil_img.width > max_dim or pil_img.height > max_dim:
+                                pil_img.thumbnail((max_dim, max_dim), PILImage.Resampling.LANCZOS)
+                            # Convert to JPEG for smaller size
+                            compressed_io = BytesIO()
+                            if pil_img.mode in ('RGBA', 'LA', 'P'):
+                                pil_img = pil_img.convert('RGB')
+                            pil_img.save(compressed_io, format='JPEG', quality=70, optimize=True)
+                            compressed_io.seek(0)
+                            return Image(compressed_io, width=width, height=height)
+                        except Exception as compress_error:
+                            # Fall back to original image
+                            img_io = BytesIO(img_bytes)
+                            return Image(img_io, width=width, height=height)
                     except Exception as e:
                         print(f"Error processing base64 image: {e}")
                         return None
