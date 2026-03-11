@@ -1257,21 +1257,17 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         elements.append(header_table)
         elements.append(Spacer(1, 15))
     
-    # Process in batches of 20 items to control memory
-    BATCH_SIZE = 20
-    
+    # Process ONE item at a time with immediate garbage collection
     for i, item in enumerate(inspection_items_for_pdf, 1):
-        # Update progress and do garbage collection EVERY 3 items for memory safety
+        # AGGRESSIVE memory management - garbage collect EVERY item
         if job_id and pdf_jobs:
-            if i % 3 == 0:
-                pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
-                gc.collect()  # Frequent garbage collection
-            if i % 10 == 0:
-                print(f"PDF Generation progress: item {i}/{total_items}")
+            pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
         
-        # Force garbage collection every 5 items
-        if i % 5 == 0:
-            gc.collect()
+        # Force garbage collection BEFORE processing each item
+        gc.collect()
+        
+        if i % 10 == 0:
+            print(f"PDF Generation progress: item {i}/{total_items} (memory cleaned)")
         
         # Item header - truncate long panel/feeder names
         panel_name = item.get('panel', '')
