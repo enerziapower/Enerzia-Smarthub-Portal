@@ -2,7 +2,31 @@
 
 ## Latest Updates
 
-### IR Thermography Phased PDF Downloads ✅ COMPLETE (Mar 11, 2026)
+### IR Thermography Memory-Optimized Single PDF ✅ COMPLETE (Mar 11, 2026)
+**Location:** Projects → IR Thermography Reports → PDF Download
+
+**P0 FIX FOR PRODUCTION:** Reverted from phased downloads to memory-optimized single PDF generation with restored large images.
+
+| Feature | Description |
+|---------|-------------|
+| **Larger Images** | Restored 230x170 dimensions (was 150x100) |
+| **Memory Optimization** | gc.collect() after each item |
+| **Lite Mode** | Auto-enabled for reports >80 items (uses 180x120) |
+| **Simple UI** | Single download button (no dropdown) |
+
+**Image Dimensions:**
+- Normal mode: 230x170 pixels (professional quality)
+- Lite mode (>80 items): 180x120 pixels (memory safe)
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography_pdf.py` - Restored image sizes, aggressive GC
+- `/app/frontend/src/pages/projects/AuditReports.js` - Simplified to single download button
+
+**Test Results:** 100% success rate (8/8 backend tests, all frontend flows verified) - See `/app/test_reports/iteration_88.json`
+
+---
+
+### IR Thermography Phased PDF Downloads (Superseded)
 **Location:** Projects → IR Thermography Reports → PDF Download
 
 **P0 FIX FOR PRODUCTION:** Large IR Thermography reports (199+ items) were failing on production due to Kubernetes memory limits. The user-approved solution is **phased downloads** - allowing users to download reports in multiple parts.
