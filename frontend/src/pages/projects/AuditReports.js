@@ -300,20 +300,23 @@ const AuditReports = () => {
   };
 
   // Background PDF generation for IR Thermography reports
-  const handleIRThermographyPDF = async (report, token, part = 0) => {
+  // Uses memory-optimized single PDF generation (no phased downloads)
+  const handleIRThermographyPDF = async (report, token) => {
     try {
-      const ITEMS_PER_PART = 50;
       const itemCount = report.inspection_items?.length || 0;
-      const totalParts = Math.ceil(itemCount / ITEMS_PER_PART);
       
-      // Build the URL with part parameter if specified
-      let generateUrl = `${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate?lite_mode=true`;
-      if (part > 0) {
-        generateUrl += `&part=${part}&items_per_part=${ITEMS_PER_PART}`;
-        toast.info(`Starting PDF generation for Part ${part} of ${totalParts}...`);
+      // Show appropriate message based on report size
+      if (itemCount > 100) {
+        toast.info(`Generating PDF for ${itemCount} items... This may take 3-5 minutes.`);
+      } else if (itemCount > 50) {
+        toast.info(`Generating PDF for ${itemCount} items... This may take 1-2 minutes.`);
       } else {
-        toast.info('Starting PDF generation with optimized images... This may take 2-3 minutes for large reports.');
+        toast.info('Starting PDF generation...');
       }
+      
+      // Use lite_mode for reports with more than 80 items to reduce memory usage
+      const useLiteMode = itemCount > 80;
+      const generateUrl = `${API_URL}/api/ir-thermography-report/${report.id}/pdf/generate${useLiteMode ? '?lite_mode=true' : ''}`;
       
       const startResponse = await fetch(generateUrl, {
         method: 'POST',
@@ -338,6 +341,55 @@ const AuditReports = () => {
       
       const startData = await startResponse.json();
       const jobId = startData.job_id;
+      
+      // Poll for completion
+      let attempts = 0;
+      const maxAttempts = 400; // ~13 minutes max for very large reports
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Check every 2 seconds
+        attempts++;
+        
+        const statusResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/status/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!statusResponse.ok) continue;
+        
+        const statusData = await statusResponse.json();
+        
+        // Show progress updates every 10 attempts
+        if (statusData.progress && attempts % 10 === 0) {
+          toast.info(statusData.progress, { duration: 2000 });
+        }
+        
+        if (statusData.status === 'completed') {
+          toast.info('PDF ready! Starting download...');
+          const downloadResponse = await fetch(`${API_URL}/api/ir-thermography-report/${report.id}/pdf/download/${jobId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (downloadResponse.ok) {
+            const blob = await downloadResponse.blob();
+            downloadBlob(blob, statusData.filename || report.report_no);
+            toast.success('PDF downloaded successfully!');
+          } else {
+            throw new Error('Failed to download generated PDF');
+          }
+          return;
+        } else if (statusData.status === 'failed') {
+          throw new Error(statusData.error || 'PDF generation failed');
+        }
+      }
+      
+      throw new Error('PDF generation timed out. The report may be too large for single download.');
+      
+    } catch (error) {
+      console.error('IR Thermography PDF error:', error);
+      toast.error(`Failed to download PDF: ${error.message}`);
+      throw error;
+    }
+  };
       
       // Poll for completion
       let attempts = 0;
