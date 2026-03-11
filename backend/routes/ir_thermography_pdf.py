@@ -1346,12 +1346,16 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                 return None
         
         # Helper function to load image from base64 or file path
-        def load_image_from_source(img_source, width=230, height=170):
-            """Load image from base64 string, file path, or MongoDB - with compression for memory efficiency"""
+        def load_image_from_source(img_source, width=180, height=120):
+            """Load image from base64 string, file path, or MongoDB - with AGGRESSIVE compression for memory efficiency"""
             if not img_source:
                 return None
             
             try:
+                # Use smaller max dimension based on lite_mode
+                max_dim = max_image_dim if 'max_image_dim' in dir() else 500
+                quality = jpeg_quality if 'jpeg_quality' in dir() else 50
+                
                 if img_source.startswith('data:image'):
                     # Base64 encoded image
                     try:
@@ -1360,46 +1364,43 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         
                         # Check if image data is valid (not all zeros/dummy data)
                         if len(img_bytes) < 100:
-                            print(f"Image too small: {len(img_bytes)} bytes")
                             return None
                         
                         # Check for valid image headers
-                        is_png = img_bytes[:4] == b'\x89PNG'  # Just check first 4 bytes for PNG
+                        is_png = img_bytes[:4] == b'\x89PNG'
                         is_jpeg = img_bytes[:2] == b'\xff\xd8'
                         is_gif = img_bytes[:6] == b'GIF89a' or img_bytes[:6] == b'GIF87a'
                         
-                        # Check for dummy/placeholder data (zeros after header)
-                        # This catches images with valid headers but no actual content
+                        # Check for dummy/placeholder data
                         non_zero_count = sum(1 for b in img_bytes[8:min(100, len(img_bytes))] if b != 0)
                         if non_zero_count == 0:
-                            print("Detected dummy/placeholder image (all zeros after header)")
                             return None
                         
                         if not (is_png or is_jpeg or is_gif):
-                            print(f"Invalid image header: {img_bytes[:8].hex()}")
                             return None
                         
-                        # Compress image to reduce memory usage for large reports
+                        # AGGRESSIVE compression to reduce memory
                         try:
                             from PIL import Image as PILImage
                             pil_img = PILImage.open(BytesIO(img_bytes))
-                            # Resize if too large
-                            max_dim = 800
+                            # Resize aggressively
                             if pil_img.width > max_dim or pil_img.height > max_dim:
                                 pil_img.thumbnail((max_dim, max_dim), PILImage.Resampling.LANCZOS)
-                            # Convert to JPEG for smaller size
+                            # Convert to JPEG with low quality
                             compressed_io = BytesIO()
                             if pil_img.mode in ('RGBA', 'LA', 'P'):
                                 pil_img = pil_img.convert('RGB')
-                            pil_img.save(compressed_io, format='JPEG', quality=70, optimize=True)
+                            pil_img.save(compressed_io, format='JPEG', quality=quality, optimize=True)
                             compressed_io.seek(0)
+                            # Clear original image from memory
+                            del pil_img
+                            del img_bytes
                             return Image(compressed_io, width=width, height=height)
-                        except Exception as compress_error:
+                        except Exception:
                             # Fall back to original image
                             img_io = BytesIO(img_bytes)
                             return Image(img_io, width=width, height=height)
-                    except Exception as e:
-                        print(f"Error processing base64 image: {e}")
+                    except Exception:
                         return None
                 elif img_source.startswith('/api/ir-thermography/db-images/') or img_source.startswith('/api/ir-thermography-db-images/'):
                     # MongoDB-stored images - fetch directly from database using sync client
