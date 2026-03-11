@@ -2358,6 +2358,18 @@ async def start_pdf_generation(report_id: str, background_tasks: BackgroundTasks
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     
+    # Auto-cleanup: Reset any old stuck jobs for this report (older than 10 minutes)
+    from datetime import timedelta
+    ten_minutes_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    await db.pdf_jobs.update_many(
+        {
+            "report_id": report_id,
+            "status": "processing",
+            "created_at": {"$lt": ten_minutes_ago}
+        },
+        {"$set": {"status": "failed", "error": "Job timed out - auto-reset"}}
+    )
+    
     # Create job ID
     job_id = str(uuid.uuid4())
     
