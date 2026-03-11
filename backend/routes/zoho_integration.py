@@ -56,12 +56,18 @@ def get_api_url():
 # ==================== TOKEN MANAGEMENT ====================
 
 # Get the base URL for redirects
-def get_redirect_uri():
-    """Get the redirect URI for OAuth callback"""
-    # Get from environment variable - required for proper OAuth flow
-    base_url = os.environ.get("REACT_APP_BACKEND_URL")
-    if not base_url:
-        raise HTTPException(status_code=500, detail="REACT_APP_BACKEND_URL not configured")
+def get_redirect_uri(request: Request = None):
+    """Get the redirect URI for OAuth callback - uses dynamic URL for multi-environment support"""
+    if request:
+        # Use request-based URL for proper OAuth flow across environments
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("host", request.url.netloc)
+        base_url = f"{scheme}://{host}"
+    else:
+        # Fallback to environment variable
+        base_url = os.environ.get("REACT_APP_BACKEND_URL")
+        if not base_url:
+            raise HTTPException(status_code=500, detail="REACT_APP_BACKEND_URL not configured")
     return f"{base_url}/api/zoho/callback"
 
 @router.get("/auth-url")
