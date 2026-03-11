@@ -1197,11 +1197,12 @@ def create_risk_categorization_section(styles):
     return elements
 
 
-def create_individual_inspection_pages(report, styles):
+def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None):
     """Create detailed pages for each inspection item - SECTION E"""
     elements = []
     
     inspection_items = report.get('inspection_items', [])
+    total_items = len(inspection_items)
     
     # Reverse the items so oldest (Item #1) comes first in PDF
     # Frontend stores newest first, PDF should show oldest first
@@ -1226,6 +1227,11 @@ def create_individual_inspection_pages(report, styles):
         elements.append(Spacer(1, 15))
     
     for i, item in enumerate(inspection_items_for_pdf, 1):
+        # Update progress every 10 items
+        if job_id and pdf_jobs and i % 10 == 0:
+            pdf_jobs[job_id]['progress'] = f'Processing item {i} of {total_items}...'
+            print(f"PDF Generation progress: item {i}/{total_items}")
+        
         # Item header - truncate long panel/feeder names
         panel_name = item.get('panel', '')
         feeder_name = item.get('feeder', '')
