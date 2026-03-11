@@ -1568,9 +1568,9 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
             ('RIGHTPADDING', (1, 1), (1, 1), 8),  # Add right padding for comments cell
         ]))
-        elements.append(analysis_footer_table)
+            elements.append(analysis_footer_table)
         
-        elements.append(PageBreak())
+            elements.append(PageBreak())
         
         except Exception as item_error:
             # Log error but continue with other items
