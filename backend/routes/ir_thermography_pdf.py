@@ -1468,40 +1468,45 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                 print(f"Error loading image from {img_source[:50] if img_source else 'None'}...: {e}")
                 return None
         
-        # Original image
-        orig_loaded = load_image_from_source(orig_img, width=img_width, height=img_height)
-        if orig_loaded:
-            img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), orig_loaded])
-        else:
-            # Use placeholder for missing image
-            placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
-            if placeholder:
-                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), placeholder])
+        # Skip images entirely if no_images mode
+        if not no_images:
+            # Original image
+            orig_loaded = load_image_from_source(orig_img, width=img_width, height=img_height)
+            if orig_loaded:
+                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), orig_loaded])
             else:
-                img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
-        
-        # Thermal image
-        thermal_loaded = load_image_from_source(thermal_img, width=img_width, height=img_height)
-        if thermal_loaded:
-            img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), thermal_loaded])
-        else:
-            # Use placeholder for missing image
-            placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
-            if placeholder:
-                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), placeholder])
+                # Use placeholder for missing image
+                placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
+                if placeholder:
+                    img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), placeholder])
+                else:
+                    img_cells.append([Paragraph("<b>Original Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
+            
+            # Thermal image
+            thermal_loaded = load_image_from_source(thermal_img, width=img_width, height=img_height)
+            if thermal_loaded:
+                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), thermal_loaded])
             else:
-                img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
-        
-        if len(img_cells) == 2:
-            img_table = Table([[img_cells[0][1], img_cells[1][1]]], colWidths=[255, 255])
-            img_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ]))
-            elements.append(img_table)
+                # Use placeholder for missing image
+                placeholder = create_placeholder_image(img_width, img_height, "Image Not\nAvailable")
+                if placeholder:
+                    img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), placeholder])
+                else:
+                    img_cells.append([Paragraph("<b>Thermal Image</b>", styles['IRTableCell']), Paragraph("Image Not Available", styles['IRTableCell'])])
+            
+            if len(img_cells) == 2:
+                img_table = Table([[img_cells[0][1], img_cells[1][1]]], colWidths=[255, 255])
+                img_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ]))
+                elements.append(img_table)
+        else:
+            # No images mode - just add a note
+            elements.append(Paragraph("<i>Images omitted for faster generation</i>", styles['IRTableCell']))
         
         elements.append(Spacer(1, 10))
         
