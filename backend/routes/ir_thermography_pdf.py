@@ -2312,7 +2312,7 @@ def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_i
         pdf_jobs[job_id]['progress'] = f'Creating {item_count} inspection pages...'
         pdf_jobs[job_id]['progress'] = 'Creating inspection pages...'
         try:
-            elements.extend(create_individual_inspection_pages(report, styles, job_id=job_id, pdf_jobs=pdf_jobs, lite_mode=lite_mode))
+            elements.extend(create_individual_inspection_pages(report, styles, job_id=job_id, pdf_jobs=pdf_jobs, lite_mode=lite_mode, no_images=no_images))
         except Exception as e:
             print(f"Error creating inspection pages: {e}")
         
