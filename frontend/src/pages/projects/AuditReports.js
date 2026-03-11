@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Search, Filter, FileText, Calendar, 
   User, MapPin, Eye, Edit, Trash2, Download, ClipboardCheck, Copy, Mail, X, Send, Loader2,
-  CheckCircle, Clock, AlertCircle, Shield, Flame
+  CheckCircle, Clock, AlertCircle, Shield, Flame, ChevronDown
 } from 'lucide-react';
 import { testReportsAPI } from '../../services/api';
 import { toast } from 'sonner';
