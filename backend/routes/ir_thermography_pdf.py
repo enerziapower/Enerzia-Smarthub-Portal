@@ -1197,12 +1197,20 @@ def create_risk_categorization_section(styles):
     return elements
 
 
-def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None):
-    """Create detailed pages for each inspection item - SECTION E"""
+def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=None, lite_mode=False):
+    """Create detailed pages for each inspection item - SECTION E
+    
+    Args:
+        lite_mode: If True, uses smaller images (150x100 instead of 230x170) for faster generation
+    """
     elements = []
     
     inspection_items = report.get('inspection_items', [])
     total_items = len(inspection_items)
+    
+    # In lite mode, use smaller image dimensions
+    img_width = 150 if lite_mode else 230
+    img_height = 100 if lite_mode else 170
     
     # Reverse the items so oldest (Item #1) comes first in PDF
     # Frontend stores newest first, PDF should show oldest first
