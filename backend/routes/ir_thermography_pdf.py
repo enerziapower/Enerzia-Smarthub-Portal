@@ -1384,7 +1384,7 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                         if non_zero_count == 0:
                             return None
                         
-                        # MEMORY-OPTIMIZED: Use temp file to avoid keeping large images in memory
+                        # Process and compress image in memory (ReportLab needs BytesIO, not temp files)
                         try:
                             from PIL import Image as PILImage
                             pil_img = PILImage.open(BytesIO(img_bytes))
@@ -1397,30 +1397,21 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
                             if pil_img.width > target_dim or pil_img.height > target_dim:
                                 pil_img.thumbnail((target_dim, target_dim), PILImage.Resampling.LANCZOS)
                             
-                            # Write to temp file instead of keeping in memory
-                            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
-                                if pil_img.mode in ('RGBA', 'LA', 'P'):
-                                    pil_img = pil_img.convert('RGB')
-                                
-                                # Use jpeg_quality from outer scope
-                                quality = jpeg_quality if jpeg_quality > 0 else 75
-                                pil_img.save(tmp_file, format='JPEG', quality=quality, optimize=True)
-                                tmp_path = tmp_file.name
+                            # Compress to JPEG in memory
+                            compressed_io = BytesIO()
+                            if pil_img.mode in ('RGBA', 'LA', 'P'):
+                                pil_img = pil_img.convert('RGB')
+                            
+                            # Use jpeg_quality from outer scope
+                            quality = jpeg_quality if jpeg_quality > 0 else 75
+                            pil_img.save(compressed_io, format='JPEG', quality=quality, optimize=True)
+                            compressed_io.seek(0)
                             
                             # Clear PIL image from memory immediately
                             del pil_img
                             gc.collect()
                             
-                            # Load from temp file (much more memory efficient)
-                            result = Image(tmp_path, width=width, height=height)
-                            
-                            # Clean up temp file after loading
-                            try:
-                                os.unlink(tmp_path)
-                            except:
-                                pass
-                            
-                            return result
+                            return Image(compressed_io, width=width, height=height)
                         except Exception as e:
                             print(f"Error processing base64 image: {e}")
                             return None
