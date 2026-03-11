@@ -2,6 +2,31 @@
 
 ## Latest Updates
 
+### IR Thermography Phased PDF Downloads ✅ COMPLETE (Mar 11, 2026)
+**Location:** Projects → IR Thermography Reports → PDF Download
+
+**P0 FIX FOR PRODUCTION:** Large IR Thermography reports (199+ items) were failing on production due to Kubernetes memory limits. The user-approved solution is **phased downloads** - allowing users to download reports in multiple parts.
+
+| Feature | Description |
+|---------|-------------|
+| **Phased Generation** | Reports >50 items split into parts (1-50, 51-100, etc.) |
+| **Part Selection UI** | Dropdown menu with part options for large reports |
+| **Part Filename** | PDFs named with part number: `Report_Part_1_of_4.pdf` |
+| **Full Report Fallback** | Option to attempt full report (may fail on production) |
+| **Regular Download** | Small reports (≤50 items) use normal download button |
+
+**API Endpoints:**
+- `POST /api/ir-thermography-report/{id}/pdf/generate?part=1&items_per_part=50` - Generate specific part
+- Parameters: `part` (1-based index), `items_per_part` (default 50)
+
+**Files Modified:**
+- `/app/backend/routes/ir_thermography_pdf.py` - Updated `generate_pdf_sync()` to slice items by part
+- `/app/frontend/src/pages/projects/AuditReports.js` - Added dropdown UI for part downloads
+
+**Test Results:** 100% success rate (10/10 backend tests, all frontend flows verified) - See `/app/test_reports/iteration_87.json`
+
+---
+
 ### IR Thermography PDF Generation ✅ FIXED (Mar 11, 2026)
 **Location:** Projects → IR Thermography Reports → PDF Download
 
