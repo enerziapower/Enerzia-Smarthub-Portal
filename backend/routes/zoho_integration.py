@@ -104,12 +104,12 @@ async def get_zoho_auth_url(request: Request, current_user: dict = Depends(requi
 
 
 @router.get("/callback")
-async def zoho_callback(code: str, location: str = "in", accounts_server: str = None):
+async def zoho_callback(request: Request, code: str, location: str = "in", accounts_server: str = None):
     """Handle OAuth callback from Zoho and exchange code for tokens"""
     if not ZOHO_CLIENT_ID or not ZOHO_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Zoho credentials not configured")
     
-    redirect_uri = get_redirect_uri()
+    redirect_uri = get_redirect_uri(request)
     
     # Use the location from callback to determine correct auth URL
     # Zoho sends location=us, location=in, location=eu etc
