@@ -1571,6 +1571,15 @@ def create_individual_inspection_pages(report, styles, job_id=None, pdf_jobs=Non
         elements.append(analysis_footer_table)
         
         elements.append(PageBreak())
+        
+        except Exception as item_error:
+            # Log error but continue with other items
+            print(f"Error processing inspection item {i}: {item_error}")
+            # Add a placeholder for the failed item
+            error_text = Paragraph(f"<b>INSPECTION ITEM {i}</b>: Error loading content", styles['IRSubHeader'])
+            elements.append(error_text)
+            elements.append(Spacer(1, 20))
+            elements.append(PageBreak())
     
     return elements
 
