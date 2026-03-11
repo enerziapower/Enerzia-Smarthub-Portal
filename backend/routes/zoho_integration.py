@@ -71,12 +71,12 @@ def get_redirect_uri(request: Request = None):
     return f"{base_url}/api/zoho/callback"
 
 @router.get("/auth-url")
-async def get_zoho_auth_url(current_user: dict = Depends(require_auth)):
+async def get_zoho_auth_url(request: Request, current_user: dict = Depends(require_auth)):
     """Get the Zoho OAuth authorization URL"""
     if not ZOHO_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Zoho Client ID not configured")
     
-    redirect_uri = get_redirect_uri()
+    redirect_uri = get_redirect_uri(request)
     # Updated scope to include estimates (quotations) with full CRUD permissions
     scope = (
         "ZohoBooks.contacts.READ,"
