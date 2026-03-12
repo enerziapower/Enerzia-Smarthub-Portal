@@ -774,7 +774,14 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                 <select
                   name="client"
                   value={formData.client}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const selectedClient = clients.find(c => c.name === e.target.value);
+                    setFormData({
+                      ...formData,
+                      client: e.target.value,
+                      customer_id: selectedClient?.id || ''
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
                 >
                   <option value="">Select Client</option>
