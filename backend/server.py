@@ -2885,7 +2885,7 @@ async def update_work_completion_certificate(certificate_id: str, data: dict):
     
     # Update allowed fields
     allowed_fields = {
-        "customer_representative", "customer_address", "order_no", "order_dated",
+        "customer_name", "customer_representative", "customer_address", "order_no", "order_dated",
         "order_amount", "billed_amount", "work_started_on", "completed_on",
         "executed_by", "supervised_by", "work_items", "quality_compliance",
         "as_built_drawings", "statutory_compliance", "site_measurements",
