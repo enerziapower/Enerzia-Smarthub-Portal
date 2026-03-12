@@ -21,6 +21,7 @@ ACB_TEMPLATE = {
         {"name": "control_voltage", "label": "Control Voltage", "type": "text", "unit": "V"},
         {"name": "spring_charge_motor_voltage", "label": "Spring Charge Motor Voltage", "type": "text", "unit": "V"},
         {"name": "rated_breaking_capacity", "label": "Rated Breaking Capacity", "type": "text", "unit": "kA"},
+        {"name": "next_due_date", "label": "Next Due On", "type": "date"},
     ],
     
     # Section 2: Insulation Resistance Test
