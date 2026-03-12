@@ -22,6 +22,7 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, prefillData = null }
     category: 'PSS',
     po_number: '',
     client: '',
+    customer_id: '',  // Store customer ID for linking to domestic customers
     location: '',
     project_name: '',
     vendor: '',
