@@ -3298,27 +3298,52 @@ def create_earth_pit_continuity_checks_section(report, styles, width):
         elements.append(Spacer(1, 10))
         return elements
     
-    # Build the table data
-    data = [['FROM: EARTH PIT NO', 'TO: EQUIPMENT', 'CONTINUITY CHECKED', 'REMARKS']]
+    # Create cell style for wrapping text
+    cell_style = ParagraphStyle(
+        'CellStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_CENTER
+    )
+    cell_style_left = ParagraphStyle(
+        'CellStyleLeft',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_LEFT
+    )
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    # Build the table data with Paragraph objects for proper text wrapping
+    data = [[
+        Paragraph('FROM: EARTH PIT NO', header_style),
+        Paragraph('TO: EQUIPMENT', header_style),
+        Paragraph('CONTINUITY CHECKED', header_style),
+        Paragraph('REMARKS', header_style)
+    ]]
     
     for row in valid_rows:
         data.append([
-            row.get('from_pit_no', ''),
-            row.get('to_equipment', ''),
-            row.get('continuity_checked', ''),
-            row.get('remarks', '')
+            Paragraph(str(row.get('from_pit_no', '')), cell_style_left),
+            Paragraph(str(row.get('to_equipment', '')), cell_style_left),
+            Paragraph(str(row.get('continuity_checked', '')), cell_style),
+            Paragraph(str(row.get('remarks', '')), cell_style_left)
         ])
     
     # Create table
     table = Table(data, colWidths=[width*0.20, width*0.35, width*0.20, width*0.25])
     
     table_style = [
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('ALIGN', (2, 0), (2, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
