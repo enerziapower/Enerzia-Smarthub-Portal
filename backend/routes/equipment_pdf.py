@@ -1950,17 +1950,26 @@ def create_relay_settings_section(report, styles, width):
         if pickup_test:
             elements.append(Paragraph("<b>Pickup Test</b>", subsection_style))
             
-            pickup_data = [['Phase', 'Setting\nCurrent', 'Setting\nTL', 'Pickup\nCurrent', 'Trip\nTime', 'Hi Set\nPickup Current', 'Hi Set\nTrip Time']]
+            # Use Paragraph objects for headers with line breaks
+            pickup_data = [[
+                create_header_cell('Phase', styles),
+                create_header_cell('Setting\nCurrent', styles),
+                create_header_cell('Setting\nTL', styles),
+                create_header_cell('Pickup\nCurrent', styles),
+                create_header_cell('Trip\nTime', styles),
+                create_header_cell('Hi Set\nPickup Current', styles),
+                create_header_cell('Hi Set\nTrip Time', styles)
+            ]]
             for row in pickup_test:
                 if isinstance(row, dict):
                     pickup_data.append([
-                        row.get('phase', ''),
-                        row.get('setting_current', '-'),
-                        row.get('setting_tl', '-'),
-                        row.get('pickup_current', '-'),
-                        row.get('trip_time', '-'),
-                        row.get('hi_set_pickup_current', '-'),
-                        row.get('hi_set_trip_time', '-')
+                        create_data_cell(row.get('phase', ''), styles, TA_CENTER),
+                        create_data_cell(row.get('setting_current', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('setting_tl', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('pickup_current', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('trip_time', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('hi_set_pickup_current', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('hi_set_trip_time', '-'), styles, TA_CENTER)
                     ])
             
             # 7 columns - distribute evenly across full width
@@ -1968,10 +1977,6 @@ def create_relay_settings_section(report, styles, width):
             pickup_table = Table(pickup_data, colWidths=[col_w]*7)
             pickup_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HEADER_LIGHT_GRAY),
-                ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_DARK_TEXT),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
@@ -1987,17 +1992,26 @@ def create_relay_settings_section(report, styles, width):
         if char_check:
             elements.append(Paragraph("<b>Characteristic Check by Secondary Injection Test</b>", subsection_style))
             
-            char_data = [['Phase', 'Plug\nSetting', 'TL', 'Graph Time\n@2x', 'Graph Time\n@5x', 'Actual Time\n@2x', 'Actual Time\n@5x']]
+            # Use Paragraph objects for headers with line breaks
+            char_data = [[
+                create_header_cell('Phase', styles),
+                create_header_cell('Plug\nSetting', styles),
+                create_header_cell('TL', styles),
+                create_header_cell('Graph Time\n@2x', styles),
+                create_header_cell('Graph Time\n@5x', styles),
+                create_header_cell('Actual Time\n@2x', styles),
+                create_header_cell('Actual Time\n@5x', styles)
+            ]]
             for row in char_check:
                 if isinstance(row, dict):
                     char_data.append([
-                        row.get('phase', ''),
-                        row.get('plug_setting', '-'),
-                        row.get('tl', '-'),
-                        row.get('graph_time_2x', '-'),
-                        row.get('graph_time_5x', '-'),
-                        row.get('actual_time_2x', '-'),
-                        row.get('actual_time_5x', '-')
+                        create_data_cell(row.get('phase', ''), styles, TA_CENTER),
+                        create_data_cell(row.get('plug_setting', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('tl', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('graph_time_2x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('graph_time_5x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('actual_time_2x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('actual_time_5x', '-'), styles, TA_CENTER)
                     ])
             
             # 7 columns - distribute evenly across full width
@@ -2005,10 +2019,6 @@ def create_relay_settings_section(report, styles, width):
             char_table = Table(char_data, colWidths=[col_w]*7)
             char_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HEADER_LIGHT_GRAY),
-                ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_DARK_TEXT),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
