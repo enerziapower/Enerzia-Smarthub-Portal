@@ -428,6 +428,7 @@ class WorkCompletionCreate(BaseModel):
     order_dated: Optional[str] = ""
     order_amount: Optional[float] = 0
     billed_amount: Optional[float] = 0
+    customer_name: Optional[str] = ""  # Added for explicit customer selection from Domestic Customers
     customer_representative: Optional[str] = ""
     customer_address: Optional[str] = ""
     executed_by: Optional[str] = ""
