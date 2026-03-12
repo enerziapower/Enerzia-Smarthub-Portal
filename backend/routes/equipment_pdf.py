@@ -465,7 +465,7 @@ def create_equipment_details_section(report, styles, width, equipment_type):
     if equipment_type == 'acb':
         equipment_details = report.get('equipment_details', {})
         date_of_testing = format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '') or '')
-        date_of_energization = format_date_ddmmyyyy(report.get('date_of_energization', '') or '')
+        next_due_date = format_date_ddmmyyyy(equipment_details.get('next_due_date', '') or report.get('next_due_date', '') or '')
         
         # Get make and model - check both equipment_details and direct report fields
         make = equipment_details.get('make_type', '') or report.get('make', '') or report.get('make_type', '')
@@ -495,7 +495,7 @@ def create_equipment_details_section(report, styles, width, equipment_type):
             ['No. of Poles:', report.get('poles', ''), 
              'Date of Testing:', date_of_testing],
             ['Breaking Capacity:', equipment_details.get('rated_breaking_capacity', '') or report.get('rated_breaking_capacity', ''), 
-             'Date of Energization:', date_of_energization],
+             'Next Due On:', next_due_date],
         ]
         
         table = Table(data, colWidths=[width*acb_col_label, width*acb_col_value, width*acb_col_label, width*acb_col_value])
