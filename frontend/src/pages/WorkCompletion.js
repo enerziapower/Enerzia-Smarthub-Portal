@@ -706,6 +706,53 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
                 </div>
               </div>
 
+              {/* Customer Selection */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <label className="block text-sm font-semibold text-emerald-800 mb-2">
+                  <User size={14} className="inline mr-1" />
+                  Select Customer (Domestic Customers) *
+                </label>
+                <select
+                  value={formData.customer_id || ''}
+                  onChange={(e) => {
+                    const customerId = e.target.value;
+                    const customer = domesticCustomers.find(c => c.id === customerId);
+                    if (customer) {
+                      setFormData({
+                        ...formData,
+                        customer_id: customerId,
+                        customer_name: customer.name,
+                        customer_address: customer.address || ''
+                      });
+                    } else {
+                      setFormData({
+                        ...formData,
+                        customer_id: '',
+                        customer_name: '',
+                        customer_address: ''
+                      });
+                    }
+                  }}
+                  className="w-full px-3 py-2.5 border border-emerald-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  data-testid="customer-dropdown"
+                >
+                  <option value="">-- Select Customer from Domestic Customers --</option>
+                  {domesticCustomers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                {formData.customer_name && (
+                  <div className="mt-2 p-2 bg-white rounded border border-emerald-200 text-sm">
+                    <p className="font-medium text-emerald-800">{formData.customer_name}</p>
+                    {formData.customer_address && (
+                      <p className="text-slate-600 text-xs mt-1">{formData.customer_address}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Dates with Calendar */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
