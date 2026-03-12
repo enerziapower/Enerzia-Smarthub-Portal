@@ -2186,6 +2186,313 @@ async def generate_ir_thermography_pdf(report_id: str):
 # In-memory storage for PDF jobs (in production, use Redis or database)
 pdf_jobs = {}
 
+# CHUNKED PDF GENERATION THRESHOLD
+# Reports with more than this many items will use chunked generation
+CHUNK_THRESHOLD = 60
+ITEMS_PER_CHUNK = 40  # Process 40 items at a time to stay within memory limits
+
+
+def generate_chunk_pdf(report, chunk_items, chunk_num, total_chunks, styles, org_settings, lite_mode=False, no_images=False):
+    """Generate a PDF for a single chunk of inspection items.
+    
+    Returns the PDF bytes for this chunk.
+    """
+    import gc
+    from io import BytesIO
+    
+    buffer = BytesIO()
+    
+    # Create a modified report with only this chunk's items
+    chunk_report = dict(report)
+    chunk_report['inspection_items'] = chunk_items
+    
+    # Calculate summary for this chunk
+    summary = {
+        'total_items': len(chunk_items),
+        'critical': 0,
+        'warning': 0,
+        'check_monitor': 0,
+        'normal': 0
+    }
+    
+    for item in chunk_items:
+        risk = item.get('risk_category', '').lower().replace(' & ', '_').replace(' ', '_')
+        if 'critical' in risk:
+            summary['critical'] += 1
+        elif 'warning' in risk:
+            summary['warning'] += 1
+        elif 'check' in risk or 'monitor' in risk:
+            summary['check_monitor'] += 1
+        else:
+            summary['normal'] += 1
+    
+    chunk_report['summary'] = summary
+    
+    # Create custom canvas class for this chunk
+    def make_canvas(*args, **kwargs):
+        return IRThermographyCanvas(*args, report_data=chunk_report, **kwargs)
+    
+    # Create document - simpler for chunks (no cover page except first chunk)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=70,
+        bottomMargin=50
+    )
+    
+    elements = []
+    
+    if chunk_num == 1:
+        # First chunk gets cover page and intro sections
+        try:
+            elements.extend(create_cover_page(chunk_report, org_settings, styles))
+            elements.extend(create_document_details_section(chunk_report, styles))
+            elements.extend(create_table_of_contents(chunk_report, styles))
+            elements.extend(create_executive_summary(chunk_report, styles))
+            elements.extend(create_inspection_summary_table(chunk_report, styles))
+            elements.extend(create_fundamentals_methodology_section(chunk_report, styles))
+            elements.extend(create_risk_categorization_section(styles))
+        except Exception as e:
+            print(f"Error creating intro sections: {e}")
+    
+    # Add inspection pages for this chunk
+    try:
+        elements.extend(create_individual_inspection_pages(chunk_report, styles, lite_mode=lite_mode, no_images=no_images))
+    except Exception as e:
+        print(f"Error creating inspection pages for chunk {chunk_num}: {e}")
+    
+    # Build PDF
+    if chunk_num == 1:
+        doc.build(
+            elements,
+            onFirstPage=lambda canvas, doc: draw_cover_page(canvas, doc, chunk_report, org_settings),
+            canvasmaker=make_canvas
+        )
+    else:
+        doc.build(elements, canvasmaker=make_canvas)
+    
+    # Force garbage collection after each chunk
+    gc.collect()
+    
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+def generate_pdf_chunked(report_id: str, job_id: str, lite_mode: bool = False, no_images: bool = False):
+    """Generate PDF in chunks and merge them into a single file.
+    
+    This approach processes items in small batches to stay within memory limits,
+    then merges all chunks into one final PDF file.
+    """
+    from PyPDF2 import PdfMerger, PdfReader
+    from io import BytesIO
+    import gc
+    import tempfile
+    import os as os_module
+    
+    try:
+        pdf_jobs[job_id]['status'] = 'processing'
+        pdf_jobs[job_id]['progress'] = 'Starting chunked PDF generation...'
+        
+        # Force garbage collection at start
+        gc.collect()
+        
+        # Get database connection
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+        db_name = os.environ.get('DB_NAME', 'test_database')
+        sync_client = MongoClient(mongo_url)
+        db = sync_client[db_name]
+        
+        # Get GridFS for storage
+        fs = gridfs.GridFS(db)
+        
+        # Update MongoDB with processing status
+        db.pdf_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {"status": "processing", "progress": "Starting chunked PDF generation..."}}
+        )
+        
+        # Get report
+        report = db.test_reports.find_one({"id": report_id})
+        if not report:
+            report = db.ir_thermography_reports.find_one({"id": report_id})
+        
+        if not report:
+            pdf_jobs[job_id]['status'] = 'failed'
+            pdf_jobs[job_id]['error'] = 'Report not found'
+            db.pdf_jobs.update_one(
+                {"job_id": job_id},
+                {"$set": {"status": "failed", "error": "Report not found"}}
+            )
+            return
+        
+        # Get all inspection items
+        all_inspection_items = report.get('inspection_items', [])
+        total_items = len(all_inspection_items)
+        
+        # Calculate chunks
+        total_chunks = (total_items + ITEMS_PER_CHUNK - 1) // ITEMS_PER_CHUNK
+        
+        pdf_jobs[job_id]['progress'] = f'Processing {total_items} items in {total_chunks} chunks...'
+        pdf_jobs[job_id]['total_items'] = total_items
+        
+        print(f"Chunked PDF generation: {total_items} items in {total_chunks} chunks")
+        
+        # Get organization settings and styles
+        org_settings = db.settings.find_one({"type": "organization"}) or {}
+        styles = get_styles()
+        
+        # Use lite_mode for large reports to reduce memory
+        effective_lite_mode = lite_mode or total_items > 100
+        
+        # Generate each chunk and save to temp files
+        chunk_files = []
+        
+        for chunk_num in range(1, total_chunks + 1):
+            start_idx = (chunk_num - 1) * ITEMS_PER_CHUNK
+            end_idx = min(chunk_num * ITEMS_PER_CHUNK, total_items)
+            chunk_items = all_inspection_items[start_idx:end_idx]
+            
+            pdf_jobs[job_id]['progress'] = f'Generating chunk {chunk_num}/{total_chunks} (items {start_idx + 1}-{end_idx})...'
+            db.pdf_jobs.update_one(
+                {"job_id": job_id},
+                {"$set": {"progress": f"Generating chunk {chunk_num}/{total_chunks}..."}}
+            )
+            
+            print(f"Processing chunk {chunk_num}/{total_chunks}: items {start_idx + 1}-{end_idx}")
+            
+            try:
+                # Generate this chunk's PDF
+                chunk_pdf_bytes = generate_chunk_pdf(
+                    report, chunk_items, chunk_num, total_chunks,
+                    styles, org_settings, effective_lite_mode, no_images
+                )
+                
+                # Save to temp file to free memory
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                temp_file.write(chunk_pdf_bytes)
+                temp_file.close()
+                chunk_files.append(temp_file.name)
+                
+                # Clear chunk bytes from memory
+                del chunk_pdf_bytes
+                gc.collect()
+                
+                print(f"Chunk {chunk_num} saved to temp file")
+                
+            except Exception as e:
+                print(f"Error generating chunk {chunk_num}: {e}")
+                # Clean up temp files on error
+                for f in chunk_files:
+                    try:
+                        os_module.unlink(f)
+                    except:
+                        pass
+                raise e
+        
+        # Merge all chunks into final PDF
+        pdf_jobs[job_id]['progress'] = 'Merging chunks into final PDF...'
+        db.pdf_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {"progress": "Merging chunks into final PDF..."}}
+        )
+        
+        print(f"Merging {len(chunk_files)} chunks...")
+        
+        merger = PdfMerger()
+        for chunk_file in chunk_files:
+            merger.append(chunk_file)
+        
+        # Write merged PDF to buffer
+        final_buffer = BytesIO()
+        merger.write(final_buffer)
+        merger.close()
+        
+        # Clean up temp files
+        for chunk_file in chunk_files:
+            try:
+                os_module.unlink(chunk_file)
+            except:
+                pass
+        
+        final_buffer.seek(0)
+        pdf_data = final_buffer.getvalue()
+        
+        # Append calibration certificate if available
+        try:
+            final_buffer_with_cert = append_calibration_certificate(BytesIO(pdf_data), report)
+            final_buffer_with_cert.seek(0)
+            pdf_data = final_buffer_with_cert.getvalue()
+        except Exception as e:
+            print(f"Error appending calibration certificate: {e}")
+        
+        # Generate filename
+        report_no = report.get('report_no', 'IR_Report')
+        filename = f"{report_no.replace('/', '_')}.pdf"
+        
+        # Store in GridFS
+        gridfs_id = fs.put(
+            pdf_data,
+            filename=filename,
+            content_type="application/pdf",
+            metadata={
+                "job_id": job_id,
+                "report_id": report_id,
+                "report_no": report_no,
+                "total_items": total_items,
+                "chunks_used": total_chunks,
+                "generation_method": "chunked"
+            }
+        )
+        
+        # Update job status
+        db.pdf_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {
+                "job_id": job_id,
+                "report_id": report_id,
+                "report_no": report_no,
+                "filename": filename,
+                "gridfs_id": str(gridfs_id),
+                "size_bytes": len(pdf_data),
+                "total_items": total_items,
+                "chunks_used": total_chunks,
+                "status": "completed",
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        pdf_jobs[job_id]['status'] = 'completed'
+        pdf_jobs[job_id]['progress'] = 'PDF ready for download'
+        pdf_jobs[job_id]['filename'] = filename
+        pdf_jobs[job_id]['size_bytes'] = len(pdf_data)
+        pdf_jobs[job_id]['gridfs_id'] = str(gridfs_id)
+        
+        print(f"Chunked PDF generation completed: {len(pdf_data)} bytes, {total_chunks} chunks merged")
+        
+        # Final cleanup
+        gc.collect()
+        
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        print(f"Chunked PDF generation failed: {error_msg}")
+        print(traceback.format_exc())
+        
+        pdf_jobs[job_id]['status'] = 'failed'
+        pdf_jobs[job_id]['error'] = error_msg
+        
+        try:
+            db.pdf_jobs.update_one(
+                {"job_id": job_id},
+                {"$set": {"status": "failed", "error": error_msg}}
+            )
+        except:
+            pass
+
 
 def generate_pdf_sync(report_id: str, job_id: str, lite_mode: bool = False, no_images: bool = False, part: int = 0, items_per_part: int = 50):
     """Synchronous PDF generation for background task.
