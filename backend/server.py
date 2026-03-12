@@ -2772,6 +2772,27 @@ async def create_work_completion_certificate(data: WorkCompletionCreate):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
+    # Get customer details from clients collection (Domestic Customers)
+    # First try to find by customer_id if project has it, otherwise match by name
+    customer_name = project.get("client", "")
+    customer_address = data.customer_address or ""
+    
+    if project.get("customer_id"):
+        # Project has customer_id reference - fetch full customer details
+        customer = await db.clients.find_one({"id": project.get("customer_id")}, {"_id": 0})
+        if customer:
+            customer_name = customer.get("name", customer_name)
+            if not customer_address:
+                customer_address = customer.get("address", "")
+    elif customer_name and not customer_address:
+        # Try to find customer by name match in clients collection
+        customer = await db.clients.find_one(
+            {"name": {"$regex": f"^{customer_name}$", "$options": "i"}, "customer_type": "domestic"},
+            {"_id": 0}
+        )
+        if customer:
+            customer_address = customer.get("address", "")
+    
     # Get organization settings for vendor info
     org_settings = await db.settings.find_one({"id": "org_settings"}, {"_id": 0})
     vendor_name = org_settings.get("name", "Enerzia Power Solutions") if org_settings else "Enerzia Power Solutions"
@@ -2788,10 +2809,10 @@ async def create_work_completion_certificate(data: WorkCompletionCreate):
         project_id=data.project_id,
         pid_no=project.get("pid_no", ""),
         project_name=project.get("project_name", ""),
-        customer_name=project.get("client", ""),
+        customer_name=customer_name,
         customer_representative=data.customer_representative or "",
         site_location=project.get("location", ""),
-        customer_address=data.customer_address or "",
+        customer_address=customer_address,
         order_no=data.order_no or project.get("po_number", ""),
         order_dated=data.order_dated or "",
         order_amount=data.order_amount or project.get("po_amount", 0),
