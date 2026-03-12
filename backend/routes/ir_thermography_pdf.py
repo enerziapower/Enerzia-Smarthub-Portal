@@ -2882,12 +2882,13 @@ async def start_pdf_generation(
     return {
         'job_id': job_id,
         'status': 'queued',
-        'message': f'PDF generation started for {items_in_part} items{part_str}{mode_str}',
+        'message': f'PDF generation started for {items_in_part} items{part_str}{mode_str}{method_str}',
         'total_items': item_count,
         'items_in_part': items_in_part,
         'part': part,
         'total_parts': total_parts,
         'estimated_seconds': estimated_time,
+        'generation_method': generation_method,
         'check_status_url': f'/api/ir-thermography-report/{report_id}/pdf/status/{job_id}'
     }
 
