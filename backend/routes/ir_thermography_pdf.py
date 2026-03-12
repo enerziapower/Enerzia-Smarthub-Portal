@@ -68,12 +68,18 @@ def get_db():
     return db
 
 
+# Cached sync database connection for PDF generation (avoids creating new connection for each image)
+_sync_db_cache = {}
+
 def get_sync_db():
-    """Get synchronous MongoDB connection for PDF generation"""
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-    db_name = os.environ.get('DB_NAME', 'test_database')
-    client = MongoClient(mongo_url)
-    return client[db_name]
+    """Get synchronous MongoDB connection for PDF generation - CACHED for performance"""
+    cache_key = 'sync_db'
+    if cache_key not in _sync_db_cache:
+        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+        db_name = os.environ.get('DB_NAME', 'test_database')
+        client = MongoClient(mongo_url)
+        _sync_db_cache[cache_key] = client[db_name]
+    return _sync_db_cache[cache_key]
 
 
 def get_styles():
