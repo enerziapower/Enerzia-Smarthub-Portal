@@ -2,6 +2,32 @@
 
 ## Latest Updates
 
+### Work Completion Certificate Customer Data Flow ✅ FIXED (Mar 12, 2026)
+**Location:** Projects → Work Completion Certificates
+
+**P0 FIX:** Work Completion Certificates were displaying project client aliases (e.g., "JLL - NTT Data") instead of the full, official customer name from the Domestic Customers database. This created unprofessional legal documents.
+
+| Feature | Description |
+|---------|-------------|
+| **Customer Dropdown** | New dropdown to select customer from Domestic Customers database |
+| **Full Customer Name** | WCC now stores and displays the full official customer name |
+| **Address Auto-fill** | Customer address auto-populates from selected customer |
+| **Edit Mode Support** | Existing WCCs can be updated with correct customer |
+| **PDF Generation** | Generated PDFs now show correct customer name and address |
+
+**Technical Changes:**
+- Frontend: Added Customer dropdown in CertificateFormModal (data-testid='customer-dropdown')
+- Backend: Added `customer_name` to WorkCompletionCreate model and allowed_fields in PUT endpoint
+- Backend: Frontend-provided customer_name takes priority over auto-detection from project.client
+
+**Files Modified:**
+- `/app/frontend/src/pages/WorkCompletion.js` - Added Customer dropdown UI with Domestic Customers
+- `/app/backend/server.py` - Updated WorkCompletionCreate model and create/update endpoints
+
+**Test Results:** 100% success rate (9/9 backend tests, all frontend features working) - See `/app/test_reports/iteration_89.json`
+
+---
+
 ### IR Thermography Memory-Optimized Single PDF ✅ COMPLETE (Mar 11, 2026)
 **Location:** Projects → IR Thermography Reports → PDF Download
 
