@@ -669,11 +669,12 @@ def create_equipment_details_section(report, styles, width, equipment_type):
         elif equipment_type == 'electrical-panel' or equipment_type == 'panel':
             # Panel / DB uses equipment_details object for storage - match UI fields exactly
             eq_details = report.get('equipment_details', {})
+            next_due_date = eq_details.get('next_due_date', '') or report.get('next_due_date', '')
             data = [
                 ['Panel Name:', eq_details.get('panel_name', ''), 'Panel Type:', eq_details.get('panel_type', '')],
                 ['Location:', eq_details.get('location', '') or report.get('equipment_location', '') or report.get('location', ''), 'Make:', eq_details.get('make', '')],
                 ['Rated Voltage (V):', eq_details.get('rated_voltage', ''), 'Rated Current (A):', eq_details.get('rated_current', '')],
-                ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Next Due Date:', format_date_ddmmyyyy(report.get('next_due_date', ''))],
+                ['Date of Testing:', format_date_ddmmyyyy(report.get('date_of_testing', '') or report.get('test_date', '')), 'Next Due Date:', format_date_ddmmyyyy(next_due_date)],
             ]
         elif equipment_type == 'ir-thermography':
             data.extend([
