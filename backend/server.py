@@ -2774,24 +2774,28 @@ async def create_work_completion_certificate(data: WorkCompletionCreate):
     
     # Get customer details from clients collection (Domestic Customers)
     # First try to find by customer_id if project has it, otherwise match by name
-    customer_name = project.get("client", "")
+    project_client = project.get("client", "")
+    customer_name = project_client  # Default to project.client
     customer_address = data.customer_address or ""
     
     if project.get("customer_id"):
         # Project has customer_id reference - fetch full customer details
         customer = await db.clients.find_one({"id": project.get("customer_id")}, {"_id": 0})
         if customer:
-            customer_name = customer.get("name", customer_name)
+            customer_name = customer.get("name", project_client)
             if not customer_address:
                 customer_address = customer.get("address", "")
-    elif customer_name and not customer_address:
+    elif project_client:
         # Try to find customer by name match in clients collection
+        # This handles cases where the project.client might be different from the domestic customer name
         customer = await db.clients.find_one(
-            {"name": {"$regex": f"^{customer_name}$", "$options": "i"}, "customer_type": "domestic"},
+            {"name": project_client, "customer_type": "domestic"},
             {"_id": 0}
         )
         if customer:
-            customer_address = customer.get("address", "")
+            customer_name = customer.get("name", project_client)
+            if not customer_address:
+                customer_address = customer.get("address", "")
     
     # Get organization settings for vendor info
     org_settings = await db.settings.find_one({"id": "org_settings"}, {"_id": 0})
