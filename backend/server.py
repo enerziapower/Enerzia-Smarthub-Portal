@@ -2773,30 +2773,34 @@ async def create_work_completion_certificate(data: WorkCompletionCreate):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    # Get customer details from clients collection (Domestic Customers)
-    # First try to find by customer_id if project has it, otherwise match by name
-    project_client = project.get("client", "")
-    customer_name = project_client  # Default to project.client
+    # Priority: Use customer_name and customer_address from frontend if provided (from Domestic Customers dropdown)
+    # Otherwise fallback to auto-detection logic
+    customer_name = data.customer_name or ""
     customer_address = data.customer_address or ""
     
-    if project.get("customer_id"):
-        # Project has customer_id reference - fetch full customer details
-        customer = await db.clients.find_one({"id": project.get("customer_id")}, {"_id": 0})
-        if customer:
-            customer_name = customer.get("name", project_client)
-            if not customer_address:
-                customer_address = customer.get("address", "")
-    elif project_client:
-        # Try to find customer by name match in clients collection
-        # This handles cases where the project.client might be different from the domestic customer name
-        customer = await db.clients.find_one(
-            {"name": project_client, "customer_type": "domestic"},
-            {"_id": 0}
-        )
-        if customer:
-            customer_name = customer.get("name", project_client)
-            if not customer_address:
-                customer_address = customer.get("address", "")
+    if not customer_name:
+        # Fallback: Get customer details from clients collection (Domestic Customers)
+        # First try to find by customer_id if project has it, otherwise match by name
+        project_client = project.get("client", "")
+        customer_name = project_client  # Default to project.client
+        
+        if project.get("customer_id"):
+            # Project has customer_id reference - fetch full customer details
+            customer = await db.clients.find_one({"id": project.get("customer_id")}, {"_id": 0})
+            if customer:
+                customer_name = customer.get("name", project_client)
+                if not customer_address:
+                    customer_address = customer.get("address", "")
+        elif project_client:
+            # Try to find customer by name match in clients collection
+            customer = await db.clients.find_one(
+                {"name": project_client, "customer_type": "domestic"},
+                {"_id": 0}
+            )
+            if customer:
+                customer_name = customer.get("name", project_client)
+                if not customer_address:
+                    customer_address = customer.get("address", "")
     
     # Get organization settings for vendor info
     org_settings = await db.settings.find_one({"id": "org_settings"}, {"_id": 0})
