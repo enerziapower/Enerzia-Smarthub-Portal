@@ -629,6 +629,10 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
       alert('Please select a project');
       return;
     }
+    if (!formData.customer_name) {
+      alert('Please select a customer from the Domestic Customers list');
+      return;
+    }
     if (!formData.work_started_on || !formData.completed_on) {
       alert('Please enter work start and completion dates');
       return;
