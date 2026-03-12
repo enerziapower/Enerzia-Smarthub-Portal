@@ -25,7 +25,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
           settingsAPI.getCategories(),
           settingsAPI.getStatuses(),
           departmentTeamAPI.getTeam('projects'),
-          settingsAPI.getClients(),
+          settingsAPI.getDomesticClients(),  // Fetch Domestic Customers from Company Hub
           settingsAPI.getVendors(),
         ]);
         setCategories(catRes.data.filter(c => c.is_active));
