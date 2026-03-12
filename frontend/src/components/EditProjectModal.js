@@ -48,6 +48,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
         project_date: project.project_date || '',
         completion_date: project.completion_date || '',
         client: project.client || '',
+        customer_id: project.customer_id || '',
         location: project.location || '',
         project_name: project.project_name || '',
         vendor: project.vendor || '',
