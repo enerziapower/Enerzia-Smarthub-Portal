@@ -492,7 +492,7 @@ def create_equipment_details_section(report, styles, width, equipment_type):
              'Serial Number:', equipment_details.get('serial_number', '') or report.get('serial_no', '') or report.get('serial_number', '')],
             ['Control Voltage (V):', equipment_details.get('control_voltage', '') or report.get('control_voltage', ''), 
              'Spring Motor (V):', equipment_details.get('spring_charge_motor_voltage', '') or report.get('spring_charge_motor_voltage', '')],
-            ['No. of Poles:', report.get('poles', ''), 
+            ['No. of Poles:', equipment_details.get('no_of_poles', '') or report.get('poles', '') or report.get('no_of_poles', ''), 
              'Date of Testing:', date_of_testing],
             ['Breaking Capacity:', equipment_details.get('rated_breaking_capacity', '') or report.get('rated_breaking_capacity', ''), 
              'Next Due On:', next_due_date],
