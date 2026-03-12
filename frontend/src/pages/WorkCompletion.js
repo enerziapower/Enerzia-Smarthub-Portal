@@ -420,13 +420,29 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     const fetchCustomers = async () => {
       try {
         const res = await settingsAPI.getDomesticClients();
-        setDomesticCustomers(res.data.filter(c => c.is_active));
+        const activeCustomers = res.data.filter(c => c.is_active);
+        setDomesticCustomers(activeCustomers);
+        
+        // In edit mode, try to match existing customer_name to a domestic customer
+        if (mode === 'edit' && certificate?.customer_name && activeCustomers.length > 0) {
+          const matchedCustomer = activeCustomers.find(
+            c => c.name?.toLowerCase() === certificate.customer_name?.toLowerCase()
+          );
+          if (matchedCustomer) {
+            setFormData(prev => ({
+              ...prev,
+              customer_id: matchedCustomer.id,
+              customer_name: matchedCustomer.name,
+              customer_address: matchedCustomer.address || prev.customer_address
+            }));
+          }
+        }
       } catch (err) {
         console.error('Error fetching domestic customers:', err);
       }
     };
     fetchCustomers();
-  }, []);
+  }, [mode, certificate?.customer_name]);
 
   useEffect(() => {
     if (mode === 'edit' && certificate) {
