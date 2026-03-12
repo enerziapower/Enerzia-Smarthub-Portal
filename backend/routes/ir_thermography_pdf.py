@@ -2188,8 +2188,8 @@ pdf_jobs = {}
 
 # CHUNKED PDF GENERATION THRESHOLD
 # Reports with more than this many items will use chunked generation
-CHUNK_THRESHOLD = 60
-ITEMS_PER_CHUNK = 40  # Process 40 items at a time to stay within memory limits
+CHUNK_THRESHOLD = 9999  # Effectively disable chunking - use direct generation for all reports
+ITEMS_PER_CHUNK = 40  # Not used anymore but kept for backward compatibility
 
 
 def generate_chunk_pdf(report, chunk_items, chunk_num, total_chunks, styles, org_settings, lite_mode=False, no_images=False):
