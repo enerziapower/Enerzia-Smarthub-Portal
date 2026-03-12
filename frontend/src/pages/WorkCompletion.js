@@ -419,10 +419,39 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     }
   }, [mode, certificate, projects]);
 
-  const handleProjectSelect = (projectId) => {
+  const handleProjectSelect = async (projectId) => {
     const project = projects.find(p => p.id === projectId);
     if (project) {
       setSelectedProject(project);
+      
+      // Try to fetch customer address from Domestic Customers
+      let customerAddress = '';
+      if (project.customer_id) {
+        try {
+          // If project has customer_id, fetch from that
+          const res = await settingsAPI.getDomesticClients();
+          const customer = res.data.find(c => c.id === project.customer_id);
+          if (customer) {
+            customerAddress = customer.address || '';
+          }
+        } catch (err) {
+          console.error('Error fetching customer:', err);
+        }
+      } else if (project.client) {
+        try {
+          // Try to find by matching client name in domestic customers
+          const res = await settingsAPI.getDomesticClients();
+          const customer = res.data.find(c => 
+            c.name?.toLowerCase() === project.client?.toLowerCase()
+          );
+          if (customer) {
+            customerAddress = customer.address || '';
+          }
+        } catch (err) {
+          console.error('Error fetching customer by name:', err);
+        }
+      }
+      
       setFormData({
         ...formData,
         project_id: projectId,
@@ -432,6 +461,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
         executed_by: project.engineer_in_charge || '',
         work_started_on: project.project_date || '',
         completed_on: project.completion_date || '',
+        customer_address: customerAddress,
       });
     }
   };
