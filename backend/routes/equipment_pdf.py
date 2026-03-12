@@ -3178,36 +3178,68 @@ def create_earth_pit_electrical_checks_section(report, styles, width):
         elements.append(Spacer(1, 10))
         return elements
     
+    # Create cell style for wrapping text
+    cell_style = ParagraphStyle(
+        'CellStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_CENTER
+    )
+    cell_style_left = ParagraphStyle(
+        'CellStyleLeft',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_LEFT
+    )
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
     # Build the table data with merged header for "Test Results Ohm"
     # Row 0: Main headers with "Test Results Ohm" spanning 2 columns
     # Row 1: Sub-headers for Individual and Combined
-    header_row1 = ['Earth Pit No', 'Pit Location', 'Test Method', 'Test Results Ohm', '', 'Remarks']
-    header_row2 = ['', '', '', 'Individual', 'Combined', '']
+    header_row1 = [
+        Paragraph('Earth Pit No', header_style),
+        Paragraph('Pit Location', header_style),
+        Paragraph('Test Method', header_style),
+        Paragraph('Test Results Ohm', header_style),
+        '',
+        Paragraph('Remarks', header_style)
+    ]
+    header_row2 = [
+        '',
+        '',
+        '',
+        Paragraph('Individual', header_style),
+        Paragraph('Combined', header_style),
+        ''
+    ]
     
     data = [header_row1, header_row2]
     
     for row in valid_rows:
         data.append([
-            row.get('earth_pit_no', ''),
-            row.get('pit_location', ''),
-            row.get('test_method', ''),
-            row.get('individual_result', ''),
-            row.get('combined_result', ''),
-            row.get('remarks', '')
+            Paragraph(str(row.get('earth_pit_no', '')), cell_style_left),
+            Paragraph(str(row.get('pit_location', '')), cell_style_left),
+            Paragraph(str(row.get('test_method', '')), cell_style),
+            Paragraph(str(row.get('individual_result', '')), cell_style),
+            Paragraph(str(row.get('combined_result', '')), cell_style),
+            Paragraph(str(row.get('remarks', '')), cell_style_left)
         ])
     
-    # Create table
+    # Create table with proper column widths
     table = Table(data, colWidths=[width*0.12, width*0.20, width*0.15, width*0.17, width*0.17, width*0.19])
     
     table_style = [
-        # Header row 1 styling
-        ('FONTNAME', (0, 0), (-1, 1), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 2), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('BACKGROUND', (0, 0), (-1, 1), LIGHT_GRAY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('ALIGN', (0, 0), (-1, 1), 'CENTER'),
-        ('ALIGN', (3, 2), (4, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
