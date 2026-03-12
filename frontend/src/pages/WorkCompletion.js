@@ -389,6 +389,7 @@ const WorkCompletion = () => {
 const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClose, onSaved }) => {
   const [saving, setSaving] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [domesticCustomers, setDomesticCustomers] = useState([]);
   const [formData, setFormData] = useState({
     project_id: certificate?.project_id || '',
     work_started_on: certificate?.work_started_on || '',
@@ -399,6 +400,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     billed_amount: certificate?.billed_amount || 0,
     customer_representative: certificate?.customer_representative || '',
     customer_address: certificate?.customer_address || '',
+    customer_name: certificate?.customer_name || '',  // Added for customer selection
     executed_by: certificate?.executed_by || '',
     supervised_by: certificate?.supervised_by || '',
     work_items: certificate?.work_items || [],
@@ -411,6 +413,19 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     annexures: certificate?.annexures || [],
     status: certificate?.status || 'Draft',
   });
+
+  // Fetch domestic customers
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await settingsAPI.getDomesticClients();
+        setDomesticCustomers(res.data.filter(c => c.is_active));
+      } catch (err) {
+        console.error('Error fetching domestic customers:', err);
+      }
+    };
+    fetchCustomers();
+  }, []);
 
   useEffect(() => {
     if (mode === 'edit' && certificate) {
