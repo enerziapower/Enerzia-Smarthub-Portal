@@ -5,7 +5,7 @@ import {
   Calendar, ClipboardList, Building2, User, MapPin, DollarSign, Paperclip, FileText, Upload,
   ArrowLeft
 } from 'lucide-react';
-import { projectsAPI, departmentTeamAPI, workCompletionAPI, projectsAPI as uploadAPI } from '../services/api';
+import { projectsAPI, departmentTeamAPI, workCompletionAPI, projectsAPI as uploadAPI, settingsAPI } from '../services/api';
 import { DatePicker } from '../components/ui/date-picker';
 
 const WorkCompletion = () => {
