@@ -3178,8 +3178,13 @@ def create_earth_pit_electrical_checks_section(report, styles, width):
         elements.append(Spacer(1, 10))
         return elements
     
-    # Build the table data
-    data = [['Earth Pit No', 'Pit Location', 'Test Method', 'Test Results Ohm\n(Individual)', 'Test Results Ohm\n(Combined)', 'Remarks']]
+    # Build the table data with merged header for "Test Results Ohm"
+    # Row 0: Main headers with "Test Results Ohm" spanning 2 columns
+    # Row 1: Sub-headers for Individual and Combined
+    header_row1 = ['Earth Pit No', 'Pit Location', 'Test Method', 'Test Results Ohm', '', 'Remarks']
+    header_row2 = ['', '', '', 'Individual', 'Combined', '']
+    
+    data = [header_row1, header_row2]
     
     for row in valid_rows:
         data.append([
@@ -3195,16 +3200,24 @@ def create_earth_pit_electrical_checks_section(report, styles, width):
     table = Table(data, colWidths=[width*0.12, width*0.20, width*0.15, width*0.17, width*0.17, width*0.19])
     
     table_style = [
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        # Header row 1 styling
+        ('FONTNAME', (0, 0), (-1, 1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 2), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 8),
-        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
+        ('BACKGROUND', (0, 0), (-1, 1), LIGHT_GRAY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('ALIGN', (3, 1), (4, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 1), 'CENTER'),
+        ('ALIGN', (3, 2), (4, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
+        # Merge "Test Results Ohm" across columns 3-4 in row 0
+        ('SPAN', (3, 0), (4, 0)),
+        # Merge Earth Pit No, Pit Location, Test Method, Remarks vertically (rows 0-1)
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (1, 1)),
+        ('SPAN', (2, 0), (2, 1)),
+        ('SPAN', (5, 0), (5, 1)),
     ]
     
     table.setStyle(TableStyle(table_style))
