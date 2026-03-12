@@ -400,7 +400,8 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     billed_amount: certificate?.billed_amount || 0,
     customer_representative: certificate?.customer_representative || '',
     customer_address: certificate?.customer_address || '',
-    customer_name: certificate?.customer_name || '',  // Added for customer selection
+    customer_name: certificate?.customer_name || '',
+    customer_id: certificate?.customer_id || '',  // Added for explicit customer selection
     executed_by: certificate?.executed_by || '',
     supervised_by: certificate?.supervised_by || '',
     work_items: certificate?.work_items || [],
