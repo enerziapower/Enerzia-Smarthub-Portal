@@ -707,7 +707,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Customer:</span>
+                    <span className="text-slate-500">Project Client:</span>
                     <span className="ml-2 font-semibold text-slate-900">
                       {selectedProject?.client || certificate?.customer_name}
                     </span>
