@@ -439,14 +439,17 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
     if (project) {
       setSelectedProject(project);
       
-      // Try to fetch customer address from Domestic Customers
+      // Try to fetch customer details from Domestic Customers
+      let customerName = project.client || '';
       let customerAddress = '';
+      
       if (project.customer_id) {
         try {
           // If project has customer_id, fetch from that
           const res = await settingsAPI.getDomesticClients();
           const customer = res.data.find(c => c.id === project.customer_id);
           if (customer) {
+            customerName = customer.name || customerName;
             customerAddress = customer.address || '';
           }
         } catch (err) {
@@ -460,6 +463,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
             c.name?.toLowerCase() === project.client?.toLowerCase()
           );
           if (customer) {
+            customerName = customer.name;
             customerAddress = customer.address || '';
           }
         } catch (err) {
@@ -476,6 +480,7 @@ const CertificateFormModal = ({ mode, certificate, projects, teamMembers, onClos
         executed_by: project.engineer_in_charge || '',
         work_started_on: project.project_date || '',
         completed_on: project.completion_date || '',
+        customer_name: customerName,
         customer_address: customerAddress,
       });
     }
