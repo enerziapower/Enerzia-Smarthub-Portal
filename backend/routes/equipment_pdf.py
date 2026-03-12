@@ -2137,17 +2137,26 @@ def create_relay_settings_section(report, styles, width):
         if feeder_char:
             elements.append(Paragraph("<b>Characteristic Check by Secondary Injection Test</b>", subsection_style))
             
-            feeder_char_data = [['Phase', 'Plug\nSetting', 'TL', 'Graph Time\n@2x', 'Graph Time\n@5x', 'Actual Time\n@2x', 'Actual Time\n@5x']]
+            # Use Paragraph objects for headers with line breaks
+            feeder_char_data = [[
+                create_header_cell('Phase', styles),
+                create_header_cell('Plug\nSetting', styles),
+                create_header_cell('TL', styles),
+                create_header_cell('Graph Time\n@2x', styles),
+                create_header_cell('Graph Time\n@5x', styles),
+                create_header_cell('Actual Time\n@2x', styles),
+                create_header_cell('Actual Time\n@5x', styles)
+            ]]
             for row in feeder_char:
                 if isinstance(row, dict):
                     feeder_char_data.append([
-                        row.get('phase', ''),
-                        row.get('plug_setting', '-'),
-                        row.get('tl', '-'),
-                        row.get('graph_time_2x', '-'),
-                        row.get('graph_time_5x', '-'),
-                        row.get('actual_time_2x', '-'),
-                        row.get('actual_time_5x', '-')
+                        create_data_cell(row.get('phase', ''), styles, TA_CENTER),
+                        create_data_cell(row.get('plug_setting', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('tl', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('graph_time_2x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('graph_time_5x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('actual_time_2x', '-'), styles, TA_CENTER),
+                        create_data_cell(row.get('actual_time_5x', '-'), styles, TA_CENTER)
                     ])
             
             # 7 columns - distribute evenly across full width
@@ -2155,10 +2164,6 @@ def create_relay_settings_section(report, styles, width):
             feeder_char_table = Table(feeder_char_data, colWidths=[col_w]*7)
             feeder_char_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HEADER_LIGHT_GRAY),
-                ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_DARK_TEXT),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
