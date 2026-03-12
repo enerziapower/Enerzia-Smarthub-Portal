@@ -173,6 +173,44 @@ EQUIPMENT_INFO = {
 }
 
 
+# Helper function to create paragraph-based table cells for proper text wrapping
+def create_cell_paragraph(text, style, is_header=False, alignment=TA_CENTER):
+    """Create a Paragraph object for table cells to ensure proper text wrapping.
+    
+    Args:
+        text: The text content (can contain \n for line breaks)
+        style: Base ParagraphStyle to use
+        is_header: Whether this is a header cell (uses bold font)
+        alignment: Text alignment (TA_CENTER, TA_LEFT, TA_RIGHT)
+    """
+    if text is None:
+        text = ''
+    text = str(text)
+    
+    # Replace \n with <br/> for proper line breaks in Paragraph
+    text = text.replace('\n', '<br/>')
+    
+    cell_style = ParagraphStyle(
+        'CellStyle',
+        parent=style,
+        fontSize=8,
+        leading=10,
+        alignment=alignment,
+        fontName='Helvetica-Bold' if is_header else 'Helvetica'
+    )
+    return Paragraph(text, cell_style)
+
+
+def create_header_cell(text, styles):
+    """Create a header cell paragraph with center alignment and bold text."""
+    return create_cell_paragraph(text, styles['Normal'], is_header=True, alignment=TA_CENTER)
+
+
+def create_data_cell(text, styles, alignment=TA_LEFT):
+    """Create a data cell paragraph with specified alignment."""
+    return create_cell_paragraph(text, styles['Normal'], is_header=False, alignment=alignment)
+
+
 def create_styles():
     """Create paragraph styles for the PDF - using base styles."""
     return create_base_styles()
