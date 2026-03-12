@@ -2306,7 +2306,7 @@ def generate_pdf_chunked(report_id: str, job_id: str, lite_mode: bool = False, n
         db = sync_client[db_name]
         
         # Get GridFS for storage
-        fs = gridfs.GridFS(db)
+        fs = GridFS(db)
         
         # Update MongoDB with processing status
         db.pdf_jobs.update_one(
