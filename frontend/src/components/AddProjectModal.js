@@ -652,7 +652,14 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, prefillData = null }
                   name="client"
                   data-testid="client-input"
                   value={formData.client}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const selectedClient = clients.find(c => c.name === e.target.value);
+                    setFormData({
+                      ...formData,
+                      client: e.target.value,
+                      customer_id: selectedClient?.id || ''
+                    });
+                  }}
                   required
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
                 >
