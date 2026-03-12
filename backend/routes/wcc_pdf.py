@@ -161,10 +161,9 @@ def generate_wcc_pdf_buffer(certificate: dict, org_settings: dict):
          Paragraph(f"M/s. {certificate.get('customer_name', '-')}", styles['SmallText']),
          Paragraph("<b>Customer Rep:</b>", styles['LabelText']), 
          Paragraph(str(certificate.get('customer_representative', '-')), styles['SmallText'])],
-        [Paragraph("<b>Site Location:</b>", styles['LabelText']), 
-         Paragraph(str(certificate.get('site_location', '-')), styles['SmallText']),
-         Paragraph("<b>Customer Address:</b>", styles['LabelText']), 
-         Paragraph(cust_addr_display, styles['SmallText'])],
+        [Paragraph("<b>Customer Address:</b>", styles['LabelText']), 
+         Paragraph(cust_addr_display, styles['SmallText']),
+         '', ''],  # Empty cells for merged row
     ]
     
     proj_table = Table(proj_data, colWidths=[col_width*0.65, col_width*1.35, col_width*0.65, col_width*1.35])
@@ -178,7 +177,8 @@ def generate_wcc_pdf_buffer(certificate: dict, org_settings: dict):
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
         ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ('BACKGROUND', (0, 0), (0, -1), LIGHT_GRAY),
-        ('BACKGROUND', (2, 0), (2, -1), LIGHT_GRAY),
+        ('BACKGROUND', (2, 0), (2, 1), LIGHT_GRAY),  # Only first 2 rows have 4 columns
+        ('SPAN', (1, 2), (3, 2)),  # Merge columns 1-3 in the address row
     ]))
     elements.append(proj_table)
     elements.append(Spacer(1, 6))
