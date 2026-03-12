@@ -2863,11 +2863,21 @@ async def start_pdf_generation(
         upsert=True
     )
     
-    # Start background task with part information
-    background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode, no_images, part, items_per_part)
+    # AUTOMATIC CHUNKED GENERATION for large reports
+    # This generates PDFs in chunks and merges them to stay within memory limits
+    if item_count > CHUNK_THRESHOLD and part == 0:
+        # Use chunked generation for large reports (full report only, not parts)
+        print(f"Using chunked PDF generation for {item_count} items (threshold: {CHUNK_THRESHOLD})")
+        background_tasks.add_task(generate_pdf_chunked, report_id, job_id, lite_mode, no_images)
+        generation_method = "chunked"
+    else:
+        # Use standard generation for smaller reports or specific parts
+        background_tasks.add_task(generate_pdf_sync, report_id, job_id, lite_mode, no_images, part, items_per_part)
+        generation_method = "standard"
     
     part_str = f' (Part {part} of {total_parts})' if part > 0 else ''
     mode_str = ' - no images' if no_images else (' - lite mode' if lite_mode else '')
+    method_str = f' [chunked: {(item_count + ITEMS_PER_CHUNK - 1) // ITEMS_PER_CHUNK} chunks]' if generation_method == 'chunked' else ''
     
     return {
         'job_id': job_id,
