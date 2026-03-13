@@ -27,6 +27,7 @@ const Layout = () => {
     companyHub: false,
     customerHub: false,  // Sub-section inside Company Hub
     employeeHub: false,
+    businessHub: false,  // Business Hub section
     departmentsHub: false,
     managementHub: false,
     administrationHub: false,
