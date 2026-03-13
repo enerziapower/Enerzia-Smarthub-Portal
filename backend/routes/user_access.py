@@ -89,12 +89,12 @@ AVAILABLE_MODULES = {
         "description": "Sales and customer relations",
         "sub_modules": [
             {"id": "sales_dashboard", "name": "Dashboard", "path": "/sales"},
+            {"id": "lead_management", "name": "Lead Management", "path": "/sales/lead-management"},
             {"id": "customer_management", "name": "Customer Management", "path": "/sales/customer-management"},
             {"id": "work_planner_sales", "name": "Work Planner", "path": "/sales/work-planner"},
             {"id": "enquiries", "name": "Enquiries", "path": "/sales/enquiries"},
             {"id": "quotations", "name": "Quotations", "path": "/sales/quotations"},
             {"id": "orders", "name": "Orders", "path": "/sales/orders"},
-            {"id": "order_management", "name": "Order Management", "path": "/sales/order-lifecycle"},
             {"id": "project_profit", "name": "Project Profit", "path": "/sales/project-profit"},
         ]
     },
