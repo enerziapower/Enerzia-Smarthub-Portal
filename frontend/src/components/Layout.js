@@ -364,7 +364,6 @@ const Layout = () => {
     { name: 'Project Reports', href: '/projects/project-reports', icon: FileCheck },
     { name: 'Calibration Services', href: '/projects/calibration', icon: FileCheck },
     { name: 'Service Reports', href: '/projects/customer-service', icon: ClipboardList },
-    { name: 'Dept. Requirements', href: '/projects/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/projects/reports', icon: FileBarChart },
   ];
 
@@ -377,7 +376,6 @@ const Layout = () => {
     { name: 'Retention', href: '/accounts/retention', icon: Clock },
     { name: 'Payments', href: '/accounts/payments', icon: CreditCard },
     { name: 'TDS', href: '/accounts/tds', icon: Percent },
-    { name: 'Dept. Requirements', href: '/accounts/dept-requirements', icon: ClipboardList },
     { name: 'Billing', href: '/accounts/billing', icon: DollarSign },
     { name: 'Reports', href: '/accounts/reports', icon: FileBarChart },
   ];
@@ -393,7 +391,6 @@ const Layout = () => {
     { name: 'Orders', href: '/sales/orders', icon: ShoppingCart },
     { name: 'Order Management', href: '/sales/order-lifecycle', icon: TrendingUp },
     { name: 'Project Profit', href: '/sales/project-profit', icon: TrendingUp },
-    { name: 'Dept. Requirements', href: '/sales/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/sales/reports', icon: FileBarChart },
   ];
 
@@ -405,7 +402,6 @@ const Layout = () => {
     { name: 'Purchase Orders', href: '/purchase/orders', icon: FileCheck },
     { name: 'Vendors', href: '/purchase/vendors', icon: Truck },
     { name: 'Inventory', href: '/purchase/inventory', icon: Package },
-    { name: 'Dept. Requirements', href: '/purchase/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/purchase/reports', icon: FileBarChart },
   ];
 
@@ -417,7 +413,6 @@ const Layout = () => {
     { name: 'Export Orders', href: '/exports/orders', icon: Ship },
     { name: 'Shipping Docs', href: '/exports/shipping', icon: FileText },
     { name: 'Customs Clearance', href: '/exports/customs', icon: FileCheck },
-    { name: 'Dept. Requirements', href: '/exports/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/exports/reports', icon: FileBarChart },
   ];
 
@@ -427,7 +422,6 @@ const Layout = () => {
     { name: 'Work Planner', href: '/finance/work-planner', icon: Calendar },
     { name: 'Budget Management', href: '/finance/budget', icon: Calculator },
     { name: 'Expense Approvals', href: '/finance/expense-approvals', icon: Receipt },
-    { name: 'Dept. Requirements', href: '/finance/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/finance/reports', icon: FileBarChart },
   ];
 
@@ -445,7 +439,6 @@ const Layout = () => {
     { name: 'Leave Management', href: '/hr/leave-dashboard', icon: Calendar },
     { name: 'Overtime Management', href: '/hr/overtime', icon: Clock },
     { name: 'Permission Approvals', href: '/hr/permission-approvals', icon: CheckSquare },
-    { name: 'Dept. Requirements', href: '/hr/dept-requirements', icon: ClipboardList },
   ];
 
   // Operations Department
@@ -454,7 +447,6 @@ const Layout = () => {
     { name: 'Work Planner', href: '/operations/work-planner', icon: Calendar },
     { name: 'Resource Planning', href: '/operations/resources', icon: Cog },
     { name: 'Maintenance Schedule', href: '/operations/maintenance', icon: Wrench },
-    { name: 'Dept. Requirements', href: '/operations/dept-requirements', icon: ClipboardList },
     { name: 'Reports', href: '/operations/reports', icon: FileBarChart },
   ];
 
