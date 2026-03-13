@@ -456,7 +456,19 @@ function AppRoutes() {
         </Route>
 
         {/* Business Hub Routes */}
-        <Route path="business-hub" element={<BusinessHub />} />
+        <Route path="business-hub">
+          <Route index element={<Navigate to="/business-hub/daily-standup" replace />} />
+          <Route path="daily-standup" element={<DailyStandup />} />
+          <Route path="orders" element={<OrderManagement />} />
+          <Route path="projects" element={<ProjectManagement />} />
+          <Route path="purchase" element={<PurchaseManagement />} />
+          <Route path="expenses" element={<ExpenseManagement />} />
+          <Route path="payments" element={<PaymentManagement />} />
+          <Route path="billing" element={<BillingManagement />} />
+          <Route path="finance" element={<FinanceAnalytics />} />
+          <Route path="meetings" element={<WeeklyMeetings />} />
+          <Route path="customer-portal" element={<CustomerPortal />} />
+        </Route>
 
         {/* Customer Hub Routes (Internal) */}
         <Route path="customer-hub">
