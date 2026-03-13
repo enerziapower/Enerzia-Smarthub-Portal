@@ -43,10 +43,13 @@ UPLOADS_DIR.mkdir(exist_ok=True)
 # Allowed file extensions for PO attachments
 ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.webp'}
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection - with fallback for robustness
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'enerzia_erp')
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+db = client[db_name]
+logger_startup = logging.getLogger(__name__)
+logger_startup.info(f"MongoDB connection configured: {mongo_url[:30]}... / {db_name}")
 
 # Resend Configuration for OTP emails
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
