@@ -6,9 +6,9 @@ ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
 class Settings:
-    # MongoDB
-    MONGO_URL: str = os.environ.get('MONGO_URL', '')
-    DB_NAME: str = os.environ.get('DB_NAME', 'dept_connect')
+    # MongoDB - Use sensible defaults to prevent empty string crash
+    MONGO_URL: str = os.environ.get('MONGO_URL') or 'mongodb://localhost:27017'
+    DB_NAME: str = os.environ.get('DB_NAME') or 'enerzia_erp'
     
     # JWT
     JWT_SECRET: str = os.environ.get('JWT_SECRET', 'your-super-secret-key-change-in-production')
