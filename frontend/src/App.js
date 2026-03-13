@@ -13,7 +13,7 @@ import WorkCompletion from './pages/WorkCompletion';
 import ProjectsTaskManager from './pages/projects/ProjectsTaskManager';
 import CustomerService from './pages/projects/CustomerService';
 import CustomerServiceHub from './pages/projects/CustomerServiceHub';
-import DeptRequirements from './pages/projects/DeptRequirements';
+// DeptRequirements removed
 import ProjectsPaymentRequests from './pages/projects/PaymentRequests';
 import ProjectLifecycle from './pages/projects/ProjectLifecycle';
 // Project Reports
