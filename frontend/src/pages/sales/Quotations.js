@@ -863,43 +863,6 @@ const Quotations = () => {
         )}
       </div>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-slate-200">
-        <div className="flex gap-1">
-          <button
-            onClick={() => setActiveTab('erp')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'erp'
-                ? 'border-slate-900 text-slate-900'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <FileText size={16} />
-              ERP Quotations
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('zoho')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'zoho'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Cloud size={16} />
-              Zoho Books Quotations
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'zoho' ? (
-        <ZohoQuotationsTab />
-      ) : (
-        <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((card, idx) => (
