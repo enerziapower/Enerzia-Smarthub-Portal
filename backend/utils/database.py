@@ -10,100 +10,153 @@ logger = logging.getLogger(__name__)
 async def create_indexes(db):
     """Create database indexes for improved query performance"""
     try:
-        # Projects collection indexes
+        # ==================== PROJECTS ====================
         await db.projects.create_index("id", unique=True)
         await db.projects.create_index("pid_no")
         await db.projects.create_index("status")
         await db.projects.create_index("category")
         await db.projects.create_index("department")
         await db.projects.create_index("created_at")
+        await db.projects.create_index("customer_id")  # NEW: For customer lookup
         await db.projects.create_index([("client", 1), ("status", 1)])
+        await db.projects.create_index([("status", 1), ("created_at", -1)])  # NEW: For filtered lists
         
-        # Users collection indexes
+        # ==================== USERS ====================
         await db.users.create_index("id", unique=True)
         await db.users.create_index("email", unique=True)
         await db.users.create_index("department")
         await db.users.create_index("role")
+        await db.users.create_index("is_active")  # NEW: For active user queries
         
-        # AMC collection indexes
+        # ==================== REFRESH TOKENS (NEW) ====================
+        await db.refresh_tokens.create_index("token", unique=True)
+        await db.refresh_tokens.create_index("user_id")
+        await db.refresh_tokens.create_index(
+            "expires_at",
+            expireAfterSeconds=0  # TTL index - auto-delete when expires_at is reached
+        )
+        
+        # ==================== AMC ====================
         await db.amcs.create_index("id", unique=True)
         await db.amcs.create_index("project_id")
         await db.amcs.create_index("status")
         await db.amcs.create_index("created_at")
         await db.amcs.create_index([("contract_details.end_date", 1)])
+        await db.amcs.create_index([("status", 1), ("contract_details.end_date", 1)])  # NEW
         
-        # Test reports collection indexes
+        # ==================== TEST REPORTS ====================
         await db.test_reports.create_index("id", unique=True)
         await db.test_reports.create_index("equipment_type")
+        await db.test_reports.create_index("report_type")  # NEW: For report type filtering
         await db.test_reports.create_index("report_no")
         await db.test_reports.create_index("customer_name")
+        await db.test_reports.create_index("project_id")  # NEW: For project-based queries
         await db.test_reports.create_index("created_at")
         await db.test_reports.create_index([("equipment_type", 1), ("created_at", -1)])
+        await db.test_reports.create_index([("report_type", 1), ("created_at", -1)])  # NEW
         
-        # Payment requests indexes
+        # ==================== IR THERMOGRAPHY ====================
+        await db.ir_thermography_images.create_index("report_id")  # NEW: For image lookup
+        await db.ir_thermography_images.create_index("item_index")  # NEW
+        
+        # ==================== PDF JOBS (NEW) ====================
+        await db.pdf_jobs.create_index("job_id", unique=True)
+        await db.pdf_jobs.create_index("status")
+        await db.pdf_jobs.create_index("created_at")
+        await db.pdf_jobs.create_index(
+            "created_at",
+            expireAfterSeconds=86400  # Auto-delete after 24 hours
+        )
+        
+        # ==================== PAYMENT REQUESTS ====================
         await db.payment_requests.create_index("id", unique=True)
         await db.payment_requests.create_index("project_id")
         await db.payment_requests.create_index("status")
         await db.payment_requests.create_index("created_at")
         await db.payment_requests.create_index([("status", 1), ("created_at", -1)])
         
-        # Work completion certificates indexes
+        # ==================== WORK COMPLETION CERTIFICATES ====================
         await db.work_completion_certificates.create_index("id", unique=True)
         await db.work_completion_certificates.create_index("project_id")
         await db.work_completion_certificates.create_index("document_no")
+        await db.work_completion_certificates.create_index("customer_name")  # NEW
+        await db.work_completion_certificates.create_index("created_at")  # NEW
         
-        # Project requirements indexes
-        await db.project_requirements.create_index("id", unique=True)
-        await db.project_requirements.create_index("project_id")
-        await db.project_requirements.create_index("type")
-        await db.project_requirements.create_index("status")
-        await db.project_requirements.create_index([("project_id", 1), ("status", 1)])
-        
-        # Weekly meetings indexes
+        # ==================== WEEKLY MEETINGS ====================
         await db.weekly_meetings.create_index("id", unique=True)
         await db.weekly_meetings.create_index("department")
         await db.weekly_meetings.create_index("meeting_date")
         await db.weekly_meetings.create_index([("department", 1), ("meeting_date", -1)])
         
-        # Department team members indexes
+        # ==================== DEPARTMENT TEAM ====================
         await db.department_team.create_index("id", unique=True)
         await db.department_team.create_index("department")
         await db.department_team.create_index("email")
         
-        # Scheduled inspections indexes
+        # ==================== SCHEDULED INSPECTIONS ====================
         await db.scheduled_inspections.create_index("id", unique=True)
         await db.scheduled_inspections.create_index("equipment_id")
         await db.scheduled_inspections.create_index("status")
         await db.scheduled_inspections.create_index("next_due_date")
         await db.scheduled_inspections.create_index([("status", 1), ("next_due_date", 1)])
         
-        # Password resets indexes (TTL index for auto-cleanup)
+        # ==================== PASSWORD RESETS ====================
         await db.password_resets.create_index("email")
         await db.password_resets.create_index(
             "created_at", 
             expireAfterSeconds=3600  # Auto-delete after 1 hour
         )
         
-        # Notifications indexes
+        # ==================== NOTIFICATIONS ====================
         await db.notifications.create_index("id", unique=True)
         await db.notifications.create_index("user_id")
+        await db.notifications.create_index("department")  # NEW
         await db.notifications.create_index("is_read")
+        await db.notifications.create_index("created_at")  # NEW
         await db.notifications.create_index([("user_id", 1), ("is_read", 1), ("created_at", -1)])
+        await db.notifications.create_index([("department", 1), ("is_read", 1), ("created_at", -1)])  # NEW
         
-        # Customers indexes
+        # ==================== CLIENTS (Domestic/Export Customers) ====================
+        await db.clients.create_index("id", unique=True)
+        await db.clients.create_index("name")
+        await db.clients.create_index("customer_type")  # NEW: domestic/export
+        await db.clients.create_index("is_active")  # NEW
+        await db.clients.create_index([("customer_type", 1), ("is_active", 1)])  # NEW
+        
+        # ==================== CUSTOMERS ====================
         await db.customers.create_index("id", unique=True)
         await db.customers.create_index("name")
         await db.customers.create_index("email")
         
-        # Vendors indexes
+        # ==================== VENDORS ====================
         await db.vendors.create_index("id", unique=True)
         await db.vendors.create_index("name")
+        await db.vendors.create_index("is_active")  # NEW
         
-        logger.info("Database indexes created successfully")
+        # ==================== QUOTATIONS ====================
+        await db.quotations.create_index("id", unique=True)
+        await db.quotations.create_index("quotation_no")  # NEW
+        await db.quotations.create_index("status")  # NEW
+        await db.quotations.create_index("created_at")  # NEW
+        await db.quotations.create_index([("status", 1), ("created_at", -1)])  # NEW
+        
+        # ==================== ENQUIRIES ====================
+        await db.enquiries.create_index("id", unique=True)
+        await db.enquiries.create_index("enquiry_no")  # NEW
+        await db.enquiries.create_index("status")  # NEW
+        await db.enquiries.create_index("created_at")  # NEW
+        
+        # ==================== LEADS ====================
+        await db.leads.create_index("id", unique=True)
+        await db.leads.create_index("status")  # NEW
+        await db.leads.create_index("assigned_to")  # NEW
+        await db.leads.create_index("created_at")  # NEW
+        
+        logger.info("✓ Database indexes created successfully")
         return True
         
     except Exception as e:
-        logger.error(f"Error creating database indexes: {e}")
+        logger.error(f"✗ Error creating database indexes: {e}")
         return False
 
 
@@ -112,9 +165,9 @@ async def get_collection_stats(db):
     collections = [
         "projects", "users", "amcs", "test_reports", 
         "payment_requests", "work_completion_certificates",
-        "project_requirements", "weekly_meetings", 
-        "department_team", "scheduled_inspections",
-        "customers", "vendors", "notifications"
+        "weekly_meetings", "department_team", "scheduled_inspections",
+        "customers", "vendors", "notifications", "clients",
+        "quotations", "enquiries", "leads", "refresh_tokens", "pdf_jobs"
     ]
     
     stats = {}
