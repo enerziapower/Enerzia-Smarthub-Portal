@@ -883,25 +883,37 @@ def get_user_departments(user: dict) -> List[str]:
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
-    """Login with email and password"""
+    """Login with email and password - returns access token and refresh token"""
     user = await db.users.find_one({"email": credentials.email.lower()}, {"_id": 0})
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     if not user.get("is_active", True):
-        raise HTTPException(status_code=401, detail="Account is disabled")
+        raise HTTPException(status_code=401, detail="Account is disabled. Please contact your administrator.")
     
     if not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    # Create token with department info
-    token = create_access_token({
+    # Create access token (short-lived: 1 hour)
+    access_token = create_access_token({
         "user_id": user["id"], 
         "email": user["email"], 
         "role": user["role"],
         "department": user.get("department"),
         "can_view_departments": user.get("can_view_departments", [])
+    })
+    
+    # Create refresh token (long-lived: 7 days)
+    refresh_token = str(uuid.uuid4())
+    refresh_expires = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    # Store refresh token in database
+    await db.refresh_tokens.insert_one({
+        "token": refresh_token,
+        "user_id": user["id"],
+        "created_at": datetime.now(timezone.utc),
+        "expires_at": refresh_expires
     })
     
     # Get user permissions
@@ -926,7 +938,63 @@ async def login(credentials: UserLogin):
         "permissions": permissions_data
     }
     
-    return {"token": token, "user": user_response}
+    return {
+        "token": access_token,
+        "refresh_token": refresh_token,
+        "token_expires_in": 3600,  # 1 hour in seconds
+        "user": user_response
+    }
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+@api_router.post("/auth/refresh")
+async def refresh_token(request: RefreshTokenRequest):
+    """Get a new access token using a refresh token"""
+    # Find refresh token
+    token_doc = await db.refresh_tokens.find_one({"token": request.refresh_token})
+    
+    if not token_doc:
+        raise HTTPException(status_code=401, detail="Invalid refresh token. Please log in again.")
+    
+    # Check if expired (although TTL index should handle this)
+    if token_doc.get("expires_at") and token_doc["expires_at"] < datetime.now(timezone.utc):
+        await db.refresh_tokens.delete_one({"token": request.refresh_token})
+        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
+    
+    # Get user
+    user = await db.users.find_one({"id": token_doc["user_id"]}, {"_id": 0})
+    if not user:
+        await db.refresh_tokens.delete_one({"token": request.refresh_token})
+        raise HTTPException(status_code=401, detail="User not found. Please log in again.")
+    
+    if not user.get("is_active", True):
+        await db.refresh_tokens.delete_one({"token": request.refresh_token})
+        raise HTTPException(status_code=401, detail="Account is disabled.")
+    
+    # Create new access token
+    new_access_token = create_access_token({
+        "user_id": user["id"], 
+        "email": user["email"], 
+        "role": user["role"],
+        "department": user.get("department"),
+        "can_view_departments": user.get("can_view_departments", [])
+    })
+    
+    return {
+        "token": new_access_token,
+        "token_expires_in": 3600
+    }
+
+
+@api_router.post("/auth/logout")
+async def logout(current_user: dict = Depends(require_auth)):
+    """Logout and invalidate refresh tokens for the user"""
+    # Delete all refresh tokens for this user
+    await db.refresh_tokens.delete_many({"user_id": current_user["user_id"]})
+    return {"message": "Logged out successfully"}
 
 
 @api_router.post("/auth/register")
