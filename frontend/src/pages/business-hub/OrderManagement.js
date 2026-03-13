@@ -53,14 +53,25 @@ const OrderManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/order-lifecycle`, {
+      
+      // Fetch orders from correct endpoint
+      const ordersResponse = await fetch(`${API_URL}/api/order-lifecycle/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.orders || []);
-        setStats(data.stats || null);
+      // Fetch dashboard stats
+      const statsResponse = await fetch(`${API_URL}/api/order-lifecycle/dashboard/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        setOrders(ordersData || []);
+      }
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData || null);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
