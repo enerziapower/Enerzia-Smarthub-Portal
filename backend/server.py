@@ -960,9 +960,18 @@ async def refresh_token(request: RefreshTokenRequest):
         raise HTTPException(status_code=401, detail="Invalid refresh token. Please log in again.")
     
     # Check if expired (although TTL index should handle this)
-    if token_doc.get("expires_at") and token_doc["expires_at"] < datetime.now(timezone.utc):
-        await db.refresh_tokens.delete_one({"token": request.refresh_token})
-        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
+    expires_at = token_doc.get("expires_at")
+    if expires_at:
+        # Handle both datetime objects and ISO strings
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        elif expires_at.tzinfo is None:
+            # Make naive datetime aware (assume UTC)
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        if expires_at < datetime.now(timezone.utc):
+            await db.refresh_tokens.delete_one({"token": request.refresh_token})
+            raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
     
     # Get user
     user = await db.users.find_one({"id": token_doc["user_id"]}, {"_id": 0})
