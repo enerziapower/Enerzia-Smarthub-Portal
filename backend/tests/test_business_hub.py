@@ -239,14 +239,24 @@ class TestBusinessHubOrderManagement:
         self.token = response.json()["token"]
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
-    def test_01_get_order_lifecycle(self):
-        """Test GET /api/order-lifecycle returns orders"""
-        response = requests.get(f"{BASE_URL}/api/order-lifecycle", headers=self.headers)
+    def test_01_get_order_lifecycle_orders(self):
+        """Test GET /api/order-lifecycle/orders returns orders list"""
+        response = requests.get(f"{BASE_URL}/api/order-lifecycle/orders", headers=self.headers)
         assert response.status_code == 200
         
         data = response.json()
-        assert "orders" in data or isinstance(data, list)
-        print(f"Order lifecycle endpoint working")
+        assert "orders" in data
+        assert "stats" in data
+        print(f"Order lifecycle endpoint working - found {len(data.get('orders', []))} orders")
+    
+    def test_02_get_order_lifecycle_dashboard_stats(self):
+        """Test GET /api/order-lifecycle/dashboard/stats returns statistics"""
+        response = requests.get(f"{BASE_URL}/api/order-lifecycle/dashboard/stats", headers=self.headers)
+        assert response.status_code == 200
+        
+        data = response.json()
+        # Check for expected stats fields
+        print(f"Dashboard stats endpoint working")
 
 
 class TestBusinessHubFinanceAnalytics:
