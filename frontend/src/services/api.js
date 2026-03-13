@@ -105,6 +105,9 @@ export const authAPI = {
   me: () => api.get('/auth/me'),
   check: () => api.get('/auth/check'),
   changePassword: (data) => api.put('/auth/change-password', data),
+  // Refresh token
+  refreshToken: (data) => api.post('/auth/refresh', data),
+  logout: () => api.post('/auth/logout'),
   // Forgot Password / OTP
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   verifyOTP: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
