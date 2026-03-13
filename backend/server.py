@@ -3683,7 +3683,7 @@ from routes.project_schedule_pdf import router as project_schedule_pdf_router
 from routes.project_schedules import router as project_schedules_router
 from routes.sales import router as sales_router
 from routes.project_profit import router as project_profit_router
-from routes.zoho_integration import router as zoho_router
+# Zoho integration removed - not in use
 from routes.customer_management import router as customer_management_router
 from routes.order_lifecycle import router as order_lifecycle_router
 from routes.purchase_module import router as purchase_module_router
@@ -3731,7 +3731,7 @@ app.include_router(project_schedule_pdf_router, prefix="/api", tags=["Project-Sc
 app.include_router(project_schedules_router, prefix="/api/project-schedules", tags=["Project-Schedules"])
 app.include_router(sales_router, tags=["Sales"])
 app.include_router(project_profit_router, prefix="/api", tags=["Project-Profit"])
-app.include_router(zoho_router, prefix="/api", tags=["Zoho-Integration"])
+# Zoho integration router removed
 app.include_router(customer_management_router, prefix="/api", tags=["Customer-Management"])
 app.include_router(order_lifecycle_router, tags=["Order-Lifecycle"])
 app.include_router(purchase_module_router, tags=["Purchase-Module"])
