@@ -1716,8 +1716,6 @@ const Quotations = () => {
           </div>
         </div>
       )}
-        </>
-      )}
     </div>
   );
 };
