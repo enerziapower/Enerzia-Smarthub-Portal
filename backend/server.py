@@ -3776,20 +3776,38 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_db_client():
     """Initialize database indexes and cache on startup"""
+    logger.info("=" * 50)
+    logger.info("SMARTHUB ENERZIA BACKEND STARTING")
+    logger.info(f"MongoDB URL: {mongo_url[:40]}...")
+    logger.info(f"Database: {db_name}")
+    logger.info("=" * 50)
+    
+    # Test MongoDB connection first
+    try:
+        await db.command('ping')
+        logger.info("✓ MongoDB connection successful")
+    except Exception as e:
+        logger.error(f"✗ MongoDB connection FAILED: {e}")
+        # Don't crash - let health check report unhealthy status
+    
     try:
         from utils.database import create_indexes
         await create_indexes(db)
-        logger.info("Database indexes initialized successfully")
+        logger.info("✓ Database indexes initialized successfully")
     except Exception as e:
-        logger.error(f"Error initializing database indexes: {e}")
+        logger.error(f"✗ Error initializing database indexes: {e}")
     
     # Initialize cache
     try:
         from utils.cache import cache
         await cache.initialize()
-        logger.info(f"Cache initialized: {cache.get_stats()}")
+        logger.info(f"✓ Cache initialized: {cache.get_stats()}")
     except Exception as e:
-        logger.error(f"Error initializing cache: {e}")
+        logger.error(f"✗ Error initializing cache: {e}")
+    
+    logger.info("=" * 50)
+    logger.info("STARTUP COMPLETE - Server ready for requests")
+    logger.info("=" * 50)
 
 
 @app.on_event("shutdown")
