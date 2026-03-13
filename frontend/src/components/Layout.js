@@ -124,6 +124,11 @@ const Layout = () => {
       newExpanded.employeeHub = true;
     }
     
+    // Business Hub
+    if (path.startsWith('/business-hub')) {
+      newExpanded.businessHub = true;
+    }
+    
     // Departments Hub
     if (path === '/' || path.startsWith('/projects') || path.startsWith('/accounts') ||
         path.startsWith('/sales') || path.startsWith('/purchase') || path.startsWith('/exports') ||
