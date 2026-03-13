@@ -712,6 +712,7 @@ const Layout = () => {
             {expandedSections.businessHub && (sidebarOpen || isMobile) && (
               <div className="mt-2 space-y-1 ml-2">
                 {/* Daily Stand-up (SOM) */}
+                {(isSuperAdmin || hasSubModuleAccess('daily_standup')) && (
                 <Link
                   to="/business-hub/daily-standup"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -723,8 +724,10 @@ const Layout = () => {
                   <CalendarDays className="w-4 h-4" />
                   <span>Daily Stand-up (SOM)</span>
                 </Link>
+                )}
 
                 {/* Order Management */}
+                {(isSuperAdmin || hasSubModuleAccess('order_management_biz')) && (
                 <Link
                   to="/business-hub/orders"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -736,8 +739,10 @@ const Layout = () => {
                   <ShoppingCart className="w-4 h-4" />
                   <span>Order Management</span>
                 </Link>
+                )}
 
                 {/* Project Management */}
+                {(isSuperAdmin || hasSubModuleAccess('project_management_biz')) && (
                 <Link
                   to="/business-hub/projects"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -749,8 +754,10 @@ const Layout = () => {
                   <FolderKanban className="w-4 h-4" />
                   <span>Project Management</span>
                 </Link>
+                )}
 
                 {/* Purchase Management */}
+                {(isSuperAdmin || hasSubModuleAccess('purchase_management_biz')) && (
                 <Link
                   to="/business-hub/purchase"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -762,8 +769,10 @@ const Layout = () => {
                   <Package className="w-4 h-4" />
                   <span>Purchase Management</span>
                 </Link>
+                )}
 
                 {/* Expense Management */}
+                {(isSuperAdmin || hasSubModuleAccess('expense_management_biz')) && (
                 <Link
                   to="/business-hub/expenses"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -775,8 +784,10 @@ const Layout = () => {
                   <Receipt className="w-4 h-4" />
                   <span>Expense Management</span>
                 </Link>
+                )}
 
                 {/* Payment Management */}
+                {(isSuperAdmin || hasSubModuleAccess('payment_management_biz')) && (
                 <Link
                   to="/business-hub/payments"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -788,8 +799,10 @@ const Layout = () => {
                   <CreditCard className="w-4 h-4" />
                   <span>Payment Management</span>
                 </Link>
+                )}
 
                 {/* Billing Management */}
+                {(isSuperAdmin || hasSubModuleAccess('billing_management_biz')) && (
                 <Link
                   to="/business-hub/billing"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -801,8 +814,10 @@ const Layout = () => {
                   <FileText className="w-4 h-4" />
                   <span>Billing Management</span>
                 </Link>
+                )}
 
                 {/* Finance Analytics */}
+                {(isSuperAdmin || hasSubModuleAccess('finance_analytics_biz')) && (
                 <Link
                   to="/business-hub/finance"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -814,8 +829,10 @@ const Layout = () => {
                   <CircleDollarSign className="w-4 h-4" />
                   <span>Finance Analytics</span>
                 </Link>
+                )}
 
                 {/* Weekly Meetings */}
+                {(isSuperAdmin || hasSubModuleAccess('weekly_meetings_biz')) && (
                 <Link
                   to="/business-hub/meetings"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -827,8 +844,10 @@ const Layout = () => {
                   <Calendar className="w-4 h-4" />
                   <span>Weekly Meetings</span>
                 </Link>
+                )}
 
                 {/* Customer Portal */}
+                {(isSuperAdmin || hasSubModuleAccess('customer_portal_biz')) && (
                 <Link
                   to="/business-hub/customer-portal"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -840,6 +859,7 @@ const Layout = () => {
                   <Globe className="w-4 h-4" />
                   <span>Customer Portal</span>
                 </Link>
+                )}
               </div>
             )}
           </div>
