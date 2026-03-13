@@ -246,8 +246,8 @@ class TestBusinessHubOrderManagement:
         
         data = response.json()
         assert "orders" in data
-        assert "stats" in data
-        print(f"Order lifecycle endpoint working - found {len(data.get('orders', []))} orders")
+        assert "total" in data
+        print(f"Order lifecycle endpoint working - found {data.get('total', 0)} orders")
     
     def test_02_get_order_lifecycle_dashboard_stats(self):
         """Test GET /api/order-lifecycle/dashboard/stats returns statistics"""
