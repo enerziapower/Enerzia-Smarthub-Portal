@@ -3,56 +3,51 @@
 ## Latest Updates
 
 ### Business Hub Implementation ✅ COMPLETE (Mar 13, 2026)
-**Location:** Sidebar → Business Hub (new section)
+**Location:** Sidebar → Business Hub (expandable section with sub-menus)
 
-**MAJOR FEATURE:** Created a new centralized "Business Hub" that consolidates order flow, project tracking, payments, expenses, and daily task management into a single interface.
+**MAJOR FEATURE:** Created a new centralized "Business Hub" with expandable sidebar sub-menus (NOT tabs) - each module is a separate page route.
 
-| Tab | Description |
-|-----|-------------|
+**Sidebar Structure:**
+```
+Business Hub (expandable)
+├── Daily Stand-up (SOM)     → /business-hub/daily-standup
+├── Order Management         → /business-hub/orders
+├── Project Management       → /business-hub/projects
+├── Purchase Management      → /business-hub/purchase
+├── Expense Management       → /business-hub/expenses
+├── Payment Management       → /business-hub/payments
+├── Billing Management       → /business-hub/billing
+├── Finance Analytics        → /business-hub/finance
+├── Weekly Meetings          → /business-hub/meetings
+└── Customer Portal          → /business-hub/customer-portal
+```
+
+| Sub-Menu | Description |
+|----------|-------------|
 | **Daily Stand-up (SOM)** | Digital whiteboard with 8 department columns for daily task management |
-| **Order Management** | Track orders from sales to completion with budget/profit tracking |
-| **Project Management** | Project execution, progress tracking, resource management |
+| **Order Management** | Track orders from sales to completion |
+| **Project Management** | Project execution, progress tracking |
 | **Purchase Management** | Procurement, PO, and GRN management |
 | **Expense Management** | Expense tracking and approvals |
-| **Payment Management** | Central view for all payment request workflows |
-| **Billing Management** | Weekly billing schedules and invoice tracking |
-| **Finance Analytics** | P&L, Savings, Cash Flow overview with category breakdown |
-| **Weekly Meetings** | Department meeting minutes and action items |
-| **Customer Portal** | Placeholder for future customer-facing portal |
-
-**Daily Stand-up (SOM) Features:**
-- Column-based view by department (Purchase, Sales, Finance, Projects, Export, Accounts, HR, Operations)
-- Date navigation with calendar picker
-- Add/Edit/Complete tasks per department
-- Progress tracking per department
-- Printable view
+| **Payment Management** | Central view for all payment requests |
+| **Billing Management** | Weekly billing schedules and tracking |
+| **Finance Analytics** | P&L, Savings, Cash Flow overview |
+| **Weekly Meetings** | Department meeting minutes |
+| **Customer Portal** | Placeholder for future feature |
 
 **Backend API Endpoints:**
-- `GET /api/som-tasks` - Get tasks with optional filters (date, department, status)
+- `GET /api/som-tasks` - Get tasks with optional filters
 - `POST /api/som-tasks` - Create new task
 - `PUT /api/som-tasks/{id}` - Update task
 - `DELETE /api/som-tasks/{id}` - Delete task
-- `GET /api/som-tasks/stats/summary` - Get task statistics
 
-**Files Created:**
-- `/app/frontend/src/pages/business-hub/index.js` - Main hub with tab navigation
-- `/app/frontend/src/pages/business-hub/DailyStandup.js` - SOM whiteboard
-- `/app/frontend/src/pages/business-hub/OrderManagement.js` - Order tracking
-- `/app/frontend/src/pages/business-hub/ProjectManagement.js` - Project tracking
-- `/app/frontend/src/pages/business-hub/PurchaseManagement.js` - Procurement
-- `/app/frontend/src/pages/business-hub/ExpenseManagement.js` - Expenses
-- `/app/frontend/src/pages/business-hub/PaymentManagement.js` - Payments
-- `/app/frontend/src/pages/business-hub/BillingManagement.js` - Billing
-- `/app/frontend/src/pages/business-hub/FinanceAnalytics.js` - P&L dashboard
-- `/app/frontend/src/pages/business-hub/WeeklyMeetings.js` - Meeting minutes
-- `/app/frontend/src/pages/business-hub/CustomerPortal.js` - Placeholder
+**Files Created/Modified:**
+- `/app/frontend/src/pages/business-hub/*.js` - 10 page components
+- `/app/frontend/src/components/Layout.js` - Expandable Business Hub sidebar
+- `/app/frontend/src/App.js` - Individual routes for each sub-menu
 - `/app/backend/routes/som_tasks.py` - Backend CRUD API
 
-**Access Control:**
-- Visible to: super_admin, ceo_owner, admin roles
-- Configurable via User Access Control for other roles
-
-**Test Results:** 100% success rate (13/13 backend tests, all frontend features working) - See `/app/test_reports/iteration_90.json`
+**Test Results:** All pages load correctly, navigation works, SOM API functional
 
 ---
 
