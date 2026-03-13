@@ -57,6 +57,9 @@ import MyReports from './pages/employee/MyReports';
 import CentralWeeklyMeetings from './pages/company-hub/CentralWeeklyMeetings';
 import CentralPaymentRequests from './pages/company-hub/CentralPaymentRequests';
 
+// Business Hub Pages
+import BusinessHub from './pages/business-hub';
+
 // Customer Hub Pages (Internal)
 import CustomerDirectory from './pages/customer-hub/CustomerDirectory';
 import CustomerProfile from './pages/customer-hub/CustomerProfile';
@@ -442,6 +445,9 @@ function AppRoutes() {
           <Route path="payment-requests" element={<Payments />} />
           <Route path="reports" element={<WeeklyMeeting />} />
         </Route>
+
+        {/* Business Hub Routes */}
+        <Route path="business-hub" element={<BusinessHub />} />
 
         {/* Customer Hub Routes (Internal) */}
         <Route path="customer-hub">
