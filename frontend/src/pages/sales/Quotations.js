@@ -3,18 +3,16 @@ import {
   Plus, Search, Edit2, Trash2, Eye, Download, X, RefreshCw, FileText,
   ChevronDown, Filter, ArrowRight, CheckCircle, Link2, AlertCircle,
   Calendar, Building2, DollarSign, Phone, Mail, User, MapPin, FileSearch,
-  Truck, Globe, Cloud
+  Truck, Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
-import ZohoQuotationsTab from './ZohoQuotationsTab';
 
 const API_URL = window.location.origin;
 
 const Quotations = () => {
   const [searchParams] = useSearchParams();
   const enquiryId = searchParams.get('enquiry');
-  const [activeTab, setActiveTab] = useState('erp'); // 'erp' or 'zoho'
   
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
