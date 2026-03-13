@@ -78,7 +78,7 @@ import Payments from './pages/Payments';
 import TDS from './pages/TDS';
 import TaskManager from './pages/TaskManager';
 import AccountsTaskManager from './pages/accounts/AccountsTaskManager';
-import AccountsDeptRequirements from './pages/accounts/DeptRequirements';
+// AccountsDeptRequirements removed
 import AccountsPaymentRequests from './pages/accounts/PaymentRequests';
 import AccountsWorkPlanner from './pages/accounts/WorkPlanner';
 import ExpenseManagement from './pages/accounts/ExpenseManagement';
@@ -91,7 +91,7 @@ import Quotations from './pages/sales/Quotations';
 import Orders from './pages/sales/Orders';
 
 import SalesTaskManager from './pages/sales/SalesTaskManager';
-import SalesDeptRequirements from './pages/sales/DeptRequirements';
+// SalesDeptRequirements removed
 import SalesPaymentRequests from './pages/sales/PaymentRequests';
 import SalesWorkPlanner from './pages/sales/WorkPlanner';
 import ProjectProfitDashboard from './pages/sales/ProjectProfitDashboard';
@@ -110,7 +110,7 @@ import PurchaseModule from './pages/purchase/PurchaseModule';
 import Vendors from './pages/purchase/Vendors';
 import Inventory from './pages/purchase/Inventory';
 import PurchaseTaskManager from './pages/purchase/PurchaseTaskManager';
-import PurchaseDeptRequirements from './pages/purchase/DeptRequirements';
+// PurchaseDeptRequirements removed
 import PurchasePaymentRequests from './pages/purchase/PaymentRequests';
 import PurchaseWorkPlanner from './pages/purchase/WorkPlanner';
 
@@ -121,7 +121,7 @@ import ShippingDocuments from './pages/exports/ShippingDocuments';
 import CustomsClearance from './pages/exports/CustomsClearance';
 import ExportCustomers from './pages/exports/ExportCustomers';
 import ExportsTaskManager from './pages/exports/ExportsTaskManager';
-import ExportsDeptRequirements from './pages/exports/DeptRequirements';
+// ExportsDeptRequirements removed
 import ExportsPaymentRequests from './pages/exports/PaymentRequests';
 import ExportsWorkPlanner from './pages/exports/WorkPlanner';
 
@@ -129,7 +129,7 @@ import ExportsWorkPlanner from './pages/exports/WorkPlanner';
 import FinanceDashboard from './pages/finance/FinanceDashboard';
 import BudgetManagement from './pages/finance/BudgetManagement';
 import FinanceTaskManager from './pages/finance/FinanceTaskManager';
-import FinanceDeptRequirements from './pages/finance/DeptRequirements';
+// FinanceDeptRequirements removed
 import PaymentRequests from './pages/finance/PaymentRequests';
 import FinanceWorkPlanner from './pages/finance/WorkPlanner';
 import ExpenseApprovals from './pages/finance/ExpenseApprovals';
@@ -145,7 +145,7 @@ import PayrollProcessing from './pages/hr/PayrollProcessing';
 import PayrollDashboard from './pages/hr/PayrollDashboard';
 import StatutoryReports from './pages/hr/StatutoryReports';
 import HRTaskManager from './pages/hr/HRTaskManager';
-import HRDeptRequirements from './pages/hr/DeptRequirements';
+// HRDeptRequirements removed
 import HRPaymentRequests from './pages/hr/PaymentRequests';
 import HRWorkPlanner from './pages/hr/WorkPlanner';
 import LeaveApprovals from './pages/hr/LeaveApprovals';
@@ -162,7 +162,7 @@ import ResourcePlanning from './pages/operations/ResourcePlanning';
 import MaintenanceSchedule from './pages/operations/MaintenanceSchedule';
 import OperationsTaskManager from './pages/operations/OperationsTaskManager';
 import OperationsPaymentRequests from './pages/operations/PaymentRequests';
-import OperationsDeptRequirements from './pages/operations/DeptRequirements';
+// OperationsDeptRequirements removed
 import OperationsWorkPlanner from './pages/operations/WorkPlanner';
 
 // Shared Pages
@@ -249,7 +249,7 @@ function AppRoutes() {
           <Route path="customer-service/all" element={<CustomerService />} />
           <Route path="customer-service/category/:categoryId" element={<CustomerService />} />
           <Route path="payment-requests" element={<ProjectsPaymentRequests />} />
-          <Route path="dept-requirements" element={<DeptRequirements />} />
+          <!-- DeptRequirements route removed -->
           <Route path="task-manager" element={<ProjectsTaskManager />} />
           <Route path="billing" element={<Billing />} />
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
@@ -305,7 +305,7 @@ function AppRoutes() {
           <Route path="tds" element={<TDS />} />
           <Route path="tasks" element={<TaskManager />} />
           <Route path="payment-requests" element={<AccountsPaymentRequests />} />
-          <Route path="dept-requirements" element={<AccountsDeptRequirements />} />
+          <!-- AccountsDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="billing" element={<Billing />} />
           <Route path="reports" element={<Reports />} />
@@ -320,7 +320,7 @@ function AppRoutes() {
           <Route path="quotations" element={<Quotations />} />
           <Route path="orders" element={<Orders />} />
           <Route path="payment-requests" element={<SalesPaymentRequests />} />
-          <Route path="dept-requirements" element={<SalesDeptRequirements />} />
+          <!-- SalesDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="project-profit" element={<ProjectProfitDashboard />} />
@@ -345,7 +345,7 @@ function AppRoutes() {
           <Route path="vendors" element={<Vendors />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="payment-requests" element={<PurchasePaymentRequests />} />
-          <Route path="dept-requirements" element={<PurchaseDeptRequirements />} />
+          <!-- PurchaseDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
@@ -360,7 +360,7 @@ function AppRoutes() {
           <Route path="shipping" element={<ShippingDocuments />} />
           <Route path="customs" element={<CustomsClearance />} />
           <Route path="payment-requests" element={<ExportsPaymentRequests />} />
-          <Route path="dept-requirements" element={<ExportsDeptRequirements />} />
+          <!-- ExportsDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
@@ -372,7 +372,7 @@ function AppRoutes() {
           <Route path="work-planner" element={<FinanceWorkPlanner />} />
           <Route path="budget" element={<BudgetManagement />} />
           <Route path="payment-requests" element={<PaymentRequests />} />
-          <Route path="dept-requirements" element={<FinanceDeptRequirements />} />
+          <!-- FinanceDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="expense-approvals" element={<ExpenseApprovals />} />
@@ -399,7 +399,7 @@ function AppRoutes() {
           <Route path="leave-dashboard" element={<LeaveDashboard />} />
           <Route path="overtime" element={<OvertimeManagement />} />
           <Route path="payment-requests" element={<HRPaymentRequests />} />
-          <Route path="dept-requirements" element={<HRDeptRequirements />} />
+          <!-- HRDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="leave-approvals" element={<LeaveApprovals />} />
@@ -414,7 +414,7 @@ function AppRoutes() {
           <Route path="resources" element={<ResourcePlanning />} />
           <Route path="maintenance" element={<MaintenanceSchedule />} />
           <Route path="payment-requests" element={<OperationsPaymentRequests />} />
-          <Route path="dept-requirements" element={<OperationsDeptRequirements />} />
+          <!-- OperationsDeptRequirements route removed -->
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
