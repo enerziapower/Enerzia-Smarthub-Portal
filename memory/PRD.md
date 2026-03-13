@@ -3002,3 +3002,63 @@ When a Zoho quotation is converted to an ERP order:
 ---
 *Last Updated: February 24, 2026*
 *Status: ZOHO QUOTATIONS TWO-WAY SYNC IMPLEMENTED ✅*
+
+---
+
+## Updates - March 13, 2026
+
+### 🗑️ CLEANUP COMPLETED
+
+#### Zoho Books Integration - REMOVED
+- `/app/backend/routes/zoho_integration.py` (1,323 lines)
+- `/app/frontend/src/pages/settings/ZohoIntegration.js`
+- `/app/frontend/src/pages/sales/ZohoQuotationsTab.js`
+- Zoho tab from Quotations page
+- All related routes and menu items
+
+#### Dept. Requirements - REMOVED
+- 8 DeptRequirements pages (all departments)
+- Sidebar menu items
+- Backend API endpoints
+- API service functions
+- **Note:** Operations and Customer Portal kept for future development
+
+**Total lines removed:** ~3,400 lines
+
+---
+
+### 🔴 P0 STABILITY FIXES - COMPLETED
+
+#### 1. Database Indexes
+- Added 40+ new indexes across all collections
+- TTL indexes for auto-cleanup (refresh_tokens, pdf_jobs, password_resets)
+- Compound indexes for common query patterns
+- **Expected improvement:** 5-10x faster page loads
+
+#### 2. Error Handling Utilities
+- Created `/app/backend/utils/errors.py`
+- Structured error codes: AUTH_*, VALIDATION_*, RESOURCE_*, PROCESSING_*
+- User-friendly error messages with field context
+- Consistent error response format
+
+#### 3. Session Management (Refresh Tokens)
+- Access token: 1 hour expiry (was 24 hours)
+- Refresh token: 7 days expiry
+- Auto-refresh when token about to expire
+- Session warning toast 5 minutes before expiry
+- "Extend Session" functionality
+- Multi-tab logout sync
+
+#### 4. New API Endpoints
+- `POST /api/auth/refresh` - Refresh access token using refresh token
+- `POST /api/auth/logout` - Invalidate all refresh tokens for user
+
+---
+
+### Pending P1 Tasks
+- New Equipment Reports: Pressure Gauge, Water Flow Meter
+- Project Completion Report module
+- Invoice Generation
+- Operations Department development
+- Customer Portal development
+
