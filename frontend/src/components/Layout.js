@@ -692,11 +692,11 @@ const Layout = () => {
           {/* ============ BUSINESS HUB ============ */}
           {(shouldShowSection('business_hub') || isSuperAdmin || user?.role === 'ceo_owner' || user?.role === 'admin') && (
           <div>
-            <Link
-              to="/business-hub"
+            <button
+              onClick={() => toggleSection('businessHub')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                location.pathname.startsWith('/business-hub') 
-                  ? 'bg-gradient-to-r from-indigo-600/30 to-blue-600/30 text-indigo-400 border border-indigo-500/30' 
+                expandedSections.businessHub || location.pathname.startsWith('/business-hub')
+                  ? 'bg-gradient-to-r from-indigo-600/20 to-blue-600/20 text-indigo-400' 
                   : 'text-slate-400 hover:bg-slate-800'
               }`}
             >
@@ -704,10 +704,144 @@ const Layout = () => {
                 <Briefcase className="w-5 h-5" />
                 {(sidebarOpen || isMobile) && <span className="font-semibold text-sm">Business Hub</span>}
               </div>
-              {(sidebarOpen || isMobile) && location.pathname.startsWith('/business-hub') && (
-                <div className="w-2 h-2 rounded-full bg-indigo-400" />
+              {(sidebarOpen || isMobile) && (
+                expandedSections.businessHub ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
               )}
-            </Link>
+            </button>
+            
+            {expandedSections.businessHub && (sidebarOpen || isMobile) && (
+              <div className="mt-2 space-y-1 ml-2">
+                {/* Daily Stand-up (SOM) */}
+                <Link
+                  to="/business-hub/daily-standup"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/daily-standup'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  <span>Daily Stand-up (SOM)</span>
+                </Link>
+
+                {/* Order Management */}
+                <Link
+                  to="/business-hub/orders"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/orders'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Order Management</span>
+                </Link>
+
+                {/* Project Management */}
+                <Link
+                  to="/business-hub/projects"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/projects'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <FolderKanban className="w-4 h-4" />
+                  <span>Project Management</span>
+                </Link>
+
+                {/* Purchase Management */}
+                <Link
+                  to="/business-hub/purchase"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/purchase'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Purchase Management</span>
+                </Link>
+
+                {/* Expense Management */}
+                <Link
+                  to="/business-hub/expenses"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/expenses'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Receipt className="w-4 h-4" />
+                  <span>Expense Management</span>
+                </Link>
+
+                {/* Payment Management */}
+                <Link
+                  to="/business-hub/payments"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/payments'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Payment Management</span>
+                </Link>
+
+                {/* Billing Management */}
+                <Link
+                  to="/business-hub/billing"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/billing'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Billing Management</span>
+                </Link>
+
+                {/* Finance Analytics */}
+                <Link
+                  to="/business-hub/finance"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/finance'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <CircleDollarSign className="w-4 h-4" />
+                  <span>Finance Analytics</span>
+                </Link>
+
+                {/* Weekly Meetings */}
+                <Link
+                  to="/business-hub/meetings"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/meetings'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Weekly Meetings</span>
+                </Link>
+
+                {/* Customer Portal */}
+                <Link
+                  to="/business-hub/customer-portal"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/customer-portal'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Customer Portal</span>
+                </Link>
+              </div>
+            )}
           </div>
           )}
 
