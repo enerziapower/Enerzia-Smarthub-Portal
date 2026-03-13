@@ -32,7 +32,22 @@ AVAILABLE_MODULES = {
             {"id": "vendors", "name": "Vendors", "path": "/vendors"},
             {"id": "team_members", "name": "Team Members", "path": "/team-members"},
             {"id": "weekly_meetings", "name": "Weekly Meetings", "path": "/company-hub/weekly-meetings"},
-            {"id": "payment_requests_company", "name": "Payment Requests", "path": "/company-hub/payment-requests"},
+        ]
+    },
+    "business_hub": {
+        "name": "Business Hub",
+        "description": "Centralized business operations and tracking",
+        "sub_modules": [
+            {"id": "daily_standup", "name": "Daily Stand-up (SOM)", "path": "/business-hub/daily-standup"},
+            {"id": "order_management_biz", "name": "Order Management", "path": "/business-hub/orders"},
+            {"id": "project_management_biz", "name": "Project Management", "path": "/business-hub/projects"},
+            {"id": "purchase_management_biz", "name": "Purchase Management", "path": "/business-hub/purchase"},
+            {"id": "expense_management_biz", "name": "Expense Management", "path": "/business-hub/expenses"},
+            {"id": "payment_management_biz", "name": "Payment Management", "path": "/business-hub/payments"},
+            {"id": "billing_management_biz", "name": "Billing Management", "path": "/business-hub/billing"},
+            {"id": "finance_analytics_biz", "name": "Finance Analytics", "path": "/business-hub/finance"},
+            {"id": "weekly_meetings_biz", "name": "Weekly Meetings", "path": "/business-hub/meetings"},
+            {"id": "customer_portal_biz", "name": "Customer Portal", "path": "/business-hub/customer-portal"},
         ]
     },
     "my_workspace": {
