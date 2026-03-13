@@ -249,7 +249,7 @@ function AppRoutes() {
           <Route path="customer-service/all" element={<CustomerService />} />
           <Route path="customer-service/category/:categoryId" element={<CustomerService />} />
           <Route path="payment-requests" element={<ProjectsPaymentRequests />} />
-          <!-- DeptRequirements route removed -->
+          {/* DeptRequirements route removed */}
           <Route path="task-manager" element={<ProjectsTaskManager />} />
           <Route path="billing" element={<Billing />} />
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
@@ -305,7 +305,7 @@ function AppRoutes() {
           <Route path="tds" element={<TDS />} />
           <Route path="tasks" element={<TaskManager />} />
           <Route path="payment-requests" element={<AccountsPaymentRequests />} />
-          <!-- AccountsDeptRequirements route removed -->
+          {/* AccountsDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="billing" element={<Billing />} />
           <Route path="reports" element={<Reports />} />
@@ -320,7 +320,7 @@ function AppRoutes() {
           <Route path="quotations" element={<Quotations />} />
           <Route path="orders" element={<Orders />} />
           <Route path="payment-requests" element={<SalesPaymentRequests />} />
-          <!-- SalesDeptRequirements route removed -->
+          {/* SalesDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="project-profit" element={<ProjectProfitDashboard />} />
@@ -345,7 +345,7 @@ function AppRoutes() {
           <Route path="vendors" element={<Vendors />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="payment-requests" element={<PurchasePaymentRequests />} />
-          <!-- PurchaseDeptRequirements route removed -->
+          {/* PurchaseDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
@@ -360,7 +360,7 @@ function AppRoutes() {
           <Route path="shipping" element={<ShippingDocuments />} />
           <Route path="customs" element={<CustomsClearance />} />
           <Route path="payment-requests" element={<ExportsPaymentRequests />} />
-          <!-- ExportsDeptRequirements route removed -->
+          {/* ExportsDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
@@ -372,7 +372,7 @@ function AppRoutes() {
           <Route path="work-planner" element={<FinanceWorkPlanner />} />
           <Route path="budget" element={<BudgetManagement />} />
           <Route path="payment-requests" element={<PaymentRequests />} />
-          <!-- FinanceDeptRequirements route removed -->
+          {/* FinanceDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="expense-approvals" element={<ExpenseApprovals />} />
@@ -399,7 +399,7 @@ function AppRoutes() {
           <Route path="leave-dashboard" element={<LeaveDashboard />} />
           <Route path="overtime" element={<OvertimeManagement />} />
           <Route path="payment-requests" element={<HRPaymentRequests />} />
-          <!-- HRDeptRequirements route removed -->
+          {/* HRDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
           <Route path="leave-approvals" element={<LeaveApprovals />} />
@@ -414,7 +414,7 @@ function AppRoutes() {
           <Route path="resources" element={<ResourcePlanning />} />
           <Route path="maintenance" element={<MaintenanceSchedule />} />
           <Route path="payment-requests" element={<OperationsPaymentRequests />} />
-          <!-- OperationsDeptRequirements route removed -->
+          {/* OperationsDeptRequirements route removed */}
           <Route path="weekly-meeting" element={<WeeklyMeeting />} />
           <Route path="reports" element={<Reports />} />
         </Route>
