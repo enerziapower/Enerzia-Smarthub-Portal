@@ -66,7 +66,8 @@ const OrderManagement = () => {
       
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
-        setOrders(ordersData || []);
+        // API returns {orders: [...], total: n}
+        setOrders(ordersData.orders || []);
       }
       
       if (statsResponse.ok) {
