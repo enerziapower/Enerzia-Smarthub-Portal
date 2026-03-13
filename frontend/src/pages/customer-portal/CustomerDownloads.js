@@ -5,7 +5,7 @@ import {
   FileCheck, Clipboard, Thermometer, Calendar
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const CustomerDownloads = () => {
   const navigate = useNavigate();

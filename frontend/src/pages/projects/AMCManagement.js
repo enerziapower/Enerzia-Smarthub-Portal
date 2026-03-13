@@ -11,7 +11,7 @@ import { scheduledInspectionsAPI, projectsAPI } from '../../services/api';
 import { EQUIPMENT_TYPES } from './EquipmentTestReports';
 import { useAuth } from '../../context/AuthContext';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 // Tab definitions
 const TABS = [

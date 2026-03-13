@@ -9,7 +9,7 @@ import {
 import { toast } from 'sonner';
 import { DatePicker } from '../../components/ui/date-picker';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const EQUIPMENT_TYPES = [
   { id: 'acb', name: 'ACB - Air Circuit Breaker' },

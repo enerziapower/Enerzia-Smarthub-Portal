@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Calendar, User, MapPin, Eye
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const CustomerReports = () => {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ const CustomerReports = () => {
 
   const loadReports = async (token) => {
     try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const API_URL = window.location.origin;
       const response = await fetch(`${API_URL}/api/customer-portal/reports?token=${token}`);
       
       if (!response.ok) {

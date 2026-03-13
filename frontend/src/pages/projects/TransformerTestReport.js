@@ -224,7 +224,7 @@ const TransformerTestReport = () => {
       
       // Fetch team members from departments/projects/team endpoint
       try {
-        const API_BASE_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
+        const API_BASE_URL = `${window.location.origin}/api`;
         const token = localStorage.getItem('token');
         const teamRes = await fetch(`${API_BASE_URL}/departments/projects/team`, {
           headers: { 'Authorization': `Bearer ${token}` }

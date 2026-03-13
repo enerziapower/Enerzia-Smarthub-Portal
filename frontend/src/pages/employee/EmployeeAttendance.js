@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { employeeHubAPI } from '../../services/api';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const EmployeeAttendance = () => {
   const { user } = useAuth();

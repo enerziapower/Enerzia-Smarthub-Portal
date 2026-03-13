@@ -549,7 +549,7 @@ const PayrollDashboard = () => {
               <h3 className="font-semibold text-slate-900">{report.name}</h3>
               <p className="text-sm text-slate-500 mt-1">{report.desc}</p>
               <button
-                onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}/api/hr/reports/${report.endpoint}/${selectedMonth}/${selectedYear}`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/api/hr/reports/${report.endpoint}/${selectedMonth}/${selectedYear}`, '_blank')}
                 className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
               >
                 <Download className="w-4 h-4" /> Download JSON

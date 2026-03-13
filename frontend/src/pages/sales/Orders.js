@@ -7,7 +7,7 @@ import {
 import { toast } from 'sonner';
 import AddProjectModal from '../../components/AddProjectModal';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);

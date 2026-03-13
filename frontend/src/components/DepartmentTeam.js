@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { departmentTeamAPI } from '../services/api';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = window.location.origin || '';
 
 const DEPARTMENT_LABELS = {
   projects: 'Project Team',

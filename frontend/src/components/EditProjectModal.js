@@ -278,7 +278,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
 
   const getFileUrl = (path) => {
     if (!path) return '';
-    return `${process.env.REACT_APP_BACKEND_URL}/api${path}`;
+    return `${window.location.origin}/api${path}`;
   };
 
   const handleSubmit = async (e) => {

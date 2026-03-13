@@ -29,7 +29,7 @@ const Reports = () => {
       }
 
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/reports/custom?${new URLSearchParams(params)}`
+        `${window.location.origin}/api/reports/custom?${new URLSearchParams(params)}`
       );
       const data = await response.json();
       setReportData(data);

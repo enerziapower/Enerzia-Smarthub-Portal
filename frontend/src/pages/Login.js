@@ -119,7 +119,7 @@ const Login = () => {
   };
 
   const logoUrl = orgSettings.logo_url 
-    ? `${process.env.REACT_APP_BACKEND_URL}/api${orgSettings.logo_url}` 
+    ? `${window.location.origin}/api${orgSettings.logo_url}` 
     : null;
 
   return (

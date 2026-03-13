@@ -6,7 +6,7 @@ import {
   Trash2, Key, ToggleLeft, ToggleRight, Zap
 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const CustomerProfile = () => {
   const { customerId } = useParams();

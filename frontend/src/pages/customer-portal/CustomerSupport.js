@@ -5,7 +5,7 @@ import {
   MessageCircle, Clock, CheckCircle, AlertCircle, ChevronRight
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const CustomerSupport = () => {
   const navigate = useNavigate();

@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const MyProfile = () => {
   const { user, updateUser } = useAuth();

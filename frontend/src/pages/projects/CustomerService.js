@@ -7,7 +7,7 @@ import {
 import { customerServiceAPI, settingsAPI, departmentTeamAPI } from '../../services/api';
 import { DatePicker } from '../../components/ui/date-picker';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 // Service Category Icons
 const SERVICE_CATEGORY_ICONS = {

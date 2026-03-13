@@ -35,7 +35,7 @@ const CustomerAMCDetail = () => {
 
   const loadAMCDetail = async (token) => {
     try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const API_URL = window.location.origin;
       const response = await fetch(`${API_URL}/api/customer-portal/amcs/${amcId}?token=${token}`);
       
       if (!response.ok) {
@@ -57,7 +57,7 @@ const CustomerAMCDetail = () => {
 
   const loadServiceHistory = async (token) => {
     try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const API_URL = window.location.origin;
       const response = await fetch(`${API_URL}/api/customer-portal/amcs/${amcId}/service-history?token=${token}`);
       
       if (response.ok) {

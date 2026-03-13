@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, CheckCircle, AlertCircle, Loader2, Send } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');

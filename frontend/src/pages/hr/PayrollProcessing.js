@@ -271,7 +271,7 @@ const PayrollProcessing = () => {
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => {
-                  const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+                  const API_URL = window.location.origin || '';
                   window.open(`${API_URL}/api/hr/payslip/${selectedRecord.id}/pdf`, '_blank');
                 }}
                 className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded"

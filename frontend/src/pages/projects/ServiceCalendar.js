@@ -6,7 +6,7 @@ import {
   CheckCircle, Circle, AlertCircle, X, Save, Loader2
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const ServiceCalendar = () => {
   const navigate = useNavigate();

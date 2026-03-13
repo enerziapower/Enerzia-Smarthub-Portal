@@ -6,7 +6,7 @@ import {
   Clock, CheckCircle, AlertCircle, Gauge
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const CalibrationList = () => {
   const navigate = useNavigate();

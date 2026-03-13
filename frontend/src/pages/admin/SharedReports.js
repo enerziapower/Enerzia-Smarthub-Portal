@@ -4,7 +4,7 @@ import {
   Loader2, Check, Filter, Building2, Mail
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const SharedReports = () => {
   const [loading, setLoading] = useState(true);

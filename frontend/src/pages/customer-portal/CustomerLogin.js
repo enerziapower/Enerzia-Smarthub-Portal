@@ -30,7 +30,7 @@ const CustomerLogin = () => {
     setLoading(true);
     setError('');
 
-    const API_URL = process.env.REACT_APP_BACKEND_URL;
+    const API_URL = window.location.origin;
 
     try {
       const endpoint = isLogin ? '/api/customer-portal/login' : '/api/customer-portal/register';

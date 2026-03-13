@@ -7,7 +7,7 @@ import {
 import { toast } from 'sonner';
 import { usersAPI } from '../../services/api';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const UserManagement = () => {
   // State

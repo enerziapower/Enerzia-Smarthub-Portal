@@ -8,7 +8,7 @@ import {
 import { testReportsAPI } from '../../services/api';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 // Audit report types including IR Thermography
 const AUDIT_TYPES = [

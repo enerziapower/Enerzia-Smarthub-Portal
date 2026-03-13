@@ -8,7 +8,7 @@ import {
 import { toast } from 'sonner';
 import { DatePicker } from '../../components/ui/date-picker';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 // Helper function to check if an image is valid (not dummy/placeholder data)
 const isValidImage = (imageData) => {

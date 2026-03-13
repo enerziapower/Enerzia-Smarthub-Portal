@@ -5,7 +5,7 @@ import {
   Building2, Phone, Mail, MapPin, Hash, Calendar, Lock
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const CustomerProfile = () => {
   const navigate = useNavigate();

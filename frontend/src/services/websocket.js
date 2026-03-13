@@ -18,7 +18,7 @@ class WebSocketService {
     this.isConnecting = true;
 
     // Determine WebSocket URL based on environment
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const backendUrl = window.location.origin || '';
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '');
     const wsUrl = `${wsProtocol}://${wsHost}/ws/sync`;

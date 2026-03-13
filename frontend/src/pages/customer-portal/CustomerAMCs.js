@@ -33,7 +33,7 @@ const CustomerAMCs = () => {
 
   const loadAMCs = async (token) => {
     try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const API_URL = window.location.origin;
       const response = await fetch(`${API_URL}/api/customer-portal/amcs?token=${token}`);
       
       if (!response.ok) {

@@ -8,7 +8,7 @@ import {
 import { EQUIPMENT_TYPES } from './EquipmentTestReports';
 import { testReportsAPI } from '../../services/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 // Equipment types that use the new template-based service report form
 const SERVICE_REPORT_EQUIPMENT = ['acb', 'mccb', 'vcb', 'dg', 'ups', 'electrical-panel', 'lightning-arrestor', 'relay', 'apfc', 'earth-pit', 'energy-meter', 'voltmeter', 'ammeter', 'battery'];

@@ -572,7 +572,7 @@ const Settings = () => {
                 <div className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white">
                   {orgSettings.logo_url ? (
                     <img 
-                      src={`${process.env.REACT_APP_BACKEND_URL}/api${orgSettings.logo_url}`}
+                      src={`${window.location.origin}/api${orgSettings.logo_url}`}
                       alt="Organization Logo"
                       className="w-full h-full object-contain"
                     />
@@ -1778,7 +1778,7 @@ const Settings = () => {
                 {emailTemplate.company_logo_url ? (
                   <div className="relative">
                     <img 
-                      src={`${process.env.REACT_APP_BACKEND_URL}${emailTemplate.company_logo_url}`}
+                      src={`${window.location.origin}${emailTemplate.company_logo_url}`}
                       alt="Email Logo"
                       className="h-16 object-contain border border-slate-200 rounded-lg p-2 bg-slate-50"
                     />

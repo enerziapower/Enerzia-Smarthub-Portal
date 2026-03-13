@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
 import ZohoQuotationsTab from './ZohoQuotationsTab';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const Quotations = () => {
   const [searchParams] = useSearchParams();

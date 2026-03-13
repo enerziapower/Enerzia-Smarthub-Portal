@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 // Project Categories
 const PROJECT_CATEGORIES = [

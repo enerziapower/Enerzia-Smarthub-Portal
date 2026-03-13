@@ -80,7 +80,7 @@ const Dashboard = () => {
 
   const loadWeeklyBreakdown = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/dashboard/this-week-breakdown`);
+      const response = await fetch(`${window.location.origin}/api/dashboard/this-week-breakdown`);
       const data = await response.json();
       setWeeklyBreakdown(data);
       setShowWeeklyBreakdown(true);
@@ -91,7 +91,7 @@ const Dashboard = () => {
 
   const loadActiveProjects = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/dashboard/active-projects-breakdown`);
+      const response = await fetch(`${window.location.origin}/api/dashboard/active-projects-breakdown`);
       const data = await response.json();
       setActiveProjectsData(data);
       setShowActiveProjects(true);
@@ -102,7 +102,7 @@ const Dashboard = () => {
 
   const loadBillingBreakdown = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/dashboard/total-billing-breakdown`);
+      const response = await fetch(`${window.location.origin}/api/dashboard/total-billing-breakdown`);
       const data = await response.json();
       setBillingBreakdownData(data);
       setShowBillingBreakdown(true);

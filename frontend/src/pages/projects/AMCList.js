@@ -6,7 +6,7 @@ import {
   Clock, CheckCircle, AlertCircle, RefreshCw, Copy
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.location.origin;
 
 const AMCList = () => {
   const navigate = useNavigate();

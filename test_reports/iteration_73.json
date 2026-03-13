@@ -15,7 +15,7 @@
   "action_items": [],
   "critical_code_review_comments": [
     "Code is well-structured with proper data-testid attributes for testing",
-    "API_URL correctly uses process.env.REACT_APP_BACKEND_URL",
+    "API_URL correctly uses window.location.origin",
     "Pipeline workflow correctly shows 6 stages: Need to Start → Ongoing → Completed → Invoiced → Paid → Closed",
     "Budget tracking shows Budget, Expenses, Balance, Profit with proper formatting",
     "Action buttons (View Details, Payment Request, Material Request, Delivery Request) navigate correctly with project_id and pid params"

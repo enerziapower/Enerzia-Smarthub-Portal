@@ -5,7 +5,7 @@ import {
   Loader2, AlertCircle, CheckCircle2, XCircle, FolderOpen
 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.location.origin;
 
 const CustomerDirectory = () => {
   const [loading, setLoading] = useState(true);
