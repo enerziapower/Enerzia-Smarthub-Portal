@@ -59,14 +59,14 @@ import CentralPaymentRequests from './pages/company-hub/CentralPaymentRequests';
 
 // Business Hub Pages
 import DailyStandup from './pages/business-hub/DailyStandup';
-import OrderManagement from './pages/business-hub/OrderManagement';
-import ProjectManagement from './pages/business-hub/ProjectManagement';
-import PurchaseManagement from './pages/business-hub/PurchaseManagement';
-import ExpenseManagement from './pages/business-hub/ExpenseManagement';
-import PaymentManagement from './pages/business-hub/PaymentManagement';
+import BizOrderManagement from './pages/business-hub/OrderManagement';
+import BizProjectManagement from './pages/business-hub/ProjectManagement';
+import BizPurchaseManagement from './pages/business-hub/PurchaseManagement';
+import BizExpenseManagement from './pages/business-hub/ExpenseManagement';
+import BizPaymentManagement from './pages/business-hub/PaymentManagement';
 import BillingManagement from './pages/business-hub/BillingManagement';
 import FinanceAnalytics from './pages/business-hub/FinanceAnalytics';
-import WeeklyMeetings from './pages/business-hub/WeeklyMeetings';
+import BizWeeklyMeetings from './pages/business-hub/WeeklyMeetings';
 import CustomerPortal from './pages/business-hub/CustomerPortal';
 
 // Customer Hub Pages (Internal)
