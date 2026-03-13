@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 
 class EnerziaAPIHealthChecker:
-    def __init__(self, base_url="https://domestic-client-hub.preview.emergentagent.com"):
+    def __init__(self, base_url="https://unified-workflow-6.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
