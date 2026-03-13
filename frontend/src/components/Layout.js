@@ -332,7 +332,7 @@ const Layout = () => {
     { name: 'Vendors', href: '/vendors', icon: Truck },
     { name: 'Team Members', href: '/team-members', icon: UsersRound },
     { name: 'Weekly Meetings', href: '/company-hub/weekly-meetings', icon: Calendar },
-    { name: 'Payment Requests', href: '/company-hub/payment-requests', icon: CreditCard },
+    // Payment Requests removed - moved to Business Hub
   ];
 
   // ============ CUSTOMER HUB (Sub-section of Company Hub) ============
