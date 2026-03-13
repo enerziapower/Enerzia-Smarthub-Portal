@@ -171,7 +171,7 @@ import WeeklyMeeting from './pages/WeeklyMeeting';
 import Billing from './pages/Billing';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import ZohoIntegration from './pages/settings/ZohoIntegration';
+// Zoho Integration removed - not in use
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 
@@ -463,7 +463,7 @@ function AppRoutes() {
 
         {/* Settings (shared) */}
         <Route path="settings" element={<Settings />} />
-        <Route path="settings/zoho" element={<ZohoIntegration />} />
+        {/* Zoho route removed */}
       </Route>
     </Routes>
   );
