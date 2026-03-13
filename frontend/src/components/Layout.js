@@ -395,7 +395,7 @@ const Layout = () => {
     { name: 'Enquiries', href: '/sales/enquiries', icon: FileText },
     { name: 'Quotations', href: '/sales/quotations', icon: FileCheck },
     { name: 'Orders', href: '/sales/orders', icon: ShoppingCart },
-    { name: 'Order Management', href: '/sales/order-lifecycle', icon: TrendingUp },
+    // Order Management removed - moved to Business Hub
     { name: 'Project Profit', href: '/sales/project-profit', icon: TrendingUp },
     { name: 'Reports', href: '/sales/reports', icon: FileBarChart },
   ];
