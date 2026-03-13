@@ -689,6 +689,28 @@ const Layout = () => {
           </div>
           )}
 
+          {/* ============ BUSINESS HUB ============ */}
+          {(shouldShowSection('business_hub') || isSuperAdmin || user?.role === 'ceo_owner' || user?.role === 'admin') && (
+          <div>
+            <Link
+              to="/business-hub"
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                location.pathname.startsWith('/business-hub') 
+                  ? 'bg-gradient-to-r from-indigo-600/30 to-blue-600/30 text-indigo-400 border border-indigo-500/30' 
+                  : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Briefcase className="w-5 h-5" />
+                {(sidebarOpen || isMobile) && <span className="font-semibold text-sm">Business Hub</span>}
+              </div>
+              {(sidebarOpen || isMobile) && location.pathname.startsWith('/business-hub') && (
+                <div className="w-2 h-2 rounded-full bg-indigo-400" />
+              )}
+            </Link>
+          </div>
+          )}
+
           {/* ============ 3. DEPARTMENTS HUB ============ */}
           {hasAnyDepartmentAccess() && (
           <div>
