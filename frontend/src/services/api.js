@@ -150,15 +150,8 @@ export const projectsAPI = {
   },
 };
 
-// Project Requirements API
-export const projectRequirementsAPI = {
-  getAll: (params) => api.get('/project-requirements', { params }),
-  getById: (id) => api.get(`/project-requirements/${id}`),
-  create: (data) => api.post('/project-requirements', data),
-  update: (id, data) => api.put(`/project-requirements/${id}`, data),
-  delete: (id) => api.delete(`/project-requirements/${id}`),
-  getSummary: () => api.get('/project-requirements/stats/summary'),
-};
+// Project Requirements API - REMOVED (Feature cleaned up)
+// export const projectRequirementsAPI = { ... };
 
 // Department Tasks API (Work Planner Tasks)
 export const departmentTasksAPI = {
