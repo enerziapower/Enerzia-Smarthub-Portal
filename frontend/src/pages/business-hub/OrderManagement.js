@@ -835,7 +835,7 @@ const OrderManagement = () => {
             <div className="sticky top-0 bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between z-10">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800">Add New Order</h3>
-                <p className="text-sm text-slate-500">Create order with PID, budget allocation, and timeline</p>
+                <p className="text-sm text-slate-500">Create order with PID and budget allocation</p>
               </div>
               <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
                 <X size={20} />
