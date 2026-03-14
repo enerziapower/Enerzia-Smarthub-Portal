@@ -860,12 +860,17 @@ const OrderManagement = () => {
                       </div>
                       <div>
                         <p className="text-slate-500">Target Profit</p>
-                        <p className="font-semibold text-green-600">{formatCurrency(targetProfit)}</p>
+                        <p className="font-semibold text-green-600">
+                          {formatCurrency(targetProfit)}
+                          <span className="text-xs ml-1 text-green-500">
+                            ({calculateProfitPercent(targetProfit, order.total_amount || order.order_value)}%)
+                          </span>
+                        </p>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => { setViewingOrder(order); setShowViewModal(true); }}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -873,6 +878,29 @@ const OrderManagement = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
+                      <button
+                        onClick={() => handleEditOrder(order)}
+                        className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                        title="Edit Order"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(order)}
+                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Delete Order"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      {order.po_file_path && (
+                        <button
+                          onClick={() => handleViewDocument(order.po_file_path)}
+                          className="p-2 text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg"
+                          title="View PO Document"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
