@@ -458,6 +458,7 @@ const OrderManagement = () => {
       const orderData = {
         ...formData,
         order_no: formData.pid_no,
+        total_amount: formData.order_value || 0,
         total_budget: totalBudget,
         lifecycle: {
           status: 'new',
@@ -465,12 +466,7 @@ const OrderManagement = () => {
           execution_budget: formData.execution_budget,
           others_budget: formData.others_budget,
           target_profit: formData.target_profit,
-          target_profit_type: formData.target_profit_type,
-          timeline: {
-            start_date: formData.start_date,
-            end_date: formData.end_date,
-            deadline: formData.deadline
-          }
+          target_profit_type: formData.target_profit_type
         },
         financials: {
           purchase_budget: formData.purchase_budget,
