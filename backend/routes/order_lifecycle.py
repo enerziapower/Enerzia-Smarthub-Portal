@@ -404,6 +404,7 @@ async def update_order(order_id: str, data: dict):
         {"$set": {
             "purchase_budget": {"type": "value", "value": data.get("purchase_budget", 0), "amount": data.get("purchase_budget", 0)},
             "execution_budget": {"type": "value", "value": data.get("execution_budget", 0), "amount": data.get("execution_budget", 0)},
+            "others_budget": {"type": "value", "value": data.get("others_budget", 0), "amount": data.get("others_budget", 0)},
             "target_profit": {"type": "amount", "value": data.get("target_profit", 0), "amount": data.get("target_profit", 0)},
             "updated_at": now
         }}
