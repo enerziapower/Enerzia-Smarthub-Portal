@@ -582,6 +582,37 @@ const OrderManagement = () => {
 
   // Handle edit order - open edit modal with order data
   const handleEditOrder = (order) => {
+    // Extract budget values, handling both direct numbers and nested objects
+    const getPurchaseBudget = () => {
+      if (typeof order.financials?.purchase_budget === 'number') return order.financials.purchase_budget;
+      if (typeof order.lifecycle?.purchase_budget === 'number') return order.lifecycle.purchase_budget;
+      if (order.lifecycle?.purchase_budget?.amount) return order.lifecycle.purchase_budget.amount;
+      return 0;
+    };
+    const getExecutionBudget = () => {
+      if (typeof order.financials?.execution_budget === 'number') return order.financials.execution_budget;
+      if (typeof order.lifecycle?.execution_budget === 'number') return order.lifecycle.execution_budget;
+      if (order.lifecycle?.execution_budget?.amount) return order.lifecycle.execution_budget.amount;
+      return 0;
+    };
+    const getOthersBudget = () => {
+      if (typeof order.financials?.others_budget === 'number') return order.financials.others_budget;
+      if (typeof order.lifecycle?.others_budget === 'number') return order.lifecycle.others_budget;
+      return 0;
+    };
+    const getTargetProfit = () => {
+      if (typeof order.financials?.target_profit === 'number') return order.financials.target_profit;
+      if (typeof order.lifecycle?.target_profit === 'number') return order.lifecycle.target_profit;
+      if (order.lifecycle?.target_profit?.amount) return order.lifecycle.target_profit.amount;
+      return 0;
+    };
+
+    const orderValue = order.order_value || order.total_amount || 0;
+    const purchaseBudget = getPurchaseBudget();
+    const executionBudget = getExecutionBudget();
+    const othersBudget = getOthersBudget();
+    const targetProfit = getTargetProfit() || (orderValue - purchaseBudget - executionBudget - othersBudget);
+
     setEditingOrder(order);
     setFormData({
       pid_no: order.pid_no || order.order_no,
@@ -591,14 +622,14 @@ const OrderManagement = () => {
       customer_address: order.customer_address || '',
       po_number: order.po_number || '',
       order_date: order.order_date || order.date || '',
-      order_value: order.order_value || order.total_amount || 0,
+      order_value: orderValue,
       delivery_date: order.delivery_date || '',
       project_name: order.project_name || '',
       location: order.location || '',
-      purchase_budget: order.financials?.purchase_budget || order.lifecycle?.purchase_budget || 0,
-      execution_budget: order.financials?.execution_budget || order.lifecycle?.execution_budget || 0,
-      others_budget: order.financials?.others_budget || order.lifecycle?.others_budget || 0,
-      target_profit: order.financials?.target_profit || order.lifecycle?.target_profit || 0,
+      purchase_budget: purchaseBudget,
+      execution_budget: executionBudget,
+      others_budget: othersBudget,
+      target_profit: targetProfit,
       items: order.items || [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
       subtotal: order.subtotal || 0,
       gst_percent: order.gst_percent || 18,
