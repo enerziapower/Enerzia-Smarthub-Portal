@@ -967,7 +967,7 @@ const OrderManagement = () => {
               </div>
 
               {/* Order Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Customer PO/WO Number</label>
                   <input
