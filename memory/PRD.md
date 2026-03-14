@@ -2,6 +2,40 @@
 
 ## Latest Updates
 
+### Order-to-Cash Lifecycle Phase 1: Order Management ✅ COMPLETE (Mar 14, 2026)
+**Location:** Business Hub → Order Management
+
+**MAJOR FEATURE:** Implemented Phase 1 of the Order-to-Cash lifecycle with a combined two-tab Order Management page.
+
+**Two-Tab Structure:**
+```
+Order Management Page
+├── Tab 1: Order Management  → Create new orders with PID generation
+└── Tab 2: Order Summary     → View all orders (migrated from Sales)
+```
+
+| Feature | Description |
+|---------|-------------|
+| **PID Generation** | Auto-generated Project ID in format `PID/FY/number` (e.g., PID/25-26/001) |
+| **Add New Order Modal** | Full form with customer info, order details, budget, timeline, and items |
+| **Budget Allocation** | Purchase Budget, Execution Budget, Others Budget, Target Profit |
+| **Timeline Planning** | Start Date, End Date, Deadline |
+| **Order Summary View** | Stats cards (Total Orders, Value, Pending, Confirmed) + Orders table |
+| **Duplicate PID Validation** | Backend rejects orders with existing PIDs |
+
+**Backend API Endpoints:**
+- `POST /api/order-lifecycle/orders` - Create new order with PID, budget, timeline
+- `GET /api/order-lifecycle/orders` - Fetch orders with lifecycle/financials data
+- `GET /api/projects/next-pid?financial_year=FY` - Get next available PID
+
+**Files Created/Modified:**
+- `/app/frontend/src/pages/business-hub/OrderManagement.js` - Two-tab component (1412 lines)
+- `/app/backend/routes/order_lifecycle.py` - Added POST /orders endpoint with OrderCreate model
+
+**Test Results:** 100% success rate (12/12 backend tests, all frontend features) - See `/app/test_reports/iteration_91.json`
+
+---
+
 ### Business Hub Implementation ✅ COMPLETE (Mar 13, 2026)
 **Location:** Sidebar → Business Hub (expandable section with sub-menus)
 
