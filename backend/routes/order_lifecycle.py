@@ -190,6 +190,145 @@ async def get_order_financials(order_id: str) -> dict:
 
 # ============== ORDER LIFECYCLE ENDPOINTS ==============
 
+class OrderCreate(BaseModel):
+    """Create a new order with PID"""
+    pid_no: str  # Format: PID/FY/number
+    category: str = "PSS"
+    customer_id: Optional[str] = None
+    customer_name: str
+    customer_address: Optional[str] = None
+    customer_gst: Optional[str] = None
+    customer_contact: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    po_number: Optional[str] = None
+    po_date: Optional[str] = None
+    order_date: Optional[str] = None
+    delivery_date: Optional[str] = None
+    project_name: Optional[str] = None
+    location: Optional[str] = None
+    # Budget fields
+    purchase_budget: float = 0
+    execution_budget: float = 0
+    others_budget: float = 0
+    target_profit: float = 0
+    target_profit_type: str = "amount"  # 'amount' or 'percent'
+    # Timeline fields
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    deadline: Optional[str] = None
+    # Items
+    items: List[dict] = []
+    subtotal: float = 0
+    gst_percent: float = 18
+    gst_amount: float = 0
+    total_amount: float = 0
+    # Other fields
+    payment_terms: Optional[str] = None
+    delivery_terms: Optional[str] = None
+    notes: Optional[str] = None
+    po_file_path: Optional[str] = None
+    status: str = "pending"
+    engineer_in_charge: Optional[str] = None
+
+
+@router.post("/orders")
+async def create_order(data: OrderCreate):
+    """Create a new order with PID, budget, and timeline - Starting point of Order-to-Cash lifecycle"""
+    # Verify PID is unique
+    existing = await db.sales_orders.find_one({"order_no": data.pid_no})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Order with PID {data.pid_no} already exists")
+    
+    order_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # Create the order
+    order_data = {
+        "id": order_id,
+        "order_no": data.pid_no,  # Use PID as order number
+        "pid_no": data.pid_no,
+        "category": data.category,
+        "customer_id": data.customer_id,
+        "customer_name": data.customer_name,
+        "customer_address": data.customer_address,
+        "customer_gst": data.customer_gst,
+        "customer_contact": data.customer_contact,
+        "customer_phone": data.customer_phone,
+        "customer_email": data.customer_email,
+        "po_number": data.po_number,
+        "po_date": data.po_date,
+        "date": data.order_date,
+        "order_date": data.order_date,
+        "delivery_date": data.delivery_date,
+        "project_name": data.project_name,
+        "location": data.location,
+        "items": data.items,
+        "subtotal": data.subtotal,
+        "gst_percent": data.gst_percent,
+        "gst_amount": data.gst_amount,
+        "total_amount": data.total_amount,
+        "payment_terms": data.payment_terms,
+        "delivery_terms": data.delivery_terms,
+        "notes": data.notes,
+        "po_file_path": data.po_file_path,
+        "status": data.status,
+        "payment_status": "unpaid",
+        "engineer_in_charge": data.engineer_in_charge,
+        "created_at": now,
+        "updated_at": now,
+        # Budget & Timeline info stored directly on order
+        "financials": {
+            "purchase_budget": data.purchase_budget,
+            "execution_budget": data.execution_budget,
+            "others_budget": data.others_budget,
+            "target_profit": data.target_profit,
+            "target_profit_type": data.target_profit_type,
+            "purchase_actual": 0,
+            "execution_actual": 0,
+            "others_actual": 0,
+            "actual_profit": 0,
+            "profit_margin": 0
+        },
+        "lifecycle": {
+            "status": "new",
+            "purchase_budget": data.purchase_budget,
+            "execution_budget": data.execution_budget,
+            "others_budget": data.others_budget,
+            "target_profit": data.target_profit,
+            "target_profit_type": data.target_profit_type,
+            "timeline": {
+                "start_date": data.start_date,
+                "end_date": data.end_date,
+                "deadline": data.deadline
+            }
+        }
+    }
+    
+    await db.sales_orders.insert_one(order_data)
+    
+    # Also create lifecycle record for detailed tracking
+    lifecycle_data = {
+        "id": str(uuid.uuid4()),
+        "sales_order_id": order_id,
+        "purchase_budget": {"type": "value", "value": data.purchase_budget, "amount": data.purchase_budget},
+        "execution_budget": {"type": "value", "value": data.execution_budget, "amount": data.execution_budget},
+        "target_profit": {"type": data.target_profit_type, "value": data.target_profit, "amount": data.target_profit},
+        "payment_milestones": [],
+        "credit_period_days": 30,
+        "status": "new",
+        "notes": data.notes,
+        "created_at": now,
+        "updated_at": now
+    }
+    await db.order_lifecycle.insert_one(lifecycle_data)
+    
+    # Remove MongoDB's _id before returning
+    order_data.pop("_id", None)
+    
+    return {"message": "Order created successfully", "order": order_data}
+
+
 @router.get("/orders")
 async def get_orders_with_lifecycle(
     status: Optional[str] = None,
@@ -205,7 +344,8 @@ async def get_orders_with_lifecycle(
     if search:
         query["$or"] = [
             {"order_no": {"$regex": search, "$options": "i"}},
-            {"customer_name": {"$regex": search, "$options": "i"}}
+            {"customer_name": {"$regex": search, "$options": "i"}},
+            {"pid_no": {"$regex": search, "$options": "i"}}
         ]
     
     # Get sales orders
