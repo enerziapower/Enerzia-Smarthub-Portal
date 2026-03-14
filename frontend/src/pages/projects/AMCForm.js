@@ -371,7 +371,8 @@ const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReport
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = `${API}/api/test-reports?limit=100`;
+      // Fetch all reports (increased limit to 500 to show all recent reports)
+      let url = `${API}/api/test-reports?limit=500`;
       if (equipmentFilter !== 'all') {
         url += `&equipment_type=${equipmentFilter}`;
       }
@@ -383,6 +384,12 @@ const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReport
       if (response.ok) {
         const data = await response.json();
         const reports = Array.isArray(data) ? data : (data.reports || data.test_reports || []);
+        // Sort by created_at descending (newest first) to ensure recent reports show at top
+        reports.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0);
+          const dateB = new Date(b.created_at || 0);
+          return dateB - dateA;
+        });
         setTestReports(reports);
       }
     } catch (error) {
