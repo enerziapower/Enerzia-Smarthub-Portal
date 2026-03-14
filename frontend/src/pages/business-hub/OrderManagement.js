@@ -66,6 +66,10 @@ const OrderManagement = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [poFile, setPOFile] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const excelInputRef = useRef(null);
   const fileInputRef = useRef(null);
   
