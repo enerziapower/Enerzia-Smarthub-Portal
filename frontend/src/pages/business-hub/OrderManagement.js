@@ -1050,182 +1050,34 @@ const OrderManagement = () => {
                 </div>
               </div>
 
-              {/* Line Items */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <ClipboardList size={18} />
-                    Order Items
-                  </h4>
-                  <div className="flex items-center gap-2">
+              {/* PO File Upload & Notes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">PO Document (PDF)</label>
+                  <div className="flex items-center gap-3">
                     <input
-                      ref={excelInputRef}
+                      ref={fileInputRef}
                       type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleExcelImport}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={handleFileUpload}
                       className="hidden"
                     />
                     <button
                       type="button"
-                      onClick={() => excelInputRef.current?.click()}
-                      className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-1"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingFile}
+                      className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2"
                     >
-                      <FileSpreadsheet size={14} />
-                      Import Excel
+                      {uploadingFile ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {poFile ? 'Change File' : 'Upload PO'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={addItem}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
-                    >
-                      <Plus size={14} />
-                      Add Item
-                    </button>
+                    {poFile && (
+                      <span className="text-sm text-green-600 flex items-center gap-1">
+                        <CheckCircle size={14} />
+                        {poFile.name}
+                      </span>
+                    )}
                   </div>
-                </div>
-
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-3 py-2 text-left w-10">#</th>
-                        <th className="px-3 py-2 text-left">Description</th>
-                        <th className="px-3 py-2 text-center w-24">Unit</th>
-                        <th className="px-3 py-2 text-center w-24">Qty</th>
-                        <th className="px-3 py-2 text-right w-32">Unit Price</th>
-                        <th className="px-3 py-2 text-right w-32">Total</th>
-                        <th className="px-3 py-2 w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {formData.items.map((item, index) => (
-                        <tr key={item.id}>
-                          <td className="px-3 py-2 text-slate-500">{item.sno}</td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={item.description}
-                              onChange={(e) => updateItem(index, 'description', e.target.value)}
-                              className="w-full px-2 py-1 border border-slate-200 rounded"
-                              placeholder="Item description"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={item.unit}
-                              onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                              className="w-full px-2 py-1 border border-slate-200 rounded"
-                            >
-                              {WORK_ITEM_UNITS.map(unit => (
-                                <option key={unit} value={unit}>{unit}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 border border-slate-200 rounded text-center"
-                              min="0"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={item.unit_price}
-                              onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 border border-slate-200 rounded text-right"
-                              min="0"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-right font-medium">{formatCurrency(item.total)}</td>
-                          <td className="px-3 py-2">
-                            <button
-                              type="button"
-                              onClick={() => removeItem(index)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Totals */}
-                <div className="mt-4 flex justify-end">
-                  <div className="w-72 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Subtotal:</span>
-                      <span className="font-medium">{formatCurrency(formData.subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">GST:</span>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={formData.gst_percent}
-                          onChange={(e) => handleGstChange(parseInt(e.target.value))}
-                          className="px-2 py-1 border border-slate-200 rounded text-sm"
-                        >
-                          <option value="0">0%</option>
-                          <option value="5">5%</option>
-                          <option value="12">12%</option>
-                          <option value="18">18%</option>
-                          <option value="28">28%</option>
-                        </select>
-                        <span className="font-medium">{formatCurrency(formData.gst_amount)}</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
-                      <span>Total:</span>
-                      <span className="text-green-600">{formatCurrency(formData.total_amount)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PO File Upload */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">PO Document (PDF)</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingFile}
-                    className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2"
-                  >
-                    {uploadingFile ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                    {poFile ? 'Change File' : 'Upload PO'}
-                  </button>
-                  {poFile && (
-                    <span className="text-sm text-green-600 flex items-center gap-1">
-                      <CheckCircle size={14} />
-                      {poFile.name}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
-                  <textarea
-                    value={formData.payment_terms}
-                    onChange={(e) => setFormData(prev => ({ ...prev, payment_terms: e.target.value }))}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
@@ -1233,6 +1085,7 @@ const OrderManagement = () => {
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                     rows={2}
+                    placeholder="Any additional notes..."
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                   />
                 </div>
