@@ -81,7 +81,7 @@ async def get_test_reports(
     report_category: Optional[str] = None,
     project_id: Optional[str] = None,
     status: Optional[str] = None,
-    limit: int = 100,
+    limit: int = 500,
     current_user: dict = Depends(require_auth)
 ):
     """Get all test reports with optional filters."""
