@@ -312,6 +312,80 @@ async def create_order(data: OrderCreate):
     return {"message": "Order created successfully", "order": order_data}
 
 
+@router.delete("/orders/{order_id}")
+async def delete_order(order_id: str):
+    """Delete an order"""
+    # Find the order
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Delete from sales_orders
+    await db.sales_orders.delete_one({"id": order_id})
+    
+    # Delete associated lifecycle record
+    await db.order_lifecycle.delete_one({"sales_order_id": order_id})
+    
+    return {"message": "Order deleted successfully"}
+
+
+@router.put("/orders/{order_id}")
+async def update_order(order_id: str, data: dict):
+    """Update an order"""
+    # Find the order
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Prepare update data
+    update_data = {
+        "customer_name": data.get("customer_name", order.get("customer_name")),
+        "customer_address": data.get("customer_address", order.get("customer_address")),
+        "po_number": data.get("po_number", order.get("po_number")),
+        "order_value": data.get("order_value", order.get("order_value")),
+        "total_amount": data.get("order_value", order.get("total_amount")),
+        "delivery_date": data.get("delivery_date", order.get("delivery_date")),
+        "project_name": data.get("project_name", order.get("project_name")),
+        "location": data.get("location", order.get("location")),
+        "notes": data.get("notes", order.get("notes")),
+        "payment_terms": data.get("payment_terms", order.get("payment_terms")),
+        "updated_at": now,
+        "financials": {
+            "purchase_budget": data.get("purchase_budget", 0),
+            "execution_budget": data.get("execution_budget", 0),
+            "others_budget": data.get("others_budget", 0),
+            "target_profit": data.get("target_profit", 0),
+            "purchase_actual": order.get("financials", {}).get("purchase_actual", 0),
+            "execution_actual": order.get("financials", {}).get("execution_actual", 0),
+            "others_actual": order.get("financials", {}).get("others_actual", 0)
+        },
+        "lifecycle": {
+            "status": order.get("lifecycle", {}).get("status", "new"),
+            "purchase_budget": data.get("purchase_budget", 0),
+            "execution_budget": data.get("execution_budget", 0),
+            "others_budget": data.get("others_budget", 0),
+            "target_profit": data.get("target_profit", 0)
+        }
+    }
+    
+    await db.sales_orders.update_one({"id": order_id}, {"$set": update_data})
+    
+    # Update lifecycle record
+    await db.order_lifecycle.update_one(
+        {"sales_order_id": order_id},
+        {"$set": {
+            "purchase_budget": {"type": "value", "value": data.get("purchase_budget", 0), "amount": data.get("purchase_budget", 0)},
+            "execution_budget": {"type": "value", "value": data.get("execution_budget", 0), "amount": data.get("execution_budget", 0)},
+            "target_profit": {"type": "amount", "value": data.get("target_profit", 0), "amount": data.get("target_profit", 0)},
+            "updated_at": now
+        }}
+    )
+    
+    return {"message": "Order updated successfully"}
+
+
 @router.get("/orders")
 async def get_orders_with_lifecycle(
     status: Optional[str] = None,
