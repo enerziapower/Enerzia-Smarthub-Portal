@@ -930,7 +930,7 @@ const OrderManagement = () => {
                     <input
                       type="number"
                       value={formData.order_value || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, order_value: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => handleBudgetChange('order_value', e.target.value)}
                       placeholder="Enter order value"
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                     />
