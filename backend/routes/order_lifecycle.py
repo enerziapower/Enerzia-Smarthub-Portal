@@ -233,6 +233,9 @@ async def create_order(data: OrderCreate):
     order_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     
+    # Use total_amount from items if provided, otherwise use order_value
+    final_total = data.total_amount if data.total_amount > 0 else data.order_value
+    
     # Create the order
     order_data = {
         "id": order_id,
@@ -246,10 +249,15 @@ async def create_order(data: OrderCreate):
         "date": data.order_date,
         "order_date": data.order_date,
         "order_value": data.order_value,
-        "total_amount": data.order_value,  # Use order_value as total_amount
         "delivery_date": data.delivery_date,
         "project_name": data.project_name,
         "location": data.location,
+        # Order Items
+        "items": data.items,
+        "subtotal": data.subtotal,
+        "gst_percent": data.gst_percent,
+        "gst_amount": data.gst_amount,
+        "total_amount": final_total,
         "payment_terms": data.payment_terms,
         "notes": data.notes,
         "po_file_path": data.po_file_path,
