@@ -598,6 +598,7 @@ const OrderManagement = () => {
     const getOthersBudget = () => {
       if (typeof order.financials?.others_budget === 'number') return order.financials.others_budget;
       if (typeof order.lifecycle?.others_budget === 'number') return order.lifecycle.others_budget;
+      if (order.lifecycle?.others_budget?.amount) return order.lifecycle.others_budget.amount;
       return 0;
     };
     const getTargetProfit = () => {
