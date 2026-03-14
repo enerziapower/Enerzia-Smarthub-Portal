@@ -197,13 +197,9 @@ class OrderCreate(BaseModel):
     customer_id: Optional[str] = None
     customer_name: str
     customer_address: Optional[str] = None
-    customer_gst: Optional[str] = None
-    customer_contact: Optional[str] = None
-    customer_phone: Optional[str] = None
-    customer_email: Optional[str] = None
-    po_number: Optional[str] = None
-    po_date: Optional[str] = None
+    po_number: Optional[str] = None  # Customer PO/WO Number
     order_date: Optional[str] = None
+    order_value: float = 0  # Order Value field
     delivery_date: Optional[str] = None
     project_name: Optional[str] = None
     location: Optional[str] = None
@@ -213,23 +209,11 @@ class OrderCreate(BaseModel):
     others_budget: float = 0
     target_profit: float = 0
     target_profit_type: str = "amount"  # 'amount' or 'percent'
-    # Timeline fields
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    deadline: Optional[str] = None
-    # Items
-    items: List[dict] = []
-    subtotal: float = 0
-    gst_percent: float = 18
-    gst_amount: float = 0
-    total_amount: float = 0
     # Other fields
     payment_terms: Optional[str] = None
-    delivery_terms: Optional[str] = None
     notes: Optional[str] = None
     po_file_path: Optional[str] = None
     status: str = "pending"
-    engineer_in_charge: Optional[str] = None
 
 
 @router.post("/orders")
