@@ -331,6 +331,32 @@ const OrderManagement = () => {
     }));
   };
 
+  // Auto-calculate Target Profit when Order Value or budgets change
+  // Formula: Order Value - Purchase Budget - Execution Budget - Others Budget = Target Profit
+  const calculateTargetProfit = useCallback((orderValue, purchaseBudget, executionBudget, othersBudget) => {
+    return (orderValue || 0) - (purchaseBudget || 0) - (executionBudget || 0) - (othersBudget || 0);
+  }, []);
+
+  // Update budget fields with auto-calculation of Target Profit
+  const handleBudgetChange = (field, value) => {
+    const numValue = parseFloat(value) || 0;
+    const newData = { ...formData, [field]: numValue };
+    
+    // Recalculate target profit
+    const targetProfit = calculateTargetProfit(
+      field === 'order_value' ? numValue : newData.order_value,
+      field === 'purchase_budget' ? numValue : newData.purchase_budget,
+      field === 'execution_budget' ? numValue : newData.execution_budget,
+      field === 'others_budget' ? numValue : newData.others_budget
+    );
+    
+    setFormData(prev => ({
+      ...prev,
+      [field]: numValue,
+      target_profit: targetProfit
+    }));
+  };
+
   // Handle PO file upload
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
