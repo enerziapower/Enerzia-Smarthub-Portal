@@ -241,6 +241,10 @@ const OrderManagement = () => {
       setFinancialYear(fy);
       fetchNextPID(fy);
       
+      // Reset form completely when opening modal
+      setFormData(initialFormData);
+      setPOFile(null); // Reset PO file attachment
+      
       // Set today's date as default
       const day = String(today.getDate()).padStart(2, '0');
       const monthStr = String(today.getMonth() + 1).padStart(2, '0');
