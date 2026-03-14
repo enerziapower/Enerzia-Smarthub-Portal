@@ -218,7 +218,7 @@ class OrderCreate(BaseModel):
 
 @router.post("/orders")
 async def create_order(data: OrderCreate):
-    """Create a new order with PID, budget, and timeline - Starting point of Order-to-Cash lifecycle"""
+    """Create a new order with PID, budget - Starting point of Order-to-Cash lifecycle"""
     # Verify PID is unique
     existing = await db.sales_orders.find_one({"order_no": data.pid_no})
     if existing:
@@ -236,32 +236,22 @@ async def create_order(data: OrderCreate):
         "customer_id": data.customer_id,
         "customer_name": data.customer_name,
         "customer_address": data.customer_address,
-        "customer_gst": data.customer_gst,
-        "customer_contact": data.customer_contact,
-        "customer_phone": data.customer_phone,
-        "customer_email": data.customer_email,
         "po_number": data.po_number,
-        "po_date": data.po_date,
         "date": data.order_date,
         "order_date": data.order_date,
+        "order_value": data.order_value,
+        "total_amount": data.order_value,  # Use order_value as total_amount
         "delivery_date": data.delivery_date,
         "project_name": data.project_name,
         "location": data.location,
-        "items": data.items,
-        "subtotal": data.subtotal,
-        "gst_percent": data.gst_percent,
-        "gst_amount": data.gst_amount,
-        "total_amount": data.total_amount,
         "payment_terms": data.payment_terms,
-        "delivery_terms": data.delivery_terms,
         "notes": data.notes,
         "po_file_path": data.po_file_path,
         "status": data.status,
         "payment_status": "unpaid",
-        "engineer_in_charge": data.engineer_in_charge,
         "created_at": now,
         "updated_at": now,
-        # Budget & Timeline info stored directly on order
+        # Budget info stored directly on order
         "financials": {
             "purchase_budget": data.purchase_budget,
             "execution_budget": data.execution_budget,
@@ -280,12 +270,7 @@ async def create_order(data: OrderCreate):
             "execution_budget": data.execution_budget,
             "others_budget": data.others_budget,
             "target_profit": data.target_profit,
-            "target_profit_type": data.target_profit_type,
-            "timeline": {
-                "start_date": data.start_date,
-                "end_date": data.end_date,
-                "deadline": data.deadline
-            }
+            "target_profit_type": data.target_profit_type
         }
     }
     
