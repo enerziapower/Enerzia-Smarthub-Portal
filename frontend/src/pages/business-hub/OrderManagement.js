@@ -712,7 +712,7 @@ const OrderManagement = () => {
                       </div>
                       <div>
                         <p className="text-slate-500">Expenses</p>
-                        <p className="font-semibold text-purple-600">{formatCurrency(order.financials?.purchase_actual || 0)}</p>
+                        <p className="font-semibold text-purple-600">{formatCurrency(order.financials?.total_cost || order.financials?.purchase_actual || 0)}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">Target Profit</p>
