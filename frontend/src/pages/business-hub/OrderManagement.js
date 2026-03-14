@@ -843,13 +843,92 @@ const OrderManagement = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* PID & Category */}
+              {/* Customer Information */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <Building2 size={18} />
+                  Customer Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Select Customer *</label>
+                    <select
+                      value={formData.customer_id}
+                      onChange={(e) => handleCustomerSelect(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="">-- Select Customer --</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name || c.company_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                    <input
+                      type="text"
+                      value={formData.customer_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+                    <textarea
+                      value={formData.customer_address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, customer_address: e.target.value }))}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Customer PO/WO Number</label>
+                    <input
+                      type="text"
+                      value={formData.po_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, po_number: e.target.value }))}
+                      placeholder="Customer Purchase/Work Order Number"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Order Date</label>
+                    <input
+                      type="text"
+                      value={formData.order_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, order_date: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Order Value (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.order_value || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, order_value: parseFloat(e.target.value) || 0 }))}
+                      placeholder="Enter order value"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
+                    <input
+                      type="date"
+                      value={formData.delivery_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, delivery_date: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Project Information */}
               <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
                 <h4 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
                   <FolderKanban size={18} />
-                  Project Identification
+                  Project Information
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
                     <input
@@ -888,117 +967,25 @@ const OrderManagement = () => {
                     </select>
                   </div>
                 </div>
-              </div>
-
-              {/* Customer Info */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                  <Building2 size={18} />
-                  Customer Information
-                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Select Customer *</label>
-                    <select
-                      value={formData.customer_id}
-                      onChange={(e) => handleCustomerSelect(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    >
-                      <option value="">-- Select Customer --</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name || c.company_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
                     <input
                       type="text"
-                      value={formData.customer_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                      value={formData.project_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">GST No</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
                     <input
                       type="text"
-                      value={formData.customer_gst}
-                      onChange={(e) => setFormData(prev => ({ ...prev, customer_gst: e.target.value }))}
+                      value={formData.location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Contact Person</label>
-                    <input
-                      type="text"
-                      value={formData.customer_contact}
-                      onChange={(e) => setFormData(prev => ({ ...prev, customer_contact: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-                    <textarea
-                      value={formData.customer_address}
-                      onChange={(e) => setFormData(prev => ({ ...prev, customer_address: e.target.value }))}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Customer PO/WO Number</label>
-                  <input
-                    type="text"
-                    value={formData.po_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, po_number: e.target.value }))}
-                    placeholder="Customer Purchase/Work Order Number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Order Date</label>
-                  <input
-                    type="text"
-                    value={formData.order_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, order_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
-                  <input
-                    type="date"
-                    value={formData.delivery_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, delivery_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
-                  <input
-                    type="text"
-                    value={formData.project_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
                 </div>
               </div>
 
@@ -1059,43 +1046,6 @@ const OrderManagement = () => {
                       <option value="amount">Amount (₹)</option>
                       <option value="percent">Percent (%)</option>
                     </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                <h4 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
-                  <Calendar size={18} />
-                  Timeline
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                    <input
-                      type="date"
-                      value={formData.start_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                    <input
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
-                    <input
-                      type="date"
-                      value={formData.deadline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
                   </div>
                 </div>
               </div>
