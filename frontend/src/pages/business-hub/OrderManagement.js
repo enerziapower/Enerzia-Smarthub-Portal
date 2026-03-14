@@ -1578,11 +1578,11 @@ const OrderManagement = () => {
       {/* Edit Order Modal */}
       {showEditModal && editingOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-violet-50">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800">Edit Order</h3>
-                <p className="text-sm text-slate-500">Update order details for {editingOrder.order_no || editingOrder.pid_no}</p>
+                <h3 className="text-lg font-semibold text-slate-800">Edit Order Details</h3>
+                <p className="text-sm text-slate-500">Order: <span className="font-mono text-violet-600">{editingOrder.order_no || editingOrder.pid_no}</span></p>
               </div>
               <button
                 onClick={() => { setShowEditModal(false); setEditingOrder(null); setFormData(initialFormData); }}
@@ -1593,6 +1593,70 @@ const OrderManagement = () => {
             </div>
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
               <form onSubmit={handleUpdateOrder} className="p-6 space-y-6">
+                
+                {/* Project Information */}
+                <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
+                  <h4 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
+                    <FolderKanban size={18} />
+                    Project Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">PID Number</label>
+                      <input
+                        type="text"
+                        value={formData.pid_no}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 font-mono text-violet-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      >
+                        {CATEGORIES.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.id} - {cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
+                      <input
+                        type="text"
+                        value={formData.project_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Customer Information */}
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
@@ -1601,20 +1665,11 @@ const OrderManagement = () => {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name *</label>
                       <input
                         type="text"
                         value={formData.customer_name}
                         onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Order Value (₹)</label>
-                      <input
-                        type="number"
-                        value={formData.order_value || ''}
-                        onChange={(e) => handleBudgetChange('order_value', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       />
                     </div>
@@ -1627,6 +1682,24 @@ const OrderManagement = () => {
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       />
                     </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+                      <textarea
+                        value={formData.customer_address}
+                        onChange={(e) => setFormData(prev => ({ ...prev, customer_address: e.target.value }))}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Order Date</label>
+                      <input
+                        type="text"
+                        value={formData.order_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, order_date: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
                       <input
@@ -1635,6 +1708,120 @@ const OrderManagement = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, delivery_date: e.target.value }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Order Value (₹) *</label>
+                      <input
+                        type="number"
+                        value={formData.order_value || ''}
+                        onChange={(e) => handleBudgetChange('order_value', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+                      <ClipboardList size={18} />
+                      Order Items
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={addItem}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                    >
+                      <Plus size={14} />
+                      Add Item
+                    </button>
+                  </div>
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left w-10">#</th>
+                          <th className="px-3 py-2 text-left">Description</th>
+                          <th className="px-3 py-2 text-center w-20">Unit</th>
+                          <th className="px-3 py-2 text-center w-20">Qty</th>
+                          <th className="px-3 py-2 text-right w-28">Unit Price</th>
+                          <th className="px-3 py-2 text-right w-28">Total</th>
+                          <th className="px-3 py-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {formData.items.map((item, index) => (
+                          <tr key={item.id || index}>
+                            <td className="px-3 py-2 text-slate-500">{index + 1}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.description || ''}
+                                onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm"
+                                placeholder="Item description"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={item.unit || 'Nos'}
+                                onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm"
+                              >
+                                {WORK_ITEM_UNITS.map(unit => (
+                                  <option key={unit} value={unit}>{unit}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.quantity || ''}
+                                onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-center"
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.unit_price || ''}
+                                onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-sm text-right"
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-right font-medium">{formatCurrency(item.total || 0)}</td>
+                            <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() => removeItem(index)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Totals */}
+                  <div className="mt-3 flex justify-end">
+                    <div className="w-64 space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Subtotal:</span>
+                        <span className="font-medium">{formatCurrency(formData.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-600">GST ({formData.gst_percent}%):</span>
+                        <span className="font-medium">{formatCurrency(formData.gst_amount)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold border-t pt-1">
+                        <span>Total:</span>
+                        <span className="text-green-600">{formatCurrency(formData.total_amount)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1645,6 +1832,7 @@ const OrderManagement = () => {
                     <DollarSign size={18} />
                     Budget Allocation
                   </h4>
+                  <p className="text-xs text-green-600 mb-3">Formula: Order Value - Purchase Budget - Execution Budget - Others Budget = Target Profit</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Purchase Budget</label>
@@ -1687,25 +1875,38 @@ const OrderManagement = () => {
                   </div>
                 </div>
 
-                {/* PO Document */}
-                {formData.po_file_path && (
-                  <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
-                    <h4 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
-                      <FileText size={18} />
-                      PO Document
-                    </h4>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-violet-600">{formData.po_file_path.split('/').pop()}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleViewDocument(formData.po_file_path)}
-                        className="px-3 py-1 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                      >
-                        View/Download
-                      </button>
+                {/* PO Document & Notes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.po_file_path && (
+                    <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
+                      <h4 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
+                        <FileText size={18} />
+                        PO Document
+                      </h4>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-violet-600 truncate flex-1">{formData.po_file_path.split('/').pop()}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(formData.po_file_path)}
+                          className="px-3 py-1.5 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1"
+                        >
+                          <Eye size={14} />
+                          View
+                        </button>
+                      </div>
                     </div>
+                  )}
+                  <div className={formData.po_file_path ? '' : 'md:col-span-2'}>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                    <textarea
+                      value={formData.notes || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      rows={3}
+                      placeholder="Any additional notes..."
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    />
                   </div>
-                )}
+                </div>
 
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
