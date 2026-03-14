@@ -546,6 +546,134 @@ const OrderManagement = () => {
     return `₹${Number(amount).toLocaleString('en-IN')}`;
   };
 
+  // Calculate profit percentage
+  const calculateProfitPercent = (profit, orderValue) => {
+    if (!orderValue || orderValue === 0) return 0;
+    return ((profit / orderValue) * 100).toFixed(1);
+  };
+
+  // Handle delete order
+  const handleDeleteOrder = async (orderId) => {
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        toast.success('Order deleted successfully');
+        setShowDeleteConfirm(null);
+        fetchOrders();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to delete order');
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast.error('Error deleting order');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handle edit order - open edit modal with order data
+  const handleEditOrder = (order) => {
+    setEditingOrder(order);
+    setFormData({
+      pid_no: order.pid_no || order.order_no,
+      category: order.category || 'PSS',
+      customer_id: order.customer_id || '',
+      customer_name: order.customer_name || '',
+      customer_address: order.customer_address || '',
+      po_number: order.po_number || '',
+      order_date: order.order_date || order.date || '',
+      order_value: order.order_value || order.total_amount || 0,
+      delivery_date: order.delivery_date || '',
+      project_name: order.project_name || '',
+      location: order.location || '',
+      purchase_budget: order.financials?.purchase_budget || order.lifecycle?.purchase_budget || 0,
+      execution_budget: order.financials?.execution_budget || order.lifecycle?.execution_budget || 0,
+      others_budget: order.financials?.others_budget || order.lifecycle?.others_budget || 0,
+      target_profit: order.financials?.target_profit || order.lifecycle?.target_profit || 0,
+      items: order.items || [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
+      subtotal: order.subtotal || 0,
+      gst_percent: order.gst_percent || 18,
+      gst_amount: order.gst_amount || 0,
+      total_amount: order.total_amount || 0,
+      payment_terms: order.payment_terms || '',
+      notes: order.notes || '',
+      po_file_path: order.po_file_path || '',
+      status: order.status || 'pending'
+    });
+    setPOFile(order.po_file_path ? { name: order.po_file_path.split('/').pop() } : null);
+    setShowEditModal(true);
+  };
+
+  // Handle update order
+  const handleUpdateOrder = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const totalBudget = (formData.purchase_budget || 0) + (formData.execution_budget || 0) + (formData.others_budget || 0);
+      
+      const orderData = {
+        ...formData,
+        total_budget: totalBudget,
+        financials: {
+          purchase_budget: formData.purchase_budget,
+          execution_budget: formData.execution_budget,
+          others_budget: formData.others_budget,
+          target_profit: formData.target_profit
+        },
+        lifecycle: {
+          purchase_budget: formData.purchase_budget,
+          execution_budget: formData.execution_budget,
+          others_budget: formData.others_budget,
+          target_profit: formData.target_profit
+        }
+      };
+      
+      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${editingOrder.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+      
+      if (response.ok) {
+        toast.success('Order updated successfully');
+        setShowEditModal(false);
+        setEditingOrder(null);
+        setFormData(initialFormData);
+        fetchOrders();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to update order');
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Error updating order');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // View/Download PO document
+  const handleViewDocument = (filePath) => {
+    if (filePath) {
+      window.open(`${API_URL}${filePath}`, '_blank');
+    } else {
+      toast.info('No document attached');
+    }
+  };
+
   // Filter orders
   const filteredOrders = orders.filter(order => {
     const matchesSearch = !searchTerm || 
