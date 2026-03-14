@@ -248,8 +248,7 @@ const OrderManagement = () => {
       const year = today.getFullYear();
       setFormData(prev => ({ 
         ...prev, 
-        order_date: `${day}/${monthStr}/${year}`,
-        start_date: `${year}-${monthStr}-${day}`
+        order_date: `${day}/${monthStr}/${year}`
       }));
     }
   }, [showAddModal]);
