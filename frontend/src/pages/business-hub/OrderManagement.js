@@ -987,6 +987,143 @@ const OrderManagement = () => {
                     />
                   </div>
                 </div>
+
+                {/* Order Items - inside Project Information */}
+                <div className="mt-4 pt-4 border-t border-violet-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-medium text-violet-700 flex items-center gap-2">
+                      <ClipboardList size={16} />
+                      Order Items
+                    </h5>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={excelInputRef}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleExcelImport}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => excelInputRef.current?.click()}
+                        className="px-3 py-1.5 text-sm border border-violet-300 rounded-lg hover:bg-violet-100 flex items-center gap-1 text-violet-700"
+                      >
+                        <FileSpreadsheet size={14} />
+                        Import Excel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={addItem}
+                        className="px-3 py-1.5 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1"
+                      >
+                        <Plus size={14} />
+                        Add Item
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-violet-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-violet-100/50">
+                        <tr>
+                          <th className="px-3 py-2 text-left w-10 text-violet-700">#</th>
+                          <th className="px-3 py-2 text-left text-violet-700">Description</th>
+                          <th className="px-3 py-2 text-center w-24 text-violet-700">Unit</th>
+                          <th className="px-3 py-2 text-center w-24 text-violet-700">Qty</th>
+                          <th className="px-3 py-2 text-right w-32 text-violet-700">Unit Price</th>
+                          <th className="px-3 py-2 text-right w-32 text-violet-700">Total</th>
+                          <th className="px-3 py-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-violet-100">
+                        {formData.items.map((item, index) => (
+                          <tr key={item.id}>
+                            <td className="px-3 py-2 text-slate-500">{item.sno}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.description}
+                                onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded"
+                                placeholder="Item description"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={item.unit}
+                                onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded"
+                              >
+                                {WORK_ITEM_UNITS.map(unit => (
+                                  <option key={unit} value={unit}>{unit}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-center"
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.unit_price}
+                                onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1 border border-slate-200 rounded text-right"
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-right font-medium">{formatCurrency(item.total)}</td>
+                            <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() => removeItem(index)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="mt-3 flex justify-end">
+                    <div className="w-72 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Subtotal:</span>
+                        <span className="font-medium">{formatCurrency(formData.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-600">GST:</span>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={formData.gst_percent}
+                            onChange={(e) => handleGstChange(parseInt(e.target.value))}
+                            className="px-2 py-1 border border-slate-200 rounded text-sm"
+                          >
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                          </select>
+                          <span className="font-medium">{formatCurrency(formData.gst_amount)}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-base font-bold border-t border-slate-200 pt-2">
+                        <span>Total:</span>
+                        <span className="text-green-600">{formatCurrency(formData.total_amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Budget Allocation */}
