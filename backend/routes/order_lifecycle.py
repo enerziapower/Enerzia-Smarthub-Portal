@@ -1172,3 +1172,190 @@ async def get_project_types():
             {"value": "custom", "label": "Custom Project"}
         ]
     }
+
+
+# ============== PROJECT MANAGEMENT ENDPOINTS (Phase 2) ==============
+
+class AcceptOrderRequest(BaseModel):
+    """Request body for accepting an order as a project"""
+    start_date: str
+    end_date: Optional[str] = None
+    deadline: Optional[str] = None
+    project_manager: Optional[str] = None
+    notes: Optional[str] = None
+    project_status: str = "accepted"
+
+
+class UpdateTimelineRequest(BaseModel):
+    """Request body for updating project timeline"""
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    deadline: Optional[str] = None
+    project_manager: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class UpdateProjectStatusRequest(BaseModel):
+    """Request body for updating project status"""
+    project_status: str
+
+
+@router.post("/orders/{order_id}/accept")
+async def accept_order_as_project(order_id: str, data: AcceptOrderRequest):
+    """
+    Accept an order from Order Management as a project.
+    This is the handoff point from Order Management to Project Management.
+    Updates the order's project_status and sets timeline information.
+    """
+    # Find the order
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Check if order is already accepted
+    current_status = order.get("project_status", "pending")
+    if current_status not in ["pending", None, ""]:
+        raise HTTPException(status_code=400, detail=f"Order already has status: {current_status}")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Prepare timeline data
+    timeline_data = {
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "deadline": data.deadline,
+        "project_manager": data.project_manager,
+        "notes": data.notes,
+        "accepted_at": now.isoformat()
+    }
+    
+    # Update the sales order with project status and timeline
+    update_data = {
+        "project_status": data.project_status,
+        "timeline": timeline_data,
+        "updated_at": now
+    }
+    
+    await db.sales_orders.update_one({"id": order_id}, {"$set": update_data})
+    
+    # Also update the order_lifecycle record if it exists
+    await db.order_lifecycle.update_one(
+        {"sales_order_id": order_id},
+        {"$set": {
+            "project_status": data.project_status,
+            "timeline": timeline_data,
+            "status": "accepted",
+            "updated_at": now
+        }}
+    )
+    
+    # Get updated order
+    updated_order = await db.sales_orders.find_one({"id": order_id}, {"_id": 0})
+    
+    return {
+        "message": f"Order {order.get('order_no', order_id)} accepted as project",
+        "order": updated_order
+    }
+
+
+@router.put("/orders/{order_id}/timeline")
+async def update_order_timeline(order_id: str, data: UpdateTimelineRequest):
+    """
+    Update the timeline for an accepted project.
+    Allows modifying start date, end date, deadline, and project manager.
+    """
+    # Find the order
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Get existing timeline or create new
+    existing_timeline = order.get("timeline", {})
+    
+    # Update timeline with new values (only if provided)
+    timeline_update = {
+        "start_date": data.start_date if data.start_date else existing_timeline.get("start_date"),
+        "end_date": data.end_date if data.end_date else existing_timeline.get("end_date"),
+        "deadline": data.deadline if data.deadline else existing_timeline.get("deadline"),
+        "project_manager": data.project_manager if data.project_manager else existing_timeline.get("project_manager"),
+        "notes": data.notes if data.notes is not None else existing_timeline.get("notes"),
+        "updated_at": now.isoformat()
+    }
+    
+    # Preserve accepted_at if it exists
+    if existing_timeline.get("accepted_at"):
+        timeline_update["accepted_at"] = existing_timeline["accepted_at"]
+    
+    # Update sales order
+    await db.sales_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "timeline": timeline_update,
+            "updated_at": now
+        }}
+    )
+    
+    # Also update order_lifecycle record
+    await db.order_lifecycle.update_one(
+        {"sales_order_id": order_id},
+        {"$set": {
+            "timeline": timeline_update,
+            "updated_at": now
+        }}
+    )
+    
+    # Get updated order
+    updated_order = await db.sales_orders.find_one({"id": order_id}, {"_id": 0})
+    
+    return {
+        "message": "Timeline updated successfully",
+        "order": updated_order
+    }
+
+
+@router.put("/orders/{order_id}/status")
+async def update_order_project_status(order_id: str, data: UpdateProjectStatusRequest):
+    """
+    Update the project status of an order.
+    Valid statuses: pending, accepted, in_progress, on_hold, completed, cancelled
+    This update is bi-directional and reflects in both Order Summary and Project Management.
+    """
+    valid_statuses = ["pending", "accepted", "in_progress", "on_hold", "completed", "cancelled"]
+    
+    if data.project_status not in valid_statuses:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+        )
+    
+    # Find the order
+    order = await db.sales_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Update sales order
+    await db.sales_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "project_status": data.project_status,
+            "updated_at": now
+        }}
+    )
+    
+    # Also update order_lifecycle record
+    await db.order_lifecycle.update_one(
+        {"sales_order_id": order_id},
+        {"$set": {
+            "project_status": data.project_status,
+            "updated_at": now
+        }}
+    )
+    
+    return {
+        "message": f"Status updated to {data.project_status}",
+        "project_status": data.project_status
+    }
