@@ -1157,13 +1157,14 @@ const OrderManagement = () => {
                   <DollarSign size={18} />
                   Budget Allocation
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <p className="text-xs text-green-600 mb-3">Formula: Order Value - Purchase Budget - Execution Budget - Others Budget = Target Profit</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Purchase Budget</label>
                     <input
                       type="number"
                       value={formData.purchase_budget || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, purchase_budget: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => handleBudgetChange('purchase_budget', e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       placeholder="₹0"
                     />
@@ -1173,7 +1174,7 @@ const OrderManagement = () => {
                     <input
                       type="number"
                       value={formData.execution_budget || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, execution_budget: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => handleBudgetChange('execution_budget', e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       placeholder="₹0"
                     />
@@ -1183,7 +1184,7 @@ const OrderManagement = () => {
                     <input
                       type="number"
                       value={formData.others_budget || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, others_budget: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => handleBudgetChange('others_budget', e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                       placeholder="₹0"
                     />
@@ -1193,21 +1194,13 @@ const OrderManagement = () => {
                     <input
                       type="number"
                       value={formData.target_profit || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, target_profit: parseFloat(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                      placeholder="₹0"
+                      readOnly
+                      className={`w-full px-3 py-2 border rounded-lg font-semibold ${
+                        formData.target_profit >= 0 
+                          ? 'border-green-300 bg-green-100 text-green-700' 
+                          : 'border-red-300 bg-red-100 text-red-700'
+                      }`}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Profit Type</label>
-                    <select
-                      value={formData.target_profit_type}
-                      onChange={(e) => setFormData(prev => ({ ...prev, target_profit_type: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    >
-                      <option value="amount">Amount (₹)</option>
-                      <option value="percent">Percent (%)</option>
-                    </select>
                   </div>
                 </div>
               </div>
