@@ -183,7 +183,7 @@ const OrderManagement = () => {
       const token = localStorage.getItem('token');
       
       const [customersRes, teamRes] = await Promise.all([
-        fetch(`${API_URL}/api/domestic-customers`, {
+        fetch(`${API_URL}/api/customer-management/customers-simple`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`${API_URL}/api/department-team/projects`, {
@@ -193,7 +193,8 @@ const OrderManagement = () => {
       
       if (customersRes.ok) {
         const data = await customersRes.json();
-        setCustomers(data.filter(c => c.is_active !== false));
+        // API returns { customers: [...], total: n }
+        setCustomers(data.customers || []);
       }
       if (teamRes.ok) {
         const data = await teamRes.json();
