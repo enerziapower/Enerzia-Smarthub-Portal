@@ -682,11 +682,11 @@ const OrderManagement = () => {
             filteredOrders.map((order) => {
               // Get budget from financials (API returns purchase_target, execution_target)
               // Also check order.lifecycle and order.financials for orders created via Order Management form
-              const purchaseBudget = order.financials?.purchase_budget || order.financials?.purchase_target || order.lifecycle?.purchase_budget?.amount || order.lifecycle?.purchase_budget || 0;
-              const executionBudget = order.financials?.execution_budget || order.financials?.execution_target || order.lifecycle?.execution_budget?.amount || order.lifecycle?.execution_budget || 0;
-              const othersBudget = order.financials?.others_budget || order.lifecycle?.others_budget || 0;
-              const totalBudget = (purchaseBudget || 0) + (executionBudget || 0) + (othersBudget || 0);
-              const targetProfit = order.financials?.target_profit || order.lifecycle?.target_profit?.amount || order.lifecycle?.target_profit || 0;
+              const purchaseBudget = Number(order.financials?.purchase_budget) || Number(order.financials?.purchase_target) || Number(order.lifecycle?.purchase_budget?.amount) || Number(order.lifecycle?.purchase_budget) || 0;
+              const executionBudget = Number(order.financials?.execution_budget) || Number(order.financials?.execution_target) || Number(order.lifecycle?.execution_budget?.amount) || Number(order.lifecycle?.execution_budget) || 0;
+              const othersBudget = Number(order.financials?.others_budget) || Number(order.lifecycle?.others_budget) || 0;
+              const totalBudget = purchaseBudget + executionBudget + othersBudget;
+              const targetProfit = Number(order.financials?.target_profit) || Number(order.lifecycle?.target_profit?.amount) || Number(order.lifecycle?.target_profit) || 0;
               
               return (
                 <div key={order.id} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow">
