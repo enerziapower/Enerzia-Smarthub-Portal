@@ -969,20 +969,12 @@ const OrderManagement = () => {
               {/* Order Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">PO Number</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Customer PO/WO Number</label>
                   <input
                     type="text"
                     value={formData.po_number}
                     onChange={(e) => setFormData(prev => ({ ...prev, po_number: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">PO Date</label>
-                  <input
-                    type="date"
-                    value={formData.po_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, po_date: e.target.value }))}
+                    placeholder="Customer Purchase/Work Order Number"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                   />
                 </div>
