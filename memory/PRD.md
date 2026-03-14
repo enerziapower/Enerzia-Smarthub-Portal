@@ -18,8 +18,11 @@ Order Management Page
 |---------|-------------|
 | **PID Generation** | Auto-generated Project ID in format `PID/FY/number` (e.g., PID/25-26/001) |
 | **Add New Order Modal** | Full form with customer info, order details, budget, timeline, and items |
+| **Customer Dropdown** | Linked to Domestic Customers with auto-fill (name, address, GST, contact) |
+| **Customer PO/WO Number** | Renamed field for customer Purchase/Work Order reference |
 | **Budget Allocation** | Purchase Budget, Execution Budget, Others Budget, Target Profit |
 | **Timeline Planning** | Start Date, End Date, Deadline |
+| **PO Document Upload** | Upload customer PO/WO document (PDF, DOC, images) |
 | **Order Summary View** | Stats cards (Total Orders, Value, Pending, Confirmed) + Orders table |
 | **Duplicate PID Validation** | Backend rejects orders with existing PIDs |
 
@@ -27,10 +30,19 @@ Order Management Page
 - `POST /api/order-lifecycle/orders` - Create new order with PID, budget, timeline
 - `GET /api/order-lifecycle/orders` - Fetch orders with lifecycle/financials data
 - `GET /api/projects/next-pid?financial_year=FY` - Get next available PID
+- `POST /api/upload-po` - Upload PO document (fixed from non-existent endpoint)
+- `GET /api/customer-management/customers-simple` - Get customer list for dropdown
 
 **Files Created/Modified:**
-- `/app/frontend/src/pages/business-hub/OrderManagement.js` - Two-tab component (1412 lines)
+- `/app/frontend/src/pages/business-hub/OrderManagement.js` - Two-tab component with fixes
 - `/app/backend/routes/order_lifecycle.py` - Added POST /orders endpoint with OrderCreate model
+
+**Bug Fixes (Mar 14, 2026):**
+- Fixed customer dropdown to use correct API endpoint `/api/customer-management/customers-simple`
+- Renamed "PO Number" to "Customer PO/WO Number" with placeholder
+- Removed "PO Date" field (only Order Date and Delivery Date remain)
+- Fixed PO Document upload to use correct endpoint `/api/upload-po`
+- Fixed Create Order button functionality
 
 **Test Results:** 100% success rate (12/12 backend tests, all frontend features) - See `/app/test_reports/iteration_91.json`
 
