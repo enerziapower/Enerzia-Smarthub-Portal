@@ -149,18 +149,36 @@ async def get_next_pid(financial_year: Optional[str] = None):
         financial_year = f"{year1:02d}-{year2:02d}"
     
     pattern = f"^PID/{financial_year}/"
+    
+    # Check both projects and sales_orders collections for existing PIDs
     projects_this_year = await db.projects.find(
         {"pid_no": {"$regex": pattern}},
         {"pid_no": 1, "_id": 0}
     ).to_list(10000)
     
-    if not projects_this_year:
+    orders_this_year = await db.sales_orders.find(
+        {"$or": [
+            {"pid_no": {"$regex": pattern}},
+            {"order_no": {"$regex": pattern}}
+        ]},
+        {"pid_no": 1, "order_no": 1, "_id": 0}
+    ).to_list(10000)
+    
+    # Combine all PIDs from both collections
+    all_pids = []
+    for project in projects_this_year:
+        all_pids.append(project.get("pid_no", ""))
+    for order in orders_this_year:
+        all_pids.append(order.get("pid_no", order.get("order_no", "")))
+    
+    if not all_pids:
         return {"next_pid": f"PID/{financial_year}/001", "financial_year": financial_year}
     
     max_num = 0
-    for project in projects_this_year:
+    for pid in all_pids:
         try:
-            pid = project.get("pid_no", "")
+            if not pid:
+                continue
             parts = pid.split("/")
             if len(parts) == 3 and parts[1] == financial_year:
                 num = int(parts[2])
