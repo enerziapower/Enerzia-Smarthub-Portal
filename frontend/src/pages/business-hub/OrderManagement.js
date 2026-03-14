@@ -370,7 +370,7 @@ const OrderManagement = () => {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       
-      const response = await fetch(`${API_URL}/api/upload/po-document`, {
+      const response = await fetch(`${API_URL}/api/upload-po`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: uploadFormData
