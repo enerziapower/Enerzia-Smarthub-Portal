@@ -163,12 +163,33 @@ async def get_order_financials(order_id: str) -> dict:
     actual_profit = order_value - total_cost
     profit_margin = (actual_profit / order_value * 100) if order_value > 0 else 0
     
-    # Calculate savings
+    # Calculate savings and budgets
     purchase_target = 0
     execution_target = 0
+    others_budget = 0
+    target_profit = 0
     if lifecycle:
         purchase_target = calculate_budget_amount(order_value, lifecycle.get("purchase_budget"))
         execution_target = calculate_budget_amount(order_value, lifecycle.get("execution_budget"))
+        # Get others_budget - might be a number or an object
+        others_b = lifecycle.get("others_budget", 0)
+        others_budget = others_b.get("amount", others_b) if isinstance(others_b, dict) else others_b
+        # Get target_profit - might be a number or an object
+        target_p = lifecycle.get("target_profit", 0)
+        target_profit = target_p.get("amount", target_p) if isinstance(target_p, dict) else target_p
+    
+    # Also check the sales_order directly for budget values
+    if sales_order:
+        order_financials = sales_order.get("financials", {})
+        order_lifecycle = sales_order.get("lifecycle", {})
+        if not purchase_target:
+            purchase_target = order_financials.get("purchase_budget", 0) or order_lifecycle.get("purchase_budget", 0)
+        if not execution_target:
+            execution_target = order_financials.get("execution_budget", 0) or order_lifecycle.get("execution_budget", 0)
+        if not others_budget:
+            others_budget = order_financials.get("others_budget", 0) or order_lifecycle.get("others_budget", 0)
+        if not target_profit:
+            target_profit = order_financials.get("target_profit", 0) or order_lifecycle.get("target_profit", 0)
     
     purchase_savings = purchase_target - purchase_cost if purchase_target > 0 else 0
     execution_savings = execution_target - total_expenses if execution_target > 0 else 0
@@ -178,9 +199,13 @@ async def get_order_financials(order_id: str) -> dict:
         "purchase_target": purchase_target,
         "purchase_actual": purchase_cost,
         "purchase_savings": purchase_savings,
+        "purchase_budget": purchase_target,  # Alias for frontend compatibility
         "execution_target": execution_target,
         "execution_actual": total_expenses,
         "execution_savings": execution_savings,
+        "execution_budget": execution_target,  # Alias for frontend compatibility
+        "others_budget": others_budget,
+        "target_profit": target_profit,
         "total_cost": total_cost,
         "actual_profit": actual_profit,
         "profit_margin": round(profit_margin, 1),
