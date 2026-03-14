@@ -86,7 +86,7 @@ const OrderManagement = () => {
     customer_address: '',
     po_number: '', // Customer PO/WO Number
     order_date: new Date().toLocaleDateString('en-GB'),
-    order_value: 0, // New field for Order Value
+    order_value: 0, // Order Value field
     delivery_date: '',
     project_name: '',
     location: '',
@@ -96,8 +96,8 @@ const OrderManagement = () => {
     others_budget: 0,
     target_profit: 0,
     target_profit_type: 'amount', // 'amount' or 'percent'
-    // Items (kept for detailed breakdown if needed)
-    items: [],
+    // Order Items
+    items: [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
     subtotal: 0,
     gst_percent: 18,
     gst_amount: 0,
