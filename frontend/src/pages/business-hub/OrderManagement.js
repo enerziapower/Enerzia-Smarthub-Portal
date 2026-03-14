@@ -1355,16 +1355,16 @@ const OrderManagement = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Target Profit</label>
-                    <input
-                      type="number"
-                      value={formData.target_profit || ''}
-                      readOnly
-                      className={`w-full px-3 py-2 border rounded-lg font-semibold ${
-                        formData.target_profit >= 0 
-                          ? 'border-green-300 bg-green-100 text-green-700' 
-                          : 'border-red-300 bg-red-100 text-red-700'
-                      }`}
-                    />
+                    <div className={`w-full px-3 py-2 border rounded-lg font-semibold flex items-center justify-between ${
+                      formData.target_profit >= 0 
+                        ? 'border-green-300 bg-green-100 text-green-700' 
+                        : 'border-red-300 bg-red-100 text-red-700'
+                    }`}>
+                      <span>{formatCurrency(formData.target_profit || 0)}</span>
+                      <span className="text-xs">
+                        ({calculateProfitPercent(formData.target_profit, formData.order_value)}%)
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
