@@ -1501,6 +1501,201 @@ const OrderManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800">Delete Order</h3>
+                  <p className="text-sm text-slate-500">This action cannot be undone</p>
+                </div>
+              </div>
+              <p className="text-slate-600 mb-6">
+                Are you sure you want to delete order <span className="font-semibold text-violet-600">{showDeleteConfirm.order_no || showDeleteConfirm.pid_no}</span>?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteOrder(showDeleteConfirm.id)}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Order Modal */}
+      {showEditModal && editingOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800">Edit Order</h3>
+                <p className="text-sm text-slate-500">Update order details for {editingOrder.order_no || editingOrder.pid_no}</p>
+              </div>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingOrder(null); setFormData(initialFormData); }}
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <form onSubmit={handleUpdateOrder} className="p-6 space-y-6">
+                {/* Customer Information */}
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <Building2 size={18} />
+                    Customer Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                      <input
+                        type="text"
+                        value={formData.customer_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Order Value (₹)</label>
+                      <input
+                        type="number"
+                        value={formData.order_value || ''}
+                        onChange={(e) => handleBudgetChange('order_value', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Customer PO/WO Number</label>
+                      <input
+                        type="text"
+                        value={formData.po_number}
+                        onChange={(e) => setFormData(prev => ({ ...prev, po_number: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
+                      <input
+                        type="date"
+                        value={formData.delivery_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, delivery_date: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Budget Allocation */}
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                    <DollarSign size={18} />
+                    Budget Allocation
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Purchase Budget</label>
+                      <input
+                        type="number"
+                        value={formData.purchase_budget || ''}
+                        onChange={(e) => handleBudgetChange('purchase_budget', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Execution Budget</label>
+                      <input
+                        type="number"
+                        value={formData.execution_budget || ''}
+                        onChange={(e) => handleBudgetChange('execution_budget', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Others Budget</label>
+                      <input
+                        type="number"
+                        value={formData.others_budget || ''}
+                        onChange={(e) => handleBudgetChange('others_budget', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Target Profit</label>
+                      <div className={`w-full px-3 py-2 border rounded-lg font-semibold flex items-center justify-between ${
+                        formData.target_profit >= 0 
+                          ? 'border-green-300 bg-green-100 text-green-700' 
+                          : 'border-red-300 bg-red-100 text-red-700'
+                      }`}>
+                        <span>{formatCurrency(formData.target_profit || 0)}</span>
+                        <span className="text-xs">({calculateProfitPercent(formData.target_profit, formData.order_value)}%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PO Document */}
+                {formData.po_file_path && (
+                  <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
+                    <h4 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
+                      <FileText size={18} />
+                      PO Document
+                    </h4>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-violet-600">{formData.po_file_path.split('/').pop()}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleViewDocument(formData.po_file_path)}
+                        className="px-3 py-1 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                      >
+                        View/Download
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => { setShowEditModal(false); setEditingOrder(null); setFormData(initialFormData); }}
+                    className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {submitting ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    Update Order
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
