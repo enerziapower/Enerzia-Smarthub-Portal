@@ -699,7 +699,9 @@ const OrderManagement = () => {
   // View/Download PO document
   const handleViewDocument = (filePath) => {
     if (filePath) {
-      window.open(`${API_URL}${filePath}`, '_blank');
+      // Ensure the path starts with /api for proper routing
+      const apiPath = filePath.startsWith('/api') ? filePath : `/api${filePath}`;
+      window.open(`${API_URL}${apiPath}`, '_blank');
     } else {
       toast.info('No document attached');
     }
