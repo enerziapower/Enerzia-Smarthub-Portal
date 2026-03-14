@@ -84,13 +84,9 @@ const OrderManagement = () => {
     customer_id: '',
     customer_name: '',
     customer_address: '',
-    customer_gst: '',
-    customer_contact: '',
-    customer_phone: '',
-    customer_email: '',
-    po_number: '',
-    po_date: '',
+    po_number: '', // Customer PO/WO Number
     order_date: new Date().toLocaleDateString('en-GB'),
+    order_value: 0, // New field for Order Value
     delivery_date: '',
     project_name: '',
     location: '',
@@ -100,23 +96,17 @@ const OrderManagement = () => {
     others_budget: 0,
     target_profit: 0,
     target_profit_type: 'amount', // 'amount' or 'percent'
-    // Timeline fields
-    start_date: '',
-    end_date: '',
-    deadline: '',
-    // Items
-    items: [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
+    // Items (kept for detailed breakdown if needed)
+    items: [],
     subtotal: 0,
     gst_percent: 18,
     gst_amount: 0,
     total_amount: 0,
     // Other fields
     payment_terms: '',
-    delivery_terms: '',
     notes: '',
     po_file_path: '',
-    status: 'pending',
-    engineer_in_charge: ''
+    status: 'pending'
   };
   
   const [formData, setFormData] = useState(initialFormData);
