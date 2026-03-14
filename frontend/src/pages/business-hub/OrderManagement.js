@@ -262,11 +262,7 @@ const OrderManagement = () => {
         ...prev,
         customer_id: customer.id,
         customer_name: customer.name || customer.company_name || '',
-        customer_address: customer.address || '',
-        customer_gst: customer.gst_number || customer.gst_no || '',
-        customer_contact: customer.contact_person || '',
-        customer_phone: customer.phone || '',
-        customer_email: customer.email || ''
+        customer_address: customer.address || ''
       }));
     }
   };
