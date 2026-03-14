@@ -358,24 +358,32 @@ const LinkServiceReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedRep
 const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReportIds = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [testReports, setTestReports] = useState([]);
+  const [allReports, setAllReports] = useState([]); // Store all reports for filtering
   const [loading, setLoading] = useState(false);
   const [equipmentFilter, setEquipmentFilter] = useState('all');
+  const [dynamicEquipmentTypes, setDynamicEquipmentTypes] = useState([]); // Dynamic list from database
 
   useEffect(() => {
     if (isOpen) {
       fetchTestReports();
     }
-  }, [isOpen, equipmentFilter]);
+  }, [isOpen]);
+
+  // Filter reports when equipment filter changes
+  useEffect(() => {
+    if (equipmentFilter === 'all') {
+      setTestReports(allReports);
+    } else {
+      setTestReports(allReports.filter(r => r.equipment_type === equipmentFilter));
+    }
+  }, [equipmentFilter, allReports]);
 
   const fetchTestReports = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // Fetch all reports (increased limit to 500 to show all recent reports)
-      let url = `${API}/api/test-reports?limit=500`;
-      if (equipmentFilter !== 'all') {
-        url += `&equipment_type=${equipmentFilter}`;
-      }
+      // Fetch all reports (increased limit to 1000 to show all reports)
+      const url = `${API}/api/test-reports?limit=1000`;
       
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -390,13 +398,35 @@ const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReport
           const dateB = new Date(b.created_at || 0);
           return dateB - dateA;
         });
+        setAllReports(reports);
         setTestReports(reports);
+        
+        // Build dynamic equipment types list from all reports
+        const uniqueTypes = [...new Set(reports.map(r => r.equipment_type).filter(Boolean))];
+        // Sort alphabetically and create label-value pairs
+        const dynamicTypes = uniqueTypes.sort().map(type => {
+          // Try to find a matching label from EQUIPMENT_TYPES, otherwise format the type
+          const predefinedType = EQUIPMENT_TYPES.find(e => e.id === type);
+          const label = predefinedType ? predefinedType.name : formatEquipmentLabel(type);
+          return { id: type, name: label };
+        });
+        setDynamicEquipmentTypes(dynamicTypes);
       }
     } catch (error) {
       console.error('Error fetching test reports:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Format equipment type label (convert snake_case/kebab-case to Title Case)
+  const formatEquipmentLabel = (type) => {
+    if (!type) return 'Unknown';
+    return type
+      .replace(/[-_]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   const filteredReports = testReports.filter(report => {
@@ -412,7 +442,7 @@ const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReport
 
   const getEquipmentLabel = (type) => {
     const eq = EQUIPMENT_TYPES.find(e => e.id === type);
-    return eq ? eq.name : type;
+    return eq ? eq.name : formatEquipmentLabel(type);
   };
 
   if (!isOpen) return null;
@@ -447,10 +477,13 @@ const LinkTestReportModal = ({ isOpen, onClose, onLink, visitIndex, linkedReport
             onChange={(e) => setEquipmentFilter(e.target.value)}
             className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Equipment Types</option>
-            {EQUIPMENT_TYPES.map(type => (
-              <option key={type.id} value={type.id}>{type.name}</option>
-            ))}
+            <option value="all">All Equipment Types ({allReports.length})</option>
+            {dynamicEquipmentTypes.map(type => {
+              const count = allReports.filter(r => r.equipment_type === type.id).length;
+              return (
+                <option key={type.id} value={type.id}>{type.name} ({count})</option>
+              );
+            })}
           </select>
         </div>
 
