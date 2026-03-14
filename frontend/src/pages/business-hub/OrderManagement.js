@@ -94,8 +94,7 @@ const OrderManagement = () => {
     purchase_budget: 0,
     execution_budget: 0,
     others_budget: 0,
-    target_profit: 0,
-    target_profit_type: 'amount', // 'amount' or 'percent'
+    target_profit: 0, // Auto-calculated: Order Value - Purchase - Execution - Others
     // Order Items
     items: [{ id: '1', sno: 1, description: '', unit: 'Nos', quantity: 1, unit_price: 0, total: 0 }],
     subtotal: 0,
