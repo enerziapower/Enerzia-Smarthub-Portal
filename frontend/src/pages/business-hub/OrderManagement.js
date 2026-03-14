@@ -378,11 +378,12 @@ const OrderManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setFormData(prev => ({ ...prev, po_file_path: data.file_path || data.url }));
+        setFormData(prev => ({ ...prev, po_file_path: data.path || data.file_path || data.url }));
         setPOFile(file);
         toast.success('File uploaded successfully');
       } else {
-        toast.error('Failed to upload file');
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to upload file');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
