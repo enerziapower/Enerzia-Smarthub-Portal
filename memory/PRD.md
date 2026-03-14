@@ -2,6 +2,46 @@
 
 ## Latest Updates
 
+### Order-to-Cash Lifecycle Phase 2: Project Management ✅ COMPLETE (Mar 14, 2026)
+**Location:** Business Hub → Project Management
+
+**MAJOR FEATURE:** Implemented Phase 2 of the Order-to-Cash lifecycle - the handoff from Order Management to Project Management.
+
+**Workflow:**
+```
+Order Management (Phase 1)          Project Management (Phase 2)
+├── Create Order with PID  ────────► View all orders from Order Management
+└── Order Summary                    ├── "Accept" pending orders
+                                     ├── Set project timeline
+                                     ├── Update project status
+                                     └── View project details
+```
+
+| Feature | Description |
+|---------|-------------|
+| **Accept Order Flow** | Projects Dept clicks "Accept" on pending orders, opens modal with timeline fields |
+| **Timeline Fields** | Start Date, End Date, Deadline, Project Manager, Notes |
+| **Project Status** | Pending → Accepted → In Progress → On Hold → Completed (or Cancelled) |
+| **Status Dropdown** | Quick status changes for accepted orders |
+| **Timeline Edit** | Calendar button to modify timeline after acceptance |
+| **Bi-directional Sync** | Timeline and status updates reflect in both Order Management and Project Management |
+| **Stats Dashboard** | Total Orders, Pending, Accepted, In Progress, Completed, Total Value |
+| **Search & Filter** | Filter by status, category, search by PID/customer |
+| **Detail View Modal** | Shows customer info, order value, category, timeline, budget allocation |
+
+**Backend API Endpoints:**
+- `POST /api/order-lifecycle/orders/{order_id}/accept` - Accept order with timeline
+- `PUT /api/order-lifecycle/orders/{order_id}/timeline` - Update timeline
+- `PUT /api/order-lifecycle/orders/{order_id}/status` - Update project status
+
+**Files Modified:**
+- `/app/backend/routes/order_lifecycle.py` - Added Accept, Timeline, Status endpoints (lines 1175-1300)
+- `/app/frontend/src/pages/business-hub/ProjectManagement.js` - Complete frontend component
+
+**Test Results:** 100% success rate (16/16 backend tests, all frontend features) - See `/app/test_reports/iteration_92.json`
+
+---
+
 ### Order-to-Cash Lifecycle Phase 1: Order Management ✅ COMPLETE (Mar 14, 2026)
 **Location:** Business Hub → Order Management
 
