@@ -18,12 +18,53 @@ const Projects = () => {
   const [importing, setImporting] = useState(false);
   const [activeView, setActiveView] = useState('live'); // 'live' or 'completed'
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [projectRequests, setProjectRequests] = useState({}); // Cache for requests
   const fileInputRef = useRef(null);
   const [filters, setFilters] = useState({
     status: '',
     category: '',
     search: '',
   });
+
+  // Calculate work items completion
+  const getWorkItemsStats = (workItems) => {
+    if (!workItems || workItems.length === 0) return { total: 0, completed: 0, avgCompletion: 0 };
+    const validItems = workItems.filter(w => w.description?.trim());
+    if (validItems.length === 0) return { total: 0, completed: 0, avgCompletion: 0 };
+    
+    const completed = validItems.filter(w => w.status === 'Completed' || w.completion_percentage === 100).length;
+    const avgCompletion = Math.round(
+      validItems.reduce((sum, item) => sum + (item.completion_percentage || 0), 0) / validItems.length
+    );
+    return { total: validItems.length, completed, avgCompletion };
+  };
+
+  // Fetch project requests (cached)
+  const fetchProjectRequests = async (projectId) => {
+    if (projectRequests[projectId]) return projectRequests[projectId];
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/by-order/${projectId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProjectRequests(prev => ({ ...prev, [projectId]: data }));
+        return data;
+      }
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    }
+    return { material: [], vendor: [], payment: [] };
+  };
+
+  // Load requests for visible projects
+  useEffect(() => {
+    if (projects.length > 0) {
+      // Only load for first 20 visible projects to avoid too many requests
+      projects.slice(0, 20).forEach(p => fetchProjectRequests(p.id));
+    }
+  }, [projects]);
 
   const loadProjects = useCallback(async () => {
     try {
