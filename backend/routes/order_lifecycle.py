@@ -1219,6 +1219,9 @@ async def accept_order_as_project(order_id: str, data: AcceptOrderRequest):
     Accept an order from Order Management as a project.
     This is the handoff point from Order Management to Project Management.
     Updates the order's project_status and sets timeline information.
+    
+    IMPORTANT: Also creates a project in the 'projects' collection (Project & Services)
+    for bi-directional sync with Business Hub Project Management.
     """
     # Find the order
     order = await db.sales_orders.find_one({"id": order_id})
@@ -1262,12 +1265,63 @@ async def accept_order_as_project(order_id: str, data: AcceptOrderRequest):
         }}
     )
     
+    # ========================================
+    # CREATE PROJECT IN PROJECT & SERVICES
+    # ========================================
+    # Check if project already exists with same PID
+    existing_project = await db.projects.find_one({"pid_no": order.get("pid_no")})
+    
+    if not existing_project:
+        # Create new project in projects collection
+        project_data = {
+            "id": str(uuid.uuid4()),
+            "pid_no": order.get("pid_no"),
+            "category": order.get("category", "PSS"),
+            "department": None,
+            "po_number": order.get("po_number", ""),
+            "po_attachment": None,
+            "client": order.get("customer_name", ""),
+            "location": order.get("location", ""),
+            "project_name": order.get("project_name", f"Project for {order.get('order_no', '')}"),
+            "vendor": "",
+            "status": "Need to Start",
+            "engineer_in_charge": data.project_manager or "",
+            "project_date": data.start_date or "",
+            "completion_date": data.end_date or "",
+            "action_items": None,
+            "work_items": order.get("items", []),  # Order items as work items
+            "scheduled_tasks": None,
+            "po_amount": order.get("order_value") or order.get("total_amount") or 0,
+            "balance": order.get("order_value") or order.get("total_amount") or 0,
+            "invoiced_amount": 0,
+            "completion_percentage": 0,
+            "this_week_billing": 0,
+            "budget": (order.get("order_value") or order.get("total_amount") or 0) * 0.5,  # 50% as budget
+            "actual_expenses": 0,
+            "pid_savings": 0,
+            "weekly_actions": "",
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat(),
+            # Link back to original order
+            "source_order_id": order_id,
+            "source_order_no": order.get("order_no", "")
+        }
+        
+        await db.projects.insert_one(project_data)
+        
+        # Update sales_order with linked project_id
+        await db.sales_orders.update_one(
+            {"id": order_id},
+            {"$set": {"linked_project_id": project_data["id"]}}
+        )
+    
     # Get updated order
     updated_order = await db.sales_orders.find_one({"id": order_id}, {"_id": 0})
     
     return {
-        "message": f"Order {order.get('order_no', order_id)} accepted as project",
-        "order": updated_order
+        "message": f"Order {order.get('order_no', order_id)} accepted as project and synced to Project & Services",
+        "order": updated_order,
+        "project_created": not existing_project
     }
 
 
