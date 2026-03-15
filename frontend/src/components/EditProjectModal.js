@@ -227,8 +227,8 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
   // Download sample template
   const downloadSampleTemplate = () => {
     const sampleData = [
-      { Description: 'Meter Calibration', Quantity: 10, Unit: 'Nos', Status: 'Pending' },
-      { Description: 'Cable Laying Work', Quantity: 500, Unit: 'Mtr', Status: 'Pending' },
+      { Description: 'Meter Calibration', Quantity: 10, Unit: 'Nos', Status: 'Pending', 'Completion %': 0 },
+      { Description: 'Cable Laying Work', Quantity: 500, Unit: 'Mtr', Status: 'Pending', 'Completion %': 0 },
     ];
     const worksheet = XLSX.utils.json_to_sheet(sampleData);
     const workbook = XLSX.utils.book_new();
@@ -236,11 +236,22 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
     XLSX.writeFile(workbook, 'work_items_template.xlsx');
   };
 
-  // Calculate savings
+  // Calculate savings and completion percentage based on work items
   const savings = (formData.budget || 0) - (formData.actual_expenses || 0);
-  const completionPercent = formData.po_amount > 0 
-    ? Math.round((formData.invoiced_amount / formData.po_amount) * 100) 
-    : 0;
+  
+  // Auto-calculate completion percentage from work items
+  const calculateCompletionFromWorkItems = () => {
+    const validItems = workItems.filter(w => w.description?.trim());
+    if (validItems.length === 0) return 0;
+    
+    const totalCompletion = validItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.completion_percentage) || 0);
+    }, 0);
+    
+    return Math.round(totalCompletion / validItems.length);
+  };
+  
+  const completionPercent = calculateCompletionFromWorkItems();
 
   // Submit form
   const handleSubmit = async (e) => {
