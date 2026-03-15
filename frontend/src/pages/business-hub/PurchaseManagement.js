@@ -780,6 +780,112 @@ const PurchaseManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Create PO Modal */}
+      {showCreatePOModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-purple-50">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                  <FileText size={20} className="text-violet-600" />
+                  Create Purchase Order
+                </h3>
+                <p className="text-sm text-slate-500">{selectedRequest.request_no}</p>
+              </div>
+              <button onClick={() => setShowCreatePOModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Vendor Name *</label>
+                <input
+                  type="text"
+                  value={poFormData.vendor_name}
+                  onChange={(e) => setPOFormData({...poFormData, vendor_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  placeholder="Enter vendor name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Vendor Contact</label>
+                <input
+                  type="text"
+                  value={poFormData.vendor_contact}
+                  onChange={(e) => setPOFormData({...poFormData, vendor_contact: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  placeholder="Phone/Email"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
+                <input
+                  type="date"
+                  value={poFormData.delivery_date}
+                  onChange={(e) => setPOFormData({...poFormData, delivery_date: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
+                <select
+                  value={poFormData.payment_terms}
+                  onChange={(e) => setPOFormData({...poFormData, payment_terms: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                >
+                  <option value="">Select payment terms</option>
+                  <option value="net_30">Net 30 days</option>
+                  <option value="net_15">Net 15 days</option>
+                  <option value="advance">Advance payment</option>
+                  <option value="cod">Cash on delivery</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <textarea
+                  value={poFormData.notes}
+                  onChange={(e) => setPOFormData({...poFormData, notes: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  rows="3"
+                  placeholder="Additional notes or requirements"
+                />
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+              <button
+                onClick={() => setShowCreatePOModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreatePO}
+                disabled={creatingPO || !poFormData.vendor_name}
+                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {creatingPO ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    Create PO
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
