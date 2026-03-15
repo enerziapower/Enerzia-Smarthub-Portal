@@ -72,6 +72,27 @@ const ProjectManagement = () => {
     notes: ''
   });
 
+  // Raise Request form data
+  const initialRequestData = {
+    // Material Request
+    items: [{ description: '', quantity: 1, unit: 'Nos', estimated_cost: 0 }],
+    // Vendor Request
+    service_type: 'Subcontractor',
+    description: '',
+    estimated_cost: 0,
+    // Payment Request
+    payment_type: 'Advance',
+    payee: '',
+    amount: 0,
+    due_date: '',
+    bank_details: '',
+    // Common
+    required_by: '',
+    priority: 'medium',
+    notes: ''
+  };
+  const [requestData, setRequestData] = useState(initialRequestData);
+
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '₹0';
     if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
