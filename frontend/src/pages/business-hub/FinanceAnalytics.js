@@ -122,8 +122,11 @@ const FinanceAnalytics = () => {
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">Finance Analytics</h2>
-            <p className="text-sm text-slate-500">P&L, Savings, and Cash Flow Overview</p>
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <TrendingUp className="text-emerald-600" />
+              Finance Analytics
+            </h2>
+            <p className="text-sm text-slate-500">P&L, Project Profitability, and Cash Flow Overview</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -143,9 +146,37 @@ const FinanceAnalytics = () => {
               onClick={fetchFinanceData}
               className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
             >
-              <RefreshCw size={20} />
+              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mt-4 border-t border-slate-200 pt-4">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'overview' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('project_pnl')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'project_pnl' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            Project P&L
+          </button>
+          <button
+            onClick={() => setActiveTab('by_category')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'by_category' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            By Category
+          </button>
         </div>
       </div>
 
