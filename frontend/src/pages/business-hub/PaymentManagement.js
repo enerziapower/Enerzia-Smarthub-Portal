@@ -111,13 +111,27 @@ const PaymentManagement = () => {
     return matchesSearch && matchesStatus && matchesDept;
   });
 
-  const handleApprove = async (requestId) => {
+  const handleApprove = async (request) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/payment-requests/${requestId}/approve`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      let response;
+      
+      // Check if it's a project request
+      if (request.is_project_request) {
+        response = await fetch(`${API_URL}/api/project-requests/${request.id}/status`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ status: 'approved' })
+        });
+      } else {
+        response = await fetch(`${API_URL}/api/payment-requests/${request.id || request.request_id}/approve`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
       
       if (response.ok) {
         toast.success('Payment request approved');
@@ -131,13 +145,27 @@ const PaymentManagement = () => {
     }
   };
 
-  const handleReject = async (requestId) => {
+  const handleReject = async (request) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/payment-requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      let response;
+      
+      // Check if it's a project request
+      if (request.is_project_request) {
+        response = await fetch(`${API_URL}/api/project-requests/${request.id}/status`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ status: 'rejected' })
+        });
+      } else {
+        response = await fetch(`${API_URL}/api/payment-requests/${request.id || request.request_id}/reject`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
       
       if (response.ok) {
         toast.success('Payment request rejected');
