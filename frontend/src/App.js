@@ -466,6 +466,8 @@ function AppRoutes() {
           <Route path="purchase" element={<BizPurchaseManagement />} />
           <Route path="expenses" element={<BizExpenseManagement />} />
           <Route path="payments" element={<BizPaymentManagement />} />
+          <Route path="vendors" element={<VendorManagement />} />
+          <Route path="grn" element={<GRNManagement />} />
           <Route path="billing" element={<BillingManagement />} />
           <Route path="finance" element={<FinanceAnalytics />} />
           <Route path="meetings" element={<BizWeeklyMeetings />} />
