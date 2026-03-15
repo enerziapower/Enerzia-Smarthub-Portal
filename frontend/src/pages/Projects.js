@@ -164,9 +164,9 @@ const Projects = () => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       return (
-        project.project_name.toLowerCase().includes(searchLower) ||
-        project.client.toLowerCase().includes(searchLower) ||
-        project.pid_no.toLowerCase().includes(searchLower)
+        (project.project_name || '').toLowerCase().includes(searchLower) ||
+        (project.client || '').toLowerCase().includes(searchLower) ||
+        (project.pid_no || '').toLowerCase().includes(searchLower)
       );
     }
     return true;
