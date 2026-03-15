@@ -35,6 +35,7 @@ const DEPARTMENT_COLORS = {
 
 const PaymentManagement = () => {
   const [requests, setRequests] = useState([]);
+  const [projectPaymentRequests, setProjectPaymentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -47,21 +48,44 @@ const PaymentManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      
+      // Fetch from existing payment requests API
       const response = await fetch(`${API_URL}/api/payment-requests/all`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      let allRequests = [];
       if (response.ok) {
         const data = await response.json();
-        setRequests(data.requests || data || []);
-        
-        // Calculate stats
-        const allRequests = data.requests || data || [];
-        const pending = allRequests.filter(r => r.status === 'pending').length;
-        const approved = allRequests.filter(r => r.status === 'approved').length;
-        const totalAmount = allRequests.reduce((sum, r) => sum + (r.amount || 0), 0);
-        setStats({ total: allRequests.length, pending, approved, total_amount: totalAmount });
+        allRequests = data.requests || data || [];
+        setRequests(allRequests);
       }
+      
+      // Also fetch payment requests from Project Management
+      const projectResponse = await fetch(`${API_URL}/api/project-requests/payments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (projectResponse.ok) {
+        const projectData = await projectResponse.json();
+        const projectPayments = (projectData.requests || []).map(req => ({
+          ...req,
+          request_id: req.request_no,
+          title: req.title || `${req.payment_type} - ${req.order_no}`,
+          vendor_name: req.payee,
+          department: 'projects',
+          is_project_request: true
+        }));
+        setProjectPaymentRequests(projectPayments);
+        allRequests = [...allRequests, ...projectPayments];
+      }
+      
+      // Calculate stats from combined data
+      const pending = allRequests.filter(r => r.status === 'pending').length;
+      const approved = allRequests.filter(r => r.status === 'approved').length;
+      const totalAmount = allRequests.reduce((sum, r) => sum + (r.amount || 0), 0);
+      setStats({ total: allRequests.length, pending, approved, total_amount: totalAmount });
+      
     } catch (error) {
       console.error('Error fetching payment requests:', error);
     } finally {
