@@ -52,10 +52,12 @@ const ProjectManagement = () => {
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRaiseRequestModal, setShowRaiseRequestModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestType, setRequestType] = useState('material');
   const [projectRequests, setProjectRequests] = useState([]);
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   const [stats, setStats] = useState({ 
     total: 0, 
