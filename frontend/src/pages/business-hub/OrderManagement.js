@@ -1098,18 +1098,52 @@ const OrderManagement = () => {
                   Customer Information
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="relative" ref={customerDropdownRef}>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Select Customer *</label>
-                    <select
-                      value={formData.customer_id}
-                      onChange={(e) => handleCustomerSelect(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    >
-                      <option value="">-- Select Customer --</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name || c.company_name}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={customerSearch}
+                        onChange={(e) => {
+                          setCustomerSearch(e.target.value);
+                          setShowCustomerDropdown(true);
+                        }}
+                        onFocus={() => setShowCustomerDropdown(true)}
+                        placeholder="Search customers..."
+                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        data-testid="customer-search-input"
+                      />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                    {showCustomerDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredCustomers.length > 0 ? (
+                          filteredCustomers.slice(0, 50).map(c => (
+                            <div
+                              key={c.id}
+                              onClick={() => handleCustomerSelect(c.id)}
+                              className={`px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-slate-100 last:border-0 ${
+                                formData.customer_id === c.id ? 'bg-blue-100' : ''
+                              }`}
+                              data-testid={`customer-option-${c.id}`}
+                            >
+                              <p className="font-medium text-slate-800 text-sm">{c.name || c.company_name}</p>
+                              {c.address && <p className="text-xs text-slate-500 truncate">{c.address}</p>}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-slate-500 text-sm">
+                            No customers found
+                          </div>
+                        )}
+                        {filteredCustomers.length > 50 && (
+                          <div className="px-3 py-2 text-center text-xs text-slate-400 bg-slate-50">
+                            Showing 50 of {filteredCustomers.length} results. Refine your search.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
