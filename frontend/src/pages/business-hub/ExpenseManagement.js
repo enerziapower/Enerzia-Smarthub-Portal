@@ -250,7 +250,7 @@ const ExpenseManagement = () => {
                         <button
                           onClick={() => handleApprove(expense.id)}
                           className="p-1.5 bg-green-100 hover:bg-green-200 rounded text-green-700"
-                          title="Approve"
+                          title="Accept"
                         >
                           <Check size={14} />
                         </button>
