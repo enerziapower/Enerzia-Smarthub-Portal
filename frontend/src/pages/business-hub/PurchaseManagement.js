@@ -549,20 +549,43 @@ const PurchaseManagement = () => {
                                 </>
                               )}
                               {request.status === 'approved' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(request.id, 'in_progress')}
-                                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
-                                >
-                                  <RefreshCw size={14} /> Start
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => openCreatePOModal(request)}
+                                    className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
+                                  >
+                                    <FileText size={14} /> Create PO
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateStatus(request.id, 'in_progress')}
+                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
+                                  >
+                                    <RefreshCw size={14} /> Start
+                                  </button>
+                                </>
                               )}
                               {request.status === 'in_progress' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(request.id, 'completed')}
-                                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1 text-sm"
-                                >
-                                  <CheckCircle size={14} /> Complete
-                                </button>
+                                <>
+                                  {!request.po_number && (
+                                    <button
+                                      onClick={() => openCreatePOModal(request)}
+                                      className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
+                                    >
+                                      <FileText size={14} /> Create PO
+                                    </button>
+                                  )}
+                                  {request.po_number && (
+                                    <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-xs font-mono">
+                                      {request.po_number}
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={() => handleUpdateStatus(request.id, 'completed')}
+                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1 text-sm"
+                                  >
+                                    <CheckCircle size={14} /> Complete
+                                  </button>
+                                </>
                               )}
                               <button
                                 onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
