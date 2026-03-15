@@ -68,6 +68,8 @@ import BillingManagement from './pages/business-hub/BillingManagement';
 import FinanceAnalytics from './pages/business-hub/FinanceAnalytics';
 import BizWeeklyMeetings from './pages/business-hub/WeeklyMeetings';
 import CustomerPortal from './pages/business-hub/CustomerPortal';
+import VendorManagement from './pages/business-hub/VendorManagement';
+import GRNManagement from './pages/business-hub/GRNManagement';
 
 // Customer Hub Pages (Internal)
 import CustomerDirectory from './pages/customer-hub/CustomerDirectory';
