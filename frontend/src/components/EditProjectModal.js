@@ -637,6 +637,156 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
               />
             </div>
 
+            {/* Business Hub Requests Section */}
+            <div className="md:col-span-2 bg-violet-50 border border-violet-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-violet-900 mb-3 flex items-center gap-2">
+                <ClipboardList size={16} />
+                Business Hub Requests
+                {loadingRequests && <Loader2 size={14} className="animate-spin text-violet-500" />}
+              </h3>
+              
+              {/* Material Requests */}
+              <div className="mb-3">
+                <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
+                  <Package size={14} className="text-amber-600" />
+                  Material Requests ({projectRequests.material?.length || 0})
+                </h4>
+                {projectRequests.material?.length > 0 ? (
+                  <div className="space-y-1">
+                    {projectRequests.material.map(req => (
+                      <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
+                        <div>
+                          <span className="font-mono text-amber-700">{req.request_number}</span>
+                          <span className="text-slate-500 ml-2">• {req.items?.length || 0} items</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                          req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {req.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No material requests</p>
+                )}
+              </div>
+
+              {/* Vendor Requests */}
+              <div className="mb-3">
+                <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
+                  <Truck size={14} className="text-blue-600" />
+                  Vendor Requests ({projectRequests.vendor?.length || 0})
+                </h4>
+                {projectRequests.vendor?.length > 0 ? (
+                  <div className="space-y-1">
+                    {projectRequests.vendor.map(req => (
+                      <div key={req.id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
+                        <div>
+                          <span className="font-mono text-blue-700">{req.request_number}</span>
+                          <span className="text-slate-500 ml-2">• {req.service_type}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-600">{formatCurrency(req.estimated_cost)}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            req.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No vendor requests</p>
+                )}
+              </div>
+
+              {/* Payment Requests */}
+              <div>
+                <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1">
+                  <CreditCard size={14} className="text-green-600" />
+                  Payment Requests ({projectRequests.payment?.length || 0})
+                </h4>
+                {projectRequests.payment?.length > 0 ? (
+                  <div className="space-y-1">
+                    {projectRequests.payment.map(req => (
+                      <div key={req.id} className="flex items-center justify-between bg-green-50 border border-green-200 rounded px-3 py-2 text-sm">
+                        <div>
+                          <span className="font-mono text-green-700">{req.request_number}</span>
+                          <span className="text-slate-500 ml-2">• {req.payee}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-green-600">{formatCurrency(req.amount)}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No payment requests</p>
+                )}
+              </div>
+              
+              <p className="text-xs text-violet-600 mt-3">
+                Requests are raised from Business Hub → Project Management
+              </p>
+            </div>
+
+            {/* GRN Status Section */}
+            <div className="md:col-span-2 bg-teal-50 border border-teal-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-teal-900 mb-3 flex items-center gap-2">
+                <CheckCircle size={16} />
+                Goods Received Notes (GRN)
+              </h3>
+              
+              {grnList.length > 0 ? (
+                <div className="space-y-2">
+                  {grnList.map(grn => (
+                    <div key={grn.id} className="bg-white border border-teal-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-sm font-medium text-teal-700">{grn.grn_number}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          grn.status === 'received' ? 'bg-green-100 text-green-700' :
+                          grn.status === 'partial' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {grn.status === 'received' ? 'Fully Received' : 
+                           grn.status === 'partial' ? 'Partial Receipt' : grn.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        <span>PO: {grn.po_number}</span>
+                        <span className="mx-2">•</span>
+                        <span>Date: {grn.received_date ? new Date(grn.received_date).toLocaleDateString() : '-'}</span>
+                        <span className="mx-2">•</span>
+                        <span>{grn.items?.length || 0} items</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <AlertTriangle size={24} className="mx-auto text-teal-300 mb-2" />
+                  <p className="text-sm text-teal-600">No goods received yet</p>
+                  <p className="text-xs text-slate-400">GRN is created from Business Hub → GRN Management</p>
+                </div>
+              )}
+            </div>
+
             {/* Budget & Expenses */}
             <div className="md:col-span-2 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <h3 className="text-sm font-semibold text-emerald-900 mb-3">Budget vs Actual</h3>
