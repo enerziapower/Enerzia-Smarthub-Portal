@@ -756,3 +756,336 @@ async def get_project_pnl(order_id: str):
 
 
 # Duplicate finance-dashboard removed - it's defined earlier
+
+
+# ============== GRN (GOODS RECEIVED NOTE) ==============
+
+class GRNItemReceived(BaseModel):
+    """Item received in GRN"""
+    description: str
+    ordered_qty: float
+    received_qty: float
+    unit: str = "Nos"
+    remarks: Optional[str] = None
+
+
+class GRNCreate(BaseModel):
+    """Create a Goods Received Note"""
+    po_id: str
+    received_date: str
+    received_by: Optional[str] = None
+    items: List[GRNItemReceived]
+    delivery_challan_no: Optional[str] = None
+    vehicle_no: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+async def generate_grn_number() -> str:
+    """Generate unique GRN number like GRN-2526-001"""
+    today = datetime.now()
+    month = today.month
+    year = today.year
+    
+    if month >= 4:
+        fy = f"{str(year)[2:]}{str(year + 1)[2:]}"
+    else:
+        fy = f"{str(year - 1)[2:]}{str(year)[2:]}"
+    
+    pattern = f"^GRN-{fy}-"
+    count = await db.grn.count_documents({"grn_number": {"$regex": pattern}})
+    
+    return f"GRN-{fy}-{str(count + 1).zfill(3)}"
+
+
+@router.post("/grn")
+async def create_grn(data: GRNCreate):
+    """Create a Goods Received Note for a Purchase Order"""
+    # Find the PO
+    po = await db.purchase_orders.find_one({"id": data.po_id})
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+    
+    now = datetime.now(timezone.utc)
+    grn_number = await generate_grn_number()
+    
+    # Calculate received totals
+    total_ordered = sum(item.ordered_qty for item in data.items)
+    total_received = sum(item.received_qty for item in data.items)
+    is_partial = total_received < total_ordered
+    
+    grn_data = {
+        "id": str(uuid.uuid4()),
+        "grn_number": grn_number,
+        "po_id": data.po_id,
+        "po_number": po.get("po_number"),
+        "order_id": po.get("order_id"),
+        "order_no": po.get("order_no"),
+        "vendor_name": po.get("vendor_name"),
+        "received_date": data.received_date,
+        "received_by": data.received_by,
+        "items": [item.dict() for item in data.items],
+        "total_ordered": total_ordered,
+        "total_received": total_received,
+        "is_partial": is_partial,
+        "delivery_challan_no": data.delivery_challan_no,
+        "vehicle_no": data.vehicle_no,
+        "remarks": data.remarks,
+        "status": "received",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.grn.insert_one(grn_data)
+    
+    # Update PO status
+    new_po_status = "partially_received" if is_partial else "received"
+    await db.purchase_orders.update_one(
+        {"id": data.po_id},
+        {"$set": {"status": new_po_status, "updated_at": now}}
+    )
+    
+    grn_data.pop("_id", None)
+    return {"message": f"GRN {grn_number} created", "grn": grn_data}
+
+
+@router.get("/grn")
+async def get_grn_list(
+    po_id: Optional[str] = None,
+    order_id: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0
+):
+    """Get all GRNs"""
+    query = {}
+    if po_id:
+        query["po_id"] = po_id
+    if order_id:
+        query["order_id"] = order_id
+    if status:
+        query["status"] = status
+    
+    cursor = db.grn.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
+    grns = await cursor.to_list(length=limit)
+    total = await db.grn.count_documents(query)
+    
+    return {"grns": grns, "total": total}
+
+
+@router.get("/grn/{grn_id}")
+async def get_grn_detail(grn_id: str):
+    """Get GRN details"""
+    grn = await db.grn.find_one({"id": grn_id}, {"_id": 0})
+    if not grn:
+        raise HTTPException(status_code=404, detail="GRN not found")
+    return grn
+
+
+# ============== INVOICES ==============
+
+class InvoiceItemCreate(BaseModel):
+    """Invoice line item"""
+    description: str
+    quantity: float = 1
+    unit: str = "Nos"
+    rate: float
+    amount: float
+    hsn_code: Optional[str] = None
+
+
+class InvoiceCreate(BaseModel):
+    """Create Invoice for a project"""
+    order_id: str
+    invoice_type: str = "Progress"  # Progress, Final, Proforma
+    items: List[InvoiceItemCreate]
+    subtotal: float
+    cgst_percent: float = 9.0
+    sgst_percent: float = 9.0
+    igst_percent: float = 0.0
+    cgst_amount: float = 0.0
+    sgst_amount: float = 0.0
+    igst_amount: float = 0.0
+    total_amount: float
+    payment_terms: Optional[str] = None
+    due_date: Optional[str] = None
+    notes: Optional[str] = None
+
+
+async def generate_invoice_number() -> str:
+    """Generate unique Invoice number like INV-2526-001"""
+    today = datetime.now()
+    month = today.month
+    year = today.year
+    
+    if month >= 4:
+        fy = f"{str(year)[2:]}{str(year + 1)[2:]}"
+    else:
+        fy = f"{str(year - 1)[2:]}{str(year)[2:]}"
+    
+    pattern = f"^INV-{fy}-"
+    count = await db.invoices.count_documents({"invoice_number": {"$regex": pattern}})
+    
+    return f"INV-{fy}-{str(count + 1).zfill(3)}"
+
+
+@router.post("/invoices")
+async def create_invoice(data: InvoiceCreate):
+    """Create an Invoice for a project/order"""
+    # Find the order
+    order = await db.sales_orders.find_one({"id": data.order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    invoice_number = await generate_invoice_number()
+    
+    invoice_data = {
+        "id": str(uuid.uuid4()),
+        "invoice_number": invoice_number,
+        "order_id": data.order_id,
+        "order_no": order.get("order_no"),
+        "customer_name": order.get("customer_name"),
+        "customer_details": order.get("customer_details", {}),
+        "project_name": order.get("project_name"),
+        "invoice_type": data.invoice_type,
+        "invoice_date": now.strftime("%Y-%m-%d"),
+        "items": [item.dict() for item in data.items],
+        "subtotal": data.subtotal,
+        "cgst_percent": data.cgst_percent,
+        "sgst_percent": data.sgst_percent,
+        "igst_percent": data.igst_percent,
+        "cgst_amount": data.cgst_amount,
+        "sgst_amount": data.sgst_amount,
+        "igst_amount": data.igst_amount,
+        "total_amount": data.total_amount,
+        "payment_terms": data.payment_terms,
+        "due_date": data.due_date,
+        "notes": data.notes,
+        "status": "draft",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.invoices.insert_one(invoice_data)
+    
+    invoice_data.pop("_id", None)
+    return {"message": f"Invoice {invoice_number} created", "invoice": invoice_data}
+
+
+@router.get("/invoices")
+async def get_invoices(
+    order_id: Optional[str] = None,
+    status: Optional[str] = None,
+    invoice_type: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0
+):
+    """Get all invoices"""
+    query = {}
+    if order_id:
+        query["order_id"] = order_id
+    if status:
+        query["status"] = status
+    if invoice_type:
+        query["invoice_type"] = invoice_type
+    
+    cursor = db.invoices.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
+    invoices = await cursor.to_list(length=limit)
+    total = await db.invoices.count_documents(query)
+    
+    # Calculate totals
+    total_amount = sum(inv.get("total_amount", 0) for inv in invoices)
+    
+    return {"invoices": invoices, "total": total, "total_amount": total_amount}
+
+
+@router.get("/invoices/{invoice_id}")
+async def get_invoice_detail(invoice_id: str):
+    """Get invoice details"""
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return invoice
+
+
+@router.put("/invoices/{invoice_id}/status")
+async def update_invoice_status(invoice_id: str, status: str):
+    """Update invoice status"""
+    valid_statuses = ["draft", "sent", "paid", "partial", "cancelled", "overdue"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    now = datetime.now(timezone.utc)
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": {"status": status, "updated_at": now}}
+    )
+    
+    return {"message": f"Invoice status updated to {status}"}
+
+
+@router.get("/invoices/by-order/{order_id}")
+async def get_invoices_by_order(order_id: str):
+    """Get all invoices for a specific order"""
+    invoices = await db.invoices.find({"order_id": order_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    total_invoiced = sum(inv.get("total_amount", 0) for inv in invoices)
+    paid_invoices = [inv for inv in invoices if inv.get("status") == "paid"]
+    total_paid = sum(inv.get("total_amount", 0) for inv in paid_invoices)
+    
+    return {
+        "order_id": order_id,
+        "invoices": invoices,
+        "summary": {
+            "total_invoices": len(invoices),
+            "total_invoiced": total_invoiced,
+            "total_paid": total_paid,
+            "outstanding": total_invoiced - total_paid
+        }
+    }
+
+
+# ============== BILLING DASHBOARD ==============
+
+@router.get("/billing-dashboard")
+async def get_billing_dashboard():
+    """Get billing dashboard with invoice summary"""
+    # Get all invoices
+    invoices = await db.invoices.find({}, {"_id": 0}).to_list(500)
+    
+    # Calculate totals
+    total_invoiced = sum(inv.get("total_amount", 0) for inv in invoices)
+    total_paid = sum(inv.get("total_amount", 0) for inv in invoices if inv.get("status") == "paid")
+    total_pending = sum(inv.get("total_amount", 0) for inv in invoices if inv.get("status") in ["draft", "sent"])
+    total_overdue = sum(inv.get("total_amount", 0) for inv in invoices if inv.get("status") == "overdue")
+    
+    # Get recent invoices
+    recent_invoices = sorted(invoices, key=lambda x: x.get("created_at", ""), reverse=True)[:10]
+    
+    return {
+        "summary": {
+            "total_invoices": len(invoices),
+            "total_invoiced": total_invoiced,
+            "total_paid": total_paid,
+            "total_pending": total_pending,
+            "total_overdue": total_overdue,
+            "collection_rate": round((total_paid / total_invoiced * 100) if total_invoiced else 0, 1)
+        },
+        "by_status": {
+            "draft": len([i for i in invoices if i.get("status") == "draft"]),
+            "sent": len([i for i in invoices if i.get("status") == "sent"]),
+            "paid": len([i for i in invoices if i.get("status") == "paid"]),
+            "partial": len([i for i in invoices if i.get("status") == "partial"]),
+            "overdue": len([i for i in invoices if i.get("status") == "overdue"])
+        },
+        "by_type": {
+            "Progress": len([i for i in invoices if i.get("invoice_type") == "Progress"]),
+            "Final": len([i for i in invoices if i.get("invoice_type") == "Final"]),
+            "Proforma": len([i for i in invoices if i.get("invoice_type") == "Proforma"])
+        },
+        "recent_invoices": recent_invoices
+    }
+
