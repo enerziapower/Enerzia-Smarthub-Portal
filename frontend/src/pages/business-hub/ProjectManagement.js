@@ -1011,6 +1011,441 @@ const ProjectManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Raise Request Modal */}
+      {showRaiseRequestModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className={`flex items-center justify-between p-4 border-b border-slate-200 ${
+              requestType === 'material' ? 'bg-gradient-to-r from-amber-50 to-orange-50' :
+              requestType === 'vendor' ? 'bg-gradient-to-r from-blue-50 to-cyan-50' :
+              'bg-gradient-to-r from-green-50 to-emerald-50'
+            }`}>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                  {requestType === 'material' && <Package className="text-amber-600" size={20} />}
+                  {requestType === 'vendor' && <Truck className="text-blue-600" size={20} />}
+                  {requestType === 'payment' && <CreditCard className="text-green-600" size={20} />}
+                  Raise {requestType === 'material' ? 'Material' : requestType === 'vendor' ? 'Vendor' : 'Payment'} Request
+                </h3>
+                <p className="text-sm text-slate-500">{selectedOrder.order_no} • {selectedOrder.customer_name}</p>
+              </div>
+              <button onClick={() => setShowRaiseRequestModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Request Type Tabs */}
+            <div className="flex border-b border-slate-200">
+              <button
+                onClick={() => setRequestType('material')}
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
+                  requestType === 'material' ? 'bg-amber-50 text-amber-700 border-b-2 border-amber-500' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <Package size={16} /> Material
+              </button>
+              <button
+                onClick={() => setRequestType('vendor')}
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
+                  requestType === 'vendor' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <Truck size={16} /> Vendor
+              </button>
+              <button
+                onClick={() => setRequestType('payment')}
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
+                  requestType === 'payment' ? 'bg-green-50 text-green-700 border-b-2 border-green-500' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <CreditCard size={16} /> Payment
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Material Request Form */}
+              {requestType === 'material' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700">Material Items</label>
+                    <button
+                      onClick={addMaterialItem}
+                      className="text-sm text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                    >
+                      <Plus size={14} /> Add Item
+                    </button>
+                  </div>
+                  {requestData.items.map((item, index) => (
+                    <div key={index} className="bg-slate-50 rounded-lg p-3 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-slate-500">Item {index + 1}</span>
+                        {requestData.items.length > 1 && (
+                          <button
+                            onClick={() => removeMaterialItem(index)}
+                            className="text-red-500 hover:text-red-600 p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Material Description"
+                        value={item.description}
+                        onChange={(e) => updateMaterialItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      />
+                      <div className="grid grid-cols-3 gap-3">
+                        <input
+                          type="number"
+                          placeholder="Qty"
+                          value={item.quantity}
+                          onChange={(e) => updateMaterialItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        />
+                        <select
+                          value={item.unit}
+                          onChange={(e) => updateMaterialItem(index, 'unit', e.target.value)}
+                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        >
+                          <option value="Nos">Nos</option>
+                          <option value="Kg">Kg</option>
+                          <option value="Mtr">Mtr</option>
+                          <option value="Set">Set</option>
+                          <option value="Lot">Lot</option>
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Est. Cost (₹)"
+                          value={item.estimated_cost}
+                          onChange={(e) => updateMaterialItem(index, 'estimated_cost', parseFloat(e.target.value) || 0)}
+                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Vendor Request Form */}
+              {requestType === 'vendor' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Service Type</label>
+                    <select
+                      value={requestData.service_type}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, service_type: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    >
+                      <option value="Subcontractor">Subcontractor</option>
+                      <option value="Rental">Equipment Rental</option>
+                      <option value="Service Provider">Service Provider</option>
+                      <option value="Consultant">Consultant</option>
+                      <option value="Transport">Transport</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Description *</label>
+                    <textarea
+                      placeholder="Describe the service/vendor requirement..."
+                      value={requestData.description}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Estimated Cost (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={requestData.estimated_cost}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, estimated_cost: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Request Form */}
+              {requestType === 'payment' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Payment Type</label>
+                      <select
+                        value={requestData.payment_type}
+                        onChange={(e) => setRequestData(prev => ({ ...prev, payment_type: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      >
+                        <option value="Advance">Advance</option>
+                        <option value="Milestone">Milestone Payment</option>
+                        <option value="Final">Final Payment</option>
+                        <option value="Vendor Payment">Vendor Payment</option>
+                        <option value="Reimbursement">Reimbursement</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Priority</label>
+                      <select
+                        value={requestData.priority}
+                        onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Payee Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Vendor or person to be paid"
+                      value={requestData.payee}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, payee: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Amount (₹) *</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={requestData.amount}
+                        onChange={(e) => setRequestData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Due Date</label>
+                      <input
+                        type="date"
+                        value={requestData.due_date}
+                        onChange={(e) => setRequestData(prev => ({ ...prev, due_date: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Bank Details (Optional)</label>
+                    <textarea
+                      placeholder="Account details for payment..."
+                      value={requestData.bank_details}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, bank_details: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Common Fields */}
+              <div className="mt-6 pt-4 border-t border-slate-200 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Required By</label>
+                    <input
+                      type="date"
+                      value={requestData.required_by}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, required_by: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Priority</label>
+                    <select
+                      value={requestData.priority}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1 block">Notes</label>
+                  <textarea
+                    placeholder="Additional notes or instructions..."
+                    value={requestData.notes}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowRaiseRequestModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (requestType === 'material') handleSubmitMaterialRequest();
+                  else if (requestType === 'vendor') handleSubmitVendorRequest();
+                  else handleSubmitPaymentRequest();
+                }}
+                disabled={submittingRequest}
+                className={`px-6 py-2 text-white rounded-lg flex items-center gap-2 ${
+                  requestType === 'material' ? 'bg-amber-600 hover:bg-amber-700' :
+                  requestType === 'vendor' ? 'bg-blue-600 hover:bg-blue-700' :
+                  'bg-green-600 hover:bg-green-700'
+                } disabled:opacity-50`}
+              >
+                {submittingRequest ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Project Requests Modal */}
+      {showRequestsModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                  <ClipboardList className="text-slate-600" size={20} />
+                  Project Requests
+                </h3>
+                <p className="text-sm text-slate-500">{selectedOrder.order_no} • {selectedOrder.customer_name}</p>
+              </div>
+              <button onClick={() => setShowRequestsModal(false)} className="p-2 hover:bg-slate-200 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Materials */}
+              <div className="mb-6">
+                <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
+                  <Package className="text-amber-600" size={18} />
+                  Material Requests ({projectRequests.materials?.length || 0})
+                </h4>
+                {projectRequests.materials?.length > 0 ? (
+                  <div className="space-y-2">
+                    {projectRequests.materials.map((req) => (
+                      <div key={req.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-sm text-amber-700">{req.request_no}</span>
+                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>{req.status}</span>
+                          </div>
+                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">{req.total_items} items • Est. {formatCurrency(req.estimated_cost)}</p>
+                        {req.required_by && <p className="text-xs text-slate-500 mt-1">Required by: {formatDate(req.required_by)}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No material requests</p>
+                )}
+              </div>
+
+              {/* Vendors */}
+              <div className="mb-6">
+                <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
+                  <Truck className="text-blue-600" size={18} />
+                  Vendor Requests ({projectRequests.vendors?.length || 0})
+                </h4>
+                {projectRequests.vendors?.length > 0 ? (
+                  <div className="space-y-2">
+                    {projectRequests.vendors.map((req) => (
+                      <div key={req.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-sm text-blue-700">{req.request_no}</span>
+                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>{req.status}</span>
+                            <span className="ml-2 text-xs text-blue-600">{req.service_type}</span>
+                          </div>
+                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">{req.description}</p>
+                        <p className="text-xs text-slate-500 mt-1">Est. {formatCurrency(req.estimated_cost)}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No vendor requests</p>
+                )}
+              </div>
+
+              {/* Payments */}
+              <div>
+                <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
+                  <CreditCard className="text-green-600" size={18} />
+                  Payment Requests ({projectRequests.payments?.length || 0})
+                </h4>
+                {projectRequests.payments?.length > 0 ? (
+                  <div className="space-y-2">
+                    {projectRequests.payments.map((req) => (
+                      <div key={req.id} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-sm text-green-700">{req.request_no}</span>
+                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>{req.status}</span>
+                            <span className="ml-2 text-xs text-green-600">{req.payment_type}</span>
+                          </div>
+                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">Payee: {req.payee} • {formatCurrency(req.amount)}</p>
+                        {req.due_date && <p className="text-xs text-slate-500 mt-1">Due: {formatDate(req.due_date)}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No payment requests</p>
+                )}
+              </div>
+            </div>
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between">
+              <button
+                onClick={() => {
+                  setShowRequestsModal(false);
+                  openRaiseRequestModal(selectedOrder, 'material');
+                }}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 flex items-center gap-2 text-sm"
+              >
+                <Plus size={14} /> New Request
+              </button>
+              <button
+                onClick={() => setShowRequestsModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
