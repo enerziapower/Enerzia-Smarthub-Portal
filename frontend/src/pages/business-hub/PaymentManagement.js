@@ -412,14 +412,14 @@ const PaymentManagement = () => {
               {selectedRequest.status === 'pending' && (
                 <div className="flex gap-3 pt-4 border-t border-slate-200">
                   <button
-                    onClick={() => handleApprove(selectedRequest.id)}
+                    onClick={() => handleApprove(selectedRequest)}
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
                   >
                     <Check size={18} />
                     Approve
                   </button>
                   <button
-                    onClick={() => handleReject(selectedRequest.id)}
+                    onClick={() => handleReject(selectedRequest)}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"
                   >
                     <X size={18} />
