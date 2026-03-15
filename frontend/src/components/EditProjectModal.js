@@ -665,7 +665,6 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                       >
                         <Trash2 size={14} />
                       </button>
-                      </button>
                     </div>
                   </div>
                 ))}
