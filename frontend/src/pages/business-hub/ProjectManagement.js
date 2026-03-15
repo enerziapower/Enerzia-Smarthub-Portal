@@ -1,92 +1,77 @@
 /**
  * Project Management - Business Hub
  * 
- * Displays orders from Order Management as projects (linked by PID)
- * - Project Dept can accept orders as projects
- * - Timeline fields (Start Date, End Date, Deadline) can be added
- * - Bi-directional sync with Order Summary status
+ * Shows projects from Project & Services (372 projects)
+ * - Bi-directional sync with Project & Services
+ * - Raise Material/Vendor/Payment requests
+ * - Track GRN status
+ * - When new order is accepted, creates project in Project & Services
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  FolderKanban, Search, Filter, RefreshCw, Eye, X, Edit2,
+  FolderKanban, Search, RefreshCw, Eye, X, Edit2,
   CheckCircle, Clock, AlertTriangle, DollarSign, Calendar,
   TrendingUp, Target, Play, Pause, Check, XCircle,
   Building2, FileText, Save, Loader2, Plus, Package, Truck, CreditCard,
-  ClipboardList, ShoppingCart
+  ClipboardList, ShoppingCart, Users, MapPin, Percent
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
-// Project/Order status configuration
+// Project status configuration (matching Project & Services)
 const PROJECT_STATUS = {
-  pending: { label: 'Pending Acceptance', color: 'bg-amber-100 text-amber-700', icon: Clock },
-  accepted: { label: 'Accepted', color: 'bg-blue-100 text-blue-700', icon: Check },
-  in_progress: { label: 'In Progress', color: 'bg-violet-100 text-violet-700', icon: Play },
-  on_hold: { label: 'On Hold', color: 'bg-slate-100 text-slate-700', icon: Pause },
-  completed: { label: 'Completed', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-700', icon: XCircle }
+  'need to start': { label: 'Need to Start', color: 'bg-amber-100 text-amber-700', icon: Clock },
+  'ongoing': { label: 'Ongoing', color: 'bg-blue-100 text-blue-700', icon: Play },
+  'on hold': { label: 'On Hold', color: 'bg-slate-100 text-slate-700', icon: Pause },
+  'completed': { label: 'Completed', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  'invoiced': { label: 'Invoiced', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
+  'cancelled': { label: 'Cancelled', color: 'bg-red-100 text-red-700', icon: XCircle }
 };
 
 // Category configuration
 const CATEGORY_CONFIG = {
-  PSS: { label: 'Projects & Services', color: 'violet' },
-  AS: { label: 'Asset Services', color: 'blue' },
-  OSS: { label: 'Other Sales & Services', color: 'amber' },
-  CS: { label: 'Commercial Sales', color: 'green' }
+  PSS: { label: 'Projects & Services', color: 'violet', bgColor: 'bg-violet-100', textColor: 'text-violet-700' },
+  AS: { label: 'Asset Services', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
+  OSS: { label: 'Other Sales & Services', color: 'amber', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
+  CS: { label: 'Commercial Sales', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700' }
 };
 
 const ProjectManagement = () => {
-  const [orders, setOrders] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [activeView, setActiveView] = useState('live'); // 'live' or 'completed'
+  const [selectedProject, setSelectedProject] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
-  const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [showRaiseRequestModal, setShowRaiseRequestModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
-  const [requestType, setRequestType] = useState('material'); // material, vendor, payment
+  const [requestType, setRequestType] = useState('material');
   const [projectRequests, setProjectRequests] = useState([]);
-  const [accepting, setAccepting] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [submittingRequest, setSubmittingRequest] = useState(false);
+  
   const [stats, setStats] = useState({ 
     total: 0, 
-    pending: 0, 
-    accepted: 0, 
-    inProgress: 0, 
-    completed: 0, 
-    totalValue: 0 
-  });
-
-  // Timeline form data
-  const [timelineData, setTimelineData] = useState({
-    start_date: '',
-    end_date: '',
-    deadline: '',
-    project_manager: '',
-    notes: ''
+    live: 0,
+    completed: 0,
+    totalValue: 0,
+    totalInvoiced: 0
   });
 
   // Raise Request form data
   const initialRequestData = {
-    // Material Request
     items: [{ description: '', quantity: 1, unit: 'Nos', estimated_cost: 0 }],
-    // Vendor Request
     service_type: 'Subcontractor',
     description: '',
     estimated_cost: 0,
-    // Payment Request
     payment_type: 'Advance',
     payee: '',
     amount: 0,
     due_date: '',
     bank_details: '',
-    // Common
     required_by: '',
     priority: 'medium',
     notes: ''
@@ -110,202 +95,99 @@ const ProjectManagement = () => {
     }
   };
 
-  // Fetch orders from Order Management (sales_orders with PID)
-  const fetchOrders = useCallback(async () => {
+  // Fetch projects from Project & Services
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/order-lifecycle/orders?limit=500`, {
+      const response = await fetch(`${API_URL}/api/projects`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
-        const ordersList = data.orders || [];
-        setOrders(ordersList);
+        setProjects(data || []);
         
         // Calculate stats
-        const pending = ordersList.filter(o => !o.project_status || o.project_status === 'pending').length;
-        const accepted = ordersList.filter(o => o.project_status === 'accepted').length;
-        const inProgress = ordersList.filter(o => o.project_status === 'in_progress').length;
-        const completed = ordersList.filter(o => o.project_status === 'completed').length;
-        const totalValue = ordersList.reduce((sum, o) => sum + (o.order_value || o.total_amount || 0), 0);
+        const completedStatuses = ['completed', 'invoiced'];
+        const liveProjects = data.filter(p => !completedStatuses.includes(p.status?.toLowerCase()));
+        const completedProjects = data.filter(p => completedStatuses.includes(p.status?.toLowerCase()));
+        const totalValue = data.reduce((sum, p) => sum + (p.po_amount || 0), 0);
+        const totalInvoiced = data.reduce((sum, p) => sum + (p.invoiced_amount || 0), 0);
         
         setStats({ 
-          total: ordersList.length, 
-          pending, 
-          accepted, 
-          inProgress, 
-          completed, 
-          totalValue 
+          total: data.length, 
+          live: liveProjects.length,
+          completed: completedProjects.length,
+          totalValue,
+          totalInvoiced
         });
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to load orders');
+      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchProjects();
+  }, [fetchProjects]);
 
-  // Filter orders
-  const filteredOrders = orders.filter(order => {
+  // Filter projects
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = !searchTerm || 
-      order.order_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.pid_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      project.pid_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.engineer_in_charge?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const orderStatus = order.project_status || 'pending';
-    const matchesStatus = !statusFilter || orderStatus === statusFilter;
-    const matchesCategory = !categoryFilter || order.category === categoryFilter;
+    const projectStatus = project.status?.toLowerCase() || 'need to start';
+    const matchesStatus = !statusFilter || projectStatus === statusFilter.toLowerCase();
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    const projectCategory = project.category?.toUpperCase() || 'PSS';
+    const matchesCategory = !categoryFilter || projectCategory === categoryFilter;
+    
+    // Filter by view (live vs completed)
+    const completedStatuses = ['completed', 'invoiced'];
+    const isCompleted = completedStatuses.includes(projectStatus);
+    const matchesView = activeView === 'live' ? !isCompleted : isCompleted;
+    
+    return matchesSearch && matchesStatus && matchesCategory && matchesView;
   });
 
   // Get status configuration
   const getStatusConfig = (status) => {
-    const normalizedStatus = status?.toLowerCase().replace(' ', '_') || 'pending';
-    return PROJECT_STATUS[normalizedStatus] || PROJECT_STATUS.pending;
+    const normalizedStatus = status?.toLowerCase() || 'need to start';
+    return PROJECT_STATUS[normalizedStatus] || PROJECT_STATUS['need to start'];
   };
 
-  // Accept order as project
-  const handleAcceptOrder = async () => {
-    if (!selectedOrder) return;
-    
-    setAccepting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${selectedOrder.id}/accept`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...timelineData,
-          project_status: 'accepted'
-        })
-      });
-      
-      if (response.ok) {
-        toast.success(`Order ${selectedOrder.order_no} accepted as project`);
-        setShowAcceptModal(false);
-        setSelectedOrder(null);
-        setTimelineData({ start_date: '', end_date: '', deadline: '', project_manager: '', notes: '' });
-        fetchOrders();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Failed to accept order');
-      }
-    } catch (error) {
-      console.error('Error accepting order:', error);
-      toast.error('Error accepting order');
-    } finally {
-      setAccepting(false);
-    }
+  // Get category configuration
+  const getCategoryConfig = (category) => {
+    const normalizedCategory = category?.toUpperCase() || 'PSS';
+    return CATEGORY_CONFIG[normalizedCategory] || CATEGORY_CONFIG.PSS;
   };
 
-  // Update project timeline
-  const handleUpdateTimeline = async () => {
-    if (!selectedOrder) return;
-    
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${selectedOrder.id}/timeline`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(timelineData)
-      });
-      
-      if (response.ok) {
-        toast.success('Timeline updated successfully');
-        setShowTimelineModal(false);
-        setSelectedOrder(null);
-        fetchOrders();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Failed to update timeline');
-      }
-    } catch (error) {
-      console.error('Error updating timeline:', error);
-      toast.error('Error updating timeline');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Update project status
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${orderId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ project_status: newStatus })
-      });
-      
-      if (response.ok) {
-        toast.success('Status updated');
-        fetchOrders();
-      } else {
-        toast.error('Failed to update status');
-      }
-    } catch (error) {
-      toast.error('Error updating status');
-    }
-  };
-
-  // Open accept modal
-  const openAcceptModal = (order) => {
-    setSelectedOrder(order);
-    setTimelineData({
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: '',
-      deadline: order.delivery_date || '',
-      project_manager: '',
-      notes: ''
-    });
-    setShowAcceptModal(true);
-  };
-
-  // Open timeline modal
-  const openTimelineModal = (order) => {
-    setSelectedOrder(order);
-    setTimelineData({
-      start_date: order.timeline?.start_date || '',
-      end_date: order.timeline?.end_date || '',
-      deadline: order.timeline?.deadline || order.delivery_date || '',
-      project_manager: order.timeline?.project_manager || '',
-      notes: order.timeline?.notes || ''
-    });
-    setShowTimelineModal(true);
+  // Open detail modal
+  const openDetailModal = (project) => {
+    setSelectedProject(project);
+    setShowDetailModal(true);
   };
 
   // Open raise request modal
-  const openRaiseRequestModal = (order, type = 'material') => {
-    setSelectedOrder(order);
+  const openRaiseRequestModal = (project, type = 'material') => {
+    setSelectedProject(project);
     setRequestType(type);
     setRequestData(initialRequestData);
     setShowRaiseRequestModal(true);
   };
 
-  // Fetch requests for an order
-  const fetchProjectRequests = async (orderId) => {
+  // Fetch requests for a project
+  const fetchProjectRequests = async (projectId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/project-requests/by-order/${orderId}`, {
+      const response = await fetch(`${API_URL}/api/project-requests/by-order/${projectId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -318,15 +200,15 @@ const ProjectManagement = () => {
   };
 
   // Open requests view modal
-  const openRequestsModal = async (order) => {
-    setSelectedOrder(order);
-    await fetchProjectRequests(order.id);
+  const openRequestsModal = async (project) => {
+    setSelectedProject(project);
+    await fetchProjectRequests(project.id);
     setShowRequestsModal(true);
   };
 
   // Submit material request
   const handleSubmitMaterialRequest = async () => {
-    if (!selectedOrder) return;
+    if (!selectedProject) return;
     if (!requestData.items.some(item => item.description)) {
       toast.error('Please add at least one item');
       return;
@@ -342,10 +224,10 @@ const ProjectManagement = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          order_id: selectedOrder.id,
-          order_no: selectedOrder.order_no,
-          project_name: selectedOrder.project_name,
-          customer_name: selectedOrder.customer_name,
+          order_id: selectedProject.id,
+          order_no: selectedProject.pid_no,
+          project_name: selectedProject.project_name,
+          customer_name: selectedProject.client,
           items: requestData.items.filter(item => item.description),
           required_by: requestData.required_by,
           priority: requestData.priority,
@@ -355,9 +237,9 @@ const ProjectManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Material request ${data.request.request_no} created`);
+        toast.success(`Material Request ${data.request.request_number} created`);
         setShowRaiseRequestModal(false);
-        setRequestData(initialRequestData);
+        setSelectedProject(null);
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Failed to create request');
@@ -371,9 +253,9 @@ const ProjectManagement = () => {
 
   // Submit vendor request
   const handleSubmitVendorRequest = async () => {
-    if (!selectedOrder) return;
+    if (!selectedProject) return;
     if (!requestData.description) {
-      toast.error('Please provide a description');
+      toast.error('Please enter a description');
       return;
     }
     
@@ -387,10 +269,10 @@ const ProjectManagement = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          order_id: selectedOrder.id,
-          order_no: selectedOrder.order_no,
-          project_name: selectedOrder.project_name,
-          customer_name: selectedOrder.customer_name,
+          order_id: selectedProject.id,
+          order_no: selectedProject.pid_no,
+          project_name: selectedProject.project_name,
+          customer_name: selectedProject.client,
           service_type: requestData.service_type,
           description: requestData.description,
           estimated_cost: requestData.estimated_cost,
@@ -402,9 +284,9 @@ const ProjectManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Vendor request ${data.request.request_no} created`);
+        toast.success(`Vendor Request ${data.request.request_number} created`);
         setShowRaiseRequestModal(false);
-        setRequestData(initialRequestData);
+        setSelectedProject(null);
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Failed to create request');
@@ -418,9 +300,9 @@ const ProjectManagement = () => {
 
   // Submit payment request
   const handleSubmitPaymentRequest = async () => {
-    if (!selectedOrder) return;
+    if (!selectedProject) return;
     if (!requestData.payee || !requestData.amount) {
-      toast.error('Please provide payee and amount');
+      toast.error('Please enter payee and amount');
       return;
     }
     
@@ -434,10 +316,10 @@ const ProjectManagement = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          order_id: selectedOrder.id,
-          order_no: selectedOrder.order_no,
-          project_name: selectedOrder.project_name,
-          customer_name: selectedOrder.customer_name,
+          order_id: selectedProject.id,
+          order_no: selectedProject.pid_no,
+          project_name: selectedProject.project_name,
+          customer_name: selectedProject.client,
           payment_type: requestData.payment_type,
           payee: requestData.payee,
           amount: requestData.amount,
@@ -450,9 +332,9 @@ const ProjectManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Payment request ${data.request.request_no} created`);
+        toast.success(`Payment Request ${data.request.request_number} created`);
         setShowRaiseRequestModal(false);
-        setRequestData(initialRequestData);
+        setSelectedProject(null);
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Failed to create request');
@@ -474,755 +356,583 @@ const ProjectManagement = () => {
 
   // Update material item
   const updateMaterialItem = (index, field, value) => {
-    const newItems = [...requestData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setRequestData(prev => ({ ...prev, items: newItems }));
+    setRequestData(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return { ...prev, items: newItems };
+    });
   };
 
   // Remove material item
   const removeMaterialItem = (index) => {
-    if (requestData.items.length <= 1) return;
-    setRequestData(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
+    if (requestData.items.length > 1) {
+      setRequestData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Calculate completion percentage
+  const getCompletionPercent = (project) => {
+    if (project.po_amount && project.invoiced_amount) {
+      return Math.round((project.invoiced_amount / project.po_amount) * 100);
+    }
+    return 0;
   };
 
   return (
     <div className="space-y-6" data-testid="project-management">
-      {/* Header with Stats */}
+      {/* Header */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <FolderKanban className="text-violet-600" />
               Project Management
             </h2>
-            <p className="text-sm text-slate-500">Accept orders and manage project timelines</p>
+            <p className="text-sm text-slate-500">Manage projects, raise requests, track progress</p>
           </div>
-
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by PID, customer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm w-64"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <Filter size={16} className="text-slate-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending Acceptance</option>
-                <option value="accepted">Accepted</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="on_hold">On Hold</option>
-              </select>
-            </div>
-
-            {/* Category Filter */}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-            >
-              <option value="">All Categories</option>
-              {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
-                <option key={key} value={key}>{key} - {config.label}</option>
-              ))}
-            </select>
-
-            {/* Refresh */}
-            <button onClick={fetchOrders} className="p-2 hover:bg-slate-100 rounded-lg">
-              <RefreshCw size={20} className={`text-slate-500 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 pt-4 border-t border-slate-100">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
-            <p className="text-sm text-slate-500">Total Orders</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
-            <p className="text-sm text-slate-500">Pending</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.accepted}</p>
-            <p className="text-sm text-slate-500">Accepted</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-violet-600">{stats.inProgress}</p>
-            <p className="text-sm text-slate-500">In Progress</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-            <p className="text-sm text-slate-500">Completed</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalValue)}</p>
-            <p className="text-sm text-slate-500">Total Value</p>
-          </div>
+          <button
+            onClick={fetchProjects}
+            className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
+          >
+            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
 
-      {/* Orders List */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
-            <p className="text-slate-500">Loading orders...</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl p-4 text-white">
+          <div className="flex items-center gap-2 mb-2">
+            <FolderKanban size={20} />
+            <span className="text-sm opacity-90">Total Projects</span>
           </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-            <FolderKanban className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-            <h3 className="text-lg font-medium text-slate-600 mb-1">No orders found</h3>
-            <p className="text-sm text-slate-500">Orders from Order Management will appear here</p>
+          <p className="text-2xl font-bold">{stats.total}</p>
+        </div>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Play size={18} className="text-blue-600" />
+            <span className="text-sm text-slate-600">Live</span>
+          </div>
+          <p className="text-xl font-bold text-blue-700">{stats.live}</p>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle size={18} className="text-green-600" />
+            <span className="text-sm text-slate-600">Completed</span>
+          </div>
+          <p className="text-xl font-bold text-green-700">{stats.completed}</p>
+        </div>
+
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign size={18} className="text-emerald-600" />
+            <span className="text-sm text-slate-600">PO Value</span>
+          </div>
+          <p className="text-xl font-bold text-emerald-700">{formatCurrency(stats.totalValue)}</p>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={18} className="text-amber-600" />
+            <span className="text-sm text-slate-600">Invoiced</span>
+          </div>
+          <p className="text-xl font-bold text-amber-700">{formatCurrency(stats.totalInvoiced)}</p>
+        </div>
+      </div>
+
+      {/* View Tabs & Filters */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* View Tabs */}
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveView('live')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeView === 'live'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Clock size={16} />
+            Live Projects
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              activeView === 'live' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'
+            }`}>
+              {stats.live}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveView('completed')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeView === 'completed'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <CheckCircle size={16} />
+            Completed
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              activeView === 'completed' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'
+            }`}>
+              {stats.completed}
+            </span>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by PID, client, project..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm"
+          />
+        </div>
+
+        {/* Category Filter */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+        >
+          <option value="">All Categories</option>
+          {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+            <option key={key} value={key}>{config.label}</option>
+          ))}
+        </select>
+
+        {/* Status Filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+        >
+          <option value="">All Statuses</option>
+          {Object.entries(PROJECT_STATUS).map(([key, config]) => (
+            <option key={key} value={key}>{config.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Projects Table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="animate-spin text-violet-500" size={32} />
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="text-center py-12 text-slate-500">
+            <FolderKanban size={48} className="mx-auto text-slate-300 mb-4" />
+            <p>No projects found</p>
           </div>
         ) : (
-          filteredOrders.map((order) => {
-            const status = order.project_status || 'pending';
-            const statusConfig = getStatusConfig(status);
-            const StatusIcon = statusConfig.icon;
-            const categoryConfig = CATEGORY_CONFIG[order.category] || CATEGORY_CONFIG.PSS;
-            const isPending = status === 'pending';
-            
-            return (
-              <div
-                key={order.id}
-                className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  {/* PID & Customer */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="font-mono font-bold text-violet-600">{order.order_no || order.pid_no}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium bg-${categoryConfig.color}-100 text-${categoryConfig.color}-700`}>
-                        {order.category || 'PSS'}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.color} flex items-center gap-1`}>
-                        <StatusIcon size={12} />
-                        {statusConfig.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600 truncate">
-                      <Building2 size={14} className="inline mr-1" />
-                      {order.customer_name}
-                      {order.project_name && <span className="text-slate-400"> • {order.project_name}</span>}
-                    </p>
-                  </div>
-
-                  {/* Order Value */}
-                  <div className="text-center px-4">
-                    <p className="text-lg font-bold text-slate-800">{formatCurrency(order.order_value || order.total_amount)}</p>
-                    <p className="text-xs text-slate-500">Order Value</p>
-                  </div>
-
-                  {/* Timeline */}
-                  <div className="text-center px-4 border-l border-slate-100">
-                    {order.timeline?.start_date ? (
-                      <>
-                        <p className="text-sm font-medium text-slate-700">
-                          {formatDate(order.timeline.start_date)} - {formatDate(order.timeline.end_date)}
-                        </p>
-                        <p className="text-xs text-slate-500">Timeline</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm text-slate-400">Not set</p>
-                        <p className="text-xs text-slate-500">Timeline</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Deadline */}
-                  <div className="text-center px-4 border-l border-slate-100">
-                    <p className="text-sm font-medium text-slate-700">
-                      {formatDate(order.timeline?.deadline || order.delivery_date)}
-                    </p>
-                    <p className="text-xs text-slate-500">Deadline</p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pl-4 border-l border-slate-100">
-                    {isPending ? (
-                      <button
-                        onClick={() => openAcceptModal(order)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm font-medium"
-                      >
-                        <Check size={16} />
-                        Accept
-                      </button>
-                    ) : (
-                      <>
-                        {/* Raise Request Dropdown */}
-                        <div className="relative group">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">PID</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Project / Client</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Category</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Status</th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">PO Amount</th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">Invoiced</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Progress</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Engineer</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredProjects.map(project => {
+                  const statusConfig = getStatusConfig(project.status);
+                  const categoryConfig = getCategoryConfig(project.category);
+                  const completion = getCompletionPercent(project);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <tr key={project.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-sm font-medium text-slate-800">{project.pid_no}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-slate-800 text-sm truncate max-w-[200px]">{project.project_name}</p>
+                        <p className="text-xs text-slate-500 truncate max-w-[200px]">{project.client}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryConfig.bgColor} ${categoryConfig.textColor}`}>
+                          {project.category?.toUpperCase() || 'PSS'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                          <StatusIcon size={12} />
+                          {statusConfig.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-700">
+                        {formatCurrency(project.po_amount)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+                        {formatCurrency(project.invoiced_amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${
+                                completion >= 100 ? 'bg-green-500' :
+                                completion >= 50 ? 'bg-blue-500' :
+                                completion > 0 ? 'bg-amber-500' : 'bg-slate-300'
+                              }`}
+                              style={{ width: `${Math.min(completion, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-slate-600">{completion}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-slate-600 truncate max-w-[100px] block">
+                          {project.engineer_in_charge || '-'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
                           <button
-                            className="px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-1 text-sm font-medium"
+                            onClick={() => openDetailModal(project)}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            title="View Details"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => openRequestsModal(project)}
+                            className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded"
+                            title="View Requests"
+                          >
+                            <ClipboardList size={16} />
+                          </button>
+                          <button
+                            onClick={() => openRaiseRequestModal(project, 'material')}
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded"
                             title="Raise Request"
                           >
-                            <Plus size={14} />
-                            Request
+                            <Plus size={16} />
                           </button>
-                          <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-                            <button
-                              onClick={() => openRaiseRequestModal(order, 'material')}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 flex items-center gap-2"
-                            >
-                              <Package size={14} className="text-amber-600" />
-                              Material Request
-                            </button>
-                            <button
-                              onClick={() => openRaiseRequestModal(order, 'vendor')}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2"
-                            >
-                              <Truck size={14} className="text-blue-600" />
-                              Vendor Request
-                            </button>
-                            <button
-                              onClick={() => openRaiseRequestModal(order, 'payment')}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-green-50 flex items-center gap-2"
-                            >
-                              <CreditCard size={14} className="text-green-600" />
-                              Payment Request
-                            </button>
-                          </div>
                         </div>
-                        <button
-                          onClick={() => openRequestsModal(order)}
-                          className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
-                          title="View Requests"
-                        >
-                          <ClipboardList size={18} />
-                        </button>
-                        <button
-                          onClick={() => openTimelineModal(order)}
-                          className="p-2 text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg"
-                          title="Edit Timeline"
-                        >
-                          <Calendar size={18} />
-                        </button>
-                        <select
-                          value={status}
-                          onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                          className="px-2 py-1 text-sm border border-slate-200 rounded-lg"
-                        >
-                          <option value="accepted">Accepted</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="on_hold">On Hold</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                      </>
-                    )}
-                    <button
-                      onClick={() => { setSelectedOrder(order); setShowDetailModal(true); }}
-                      className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Results count */}
+        {!loading && filteredProjects.length > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+            Showing {filteredProjects.length} of {stats.total} projects
+          </div>
         )}
       </div>
 
-      {/* Accept Order Modal */}
-      {showAcceptModal && selectedOrder && (
+      {/* Project Detail Modal */}
+      {showDetailModal && selectedProject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-green-50 to-emerald-50">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800">Accept Order as Project</h3>
-                <p className="text-sm text-slate-500">{selectedOrder.order_no}</p>
-              </div>
-              <button onClick={() => setShowAcceptModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 rounded-lg p-3 mb-4">
-                <p className="text-sm"><strong>Customer:</strong> {selectedOrder.customer_name}</p>
-                <p className="text-sm"><strong>Order Value:</strong> {formatCurrency(selectedOrder.order_value || selectedOrder.total_amount)}</p>
-              </div>
-
-              <h4 className="font-medium text-slate-700 flex items-center gap-2">
-                <Calendar size={16} />
-                Set Project Timeline
-              </h4>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Start Date *</label>
-                  <input
-                    type="date"
-                    value={timelineData.start_date}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, start_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={timelineData.end_date}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, end_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
-                  <input
-                    type="date"
-                    value={timelineData.deadline}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, deadline: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Project Manager</label>
-                  <input
-                    type="text"
-                    value={timelineData.project_manager}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, project_manager: e.target.value }))}
-                    placeholder="Assign manager"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-                <textarea
-                  value={timelineData.notes}
-                  onChange={(e) => setTimelineData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={2}
-                  placeholder="Any notes for project execution..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                <button
-                  onClick={() => setShowAcceptModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAcceptOrder}
-                  disabled={accepting || !timelineData.start_date}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {accepting ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
-                  Accept & Start Project
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Timeline Modal */}
-      {showTimelineModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-purple-50">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800">Edit Project Timeline</h3>
-                <p className="text-sm text-slate-500">{selectedOrder.order_no}</p>
+                <h3 className="text-lg font-semibold text-slate-800">{selectedProject.pid_no}</h3>
+                <p className="text-sm text-slate-500">{selectedProject.project_name}</p>
               </div>
-              <button onClick={() => setShowTimelineModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={timelineData.start_date}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, start_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Status & Category */}
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusConfig(selectedProject.status).color}`}>
+                  {getStatusConfig(selectedProject.status).label}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryConfig(selectedProject.category).bgColor} ${getCategoryConfig(selectedProject.category).textColor}`}>
+                  {getCategoryConfig(selectedProject.category).label}
+                </span>
+              </div>
+
+              {/* Client Info */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 size={16} className="text-slate-500" />
+                  <span className="text-sm font-medium text-slate-700">Client</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={timelineData.end_date}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, end_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
+                <p className="text-slate-800">{selectedProject.client}</p>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500">PO Amount</p>
+                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(selectedProject.po_amount)}</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
-                  <input
-                    type="date"
-                    value={timelineData.deadline}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, deadline: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500">Invoiced</p>
+                  <p className="text-lg font-bold text-blue-700">{formatCurrency(selectedProject.invoiced_amount)}</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Project Manager</label>
-                  <input
-                    type="text"
-                    value={timelineData.project_manager}
-                    onChange={(e) => setTimelineData(prev => ({ ...prev, project_manager: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                  />
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500">This Week Billing</p>
+                  <p className="text-lg font-bold text-amber-700">{formatCurrency(selectedProject.this_week_billing)}</p>
                 </div>
               </div>
 
+              {/* Progress */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-                <textarea
-                  value={timelineData.notes}
-                  onChange={(e) => setTimelineData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-600">Completion Progress</span>
+                  <span className="font-medium text-slate-800">{getCompletionPercent(selectedProject)}%</span>
+                </div>
+                <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-violet-500 rounded-full transition-all"
+                    style={{ width: `${Math.min(getCompletionPercent(selectedProject), 100)}%` }}
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                <button
-                  onClick={() => setShowTimelineModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdateTimeline}
-                  disabled={saving}
-                  className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                  Save Timeline
-                </button>
-              </div>
+              {/* Engineer */}
+              {selectedProject.engineer_in_charge && (
+                <div className="flex items-center gap-2">
+                  <Users size={16} className="text-slate-500" />
+                  <span className="text-sm text-slate-600">Engineer:</span>
+                  <span className="text-sm font-medium text-slate-800">{selectedProject.engineer_in_charge}</span>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Order Detail Modal */}
-      {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800">Order Details</h3>
-                <p className="text-sm text-violet-600 font-mono">{selectedOrder.order_no}</p>
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowDetailModal(false); openRaiseRequestModal(selectedProject, 'material'); }}
+                  className="px-3 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 flex items-center gap-1"
+                >
+                  <Package size={14} /> Material
+                </button>
+                <button
+                  onClick={() => { setShowDetailModal(false); openRaiseRequestModal(selectedProject, 'vendor'); }}
+                  className="px-3 py-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 flex items-center gap-1"
+                >
+                  <Truck size={14} /> Vendor
+                </button>
+                <button
+                  onClick={() => { setShowDetailModal(false); openRaiseRequestModal(selectedProject, 'payment'); }}
+                  className="px-3 py-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 flex items-center gap-1"
+                >
+                  <CreditCard size={14} /> Payment
+                </button>
               </div>
-              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                <X size={20} />
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Close
               </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)] space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Customer</p>
-                  <p className="font-medium">{selectedOrder.customer_name}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Order Value</p>
-                  <p className="font-medium text-green-600">{formatCurrency(selectedOrder.order_value || selectedOrder.total_amount)}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Category</p>
-                  <p className="font-medium">{selectedOrder.category} - {CATEGORY_CONFIG[selectedOrder.category]?.label}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Project Status</p>
-                  <p className="font-medium">{getStatusConfig(selectedOrder.project_status).label}</p>
-                </div>
-              </div>
-
-              {selectedOrder.timeline && (
-                <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
-                  <h4 className="font-medium text-violet-800 mb-3 flex items-center gap-2">
-                    <Calendar size={16} />
-                    Project Timeline
-                  </h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-500">Start Date</p>
-                      <p className="font-medium">{formatDate(selectedOrder.timeline.start_date)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">End Date</p>
-                      <p className="font-medium">{formatDate(selectedOrder.timeline.end_date)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Deadline</p>
-                      <p className="font-medium">{formatDate(selectedOrder.timeline.deadline)}</p>
-                    </div>
-                  </div>
-                  {selectedOrder.timeline.project_manager && (
-                    <p className="text-sm mt-2"><strong>Project Manager:</strong> {selectedOrder.timeline.project_manager}</p>
-                  )}
-                </div>
-              )}
-
-              {selectedOrder.financials && (
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <h4 className="font-medium text-green-800 mb-3 flex items-center gap-2">
-                    <DollarSign size={16} />
-                    Budget Allocation
-                  </h4>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-500">Purchase Budget</p>
-                      <p className="font-medium">{formatCurrency(selectedOrder.financials.purchase_budget)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Execution Budget</p>
-                      <p className="font-medium">{formatCurrency(selectedOrder.financials.execution_budget)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Others Budget</p>
-                      <p className="font-medium">{formatCurrency(selectedOrder.financials.others_budget)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Target Profit</p>
-                      <p className="font-medium text-green-600">{formatCurrency(selectedOrder.financials.target_profit)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
 
       {/* Raise Request Modal */}
-      {showRaiseRequestModal && selectedOrder && (
+      {showRaiseRequestModal && selectedProject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-            <div className={`flex items-center justify-between p-4 border-b border-slate-200 ${
-              requestType === 'material' ? 'bg-gradient-to-r from-amber-50 to-orange-50' :
-              requestType === 'vendor' ? 'bg-gradient-to-r from-blue-50 to-cyan-50' :
-              'bg-gradient-to-r from-green-50 to-emerald-50'
-            }`}>
+          <div className="bg-white rounded-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  {requestType === 'material' && <Package className="text-amber-600" size={20} />}
-                  {requestType === 'vendor' && <Truck className="text-blue-600" size={20} />}
-                  {requestType === 'payment' && <CreditCard className="text-green-600" size={20} />}
-                  Raise {requestType === 'material' ? 'Material' : requestType === 'vendor' ? 'Vendor' : 'Payment'} Request
-                </h3>
-                <p className="text-sm text-slate-500">{selectedOrder.order_no} • {selectedOrder.customer_name}</p>
+                <h3 className="text-lg font-semibold text-slate-800">Raise Request</h3>
+                <p className="text-sm text-slate-500">{selectedProject.pid_no} • {selectedProject.project_name}</p>
               </div>
               <button onClick={() => setShowRaiseRequestModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
                 <X size={20} />
               </button>
             </div>
 
-            {/* Request Type Tabs */}
-            <div className="flex border-b border-slate-200">
-              <button
-                onClick={() => setRequestType('material')}
-                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
-                  requestType === 'material' ? 'bg-amber-50 text-amber-700 border-b-2 border-amber-500' : 'text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <Package size={16} /> Material
-              </button>
-              <button
-                onClick={() => setRequestType('vendor')}
-                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
-                  requestType === 'vendor' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500' : 'text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <Truck size={16} /> Vendor
-              </button>
-              <button
-                onClick={() => setRequestType('payment')}
-                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
-                  requestType === 'payment' ? 'bg-green-50 text-green-700 border-b-2 border-green-500' : 'text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <CreditCard size={16} /> Payment
-              </button>
+            <div className="p-4 border-b border-slate-200">
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
+                <button
+                  onClick={() => setRequestType('material')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    requestType === 'material' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  <Package size={16} /> Material
+                </button>
+                <button
+                  onClick={() => setRequestType('vendor')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    requestType === 'vendor' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  <Truck size={16} /> Vendor
+                </button>
+                <button
+                  onClick={() => setRequestType('payment')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    requestType === 'payment' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  <CreditCard size={16} /> Payment
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {/* Material Request Form */}
               {requestType === 'material' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-700">Material Items</label>
-                    <button
-                      onClick={addMaterialItem}
-                      className="text-sm text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                    >
-                      <Plus size={14} /> Add Item
-                    </button>
-                  </div>
-                  {requestData.items.map((item, index) => (
-                    <div key={index} className="bg-slate-50 rounded-lg p-3 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-slate-500">Item {index + 1}</span>
-                        {requestData.items.length > 1 && (
+                <>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-medium text-slate-700">Items Required</label>
+                      <button
+                        onClick={addMaterialItem}
+                        className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Add Item
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {requestData.items.map((item, index) => (
+                        <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="Description"
+                            value={item.description}
+                            onChange={(e) => updateMaterialItem(index, 'description', e.target.value)}
+                            className="col-span-5 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Qty"
+                            value={item.quantity}
+                            onChange={(e) => updateMaterialItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                            className="col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                          <select
+                            value={item.unit}
+                            onChange={(e) => updateMaterialItem(index, 'unit', e.target.value)}
+                            className="col-span-2 px-2 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                          >
+                            <option>Nos</option>
+                            <option>Kg</option>
+                            <option>Mtr</option>
+                            <option>Set</option>
+                            <option>Lot</option>
+                          </select>
+                          <input
+                            type="number"
+                            placeholder="Est. Cost"
+                            value={item.estimated_cost}
+                            onChange={(e) => updateMaterialItem(index, 'estimated_cost', parseFloat(e.target.value) || 0)}
+                            className="col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
                           <button
                             onClick={() => removeMaterialItem(index)}
-                            className="text-red-500 hover:text-red-600 p-1"
+                            className="col-span-1 p-2 text-red-500 hover:bg-red-50 rounded"
+                            disabled={requestData.items.length === 1}
                           >
-                            <X size={14} />
+                            <X size={16} />
                           </button>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Material Description"
-                        value={item.description}
-                        onChange={(e) => updateMaterialItem(index, 'description', e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                      />
-                      <div className="grid grid-cols-3 gap-3">
-                        <input
-                          type="number"
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateMaterialItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                        />
-                        <select
-                          value={item.unit}
-                          onChange={(e) => updateMaterialItem(index, 'unit', e.target.value)}
-                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                        >
-                          <option value="Nos">Nos</option>
-                          <option value="Kg">Kg</option>
-                          <option value="Mtr">Mtr</option>
-                          <option value="Set">Set</option>
-                          <option value="Lot">Lot</option>
-                        </select>
-                        <input
-                          type="number"
-                          placeholder="Est. Cost (₹)"
-                          value={item.estimated_cost}
-                          onChange={(e) => updateMaterialItem(index, 'estimated_cost', parseFloat(e.target.value) || 0)}
-                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                        />
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </>
               )}
 
               {/* Vendor Request Form */}
               {requestType === 'vendor' && (
-                <div className="space-y-4">
+                <>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Service Type</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Service Type</label>
                     <select
                       value={requestData.service_type}
                       onChange={(e) => setRequestData(prev => ({ ...prev, service_type: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                     >
-                      <option value="Subcontractor">Subcontractor</option>
-                      <option value="Rental">Equipment Rental</option>
-                      <option value="Service Provider">Service Provider</option>
-                      <option value="Consultant">Consultant</option>
-                      <option value="Transport">Transport</option>
+                      <option>Subcontractor</option>
+                      <option>Equipment Rental</option>
+                      <option>Transportation</option>
+                      <option>Testing Services</option>
+                      <option>Consulting</option>
+                      <option>Other</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Description *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                     <textarea
-                      placeholder="Describe the service/vendor requirement..."
                       value={requestData.description}
                       onChange={(e) => setRequestData(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                       rows={3}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      placeholder="Describe the vendor service required..."
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Estimated Cost (₹)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Estimated Cost</label>
                     <input
                       type="number"
-                      placeholder="0"
                       value={requestData.estimated_cost}
                       onChange={(e) => setRequestData(prev => ({ ...prev, estimated_cost: parseFloat(e.target.value) || 0 }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                     />
                   </div>
-                </div>
+                </>
               )}
 
               {/* Payment Request Form */}
               {requestType === 'payment' && (
-                <div className="space-y-4">
+                <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Payment Type</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Payment Type</label>
                       <select
                         value={requestData.payment_type}
                         onChange={(e) => setRequestData(prev => ({ ...prev, payment_type: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                       >
-                        <option value="Advance">Advance</option>
-                        <option value="Milestone">Milestone Payment</option>
-                        <option value="Final">Final Payment</option>
-                        <option value="Vendor Payment">Vendor Payment</option>
-                        <option value="Reimbursement">Reimbursement</option>
+                        <option>Advance</option>
+                        <option>Milestone</option>
+                        <option>Final</option>
+                        <option>Reimbursement</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Priority</label>
-                      <select
-                        value={requestData.priority}
-                        onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Payee Name *</label>
-                    <input
-                      type="text"
-                      placeholder="Vendor or person to be paid"
-                      value={requestData.payee}
-                      onChange={(e) => setRequestData(prev => ({ ...prev, payee: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Amount (₹) *</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
                       <input
                         type="number"
-                        placeholder="0"
                         value={requestData.amount}
                         onChange={(e) => setRequestData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Payee Name</label>
+                    <input
+                      type="text"
+                      value={requestData.payee}
+                      onChange={(e) => setRequestData(prev => ({ ...prev, payee: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      placeholder="Vendor/Supplier name"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Due Date</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
                       <input
                         type="date"
                         value={requestData.due_date}
@@ -1230,56 +940,54 @@ const ProjectManagement = () => {
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Bank Details</label>
+                      <input
+                        type="text"
+                        value={requestData.bank_details}
+                        onChange={(e) => setRequestData(prev => ({ ...prev, bank_details: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        placeholder="Account/IFSC"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Bank Details (Optional)</label>
-                    <textarea
-                      placeholder="Account details for payment..."
-                      value={requestData.bank_details}
-                      onChange={(e) => setRequestData(prev => ({ ...prev, bank_details: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                      rows={2}
-                    />
-                  </div>
-                </div>
+                </>
               )}
 
               {/* Common Fields */}
-              <div className="mt-6 pt-4 border-t border-slate-200 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Required By</label>
-                    <input
-                      type="date"
-                      value={requestData.required_by}
-                      onChange={(e) => setRequestData(prev => ({ ...prev, required_by: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">Priority</label>
-                    <select
-                      value={requestData.priority}
-                      onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">Notes</label>
-                  <textarea
-                    placeholder="Additional notes or instructions..."
-                    value={requestData.notes}
-                    onChange={(e) => setRequestData(prev => ({ ...prev, notes: e.target.value }))}
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Required By</label>
+                  <input
+                    type="date"
+                    value={requestData.required_by}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, required_by: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    rows={2}
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
+                  <select
+                    value={requestData.priority}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <textarea
+                  value={requestData.notes}
+                  onChange={(e) => setRequestData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Additional notes..."
+                />
               </div>
             </div>
 
@@ -1291,17 +999,13 @@ const ProjectManagement = () => {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (requestType === 'material') handleSubmitMaterialRequest();
-                  else if (requestType === 'vendor') handleSubmitVendorRequest();
-                  else handleSubmitPaymentRequest();
-                }}
+                onClick={
+                  requestType === 'material' ? handleSubmitMaterialRequest :
+                  requestType === 'vendor' ? handleSubmitVendorRequest :
+                  handleSubmitPaymentRequest
+                }
                 disabled={submittingRequest}
-                className={`px-6 py-2 text-white rounded-lg flex items-center gap-2 ${
-                  requestType === 'material' ? 'bg-amber-600 hover:bg-amber-700' :
-                  requestType === 'vendor' ? 'bg-blue-600 hover:bg-blue-700' :
-                  'bg-green-600 hover:bg-green-700'
-                } disabled:opacity-50`}
+                className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {submittingRequest ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 Submit Request
@@ -1311,47 +1015,44 @@ const ProjectManagement = () => {
         </div>
       )}
 
-      {/* View Project Requests Modal */}
-      {showRequestsModal && selectedOrder && (
+      {/* View Requests Modal */}
+      {showRequestsModal && selectedProject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+          <div className="bg-white rounded-xl w-full max-w-3xl m-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-purple-50">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  <ClipboardList className="text-slate-600" size={20} />
-                  Project Requests
-                </h3>
-                <p className="text-sm text-slate-500">{selectedOrder.order_no} • {selectedOrder.customer_name}</p>
+                <h3 className="text-lg font-semibold text-slate-800">Project Requests</h3>
+                <p className="text-sm text-slate-500">{selectedProject.pid_no} • {selectedProject.project_name}</p>
               </div>
-              <button onClick={() => setShowRequestsModal(false)} className="p-2 hover:bg-slate-200 rounded-lg">
+              <button onClick={() => setShowRequestsModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              {/* Materials */}
-              <div className="mb-6">
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Material Requests */}
+              <div>
                 <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
-                  <Package className="text-amber-600" size={18} />
-                  Material Requests ({projectRequests.materials?.length || 0})
+                  <Package size={18} className="text-amber-600" />
+                  Material Requests ({projectRequests.material?.length || 0})
                 </h4>
-                {projectRequests.materials?.length > 0 ? (
+                {projectRequests.material?.length > 0 ? (
                   <div className="space-y-2">
-                    {projectRequests.materials.map((req) => (
+                    {projectRequests.material.map(req => (
                       <div key={req.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="font-mono text-sm text-amber-700">{req.request_no}</span>
-                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>{req.status}</span>
+                            <span className="font-mono text-sm text-amber-700">{req.request_number}</span>
+                            <p className="text-sm text-slate-600 mt-1">{req.items?.length || 0} items</p>
                           </div>
-                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {req.status}
+                          </span>
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">{req.total_items} items • Est. {formatCurrency(req.estimated_cost)}</p>
-                        {req.required_by && <p className="text-xs text-slate-500 mt-1">Required by: {formatDate(req.required_by)}</p>}
                       </div>
                     ))}
                   </div>
@@ -1360,31 +1061,29 @@ const ProjectManagement = () => {
                 )}
               </div>
 
-              {/* Vendors */}
-              <div className="mb-6">
+              {/* Vendor Requests */}
+              <div>
                 <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
-                  <Truck className="text-blue-600" size={18} />
-                  Vendor Requests ({projectRequests.vendors?.length || 0})
+                  <Truck size={18} className="text-blue-600" />
+                  Vendor Requests ({projectRequests.vendor?.length || 0})
                 </h4>
-                {projectRequests.vendors?.length > 0 ? (
+                {projectRequests.vendor?.length > 0 ? (
                   <div className="space-y-2">
-                    {projectRequests.vendors.map((req) => (
+                    {projectRequests.vendor.map(req => (
                       <div key={req.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="font-mono text-sm text-blue-700">{req.request_no}</span>
-                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>{req.status}</span>
-                            <span className="ml-2 text-xs text-blue-600">{req.service_type}</span>
+                            <span className="font-mono text-sm text-blue-700">{req.request_number}</span>
+                            <p className="text-sm text-slate-600 mt-1">{req.service_type}: {req.description?.slice(0, 50)}...</p>
                           </div>
-                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {req.status}
+                          </span>
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">{req.description}</p>
-                        <p className="text-xs text-slate-500 mt-1">Est. {formatCurrency(req.estimated_cost)}</p>
                       </div>
                     ))}
                   </div>
@@ -1393,31 +1092,29 @@ const ProjectManagement = () => {
                 )}
               </div>
 
-              {/* Payments */}
+              {/* Payment Requests */}
               <div>
                 <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
-                  <CreditCard className="text-green-600" size={18} />
-                  Payment Requests ({projectRequests.payments?.length || 0})
+                  <CreditCard size={18} className="text-green-600" />
+                  Payment Requests ({projectRequests.payment?.length || 0})
                 </h4>
-                {projectRequests.payments?.length > 0 ? (
+                {projectRequests.payment?.length > 0 ? (
                   <div className="space-y-2">
-                    {projectRequests.payments.map((req) => (
+                    {projectRequests.payment.map(req => (
                       <div key={req.id} className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="font-mono text-sm text-green-700">{req.request_no}</span>
-                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                              req.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              req.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>{req.status}</span>
-                            <span className="ml-2 text-xs text-green-600">{req.payment_type}</span>
+                            <span className="font-mono text-sm text-green-700">{req.request_number}</span>
+                            <p className="text-sm text-slate-600 mt-1">{req.payee} • {formatCurrency(req.amount)}</p>
                           </div>
-                          <span className="text-sm text-slate-500">{formatDate(req.created_at)}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {req.status}
+                          </span>
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">Payee: {req.payee} • {formatCurrency(req.amount)}</p>
-                        {req.due_date && <p className="text-xs text-slate-500 mt-1">Due: {formatDate(req.due_date)}</p>}
                       </div>
                     ))}
                   </div>
@@ -1426,13 +1123,11 @@ const ProjectManagement = () => {
                 )}
               </div>
             </div>
+
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between">
               <button
-                onClick={() => {
-                  setShowRequestsModal(false);
-                  openRaiseRequestModal(selectedOrder, 'material');
-                }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 flex items-center gap-2 text-sm"
+                onClick={() => { setShowRequestsModal(false); openRaiseRequestModal(selectedProject, 'material'); }}
+                className="px-4 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 flex items-center gap-1"
               >
                 <Plus size={14} /> New Request
               </button>
