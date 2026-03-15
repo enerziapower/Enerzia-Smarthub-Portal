@@ -662,8 +662,8 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                     {projectRequests.material.map(req => (
                       <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
                         <div>
-                          <span className="font-mono text-amber-700">{req.request_number}</span>
-                          <span className="text-slate-500 ml-2">• {req.items?.length || 0} items</span>
+                          <span className="font-mono text-amber-700">{req.request_no || req.request_number}</span>
+                          <span className="text-slate-500 ml-2">• {req.items?.length || req.total_items || 0} items</span>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           req.status === 'approved' ? 'bg-green-100 text-green-700' :
