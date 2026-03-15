@@ -47,8 +47,13 @@ const ProjectManagement = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [showRaiseRequestModal, setShowRaiseRequestModal] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
+  const [requestType, setRequestType] = useState('material'); // material, vendor, payment
+  const [projectRequests, setProjectRequests] = useState([]);
   const [accepting, setAccepting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [submittingRequest, setSubmittingRequest] = useState(false);
   const [stats, setStats] = useState({ 
     total: 0, 
     pending: 0, 
