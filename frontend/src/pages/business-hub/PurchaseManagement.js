@@ -88,38 +88,53 @@ const PurchaseManagement = () => {
       const matResponse = await fetch(`${API_URL}/api/project-requests/materials`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      let matList = [];
       if (matResponse.ok) {
         const matData = await matResponse.json();
-        setMaterialRequests(matData.requests || []);
+        matList = matData.requests || [];
+        setMaterialRequests(matList);
       }
       
       // Fetch vendor requests from projects
       const vendorResponse = await fetch(`${API_URL}/api/project-requests/vendors`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      let vendorList = [];
       if (vendorResponse.ok) {
         const vendorData = await vendorResponse.json();
-        setVendorRequests(vendorData.requests || []);
+        vendorList = vendorData.requests || [];
+        setVendorRequests(vendorList);
       }
       
-      // Fetch existing purchase orders
+      // Fetch project-created purchase orders
+      const projectPOResponse = await fetch(`${API_URL}/api/project-requests/purchase-orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      let poList = [];
+      if (projectPOResponse.ok) {
+        const projectPOData = await projectPOResponse.json();
+        poList = projectPOData.purchase_orders || [];
+      }
+      
+      // Also fetch existing purchase orders from old API
       const poResponse = await fetch(`${API_URL}/api/purchase/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (poResponse.ok) {
         const poData = await poResponse.json();
-        setPurchaseOrders(poData || []);
+        poList = [...poList, ...(poData || [])];
       }
+      setPurchaseOrders(poList);
       
       // Calculate stats
-      const matPending = materialRequests.filter(r => r.status === 'pending').length;
-      const vendorPending = vendorRequests.filter(r => r.status === 'pending').length;
-      const totalValue = [...materialRequests, ...vendorRequests].reduce((sum, r) => sum + (r.estimated_cost || r.amount || 0), 0);
+      const matPending = matList.filter(r => r.status === 'pending').length;
+      const vendorPending = vendorList.filter(r => r.status === 'pending').length;
+      const totalValue = [...matList, ...vendorList].reduce((sum, r) => sum + (r.estimated_cost || r.amount || 0), 0);
       
       setStats({
         materials_pending: matPending,
         vendors_pending: vendorPending,
-        orders: purchaseOrders.length,
+        orders: poList.length,
         total_value: totalValue
       });
       
