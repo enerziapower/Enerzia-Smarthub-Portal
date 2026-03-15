@@ -275,8 +275,28 @@ const OrderManagement = () => {
         customer_name: customer.name || customer.company_name || '',
         customer_address: customer.address || ''
       }));
+      setCustomerSearch(customer.name || customer.company_name || '');
+      setShowCustomerDropdown(false);
     }
   };
+
+  // Filter customers based on search
+  const filteredCustomers = customers.filter(c => {
+    const name = (c.name || c.company_name || '').toLowerCase();
+    const searchLower = customerSearch.toLowerCase();
+    return name.includes(searchLower);
+  });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Calculate totals
   const calculateTotals = (items, gstPercent) => {
