@@ -2,6 +2,42 @@
 
 ## Latest Updates
 
+### Phase 6: Project & Services Integration ✅ COMPLETE (Dec 2025)
+**Location:** Business Hub → Project Management, Billing Management
+
+**MAJOR CHANGES:**
+
+**1. Project Management - Connected to Project & Services**
+- Now shows **372 projects from Project & Services** (not orders)
+- Live (93) and Completed (279) tabs
+- Displays: PID, Project/Client, Category, Status, PO Amount, Invoiced, Progress %, Engineer
+- Bi-directional sync with Project & Services data
+- Can raise Material/Vendor/Payment requests from any project
+
+**2. Billing Management - Simplified (ZOHO Books Integration)**
+- **Removed Invoice tab** - User uses ZOHO Books for invoices/POs
+- Only 2 tabs remain:
+  - **Progress Tracking**: Shows completion % by category (PSS, AS, OSS, CS)
+  - **Weekly Billing**: Read-only view of this week's billing from Project & Services
+- Stats: Total PO Value (₹7.77Cr), Invoiced (₹4.45Cr), Avg Completion (77%)
+
+**Data Flow:**
+```
+Project & Services (372 projects)
+       ↓
+Business Hub Project Management (view + raise requests)
+       ↓
+Purchase/Expense/Payment Management (process requests)
+       ↓
+GRN Management (track goods receipt)
+       ↓
+Billing & Progress (track completion - invoices in ZOHO Books)
+```
+
+**Test Results:** 100% frontend - See `/app/test_reports/iteration_96.json`
+
+---
+
 ### Phase 5: Vendor, GRN & Billing Management ✅ COMPLETE (Dec 2025)
 **Location:** Business Hub → Vendor Management, GRN Management, Billing Management
 
