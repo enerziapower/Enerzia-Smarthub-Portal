@@ -668,6 +668,46 @@ const ProjectManagement = () => {
                       </button>
                     ) : (
                       <>
+                        {/* Raise Request Dropdown */}
+                        <div className="relative group">
+                          <button
+                            className="px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-1 text-sm font-medium"
+                            title="Raise Request"
+                          >
+                            <Plus size={14} />
+                            Request
+                          </button>
+                          <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
+                            <button
+                              onClick={() => openRaiseRequestModal(order, 'material')}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 flex items-center gap-2"
+                            >
+                              <Package size={14} className="text-amber-600" />
+                              Material Request
+                            </button>
+                            <button
+                              onClick={() => openRaiseRequestModal(order, 'vendor')}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2"
+                            >
+                              <Truck size={14} className="text-blue-600" />
+                              Vendor Request
+                            </button>
+                            <button
+                              onClick={() => openRaiseRequestModal(order, 'payment')}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-green-50 flex items-center gap-2"
+                            >
+                              <CreditCard size={14} className="text-green-600" />
+                              Payment Request
+                            </button>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openRequestsModal(order)}
+                          className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                          title="View Requests"
+                        >
+                          <ClipboardList size={18} />
+                        </button>
                         <button
                           onClick={() => openTimelineModal(order)}
                           className="p-2 text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg"
