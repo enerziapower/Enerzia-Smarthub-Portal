@@ -332,7 +332,7 @@ const PaymentManagement = () => {
                             <button
                               onClick={() => handleApprove(request)}
                               className="p-1.5 hover:bg-green-100 rounded text-green-600"
-                              title="Approve"
+                              title="Accept"
                             >
                               <Check size={16} />
                             </button>
