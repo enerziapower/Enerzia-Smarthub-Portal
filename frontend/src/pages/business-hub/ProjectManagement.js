@@ -1,26 +1,27 @@
 /**
  * Project Management - Business Hub
  * 
- * Shows projects from Project & Services (372 projects)
- * - Bi-directional sync with Project & Services
- * - Raise Material/Vendor/Payment requests
- * - Track GRN status
- * - When new order is accepted, creates project in Project & Services
+ * Three views:
+ * 1. Pending Orders - Orders from Order Management waiting to be accepted
+ * 2. Live Projects - Active projects from Project & Services
+ * 3. Completed Projects - Completed projects from Project & Services
+ * 
+ * When order is "Accepted" → Creates project in Project & Services
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  FolderKanban, Search, RefreshCw, Eye, X, Edit2,
-  CheckCircle, Clock, AlertTriangle, DollarSign, Calendar,
-  TrendingUp, Target, Play, Pause, Check, XCircle,
-  Building2, FileText, Save, Loader2, Plus, Package, Truck, CreditCard,
-  ClipboardList, ShoppingCart, Users, MapPin, Percent
+  FolderKanban, Search, RefreshCw, Eye, X,
+  CheckCircle, Clock, DollarSign, Calendar,
+  TrendingUp, Play, Pause, Check, XCircle,
+  Building2, Save, Loader2, Plus, Package, Truck, CreditCard,
+  ClipboardList, Users, AlertCircle, FileCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
-// Project status configuration (matching Project & Services)
+// Project status configuration
 const PROJECT_STATUS = {
   'need to start': { label: 'Need to Start', color: 'bg-amber-100 text-amber-700', icon: Clock },
   'ongoing': { label: 'Ongoing', color: 'bg-blue-100 text-blue-700', icon: Play },
@@ -35,30 +36,43 @@ const CATEGORY_CONFIG = {
   PSS: { label: 'Projects & Services', color: 'violet', bgColor: 'bg-violet-100', textColor: 'text-violet-700' },
   AS: { label: 'Asset Services', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
   OSS: { label: 'Other Sales & Services', color: 'amber', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
-  CS: { label: 'Commercial Sales', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700' }
+  CS: { label: 'Commercial Sales', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-100' }
 };
 
 const ProjectManagement = () => {
   const [projects, setProjects] = useState([]);
+  const [pendingOrders, setPendingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [activeView, setActiveView] = useState('live'); // 'live' or 'completed'
+  const [activeView, setActiveView] = useState('pending'); // 'pending', 'live', 'completed'
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRaiseRequestModal, setShowRaiseRequestModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [requestType, setRequestType] = useState('material');
   const [projectRequests, setProjectRequests] = useState([]);
   const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [accepting, setAccepting] = useState(false);
   
   const [stats, setStats] = useState({ 
     total: 0, 
+    pending: 0,
     live: 0,
     completed: 0,
     totalValue: 0,
     totalInvoiced: 0
+  });
+
+  // Accept form data
+  const [acceptData, setAcceptData] = useState({
+    start_date: '',
+    end_date: '',
+    deadline: '',
+    project_manager: '',
+    notes: ''
   });
 
   // Raise Request form data
@@ -95,66 +109,94 @@ const ProjectManagement = () => {
     }
   };
 
-  // Fetch projects from Project & Services
-  const fetchProjects = useCallback(async () => {
+  // Fetch all data
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/projects`, {
+
+      // Fetch projects from Project & Services
+      const projectsRes = await fetch(`${API_URL}/api/projects`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data || []);
-        
-        // Calculate stats
-        const completedStatuses = ['completed', 'invoiced'];
-        const liveProjects = data.filter(p => !completedStatuses.includes(p.status?.toLowerCase()));
-        const completedProjects = data.filter(p => completedStatuses.includes(p.status?.toLowerCase()));
-        const totalValue = data.reduce((sum, p) => sum + (p.po_amount || 0), 0);
-        const totalInvoiced = data.reduce((sum, p) => sum + (p.invoiced_amount || 0), 0);
-        
-        setStats({ 
-          total: data.length, 
-          live: liveProjects.length,
-          completed: completedProjects.length,
-          totalValue,
-          totalInvoiced
-        });
+      let projectsList = [];
+      if (projectsRes.ok) {
+        projectsList = await projectsRes.json();
+        setProjects(projectsList || []);
       }
+
+      // Fetch pending orders from Order Management
+      const ordersRes = await fetch(`${API_URL}/api/order-lifecycle/orders?limit=500`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      let pendingList = [];
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
+        // Filter only pending orders (not yet accepted)
+        pendingList = (data.orders || []).filter(o => 
+          !o.project_status || o.project_status === 'pending' || o.project_status === ''
+        );
+        setPendingOrders(pendingList);
+      }
+
+      // Calculate stats
+      const completedStatuses = ['completed', 'invoiced'];
+      const liveProjects = projectsList.filter(p => !completedStatuses.includes(p.status?.toLowerCase()));
+      const completedProjects = projectsList.filter(p => completedStatuses.includes(p.status?.toLowerCase()));
+      const totalValue = projectsList.reduce((sum, p) => sum + (p.po_amount || 0), 0);
+      const totalInvoiced = projectsList.reduce((sum, p) => sum + (p.invoiced_amount || 0), 0);
+      
+      setStats({ 
+        total: projectsList.length, 
+        pending: pendingList.length,
+        live: liveProjects.length,
+        completed: completedProjects.length,
+        totalValue,
+        totalInvoiced
+      });
     } catch (error) {
-      console.error('Error fetching projects:', error);
-      toast.error('Failed to load projects');
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    fetchData();
+  }, [fetchData]);
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
     const matchesSearch = !searchTerm || 
       project.pid_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.engineer_in_charge?.toLowerCase().includes(searchTerm.toLowerCase());
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const projectStatus = project.status?.toLowerCase() || 'need to start';
-    const matchesStatus = !statusFilter || projectStatus === statusFilter.toLowerCase();
-    
     const projectCategory = project.category?.toUpperCase() || 'PSS';
     const matchesCategory = !categoryFilter || projectCategory === categoryFilter;
     
-    // Filter by view (live vs completed)
     const completedStatuses = ['completed', 'invoiced'];
     const isCompleted = completedStatuses.includes(projectStatus);
     const matchesView = activeView === 'live' ? !isCompleted : isCompleted;
     
-    return matchesSearch && matchesStatus && matchesCategory && matchesView;
+    return matchesSearch && matchesCategory && matchesView;
+  });
+
+  // Filter pending orders
+  const filteredPendingOrders = pendingOrders.filter(order => {
+    const matchesSearch = !searchTerm || 
+      order.pid_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const orderCategory = order.category?.toUpperCase() || 'PSS';
+    const matchesCategory = !categoryFilter || orderCategory === categoryFilter;
+    
+    return matchesSearch && matchesCategory;
   });
 
   // Get status configuration
@@ -167,6 +209,54 @@ const ProjectManagement = () => {
   const getCategoryConfig = (category) => {
     const normalizedCategory = category?.toUpperCase() || 'PSS';
     return CATEGORY_CONFIG[normalizedCategory] || CATEGORY_CONFIG.PSS;
+  };
+
+  // Open accept modal
+  const openAcceptModal = (order) => {
+    setSelectedOrder(order);
+    setAcceptData({
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: '',
+      deadline: order.delivery_date || '',
+      project_manager: '',
+      notes: ''
+    });
+    setShowAcceptModal(true);
+  };
+
+  // Accept order and create project
+  const handleAcceptOrder = async () => {
+    if (!selectedOrder) return;
+    
+    setAccepting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/order-lifecycle/orders/${selectedOrder.id}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(acceptData)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message || `Order ${selectedOrder.pid_no} accepted and synced to Project & Services`);
+        setShowAcceptModal(false);
+        setSelectedOrder(null);
+        setActiveView('live'); // Switch to live projects to see the new project
+        fetchData();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to accept order');
+      }
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      toast.error('Error accepting order');
+    } finally {
+      setAccepting(false);
+    }
   };
 
   // Open detail modal
@@ -346,7 +436,7 @@ const ProjectManagement = () => {
     }
   };
 
-  // Add material item
+  // Add/update/remove material items
   const addMaterialItem = () => {
     setRequestData(prev => ({
       ...prev,
@@ -354,7 +444,6 @@ const ProjectManagement = () => {
     }));
   };
 
-  // Update material item
   const updateMaterialItem = (index, field, value) => {
     setRequestData(prev => {
       const newItems = [...prev.items];
@@ -363,7 +452,6 @@ const ProjectManagement = () => {
     });
   };
 
-  // Remove material item
   const removeMaterialItem = (index) => {
     if (requestData.items.length > 1) {
       setRequestData(prev => ({
@@ -375,8 +463,8 @@ const ProjectManagement = () => {
 
   // Calculate completion percentage
   const getCompletionPercent = (project) => {
-    if (project.po_amount && project.invoiced_amount) {
-      return Math.round((project.invoiced_amount / project.po_amount) * 100);
+    if (project.po_amount && project.po_amount > 0) {
+      return Math.round((project.invoiced_amount || 0) / project.po_amount * 100);
     }
     return 0;
   };
@@ -391,11 +479,12 @@ const ProjectManagement = () => {
               <FolderKanban className="text-violet-600" />
               Project Management
             </h2>
-            <p className="text-sm text-slate-500">Manage projects, raise requests, track progress</p>
+            <p className="text-sm text-slate-500">Accept orders, manage projects, raise requests</p>
           </div>
           <button
-            onClick={fetchProjects}
+            onClick={fetchData}
             className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
+            data-testid="refresh-btn"
           >
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -403,7 +492,15 @@ const ProjectManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-4 text-white">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle size={20} />
+            <span className="text-sm opacity-90">Pending</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.pending}</p>
+        </div>
+        
         <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl p-4 text-white">
           <div className="flex items-center gap-2 mb-2">
             <FolderKanban size={20} />
@@ -450,14 +547,32 @@ const ProjectManagement = () => {
         {/* View Tabs */}
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
           <button
+            onClick={() => setActiveView('pending')}
+            data-testid="pending-tab"
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeView === 'pending'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <AlertCircle size={16} />
+            Pending Orders
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              activeView === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'
+            }`}>
+              {stats.pending}
+            </span>
+          </button>
+          <button
             onClick={() => setActiveView('live')}
+            data-testid="live-tab"
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeView === 'live'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Clock size={16} />
+            <Play size={16} />
             Live Projects
             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
               activeView === 'live' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'
@@ -467,6 +582,7 @@ const ProjectManagement = () => {
           </button>
           <button
             onClick={() => setActiveView('completed')}
+            data-testid="completed-tab"
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeView === 'completed'
                 ? 'bg-white text-slate-900 shadow-sm'
@@ -506,140 +622,330 @@ const ProjectManagement = () => {
             <option key={key} value={key}>{config.label}</option>
           ))}
         </select>
-
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
-        >
-          <option value="">All Statuses</option>
-          {Object.entries(PROJECT_STATUS).map(([key, config]) => (
-            <option key={key} value={key}>{config.label}</option>
-          ))}
-        </select>
       </div>
 
-      {/* Projects Table */}
+      {/* Content */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="animate-spin text-violet-500" size={32} />
           </div>
-        ) : filteredProjects.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            <FolderKanban size={48} className="mx-auto text-slate-300 mb-4" />
-            <p>No projects found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">PID</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Project / Client</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Category</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Status</th>
-                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">PO Amount</th>
-                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">Invoiced</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Progress</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Engineer</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredProjects.map(project => {
-                  const statusConfig = getStatusConfig(project.status);
-                  const categoryConfig = getCategoryConfig(project.category);
-                  const completion = getCompletionPercent(project);
-                  const StatusIcon = statusConfig.icon;
-                  
-                  return (
-                    <tr key={project.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-medium text-slate-800">{project.pid_no}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-slate-800 text-sm truncate max-w-[200px]">{project.project_name}</p>
-                        <p className="text-xs text-slate-500 truncate max-w-[200px]">{project.client}</p>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryConfig.bgColor} ${categoryConfig.textColor}`}>
-                          {project.category?.toUpperCase() || 'PSS'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
-                          <StatusIcon size={12} />
-                          {statusConfig.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium text-slate-700">
-                        {formatCurrency(project.po_amount)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">
-                        {formatCurrency(project.invoiced_amount)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full transition-all ${
-                                completion >= 100 ? 'bg-green-500' :
-                                completion >= 50 ? 'bg-blue-500' :
-                                completion > 0 ? 'bg-amber-500' : 'bg-slate-300'
-                              }`}
-                              style={{ width: `${Math.min(completion, 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-slate-600">{completion}%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-slate-600 truncate max-w-[100px] block">
-                          {project.engineer_in_charge || '-'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => openDetailModal(project)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                            title="View Details"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => openRequestsModal(project)}
-                            className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded"
-                            title="View Requests"
-                          >
-                            <ClipboardList size={16} />
-                          </button>
-                          <button
-                            onClick={() => openRaiseRequestModal(project, 'material')}
-                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded"
-                            title="Raise Request"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      </td>
+        ) : activeView === 'pending' ? (
+          /* Pending Orders Tab */
+          <>
+            <div className="p-4 border-b border-slate-200 bg-orange-50">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <AlertCircle size={18} className="text-orange-600" />
+                Orders Waiting for Acceptance
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">Accept orders to create projects in Project & Services</p>
+            </div>
+            
+            {filteredPendingOrders.length === 0 ? (
+              <div className="text-center py-12 text-slate-500">
+                <FileCheck size={48} className="mx-auto text-slate-300 mb-4" />
+                <p>No pending orders</p>
+                <p className="text-sm mt-2">All orders have been accepted</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">PID</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Project / Customer</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Category</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">Order Value</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Delivery Date</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Created</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Action</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-        
-        {/* Results count */}
-        {!loading && filteredProjects.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
-            Showing {filteredProjects.length} of {stats.total} projects
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredPendingOrders.map(order => {
+                      const categoryConfig = getCategoryConfig(order.category);
+                      
+                      return (
+                        <tr key={order.id} className="hover:bg-orange-50/50">
+                          <td className="px-4 py-3">
+                            <span className="font-mono text-sm font-medium text-slate-800">{order.pid_no}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-slate-800 text-sm truncate max-w-[200px]">{order.project_name}</p>
+                            <p className="text-xs text-slate-500 truncate max-w-[200px]">{order.customer_name}</p>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryConfig.bgColor} ${categoryConfig.textColor}`}>
+                              {order.category?.toUpperCase() || 'PSS'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium text-slate-700">
+                            {formatCurrency(order.order_value || order.total_amount)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {formatDate(order.delivery_date)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-500">
+                            {formatDate(order.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => openAcceptModal(order)}
+                              data-testid={`accept-btn-${order.id}`}
+                              className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors flex items-center gap-2 mx-auto"
+                            >
+                              <Check size={16} />
+                              Accept
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {filteredPendingOrders.length > 0 && (
+              <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+                {filteredPendingOrders.length} pending orders
+              </div>
+            )}
+          </>
+        ) : (
+          /* Live/Completed Projects Tab */
+          <>
+            {filteredProjects.length === 0 ? (
+              <div className="text-center py-12 text-slate-500">
+                <FolderKanban size={48} className="mx-auto text-slate-300 mb-4" />
+                <p>No {activeView} projects found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">PID</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Project / Client</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Category</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Status</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">PO Amount</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase">Invoiced</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Progress</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Engineer</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-slate-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredProjects.map(project => {
+                      const statusConfig = getStatusConfig(project.status);
+                      const categoryConfig = getCategoryConfig(project.category);
+                      const completion = getCompletionPercent(project);
+                      const StatusIcon = statusConfig.icon;
+                      
+                      return (
+                        <tr key={project.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3">
+                            <span className="font-mono text-sm font-medium text-slate-800">{project.pid_no}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-slate-800 text-sm truncate max-w-[200px]">{project.project_name}</p>
+                            <p className="text-xs text-slate-500 truncate max-w-[200px]">{project.client}</p>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryConfig.bgColor} ${categoryConfig.textColor}`}>
+                              {project.category?.toUpperCase() || 'PSS'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                              <StatusIcon size={12} />
+                              {statusConfig.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium text-slate-700">
+                            {formatCurrency(project.po_amount)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+                            {formatCurrency(project.invoiced_amount)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all ${
+                                    completion >= 100 ? 'bg-green-500' :
+                                    completion >= 50 ? 'bg-blue-500' :
+                                    completion > 0 ? 'bg-amber-500' : 'bg-slate-300'
+                                  }`}
+                                  style={{ width: `${Math.min(completion, 100)}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-slate-600">{completion}%</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-slate-600 truncate max-w-[100px] block">
+                              {project.engineer_in_charge || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => openDetailModal(project)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                title="View Details"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                onClick={() => openRequestsModal(project)}
+                                className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded"
+                                title="View Requests"
+                              >
+                                <ClipboardList size={16} />
+                              </button>
+                              <button
+                                onClick={() => openRaiseRequestModal(project, 'material')}
+                                className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded"
+                                title="Raise Request"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {!loading && filteredProjects.length > 0 && (
+              <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+                Showing {filteredProjects.length} of {stats.total} projects
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      {/* Accept Order Modal */}
+      {showAcceptModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-lg m-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-orange-50 to-amber-50">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                  <Check className="text-orange-600" size={20} />
+                  Accept Order as Project
+                </h3>
+                <p className="text-sm text-slate-500">{selectedOrder.pid_no} • {selectedOrder.customer_name}</p>
+              </div>
+              <button onClick={() => setShowAcceptModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Order Summary */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h4 className="font-medium text-slate-700 mb-2">Order Details</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-slate-500">Project:</span>
+                    <p className="font-medium">{selectedOrder.project_name}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Value:</span>
+                    <p className="font-medium text-emerald-600">{formatCurrency(selectedOrder.order_value || selectedOrder.total_amount)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Start Date *</label>
+                  <input
+                    type="date"
+                    value={acceptData.start_date}
+                    onChange={(e) => setAcceptData(prev => ({ ...prev, start_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={acceptData.end_date}
+                    onChange={(e) => setAcceptData(prev => ({ ...prev, end_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
+                  <input
+                    type="date"
+                    value={acceptData.deadline}
+                    onChange={(e) => setAcceptData(prev => ({ ...prev, deadline: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Project Manager / Engineer</label>
+                  <input
+                    type="text"
+                    value={acceptData.project_manager}
+                    onChange={(e) => setAcceptData(prev => ({ ...prev, project_manager: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    placeholder="Assign engineer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <textarea
+                  value={acceptData.notes}
+                  onChange={(e) => setAcceptData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Additional notes..."
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                <p className="text-blue-800">
+                  <strong>Note:</strong> This will create a new project in Project & Services with the order details.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowAcceptModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAcceptOrder}
+                disabled={accepting || !acceptData.start_date}
+                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {accepting ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                Accept & Create Project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Project Detail Modal */}
       {showDetailModal && selectedProject && (
