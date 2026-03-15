@@ -15,7 +15,7 @@ import {
   CheckCircle, Clock, DollarSign, Calendar,
   TrendingUp, Play, Pause, Check, XCircle,
   Building2, Save, Loader2, Plus, Package, Truck, CreditCard,
-  ClipboardList, Users, AlertCircle, FileCheck
+  ClipboardList, Users, AlertCircle, FileCheck, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
