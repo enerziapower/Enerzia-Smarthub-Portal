@@ -344,7 +344,7 @@ const PurchaseManagement = () => {
                                     onClick={() => handleUpdateStatus(request.id, 'approved')}
                                     className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
                                   >
-                                    <Check size={14} /> Approve
+                                    <Check size={14} /> Accept
                                   </button>
                                   <button
                                     onClick={() => handleUpdateStatus(request.id, 'rejected')}
@@ -440,7 +440,7 @@ const PurchaseManagement = () => {
                                     onClick={() => handleUpdateStatus(request.id, 'approved')}
                                     className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
                                   >
-                                    <Check size={14} /> Approve
+                                    <Check size={14} /> Accept
                                   </button>
                                   <button
                                     onClick={() => handleUpdateStatus(request.id, 'rejected')}
@@ -642,7 +642,7 @@ const PurchaseManagement = () => {
                       disabled={updating}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
                     >
-                      <Check size={16} /> Approve
+                      <Check size={16} /> Accept
                     </button>
                   </>
                 )}
