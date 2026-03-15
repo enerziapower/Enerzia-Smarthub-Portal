@@ -2,6 +2,18 @@
 
 ## Latest Updates
 
+### Phase 6.3: Sidebar Cleanup ✅ COMPLETE (Mar 15, 2026)
+**Location:** Layout.js → Projects Department Navigation
+
+**CLEANUP PERFORMED:**
+- **Removed "Order Summary"** from Projects dept - now accessed via Business Hub → Order Management → Order Summary tab
+- **Removed "Weekly Billing"** from Projects dept - now accessed via Business Hub → Billing Management → Weekly Billing tab
+
+**Remaining Projects Department Items:**
+- Dashboard, Projects & Services, Project Management, Payment Requests, Work Planner, AMC Management, Project Reports, Calibration Services, Service Reports, Reports
+
+---
+
 ### Phase 6.2: P1 Features - Customer Search & Delete Flow ✅ COMPLETE (Mar 15, 2026)
 **Location:** Business Hub → Order Management, Project Management
 
