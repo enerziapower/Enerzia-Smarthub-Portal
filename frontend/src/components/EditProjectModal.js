@@ -80,7 +80,16 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
         actual_expenses: project.actual_expenses || 0,
         weekly_actions: project.weekly_actions || '',
       });
-      setWorkItems(project.work_items || [{ description: '', quantity: '', unit: 'Nos', status: 'Pending' }]);
+      
+      // Initialize work items with completion_percentage
+      const items = project.work_items || [{ description: '', quantity: '', unit: 'Nos', status: 'Pending', completion_percentage: 0 }];
+      setWorkItems(items.map(item => ({
+        ...item,
+        completion_percentage: item.completion_percentage || (item.status === 'Completed' ? 100 : 0)
+      })));
+      
+      // Check if project came from Business Hub (order)
+      setIsFromBusinessHub(!!project.source_order_id);
       
       // Fetch Business Hub data
       fetchProjectRequests(project.id);
