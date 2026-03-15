@@ -178,6 +178,57 @@ const PurchaseManagement = () => {
     }
   };
 
+  // Open Create PO modal
+  const openCreatePOModal = (request) => {
+    setSelectedRequest(request);
+    setPOFormData({
+      vendor_name: '',
+      vendor_contact: '',
+      delivery_date: request.required_by || '',
+      payment_terms: '',
+      notes: ''
+    });
+    setShowCreatePOModal(true);
+  };
+
+  // Create PO from material request
+  const handleCreatePO = async () => {
+    if (!selectedRequest || !poFormData.vendor_name) {
+      toast.error('Please provide vendor name');
+      return;
+    }
+    
+    setCreatingPO(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/create-po`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          request_id: selectedRequest.id,
+          ...poFormData
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Purchase Order ${data.po.po_number} created`);
+        setShowCreatePOModal(false);
+        fetchData();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create PO');
+      }
+    } catch (error) {
+      toast.error('Error creating purchase order');
+    } finally {
+      setCreatingPO(false);
+    }
+  };
+
   // Filter requests based on search and status
   const filterRequests = (requests) => {
     return requests.filter(req => {
