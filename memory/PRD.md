@@ -8,13 +8,19 @@
 **MAJOR CHANGES:**
 
 **1. Project Management - Connected to Project & Services**
-- Now shows **372 projects from Project & Services** (not orders)
-- Live (93) and Completed (279) tabs
+- Now shows **373 projects from Project & Services** (not orders)
+- Live (94) and Completed (279) tabs
 - Displays: PID, Project/Client, Category, Status, PO Amount, Invoiced, Progress %, Engineer
 - Bi-directional sync with Project & Services data
 - Can raise Material/Vendor/Payment requests from any project
 
-**2. Billing Management - Simplified (ZOHO Books Integration)**
+**2. Order Accept → Project Sync ✅ IMPLEMENTED**
+- When order is "Accepted" in Order Management → **Auto-creates project in Project & Services**
+- Project fields populated from order: PID, Customer, Category, Location, Items
+- Engineer assigned from accept form
+- `linked_project_id` stored in order for bi-directional reference
+
+**3. Billing Management - Simplified (ZOHO Books Integration)**
 - **Removed Invoice tab** - User uses ZOHO Books for invoices/POs
 - Only 2 tabs remain:
   - **Progress Tracking**: Shows completion % by category (PSS, AS, OSS, CS)
