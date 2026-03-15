@@ -2,6 +2,34 @@
 
 ## Latest Updates
 
+### Phase 6.5: Business Hub → Project Sync Improvements ✅ COMPLETE (Mar 15, 2026)
+**Issues Fixed Based on User Feedback:**
+
+**Issue 1: Duplicate Customer Selection - FIXED**
+- Projects created from Business Hub orders now show **read-only Client/Location fields**
+- "From Business Hub Order" badge displayed in Edit modal header
+- Fields show "(from order)" label to indicate data source
+- Regular projects (not from orders) still have editable dropdowns
+
+**Issue 2: Order Items → Work Items with Completion Tracking - FIXED**
+- Work Items section now has **"Completion %"** column
+- Each work item can have 0-100% completion
+- Status auto-updates: "Completed" status → 100%, 100% completion → "Completed"
+- **Progress bar now calculates from average work item completion** (not invoiced/PO ratio)
+
+**Issue 3: Project Details Flow from Business Hub - FIXED**
+- Client and Location flow from order and are read-only
+- Other fields (Category, Engineer, PO Number) remain editable
+- `source_order_id` and `source_order_no` fields added to Project API model
+
+**Bug Fixes:**
+- Search filter now handles null `project_name`, `client`, `pid_no` values safely
+- API now returns `source_order_id` and `source_order_no` in project responses
+
+**Test Results:** 100% Backend (11/11), 100% Frontend - See `/app/test_reports/iteration_100.json`
+
+---
+
 ### Phase 6.4: Comprehensive E2E Testing ✅ COMPLETE (Mar 15, 2026)
 **Scope:** Full Business Hub & Project & Services integration testing
 
