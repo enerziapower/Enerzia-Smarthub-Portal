@@ -37,41 +37,37 @@ const FinanceAnalytics = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      // Fetch projects for revenue data
-      const projectsRes = await fetch(`${API_URL}/api/projects`, {
+      // Fetch project P&L dashboard from new API
+      const dashboardRes = await fetch(`${API_URL}/api/project-requests/finance-dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      // Fetch orders for additional financial data
-      const ordersRes = await fetch(`${API_URL}/api/order-lifecycle`, {
+      if (dashboardRes.ok) {
+        const dashData = await dashboardRes.json();
+        setDashboardData(dashData);
+        setProjectPnL(dashData.projects || []);
+        
+        // Update stats from dashboard
+        setStats({
+          total_revenue: dashData.summary?.total_revenue || 0,
+          total_expenses: dashData.summary?.total_actual_cost || 0,
+          total_budget: dashData.summary?.total_budgeted_cost || 0,
+          net_profit: dashData.summary?.gross_profit || 0,
+          profit_margin: dashData.summary?.total_revenue > 0 
+            ? ((dashData.summary?.gross_profit / dashData.summary?.total_revenue) * 100).toFixed(1) 
+            : 0,
+          budget_variance: dashData.summary?.budget_variance || 0,
+          project_count: dashData.summary?.total_projects || 0
+        });
+      }
+      
+      // Also fetch legacy projects for historical data
+      const projectsRes = await fetch(`${API_URL}/api/projects`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (projectsRes.ok) {
         const projects = await projectsRes.json();
-        
-        // Calculate revenue from projects
-        const totalRevenue = projects.reduce((sum, p) => sum + (p.po_amount || 0), 0);
-        const totalInvoiced = projects.reduce((sum, p) => sum + (p.invoiced_amount || 0), 0);
-        const totalExpenses = projects.reduce((sum, p) => sum + (p.actual_expenses || 0), 0);
-        const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-        const totalSavings = projects.reduce((sum, p) => sum + (p.pid_savings || 0), 0);
-        
-        const netProfit = totalInvoiced - totalExpenses;
-        const profitMargin = totalInvoiced > 0 ? (netProfit / totalInvoiced) * 100 : 0;
-        const pendingReceivables = totalRevenue - totalInvoiced;
-        
-        setStats({
-          total_revenue: totalRevenue,
-          total_invoiced: totalInvoiced,
-          total_expenses: totalExpenses,
-          total_budget: totalBudget,
-          net_profit: netProfit,
-          profit_margin: profitMargin.toFixed(1),
-          pending_receivables: pendingReceivables,
-          total_savings: totalSavings,
-          project_count: projects.length
-        });
         
         // Calculate by category (department proxy)
         const byCategory = {};
