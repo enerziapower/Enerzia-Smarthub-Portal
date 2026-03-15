@@ -243,7 +243,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
         work_items: workItems.filter(item => item.description?.trim()),
       };
 
-      await projectsAPI.updateProject(project.id, updateData);
+      await projectsAPI.update(project.id, updateData);
       onProjectUpdated?.();
       onClose();
     } catch (error) {
