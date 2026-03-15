@@ -574,24 +574,37 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                 </div>
               </div>
               
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {/* Work Items Header */}
+                <div className="bg-amber-100 rounded-lg p-2 border border-amber-300 flex items-center gap-3 sticky top-0">
+                  <span className="text-xs font-semibold text-amber-700 w-6">#</span>
+                  <div className="flex-1 grid grid-cols-12 gap-2 text-xs font-semibold text-amber-700">
+                    <span className="col-span-4">Description</span>
+                    <span className="col-span-1">Qty</span>
+                    <span className="col-span-2">Unit</span>
+                    <span className="col-span-2">Status</span>
+                    <span className="col-span-2">Completion %</span>
+                    <span className="col-span-1"></span>
+                  </div>
+                </div>
+                
                 {workItems.map((item, idx) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-amber-200 flex items-start gap-3">
-                    <span className="text-xs font-semibold text-amber-600 mt-2">#{idx + 1}</span>
+                    <span className="text-xs font-semibold text-amber-600 mt-2 w-6">#{idx + 1}</span>
                     <div className="flex-1 grid grid-cols-12 gap-2">
                       <input
                         type="text"
                         value={item.description || ''}
                         onChange={(e) => updateWorkItem(idx, 'description', e.target.value)}
                         placeholder="Description"
-                        className="col-span-5 px-2 py-1.5 border border-slate-200 rounded text-sm"
+                        className="col-span-4 px-2 py-1.5 border border-slate-200 rounded text-sm"
                       />
                       <input
                         type="number"
                         value={item.quantity || ''}
                         onChange={(e) => updateWorkItem(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="col-span-2 px-2 py-1.5 border border-slate-200 rounded text-sm"
+                        className="col-span-1 px-2 py-1.5 border border-slate-200 rounded text-sm"
                       />
                       <select
                         value={item.unit || 'Nos'}
@@ -602,7 +615,15 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                       </select>
                       <select
                         value={item.status || 'Pending'}
-                        onChange={(e) => updateWorkItem(idx, 'status', e.target.value)}
+                        onChange={(e) => {
+                          updateWorkItem(idx, 'status', e.target.value);
+                          // Auto-update completion percentage based on status
+                          if (e.target.value === 'Completed') {
+                            updateWorkItem(idx, 'completion_percentage', 100);
+                          } else if (e.target.value === 'Pending') {
+                            updateWorkItem(idx, 'completion_percentage', 0);
+                          }
+                        }}
                         className={`col-span-2 px-2 py-1.5 border rounded text-sm ${
                           item.status === 'Completed' ? 'bg-green-50 border-green-300 text-green-700' :
                           item.status === 'In Progress' ? 'bg-blue-50 border-blue-300 text-blue-700' :
@@ -611,6 +632,30 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                       >
                         {WORK_ITEM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
+                      <div className="col-span-2 flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={item.completion_percentage || 0}
+                          onChange={(e) => {
+                            const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                            updateWorkItem(idx, 'completion_percentage', val);
+                            // Auto-update status based on completion
+                            if (val === 100) {
+                              updateWorkItem(idx, 'status', 'Completed');
+                            } else if (val > 0 && item.status === 'Pending') {
+                              updateWorkItem(idx, 'status', 'In Progress');
+                            }
+                          }}
+                          className={`w-14 px-2 py-1.5 border rounded text-sm text-center ${
+                            (item.completion_percentage || 0) === 100 ? 'bg-green-50 border-green-300 text-green-700' :
+                            (item.completion_percentage || 0) > 0 ? 'bg-blue-50 border-blue-300 text-blue-700' :
+                            'bg-white border-slate-200'
+                          }`}
+                        />
+                        <span className="text-xs text-slate-500">%</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeWorkItem(idx)}
@@ -618,6 +663,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                         disabled={workItems.length === 1}
                       >
                         <Trash2 size={14} />
+                      </button>
                       </button>
                     </div>
                   </div>
