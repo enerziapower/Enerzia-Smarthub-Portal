@@ -11,7 +11,7 @@ import os
 import tempfile
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://project-order-sync.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://business-lifecycle-1.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEST_EMAIL = "admin@enerzia.com"
