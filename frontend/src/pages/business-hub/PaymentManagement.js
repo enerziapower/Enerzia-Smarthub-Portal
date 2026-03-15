@@ -416,7 +416,7 @@ const PaymentManagement = () => {
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
                   >
                     <Check size={18} />
-                    Approve
+                    Accept
                   </button>
                   <button
                     onClick={() => handleReject(selectedRequest)}
