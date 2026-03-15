@@ -330,14 +330,14 @@ const PaymentManagement = () => {
                         {request.status === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleApprove(request.id)}
+                              onClick={() => handleApprove(request)}
                               className="p-1.5 hover:bg-green-100 rounded text-green-600"
                               title="Approve"
                             >
                               <Check size={16} />
                             </button>
                             <button
-                              onClick={() => handleReject(request.id)}
+                              onClick={() => handleReject(request)}
                               className="p-1.5 hover:bg-red-100 rounded text-red-600"
                               title="Reject"
                             >
