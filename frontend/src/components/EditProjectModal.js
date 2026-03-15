@@ -93,7 +93,13 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setProjectRequests(data.requests || { material: [], vendor: [], payment: [] });
+        // Handle both singular and plural keys from API
+        const requests = data.requests || {};
+        setProjectRequests({
+          material: requests.materials || requests.material || [],
+          vendor: requests.vendors || requests.vendor || [],
+          payment: requests.payments || requests.payment || []
+        });
       }
     } catch (error) {
       console.error('Error fetching project requests:', error);
