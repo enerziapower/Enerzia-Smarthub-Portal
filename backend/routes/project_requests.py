@@ -454,3 +454,300 @@ async def get_dashboard_stats():
                 stats["payments"]["total_amount"] += r.get("total_amount", 0)
     
     return stats
+
+
+
+# ============== PO CREATION FROM MATERIAL REQUESTS ==============
+
+class POFromRequestCreate(BaseModel):
+    """Create Purchase Order from an approved material request"""
+    request_id: str
+    vendor_name: str
+    vendor_contact: Optional[str] = None
+    delivery_date: Optional[str] = None
+    payment_terms: Optional[str] = None
+    notes: Optional[str] = None
+
+
+async def generate_po_number() -> str:
+    """Generate unique PO number like PO-2526-001"""
+    today = datetime.now()
+    month = today.month
+    year = today.year
+    
+    # Determine financial year
+    if month >= 4:
+        fy = f"{str(year)[2:]}{str(year + 1)[2:]}"
+    else:
+        fy = f"{str(year - 1)[2:]}{str(year)[2:]}"
+    
+    # Get count for this FY
+    pattern = f"^PO-{fy}-"
+    count = await db.purchase_orders.count_documents({"po_number": {"$regex": pattern}})
+    
+    return f"PO-{fy}-{str(count + 1).zfill(3)}"
+
+
+@router.post("/create-po")
+async def create_po_from_request(data: POFromRequestCreate):
+    """
+    Create a Purchase Order from an approved material request.
+    Links the PO back to the original request and project.
+    """
+    # Find the material request
+    request = await db.project_requests.find_one({"id": data.request_id, "request_type": "material"})
+    if not request:
+        raise HTTPException(status_code=404, detail="Material request not found")
+    
+    # Verify request is approved
+    if request.get("status") not in ["approved", "in_progress"]:
+        raise HTTPException(status_code=400, detail="Only approved requests can be converted to PO")
+    
+    now = datetime.now(timezone.utc)
+    po_number = await generate_po_number()
+    
+    # Create PO document
+    po_data = {
+        "id": str(uuid.uuid4()),
+        "po_number": po_number,
+        "request_id": data.request_id,
+        "request_no": request.get("request_no"),
+        "order_id": request.get("order_id"),
+        "order_no": request.get("order_no"),
+        "project_name": request.get("project_name"),
+        "customer_name": request.get("customer_name"),
+        "vendor_name": data.vendor_name,
+        "vendor_contact": data.vendor_contact,
+        "items": request.get("items", []),
+        "total_items": request.get("total_items", 0),
+        "total_amount": request.get("estimated_cost", 0),
+        "delivery_date": data.delivery_date,
+        "payment_terms": data.payment_terms,
+        "notes": data.notes,
+        "status": "created",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.purchase_orders.insert_one(po_data)
+    
+    # Update the request with PO linkage
+    await db.project_requests.update_one(
+        {"id": data.request_id},
+        {"$set": {
+            "status": "in_progress",
+            "po_number": po_number,
+            "po_id": po_data["id"],
+            "updated_at": now
+        },
+        "$push": {
+            "status_history": {
+                "status": "in_progress",
+                "timestamp": now.isoformat(),
+                "comments": f"PO {po_number} created"
+            }
+        }}
+    )
+    
+    po_data.pop("_id", None)
+    return {"message": f"Purchase Order {po_number} created", "po": po_data}
+
+
+@router.get("/purchase-orders")
+async def get_purchase_orders(
+    order_id: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0
+):
+    """Get all purchase orders created from project requests"""
+    query = {}
+    if order_id:
+        query["order_id"] = order_id
+    if status:
+        query["status"] = status
+    
+    cursor = db.purchase_orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
+    pos = await cursor.to_list(length=limit)
+    total = await db.purchase_orders.count_documents(query)
+    
+    return {"purchase_orders": pos, "total": total}
+
+
+@router.put("/purchase-orders/{po_id}/status")
+async def update_po_status(po_id: str, status: str):
+    """Update PO status"""
+    valid_statuses = ["created", "sent", "confirmed", "partially_received", "received", "completed", "cancelled"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    po = await db.purchase_orders.find_one({"id": po_id})
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    
+    now = datetime.now(timezone.utc)
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"status": status, "updated_at": now}}
+    )
+    
+    # If PO is completed, update the original request
+    if status == "completed" and po.get("request_id"):
+        await db.project_requests.update_one(
+            {"id": po["request_id"]},
+            {"$set": {"status": "completed", "updated_at": now}}
+        )
+    
+    return {"message": f"PO status updated to {status}"}
+
+
+# ============== PROJECT P&L (PROFIT & LOSS) ==============
+
+@router.get("/project-pnl/{order_id}")
+async def get_project_pnl(order_id: str):
+    """
+    Get Profit & Loss summary for a project.
+    Aggregates all costs from material requests, vendor requests, and payments.
+    """
+    # Get the sales order
+    order = await db.sales_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Get all requests for this order
+    requests = await db.project_requests.find({"order_id": order_id}, {"_id": 0}).to_list(100)
+    
+    # Calculate costs by type
+    material_costs = sum(r.get("estimated_cost", 0) for r in requests if r.get("request_type") == "material")
+    vendor_costs = sum(r.get("estimated_cost", 0) for r in requests if r.get("request_type") == "vendor")
+    payment_costs = sum(r.get("amount", 0) for r in requests if r.get("request_type") == "payment")
+    
+    # Get budgets from order
+    financials = order.get("financials", {})
+    order_value = order.get("order_value", 0)
+    purchase_budget = financials.get("purchase_budget", 0)
+    execution_budget = financials.get("execution_budget", 0)
+    others_budget = financials.get("others_budget", 0)
+    total_budget = purchase_budget + execution_budget + others_budget
+    target_profit = financials.get("target_profit", order_value - total_budget)
+    
+    # Calculate actuals vs budget
+    total_costs = material_costs + vendor_costs + payment_costs
+    actual_profit = order_value - total_costs
+    profit_variance = actual_profit - target_profit
+    
+    return {
+        "order_id": order_id,
+        "order_no": order.get("order_no"),
+        "customer_name": order.get("customer_name"),
+        "project_name": order.get("project_name"),
+        "project_status": order.get("project_status", "pending"),
+        "revenue": {
+            "order_value": order_value
+        },
+        "budgets": {
+            "purchase_budget": purchase_budget,
+            "execution_budget": execution_budget,
+            "others_budget": others_budget,
+            "total_budget": total_budget,
+            "target_profit": target_profit,
+            "target_profit_percent": round((target_profit / order_value * 100) if order_value else 0, 1)
+        },
+        "actuals": {
+            "material_costs": material_costs,
+            "vendor_costs": vendor_costs,
+            "payment_costs": payment_costs,
+            "total_costs": total_costs,
+            "actual_profit": actual_profit,
+            "actual_profit_percent": round((actual_profit / order_value * 100) if order_value else 0, 1)
+        },
+        "variance": {
+            "cost_variance": total_costs - total_budget,
+            "profit_variance": profit_variance,
+            "is_over_budget": total_costs > total_budget,
+            "is_profitable": actual_profit > 0
+        },
+        "request_summary": {
+            "materials": len([r for r in requests if r.get("request_type") == "material"]),
+            "vendors": len([r for r in requests if r.get("request_type") == "vendor"]),
+            "payments": len([r for r in requests if r.get("request_type") == "payment"])
+        }
+    }
+
+
+@router.get("/finance-dashboard")
+async def get_finance_dashboard():
+    """
+    Get overall finance dashboard with P&L summary across all projects.
+    """
+    # Get all sales orders with project status
+    orders = await db.sales_orders.find(
+        {"project_status": {"$in": ["accepted", "in_progress", "completed"]}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Get all requests
+    all_requests = await db.project_requests.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate totals
+    total_revenue = sum(o.get("order_value", 0) for o in orders)
+    total_budgeted_cost = sum(
+        (o.get("financials", {}).get("purchase_budget", 0) +
+         o.get("financials", {}).get("execution_budget", 0) +
+         o.get("financials", {}).get("others_budget", 0))
+        for o in orders
+    )
+    
+    # Actual costs from requests
+    material_costs = sum(r.get("estimated_cost", 0) for r in all_requests if r.get("request_type") == "material")
+    vendor_costs = sum(r.get("estimated_cost", 0) for r in all_requests if r.get("request_type") == "vendor")
+    payment_costs = sum(r.get("amount", 0) for r in all_requests if r.get("request_type") == "payment")
+    total_actual_cost = material_costs + vendor_costs + payment_costs
+    
+    # Project-wise breakdown
+    project_summary = []
+    for order in orders[:20]:  # Top 20 projects
+        order_requests = [r for r in all_requests if r.get("order_id") == order.get("id")]
+        order_costs = sum(
+            r.get("estimated_cost", 0) if r.get("request_type") != "payment" else r.get("amount", 0)
+            for r in order_requests
+        )
+        order_value = order.get("order_value", 0)
+        profit = order_value - order_costs
+        
+        project_summary.append({
+            "order_id": order.get("id"),
+            "order_no": order.get("order_no"),
+            "customer_name": order.get("customer_name"),
+            "project_status": order.get("project_status"),
+            "order_value": order_value,
+            "total_costs": order_costs,
+            "profit": profit,
+            "profit_percent": round((profit / order_value * 100) if order_value else 0, 1),
+            "request_count": len(order_requests)
+        })
+    
+    # Sort by profit
+    project_summary.sort(key=lambda x: x.get("profit", 0), reverse=True)
+    
+    return {
+        "summary": {
+            "total_projects": len(orders),
+            "total_revenue": total_revenue,
+            "total_budgeted_cost": total_budgeted_cost,
+            "total_actual_cost": total_actual_cost,
+            "gross_profit": total_revenue - total_actual_cost,
+            "budget_variance": total_actual_cost - total_budgeted_cost
+        },
+        "by_status": {
+            "accepted": len([o for o in orders if o.get("project_status") == "accepted"]),
+            "in_progress": len([o for o in orders if o.get("project_status") == "in_progress"]),
+            "completed": len([o for o in orders if o.get("project_status") == "completed"])
+        },
+        "request_totals": {
+            "materials": {"count": len([r for r in all_requests if r.get("request_type") == "material"]), "value": material_costs},
+            "vendors": {"count": len([r for r in all_requests if r.get("request_type") == "vendor"]), "value": vendor_costs},
+            "payments": {"count": len([r for r in all_requests if r.get("request_type") == "payment"]), "value": payment_costs}
+        },
+        "projects": project_summary
+    }
