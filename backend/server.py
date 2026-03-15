@@ -3647,6 +3647,7 @@ app.include_router(project_orders_router, tags=["Project-Orders-Integration"])
 app.include_router(user_access_router, tags=["User-Access-Control"])
 app.include_router(lead_management_router, tags=["Lead-Management"])
 app.include_router(som_tasks_router, tags=["SOM-Tasks"])
+app.include_router(project_requests_router, tags=["Project-Requests"])
 
 # Include the main router with remaining routes
 app.include_router(api_router)
