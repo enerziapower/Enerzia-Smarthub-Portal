@@ -262,6 +262,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
       const updateData = {
         ...formData,
         work_items: workItems.filter(item => item.description?.trim()),
+        completion_percentage: calculateCompletionFromWorkItems(), // Auto-calculated from work items
       };
 
       await projectsAPI.update(project.id, updateData);
