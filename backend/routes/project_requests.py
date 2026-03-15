@@ -1032,3 +1032,65 @@ async def get_billing_dashboard():
         "recent_invoices": recent_invoices
     }
 
+
+
+# ============== GENERIC REQUEST ENDPOINTS (MUST BE LAST - catch-all routes) ==============
+
+@router.get("/{request_id}")
+async def get_request_details(request_id: str):
+    """Get single request details"""
+    request = await db.project_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    return request
+
+
+@router.put("/{request_id}/status")
+async def update_request_status(request_id: str, data: RequestStatusUpdate):
+    """Update request status (used by Purchase/Payment Management)"""
+    valid_statuses = ["pending", "approved", "rejected", "in_progress", "completed", "cancelled"]
+    if data.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    request = await db.project_requests.find_one({"id": request_id})
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Add to status history
+    status_entry = {
+        "status": data.status,
+        "timestamp": now.isoformat(),
+        "user": data.updated_by,
+        "comments": data.comments
+    }
+    
+    await db.project_requests.update_one(
+        {"id": request_id},
+        {
+            "$set": {
+                "status": data.status,
+                "updated_at": now
+            },
+            "$push": {
+                "status_history": status_entry
+            }
+        }
+    )
+    
+    return {"message": f"Status updated to {data.status}", "status": data.status}
+
+
+@router.delete("/{request_id}")
+async def delete_request(request_id: str):
+    """Delete a request (only if pending)"""
+    request = await db.project_requests.find_one({"id": request_id})
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if request.get("status") not in ["pending", "rejected", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Can only delete pending, rejected, or cancelled requests")
+    
+    await db.project_requests.delete_one({"id": request_id})
+    return {"message": "Request deleted successfully"}
