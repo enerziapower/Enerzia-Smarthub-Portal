@@ -12,7 +12,8 @@ import {
   FolderKanban, Search, Filter, RefreshCw, Eye, X, Edit2,
   CheckCircle, Clock, AlertTriangle, DollarSign, Calendar,
   TrendingUp, Target, Play, Pause, Check, XCircle,
-  Building2, FileText, Save, Loader2
+  Building2, FileText, Save, Loader2, Plus, Package, Truck, CreditCard,
+  ClipboardList, ShoppingCart
 } from 'lucide-react';
 import { toast } from 'sonner';
 
