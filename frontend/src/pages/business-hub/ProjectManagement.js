@@ -1495,6 +1495,61 @@ const ProjectManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-md m-4">
+            <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-red-50 to-rose-50">
+              <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <Trash2 className="text-red-600" size={20} />
+                Delete Project
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-slate-600">
+                Are you sure you want to delete this project?
+              </p>
+              
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="font-mono text-sm font-medium text-slate-800">{selectedProject.pid_no}</p>
+                <p className="text-sm text-slate-600 mt-1">{selectedProject.project_name}</p>
+                <p className="text-xs text-slate-500 mt-1">{selectedProject.client}</p>
+              </div>
+
+              {selectedProject.source_order_id && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                  <p className="text-amber-800">
+                    <strong>Note:</strong> This project was created from an order. The linked order will be reset to "pending" status and can be re-accepted.
+                  </p>
+                </div>
+              )}
+
+              <p className="text-sm text-red-600">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProject}
+                disabled={deleting}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                Delete Project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
