@@ -800,6 +800,36 @@ const Layout = () => {
                 </Link>
                 )}
 
+                {/* Vendor Management */}
+                {(isSuperAdmin || hasSubModuleAccess('vendor_management_biz')) && (
+                <Link
+                  to="/business-hub/vendors"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/vendors'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Store className="w-4 h-4" />
+                  <span>Vendor Management</span>
+                </Link>
+                )}
+
+                {/* GRN Management */}
+                {(isSuperAdmin || hasSubModuleAccess('grn_management_biz')) && (
+                <Link
+                  to="/business-hub/grn"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === '/business-hub/grn'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'
+                  }`}
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>GRN Management</span>
+                </Link>
+                )}
+
                 {/* Billing Management */}
                 {(isSuperAdmin || hasSubModuleAccess('billing_management_biz')) && (
                 <Link
