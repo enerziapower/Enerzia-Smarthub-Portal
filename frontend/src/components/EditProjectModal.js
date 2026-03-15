@@ -18,6 +18,11 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
   const [vendors, setVendors] = useState([]);
   const [formData, setFormData] = useState({});
   const excelInputRef = useRef(null);
+  
+  // Business Hub integration - Project Requests & GRN
+  const [projectRequests, setProjectRequests] = useState({ material: [], vendor: [], payment: [] });
+  const [grnList, setGrnList] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   // Fetch settings on mount
   useEffect(() => {
