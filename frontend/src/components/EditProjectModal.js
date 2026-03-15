@@ -366,31 +366,52 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
               <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <Building2 size={16} />
                 Project Details
+                {isFromBusinessHub && (
+                  <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    From Business Hub Order
+                  </span>
+                )}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Client</label>
-                  <select
-                    name="client"
-                    value={formData.client}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
-                  >
-                    <option value="">Select Client</option>
-                    {clients.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Client {isFromBusinessHub && <span className="text-slate-400">(from order)</span>}
+                  </label>
+                  {isFromBusinessHub ? (
+                    <div className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-100 text-slate-700">
+                      {formData.client || 'Not specified'}
+                    </div>
+                  ) : (
+                    <select
+                      name="client"
+                      value={formData.client}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
+                    >
+                      <option value="">Select Client</option>
+                      {clients.map(c => (
+                        <option key={c.id} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                  />
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Location {isFromBusinessHub && <span className="text-slate-400">(from order)</span>}
+                  </label>
+                  {isFromBusinessHub ? (
+                    <div className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-100 text-slate-700">
+                      {formData.location || 'Not specified'}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
