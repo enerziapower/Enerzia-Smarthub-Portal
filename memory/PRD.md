@@ -2,6 +2,65 @@
 
 ## Latest Updates
 
+### Phase 5: Vendor, GRN & Billing Management ✅ COMPLETE (Dec 2025)
+**Location:** Business Hub → Vendor Management, GRN Management, Billing Management
+
+**MAJOR FEATURES:**
+
+**1. Vendor Management (Migrated to Business Hub)**
+- Full CRUD operations for vendors with 1000+ vendors
+- Import/Export Excel functionality
+- Category filtering and search
+- Bank details, GST/PAN number tracking
+- Purchase Orders linked to vendors
+- Vendor rating system
+
+**2. GRN Management (Goods Received Notes)**
+- Create GRN from Purchase Orders
+- **Partial goods receipt support** - receive 5 of 10 items
+- Track ordered vs received quantities
+- Delivery challan and vehicle number tracking
+- PO status updates (created → partially_received → received)
+- GRN number format: `GRN-FYFY-NNN`
+
+**3. Billing Management (Enhanced)**
+| Tab | Content |
+|-----|---------|
+| **Order Items & Milestones** | Order items with completion percentage tracking |
+| **Invoices** | Generated invoices with status workflow |
+| **Weekly Billing** | Projects sync with weekly billing summary |
+
+**4. Invoice Generation**
+- Generate invoices from order milestones
+- Invoice types: Progress, Final, Proforma
+- GST calculation (CGST/SGST/IGST)
+- Invoice status workflow: Draft → Sent → Paid
+- Invoice number format: `INV-FYFY-NNN`
+
+**5. Milestone/Completion Tracking**
+- Order Items represent project phases/milestones
+- Completion percentage (0-100%) per item
+- Overall completion calculated from item averages
+- Update completion via slider modal
+
+**Backend API Endpoints:**
+- `GET/POST /api/project-requests/grn` - GRN management
+- `GET/POST /api/project-requests/invoices` - Invoice management
+- `PUT /api/project-requests/invoices/{id}/status` - Invoice status updates
+- `GET /api/project-requests/billing-dashboard` - Billing summary
+- `PUT /api/order-lifecycle/orders/{id}` - Update item completion percentage
+
+**Frontend Routes Added:**
+- `/business-hub/vendors` - Vendor Management
+- `/business-hub/grn` - GRN Management
+- `/business-hub/billing` - Billing Management (enhanced)
+
+**Test Results:** 94% backend (17/18), 100% frontend - See `/app/test_reports/iteration_95.json`
+
+**Bug Fixed:** Route ordering in `project_requests.py` - catch-all routes moved to end
+
+---
+
 ### Phase 3 & 4: PO Creation & Finance P&L ✅ COMPLETE (Mar 15, 2026)
 **Location:** Business Hub → Purchase Management, Finance Analytics
 
