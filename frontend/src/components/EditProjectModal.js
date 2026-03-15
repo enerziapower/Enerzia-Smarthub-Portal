@@ -28,6 +28,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
   const [clients, setClients] = useState([]);
   const [formData, setFormData] = useState({});
   const [workItems, setWorkItems] = useState([]);
+  const [isFromBusinessHub, setIsFromBusinessHub] = useState(false); // Track if project came from order
   const excelInputRef = useRef(null);
   
   // Business Hub integration
