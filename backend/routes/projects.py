@@ -50,6 +50,9 @@ class Project(BaseModel):
     actual_expenses: float = 0
     pid_savings: float = 0
     weekly_actions: Optional[str] = None
+    # Business Hub link fields
+    source_order_id: Optional[str] = None
+    source_order_no: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
