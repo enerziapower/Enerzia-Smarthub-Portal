@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Loader2, Upload, FileText, Trash2, ExternalLink, Calendar, Plus, ClipboardList, FileSpreadsheet } from 'lucide-react';
+import { X, Save, Loader2, Upload, FileText, Trash2, ExternalLink, Calendar, Plus, ClipboardList, FileSpreadsheet, Package, Truck, CreditCard, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { projectsAPI, settingsAPI, departmentTeamAPI } from '../services/api';
 import * as XLSX from 'xlsx';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
   const [loading, setLoading] = useState(false);
