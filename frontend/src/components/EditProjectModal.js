@@ -201,7 +201,8 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
             description: String(row['Description'] || row['description'] || '').trim(),
             quantity: parseFloat(row['Quantity'] || row['quantity'] || 0) || 0,
             unit: WORK_ITEM_UNITS.includes(row['Unit'] || row['unit']) ? row['Unit'] || row['unit'] : 'Nos',
-            status: WORK_ITEM_STATUSES.includes(row['Status'] || row['status']) ? row['Status'] || row['status'] : 'Pending'
+            status: WORK_ITEM_STATUSES.includes(row['Status'] || row['status']) ? row['Status'] || row['status'] : 'Pending',
+            completion_percentage: parseFloat(row['Completion %'] || row['completion_percentage'] || 0) || 0
           })).filter(item => item.description);
 
           if (newWorkItems.length > 0) {
