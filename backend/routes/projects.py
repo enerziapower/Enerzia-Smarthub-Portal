@@ -314,14 +314,45 @@ async def update_project(project_id: str, update_data: ProjectUpdate):
 
 @router.delete("/{project_id}")
 async def delete_project(project_id: str):
-    """Delete a project"""
+    """
+    Delete a project (Bi-directional delete)
+    - Removes project from projects collection
+    - Cleans up linked order reference in sales_orders
+    """
+    # First, find the project to check for linked order
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Delete the project
     result = await db.projects.delete_one({"id": project_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     
+    # Clean up linked order reference if exists
+    source_order_id = project.get("source_order_id")
+    if source_order_id:
+        # Update the linked order - remove project link and reset status
+        await db.sales_orders.update_one(
+            {"id": source_order_id},
+            {"$set": {
+                "linked_project_id": None,
+                "project_status": "pending"  # Reset to pending so it can be re-accepted
+            }}
+        )
+    
+    # Also check if any order has this project linked via linked_project_id
+    await db.sales_orders.update_many(
+        {"linked_project_id": project_id},
+        {"$set": {
+            "linked_project_id": None,
+            "project_status": "pending"
+        }}
+    )
+    
     await broadcast_update("project", "delete", {"id": project_id})
     
-    return {"message": "Project deleted successfully"}
+    return {"message": "Project deleted successfully", "order_cleaned": source_order_id is not None}
 
 
 @router.get("/export/excel")
