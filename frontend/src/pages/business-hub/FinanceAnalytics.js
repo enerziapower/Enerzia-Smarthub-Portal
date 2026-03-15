@@ -13,10 +13,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = window.location.origin;
+const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 const FinanceAnalytics = () => {
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({
     total_revenue: 0,
     total_expenses: 0,
@@ -25,6 +26,8 @@ const FinanceAnalytics = () => {
     pending_receivables: 0,
     pending_payables: 0
   });
+  const [projectPnL, setProjectPnL] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [monthlyData, setMonthlyData] = useState([]);
   const [departmentData, setDepartmentData] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
