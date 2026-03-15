@@ -853,6 +853,13 @@ const ProjectManagement = () => {
                               >
                                 <Plus size={16} />
                               </button>
+                              <button
+                                onClick={() => openDeleteModal(project)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                title="Delete Project"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
                           </td>
                         </tr>
