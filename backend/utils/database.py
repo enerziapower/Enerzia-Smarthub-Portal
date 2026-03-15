@@ -17,17 +17,34 @@ async def safe_create_index(collection, keys, **kwargs):
         await collection.create_index(keys, **kwargs)
     except OperationFailure as e:
         if e.code == 85:  # IndexOptionsConflict
-            # Drop the existing index and recreate with new options
-            index_name = kwargs.get('name') or f"{keys}_1" if isinstance(keys, str) else None
-            if index_name:
-                try:
-                    await collection.drop_index(index_name)
-                    await collection.create_index(keys, **kwargs)
-                    logger.info(f"Recreated index {index_name} with updated options")
-                except Exception as drop_err:
-                    logger.warning(f"Could not recreate index {index_name}: {drop_err}")
+            # Get the index name - either from kwargs or construct from keys
+            if isinstance(keys, str):
+                default_name = f"{keys}_1"
+            elif isinstance(keys, list):
+                default_name = "_".join(f"{k}_{v}" for k, v in keys)
             else:
-                logger.warning(f"Index conflict but no name to drop: {e}")
+                default_name = None
+            
+            # Try to drop the existing index (which conflicts)
+            # The conflicting index has the default name (without our custom name suffix)
+            try:
+                if default_name:
+                    await collection.drop_index(default_name)
+                    logger.info(f"Dropped conflicting index {default_name}")
+                
+                # Now create with our options
+                await collection.create_index(keys, **kwargs)
+                new_name = kwargs.get('name', default_name)
+                logger.info(f"Created index {new_name} with updated options")
+            except OperationFailure as drop_err:
+                if drop_err.code == 27:  # IndexNotFound - that's fine
+                    # The index might have already been dropped or doesn't exist
+                    try:
+                        await collection.create_index(keys, **kwargs)
+                    except OperationFailure:
+                        logger.warning(f"Could not create index {kwargs.get('name', default_name)}: {e}")
+                else:
+                    logger.warning(f"Could not recreate index: {drop_err}")
         else:
             raise
 
