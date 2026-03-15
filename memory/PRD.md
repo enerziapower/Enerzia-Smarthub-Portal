@@ -10,12 +10,12 @@
 **1. Project Management - Connected to Project & Services**
 - Now shows **373 projects from Project & Services** (not orders)
 - Live (94) and Completed (279) tabs
+- **NEW: "Pending Orders" tab** showing orders from Order Management with **Accept button**
 - Displays: PID, Project/Client, Category, Status, PO Amount, Invoiced, Progress %, Engineer
-- Bi-directional sync with Project & Services data
 - Can raise Material/Vendor/Payment requests from any project
 
 **2. Order Accept → Project Sync ✅ IMPLEMENTED**
-- When order is "Accepted" in Order Management → **Auto-creates project in Project & Services**
+- When order is "Accepted" in Project Management → **Auto-creates project in Project & Services**
 - Project fields populated from order: PID, Customer, Category, Location, Items
 - Engineer assigned from accept form
 - `linked_project_id` stored in order for bi-directional reference
@@ -25,7 +25,18 @@
 - Only 2 tabs remain:
   - **Progress Tracking**: Shows completion % by category (PSS, AS, OSS, CS)
   - **Weekly Billing**: Read-only view of this week's billing from Project & Services
-- Stats: Total PO Value (₹7.77Cr), Invoiced (₹4.45Cr), Avg Completion (77%)
+
+**4. Edit Project Modal - Business Hub Sync ✅ IMPLEMENTED**
+- **NEW: "Business Hub Requests" section** showing:
+  - Material Requests (with request number, item count, status)
+  - Vendor Requests (with service type, estimated cost, status)
+  - Payment Requests (with payee, amount, status)
+- **NEW: "Goods Received Notes (GRN)" section** showing GRN status for the project
+- Real-time data fetched from Business Hub APIs
+
+**API Endpoints for Sync:**
+- `GET /api/project-requests/by-order/{project_id}` - Fetch requests for a project
+- `GET /api/project-requests/grn?project_id={id}` - Fetch GRN for a project
 
 **Data Flow:**
 ```
