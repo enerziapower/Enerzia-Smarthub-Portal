@@ -426,148 +426,188 @@ const Projects = () => {
       </div>
 
       {/* Projects List */}
-      <div className="space-y-4">
-        {filteredProjects.map((project, index) => (
-          <div
-            key={project.id}
-            data-testid={`project-card-${index}`}
-            className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                    {project.project_name}
+      <div className="space-y-3">
+        {filteredProjects.map((project, index) => {
+          const workStats = getWorkItemsStats(project.work_items);
+          const requests = projectRequests[project.id] || { material: [], vendor: [], payment: [] };
+          const pendingMaterial = requests.material?.filter(r => r.status === 'pending').length || 0;
+          const pendingPayment = requests.payment?.filter(r => r.status === 'pending').length || 0;
+          
+          return (
+            <div
+              key={project.id}
+              data-testid={`project-card-${index}`}
+              className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              {/* Header Row */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded font-semibold text-slate-700">{project.pid_no}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getCategoryBadgeClass(project.category)}`}>
+                      {project.category}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(project.status)}`}>
+                      {project.status}
+                    </span>
+                    {project.source_order_id && (
+                      <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200">
+                        Business Hub
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-semibold text-slate-900 truncate max-w-xl">
+                    {project.client || project.project_name || 'Unnamed Project'}
                   </h3>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCategoryBadgeClass(
-                      project.category
-                    )}`}
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {project.location && <span>{project.location} • </span>}
+                    {project.engineer_in_charge && <span className="font-medium">{project.engineer_in_charge}</span>}
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => handleEditProject(project)}
+                    data-testid={`edit-project-btn-${index}`}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium hover:bg-slate-100 transition-all"
                   >
-                    {project.category}
+                    <Edit size={14} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProject(project.id, project.project_name)}
+                    data-testid={`delete-project-btn-${index}`}
+                    className="p-1.5 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-100 transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Content - 3 Column Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Column 1: Financials */}
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                  <p className="text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
+                    <TrendingUp size={12} />
+                    Financials
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-slate-500">PO Amount</p>
+                      <p className="font-semibold font-mono text-slate-800">₹{(project.po_amount || 0).toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Invoiced</p>
+                      <p className="font-semibold font-mono text-emerald-600">₹{(project.invoiced_amount || 0).toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Balance</p>
+                      <p className="font-semibold font-mono text-amber-600">₹{((project.po_amount || 0) - (project.invoiced_amount || 0)).toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">This Week</p>
+                      <p className="font-semibold font-mono text-violet-600">₹{(project.this_week_billing || 0).toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2: Work Items & Progress */}
+                <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+                  <p className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+                    <ClipboardList size={12} />
+                    Work Items & Progress
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-amber-600">Items</span>
+                      <span className="font-semibold text-amber-800">
+                        {workStats.completed}/{workStats.total} completed
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${workStats.avgCompletion >= 100 ? 'bg-green-500' : 'bg-amber-500'} transition-all`}
+                          style={{ width: `${Math.min(workStats.avgCompletion, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-amber-800 w-10">{workStats.avgCompletion || project.completion_percentage || 0}%</span>
+                    </div>
+                    {project.completion_date && (
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-amber-200">
+                        <span className="text-amber-600 flex items-center gap-1">
+                          <Calendar size={10} />
+                          Target
+                        </span>
+                        <span className="font-medium text-amber-800">{project.completion_date}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Column 3: Business Hub Requests */}
+                <div className="bg-violet-50 rounded-lg p-3 border border-violet-100">
+                  <p className="text-xs font-semibold text-violet-700 mb-2 flex items-center gap-1">
+                    <Package size={12} />
+                    Requests
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-white rounded-lg py-1.5 px-2 border border-violet-100">
+                      <Package size={14} className="mx-auto text-amber-500 mb-0.5" />
+                      <p className="text-xs font-bold text-slate-800">{requests.material?.length || 0}</p>
+                      <p className="text-[10px] text-slate-500">Material</p>
+                      {pendingMaterial > 0 && (
+                        <span className="text-[9px] text-amber-600 font-medium">{pendingMaterial} pending</span>
+                      )}
+                    </div>
+                    <div className="bg-white rounded-lg py-1.5 px-2 border border-violet-100">
+                      <Truck size={14} className="mx-auto text-blue-500 mb-0.5" />
+                      <p className="text-xs font-bold text-slate-800">{requests.vendor?.length || 0}</p>
+                      <p className="text-[10px] text-slate-500">Vendor</p>
+                    </div>
+                    <div className="bg-white rounded-lg py-1.5 px-2 border border-violet-100">
+                      <CreditCard size={14} className="mx-auto text-green-500 mb-0.5" />
+                      <p className="text-xs font-bold text-slate-800">{requests.payment?.length || 0}</p>
+                      <p className="text-[10px] text-slate-500">Payment</p>
+                      {pendingPayment > 0 && (
+                        <span className="text-[9px] text-amber-600 font-medium">{pendingPayment} pending</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer - Budget & Savings */}
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-500">
+                    Budget: <span className="font-mono font-medium text-blue-600">₹{(project.budget || 0).toLocaleString('en-IN')}</span>
                   </span>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(
-                      project.status
-                    )}`}
-                  >
-                    {project.status}
+                  <span className={`${(project.pid_savings || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    Savings: <span className="font-mono font-semibold">₹{(project.pid_savings || 0).toLocaleString('en-IN')}</span>
                   </span>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-slate-600">
-                  <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{project.pid_no}</span>
-                  <span>{project.client}</span>
-                  <span>•</span>
-                  <span>{project.location}</span>
-                  <span>•</span>
-                  <span className="font-medium">{project.engineer_in_charge}</span>
-                  {project.linked_order_no && (
-                    <>
-                      <span>•</span>
-                      <span className="flex items-center gap-1 text-blue-600">
-                        <ChevronRight size={14} />
-                        <span className="text-xs font-medium">Linked: {project.linked_order_no}</span>
-                      </span>
-                    </>
+                <div className="flex items-center gap-3">
+                  {project.vendor && (
+                    <span className="text-slate-500">Vendor: <span className="text-slate-700">{project.vendor}</span></span>
+                  )}
+                  {project.po_number && (
+                    <span className="text-slate-500">PO: <span className="font-mono text-slate-700">{project.po_number}</span></span>
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEditProject(project)}
-                  data-testid={`edit-project-btn-${index}`}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-100 transition-all active:scale-95"
-                >
-                  <Edit size={16} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteProject(project.id, project.project_name)}
-                  data-testid={`delete-project-btn-${index}`}
-                  className="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-sm font-medium hover:bg-rose-100 transition-all active:scale-95"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">PO Amount</p>
-                <p className="text-sm font-semibold font-mono text-slate-900">
-                  ₹{project.po_amount.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Invoiced</p>
-                <p className="text-sm font-semibold font-mono text-emerald-600">
-                  ₹{project.invoiced_amount.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Balance Amount</p>
-                <p className="text-sm font-semibold font-mono text-amber-600">
-                  ₹{((project.po_amount || 0) - (project.invoiced_amount || 0)).toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">This Week</p>
-                <p className="text-sm font-semibold font-mono text-violet-600">
-                  ₹{project.this_week_billing.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Budget</p>
-                <p className="text-sm font-semibold font-mono text-blue-600">
-                  ₹{(project.budget || 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">PID Savings</p>
-                <p className={`text-sm font-semibold font-mono ${(project.pid_savings || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ₹{(project.pid_savings || 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-            </div>
-
-            {/* Progress Bar & Target Date */}
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-slate-500">Completion Progress</p>
-                  <p className="text-xs font-semibold text-slate-900">{project.completion_percentage}%</p>
-                </div>
-                <Progress value={project.completion_percentage} className="h-2" />
-              </div>
-              {project.completion_date && (
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 mb-1">Target Date</p>
-                  <p className="text-sm font-semibold text-orange-600">{project.completion_date}</p>
+              {/* Weekly Actions - Collapsible */}
+              {project.weekly_actions && (
+                <div className="mt-2 p-2 bg-sky-50 border border-sky-100 rounded-lg text-xs">
+                  <span className="font-medium text-sky-700">Weekly Actions: </span>
+                  <span className="text-sky-600">{project.weekly_actions}</span>
                 </div>
               )}
             </div>
-
-            {/* Weekly Actions */}
-            {project.weekly_actions && (
-              <div className="mt-4 p-3 bg-sky-50 border border-sky-200 rounded-lg">
-                <p className="text-xs font-medium text-sky-900 mb-1">Weekly Actions:</p>
-                <p className="text-sm text-sky-700">{project.weekly_actions}</p>
-              </div>
-            )}
-
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-xs text-slate-500">
-                Vendor: <span className="text-slate-700 font-medium">{project.vendor}</span>
-              </p>
-              {project.po_number && (
-                <p className="text-xs text-slate-500">
-                  PO: <span className="font-mono text-slate-700">{project.po_number}</span>
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {filteredProjects.length === 0 && (
           <div className="text-center py-12">
