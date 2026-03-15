@@ -293,6 +293,201 @@ const ProjectManagement = () => {
     setShowTimelineModal(true);
   };
 
+  // Open raise request modal
+  const openRaiseRequestModal = (order, type = 'material') => {
+    setSelectedOrder(order);
+    setRequestType(type);
+    setRequestData(initialRequestData);
+    setShowRaiseRequestModal(true);
+  };
+
+  // Fetch requests for an order
+  const fetchProjectRequests = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/by-order/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProjectRequests(data.requests || {});
+      }
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    }
+  };
+
+  // Open requests view modal
+  const openRequestsModal = async (order) => {
+    setSelectedOrder(order);
+    await fetchProjectRequests(order.id);
+    setShowRequestsModal(true);
+  };
+
+  // Submit material request
+  const handleSubmitMaterialRequest = async () => {
+    if (!selectedOrder) return;
+    if (!requestData.items.some(item => item.description)) {
+      toast.error('Please add at least one item');
+      return;
+    }
+    
+    setSubmittingRequest(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/materials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+          order_no: selectedOrder.order_no,
+          project_name: selectedOrder.project_name,
+          customer_name: selectedOrder.customer_name,
+          items: requestData.items.filter(item => item.description),
+          required_by: requestData.required_by,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Material request ${data.request.request_no} created`);
+        setShowRaiseRequestModal(false);
+        setRequestData(initialRequestData);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  // Submit vendor request
+  const handleSubmitVendorRequest = async () => {
+    if (!selectedOrder) return;
+    if (!requestData.description) {
+      toast.error('Please provide a description');
+      return;
+    }
+    
+    setSubmittingRequest(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/vendors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+          order_no: selectedOrder.order_no,
+          project_name: selectedOrder.project_name,
+          customer_name: selectedOrder.customer_name,
+          service_type: requestData.service_type,
+          description: requestData.description,
+          estimated_cost: requestData.estimated_cost,
+          required_by: requestData.required_by,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Vendor request ${data.request.request_no} created`);
+        setShowRaiseRequestModal(false);
+        setRequestData(initialRequestData);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  // Submit payment request
+  const handleSubmitPaymentRequest = async () => {
+    if (!selectedOrder) return;
+    if (!requestData.payee || !requestData.amount) {
+      toast.error('Please provide payee and amount');
+      return;
+    }
+    
+    setSubmittingRequest(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+          order_no: selectedOrder.order_no,
+          project_name: selectedOrder.project_name,
+          customer_name: selectedOrder.customer_name,
+          payment_type: requestData.payment_type,
+          payee: requestData.payee,
+          amount: requestData.amount,
+          due_date: requestData.due_date,
+          bank_details: requestData.bank_details,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Payment request ${data.request.request_no} created`);
+        setShowRaiseRequestModal(false);
+        setRequestData(initialRequestData);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  // Add material item
+  const addMaterialItem = () => {
+    setRequestData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, unit: 'Nos', estimated_cost: 0 }]
+    }));
+  };
+
+  // Update material item
+  const updateMaterialItem = (index, field, value) => {
+    const newItems = [...requestData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setRequestData(prev => ({ ...prev, items: newItems }));
+  };
+
+  // Remove material item
+  const removeMaterialItem = (index) => {
+    if (requestData.items.length <= 1) return;
+    setRequestData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className="space-y-6" data-testid="project-management">
       {/* Header with Stats */}
