@@ -357,7 +357,7 @@ async def delete_order(order_id: str):
 
 @router.put("/orders/{order_id}")
 async def update_order(order_id: str, data: dict):
-    """Update an order"""
+    """Update an order - supports items with completion_percentage for milestone tracking"""
     # Find the order
     order = await db.sales_orders.find_one({"id": order_id})
     if not order:
@@ -365,7 +365,16 @@ async def update_order(order_id: str, data: dict):
     
     now = datetime.now(timezone.utc)
     
-    # Prepare update data
+    # Check if only items are being updated (for milestone completion)
+    if "items" in data and len(data.keys()) == 1:
+        # Simple items update for milestone tracking
+        await db.sales_orders.update_one(
+            {"id": order_id}, 
+            {"$set": {"items": data["items"], "updated_at": now}}
+        )
+        return {"message": "Order items updated successfully"}
+    
+    # Prepare full update data
     update_data = {
         "customer_name": data.get("customer_name", order.get("customer_name")),
         "customer_address": data.get("customer_address", order.get("customer_address")),
@@ -395,6 +404,10 @@ async def update_order(order_id: str, data: dict):
             "target_profit": data.get("target_profit", 0)
         }
     }
+    
+    # Include items if provided
+    if "items" in data:
+        update_data["items"] = data["items"]
     
     await db.sales_orders.update_one({"id": order_id}, {"$set": update_data})
     
