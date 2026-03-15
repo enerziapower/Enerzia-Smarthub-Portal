@@ -75,8 +75,55 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
       // Set existing PO attachment
       setPOFilePath(project.po_attachment || '');
       setPOFile(null);
+      
+      // Fetch Business Hub requests and GRN for this project
+      fetchProjectRequests(project.id);
+      fetchGRNList(project.id);
     }
   }, [project]);
+
+  // Fetch project requests from Business Hub
+  const fetchProjectRequests = async (projectId) => {
+    if (!projectId) return;
+    setLoadingRequests(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/by-order/${projectId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProjectRequests(data.requests || { material: [], vendor: [], payment: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching project requests:', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  // Fetch GRN list for this project
+  const fetchGRNList = async (projectId) => {
+    if (!projectId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/grn?project_id=${projectId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGrnList(data.grns || []);
+      }
+    } catch (error) {
+      console.error('Error fetching GRN:', error);
+    }
+  };
+
+  // Format currency helper
+  const formatCurrency = (amount) => {
+    if (!amount && amount !== 0) return '₹0';
+    return `₹${Number(amount).toLocaleString('en-IN')}`;
+  };
 
   // Work Items / Line Items state and handlers
   const [workItems, setWorkItems] = useState([]);
