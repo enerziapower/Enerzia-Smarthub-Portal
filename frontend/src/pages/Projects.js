@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { projectsAPI } from '../services/api';
-import { Search, Filter, Loader2, ChevronRight, Plus, Edit, Download, Upload, FileText, FileSpreadsheet, Trash2, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
+import { Search, Filter, Loader2, ChevronRight, Plus, Edit, Download, Upload, FileText, FileSpreadsheet, Trash2, CheckCircle2, Clock, RefreshCw, Package, Truck, CreditCard, ClipboardList, TrendingUp, Calendar } from 'lucide-react';
 import { Progress } from '../components/ui/progress';
 import AddProjectModal from '../components/AddProjectModal';
 import EditProjectModal from '../components/EditProjectModal';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
