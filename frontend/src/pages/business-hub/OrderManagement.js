@@ -72,6 +72,11 @@ const OrderManagement = () => {
   const [deleting, setDeleting] = useState(false);
   const excelInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const customerDropdownRef = useRef(null);
+  
+  // Searchable customer dropdown state
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   
   // Stats
   const [stats, setStats] = useState({
