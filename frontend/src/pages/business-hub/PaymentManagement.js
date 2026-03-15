@@ -97,11 +97,15 @@ const PaymentManagement = () => {
     fetchRequests();
   }, [fetchRequests]);
 
-  const filteredRequests = requests.filter(req => {
+  // Combine regular requests with project payment requests
+  const allPaymentRequests = [...requests, ...projectPaymentRequests];
+
+  const filteredRequests = allPaymentRequests.filter(req => {
     const matchesSearch = !searchTerm || 
       req.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.request_id?.toLowerCase().includes(searchTerm.toLowerCase());
+      req.request_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.order_no?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || req.status === statusFilter;
     const matchesDept = !deptFilter || req.department?.toLowerCase() === deptFilter;
     return matchesSearch && matchesStatus && matchesDept;
