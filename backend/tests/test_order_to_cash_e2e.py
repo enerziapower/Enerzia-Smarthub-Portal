@@ -134,33 +134,26 @@ class TestProjectManagement:
         assert create_response.status_code == 200
         order_id = create_response.json()["order"]["id"]
         
-        # Accept the order
+        # Accept the order - POST endpoint with required fields
         accept_data = {
-            "project_status": "accepted",
-            "timeline": {
-                "start_date": "2026-03-20",
-                "end_date": "2026-06-30",
-                "deadline": "2026-04-15",
-                "project_manager": "Test PM",
-                "notes": "E2E Test acceptance"
-            }
+            "start_date": "2026-03-20",
+            "end_date": "2026-06-30",
+            "deadline": "2026-04-15",
+            "project_manager": "Test PM",
+            "notes": "E2E Test acceptance",
+            "project_status": "accepted"
         }
         
-        accept_response = requests.put(
+        accept_response = requests.post(
             f"{BASE_URL}/api/order-lifecycle/orders/{order_id}/accept",
             json=accept_data
         )
         
-        # Check if accept endpoint exists, if not try alternative
-        if accept_response.status_code == 404:
-            # Try updating lifecycle status directly
-            lifecycle_response = requests.put(
-                f"{BASE_URL}/api/order-lifecycle/orders/{order_id}/lifecycle/status?status=accepted"
-            )
-            print(f"✓ Order lifecycle status updated (alternative method)")
-        else:
-            assert accept_response.status_code == 200
-            print(f"✓ Order accepted and project created")
+        assert accept_response.status_code == 200
+        data = accept_response.json()
+        assert "order" in data
+        assert data["order"]["project_status"] == "accepted"
+        print(f"✓ Order accepted and project created: {test_pid}")
         
         pytest.accept_order_id = order_id
     
