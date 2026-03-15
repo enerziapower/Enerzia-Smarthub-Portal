@@ -45,7 +45,16 @@ const PurchaseManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCreatePOModal, setShowCreatePOModal] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [creatingPO, setCreatingPO] = useState(false);
+  const [poFormData, setPOFormData] = useState({
+    vendor_name: '',
+    vendor_contact: '',
+    delivery_date: '',
+    payment_terms: '',
+    notes: ''
+  });
   const [stats, setStats] = useState({ 
     materials_pending: 0, 
     vendors_pending: 0, 
