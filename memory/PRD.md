@@ -34,9 +34,18 @@
 - **NEW: "Goods Received Notes (GRN)" section** showing GRN status for the project
 - Real-time data fetched from Business Hub APIs
 
+**5. Bi-directional Delete ✅ IMPLEMENTED**
+- Delete button added to Business Hub Project Management (trash icon)
+- Delete confirmation modal with project details
+- **Automatic cleanup**: When project is deleted:
+  - Linked order's `linked_project_id` is cleared
+  - Order status reset to "pending" (can be re-accepted)
+- Works from both Project & Services AND Business Hub
+
 **API Endpoints for Sync:**
 - `GET /api/project-requests/by-order/{project_id}` - Fetch requests for a project
 - `GET /api/project-requests/grn?project_id={id}` - Fetch GRN for a project
+- `DELETE /api/projects/{project_id}` - Delete project with order cleanup
 
 **Data Flow:**
 ```
