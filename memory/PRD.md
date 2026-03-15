@@ -2,6 +2,36 @@
 
 ## Latest Updates
 
+### Phase 3 & 4: PO Creation & Finance P&L ✅ COMPLETE (Mar 15, 2026)
+**Location:** Business Hub → Purchase Management, Finance Analytics
+
+**MAJOR FEATURES:**
+
+**1. PO Creation from Material Requests**
+- Purchase Dept can create POs directly from approved material requests
+- PO number format: `PO-FYFY-NNN` (e.g., PO-2526-001)
+- PO links back to original request and updates status
+
+**2. Finance Analytics with Project P&L**
+| Tab | Content |
+|-----|---------|
+| **Overview** | Total Revenue, Gross Profit, Total Costs, Budget Variance cards + P&L Summary |
+| **Project P&L** | Table with Order Value, Total Costs, Profit, Margin, Status per project |
+| **By Category** | Revenue/Expenses/Profit breakdown by project category |
+
+**3. UI Changes**
+- All "Approve" buttons changed to **"Accept"** across Purchase/Payment/Expense Management
+
+**Backend API Endpoints:**
+- `POST /api/project-requests/create-po` - Create PO from approved request
+- `GET /api/project-requests/purchase-orders` - List all POs
+- `GET /api/project-requests/finance-dashboard` - Overall P&L dashboard
+- `GET /api/project-requests/project-pnl/{order_id}` - Individual project P&L
+
+**Test Results:** 100% success rate (24/24 backend tests) - See `/app/test_reports/iteration_94.json`
+
+---
+
 ### Raise Request Feature ✅ COMPLETE (Mar 15, 2026)
 **Location:** Business Hub → Project Management, Purchase Management, Payment Management
 
