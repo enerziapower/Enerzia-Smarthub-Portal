@@ -2,6 +2,24 @@
 
 ## Latest Updates
 
+### Phase 6.1: Edit Project Modal Refactor ✅ COMPLETE (Mar 15, 2026)
+**Location:** Projects → Project & Services → Edit Modal
+
+**CHANGES:**
+- **Bug Fixed:** Save Changes button was failing - changed `projectsAPI.updateProject()` to `projectsAPI.update()`
+- **Verified All 7 Sections Visible:**
+  1. Status & Progress (Status, Start Date, Target Completion, Progress bar)
+  2. Project Details (Client, Location, Category, Engineer, PO Number)
+  3. Financials (PO Amount, Invoiced, Budget, Actual Expenses, This Week Billing, Balance, PID Savings)
+  4. Work Items (with Template/Upload Excel/Add functionality)
+  5. Weekly Notes (textarea for weekly review)
+  6. Business Hub Requests (Material/Vendor/Payment counts with status)
+  7. GRN Status (Goods Received Notes with Received/Partial badges)
+- **Modal scrolling works correctly** - all sections accessible
+- **Test Results:** 100% frontend - See `/app/test_reports/iteration_97.json`
+
+---
+
 ### Phase 6: Project & Services Integration ✅ COMPLETE (Dec 2025)
 **Location:** Business Hub → Project Management, Billing Management
 
