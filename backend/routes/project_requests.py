@@ -652,26 +652,7 @@ async def create_po_from_request(data: POFromRequestCreate):
     return {"message": f"Purchase Order {po_number} created", "po": po_data}
 
 
-@router.get("/purchase-orders")
-async def get_purchase_orders(
-    order_id: Optional[str] = None,
-    status: Optional[str] = None,
-    limit: int = 100,
-    skip: int = 0
-):
-    """Get all purchase orders created from project requests"""
-    query = {}
-    if order_id:
-        query["order_id"] = order_id
-    if status:
-        query["status"] = status
-    
-    cursor = db.purchase_orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit)
-    pos = await cursor.to_list(length=limit)
-    total = await db.purchase_orders.count_documents(query)
-    
-    return {"purchase_orders": pos, "total": total}
-
+# Duplicate purchase-orders GET removed - it's defined earlier
 
 @router.put("/purchase-orders/{po_id}/status")
 async def update_po_status(po_id: str, status: str):
