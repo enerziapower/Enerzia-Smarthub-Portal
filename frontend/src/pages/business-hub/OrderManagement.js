@@ -253,6 +253,8 @@ const OrderManagement = () => {
       // Reset form completely when opening modal
       setFormData(initialFormData);
       setPOFile(null); // Reset PO file attachment
+      setCustomerSearch(''); // Reset customer search
+      setShowCustomerDropdown(false);
       
       // Set today's date as default
       const day = String(today.getDate()).padStart(2, '0');
