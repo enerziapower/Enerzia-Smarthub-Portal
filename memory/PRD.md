@@ -2,6 +2,34 @@
 
 ## Latest Updates
 
+### Phase 6.2: P1 Features - Customer Search & Delete Flow ✅ COMPLETE (Mar 15, 2026)
+**Location:** Business Hub → Order Management, Project Management
+
+**FEATURES IMPLEMENTED:**
+
+**1. Searchable Customer Dropdown (Order Management)**
+- Replaced simple `<select>` with searchable input field
+- Type-ahead filtering as user types
+- Dropdown shows customer name AND address preview
+- Auto-fills Customer Name and Address on selection
+- Shows "50 of X results" when too many matches
+- data-testid="customer-search-input" for testing
+
+**2. Bi-directional Project Delete Flow**
+- Delete button (trash icon) added to Live Projects table
+- Delete confirmation modal shows:
+  - Project PID and name
+  - Client/customer info
+  - "This action cannot be undone" warning
+- Backend DELETE endpoint cleans up:
+  - Removes project from `projects` collection
+  - Sets `linked_project_id = null` in linked `sales_orders`
+  - Resets order to "pending" status (can be re-accepted)
+
+**Test Results:** 100% backend (8/8), 100% frontend - See `/app/test_reports/iteration_98.json`
+
+---
+
 ### Phase 6.1: Edit Project Modal Refactor ✅ COMPLETE (Mar 15, 2026)
 **Location:** Projects → Project & Services → Edit Modal
 
