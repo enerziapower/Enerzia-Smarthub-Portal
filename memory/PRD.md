@@ -2,6 +2,49 @@
 
 ## Latest Updates
 
+### Raise Request Feature ✅ COMPLETE (Mar 15, 2026)
+**Location:** Business Hub → Project Management, Purchase Management, Payment Management
+
+**MAJOR FEATURE:** Implemented complete request workflow from Project Management to Purchase and Payment Management.
+
+**Workflow:**
+```
+Project Management                Purchase Management           Payment Management
+├── Raise Material Request ─────► Material Requests Tab ─────► [Process Purchase]
+├── Raise Vendor Request ───────► Vendor Requests Tab ────────► [Process Purchase]
+└── Raise Payment Request ──────────────────────────────────► Payment Requests
+                                          │                           │
+                                          └── Approve/Reject ─────────┘
+```
+
+| Feature | Description |
+|---------|-------------|
+| **Material Requests** | Add multiple items with description, quantity, unit, estimated cost |
+| **Vendor Requests** | Service Type (Subcontractor, Rental, etc.), description, estimated cost |
+| **Payment Requests** | Payment Type (Advance, Milestone, Final), payee, amount, due date |
+| **Request Numbers** | Auto-generated: MR-FYFY-NNN, VR-FYFY-NNN, PR-FYFY-NNN |
+| **Status Workflow** | Pending → Approved → In Progress → Completed (or Rejected) |
+| **View Requests** | Modal shows all requests grouped by type for a project |
+| **Purchase Processing** | Purchase Dept can Approve/Reject material & vendor requests |
+| **Payment Processing** | Finance Dept can Approve/Reject payment requests |
+
+**Backend API Endpoints:**
+- `POST /api/project-requests/materials` - Create material request
+- `POST /api/project-requests/vendors` - Create vendor request
+- `POST /api/project-requests/payments` - Create payment request
+- `GET /api/project-requests/by-order/{order_id}` - Get all requests for an order
+- `PUT /api/project-requests/{id}/status` - Update request status
+
+**Files Created/Modified:**
+- `/app/backend/routes/project_requests.py` - NEW: Complete backend API
+- `/app/frontend/src/pages/business-hub/ProjectManagement.js` - Added Raise Request modal
+- `/app/frontend/src/pages/business-hub/PurchaseManagement.js` - Shows project requests
+- `/app/frontend/src/pages/business-hub/PaymentManagement.js` - Shows payment requests
+
+**Test Results:** 100% success rate (26/26 backend tests, all frontend features) - See `/app/test_reports/iteration_93.json`
+
+---
+
 ### Order-to-Cash Lifecycle Phase 2: Project Management ✅ COMPLETE (Mar 14, 2026)
 **Location:** Business Hub → Project Management
 
