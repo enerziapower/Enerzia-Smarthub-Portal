@@ -267,6 +267,45 @@ const ProjectManagement = () => {
     setShowDetailModal(true);
   };
 
+  // Open delete confirmation modal
+  const openDeleteModal = (project) => {
+    setSelectedProject(project);
+    setShowDeleteModal(true);
+  };
+
+  // Delete project (bi-directional - also cleans up linked order)
+  const handleDeleteProject = async () => {
+    if (!selectedProject) return;
+    
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/projects/${selectedProject.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Project ${selectedProject.pid_no} deleted successfully`);
+        if (data.order_cleaned) {
+          toast.info('Linked order reset to pending status');
+        }
+        setShowDeleteModal(false);
+        setSelectedProject(null);
+        fetchData(); // Refresh the list
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to delete project');
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Error deleting project');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Open raise request modal
   const openRaiseRequestModal = (project, type = 'material') => {
     setSelectedProject(project);
