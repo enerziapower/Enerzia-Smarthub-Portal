@@ -30,12 +30,12 @@ class Project(BaseModel):
     department: Optional[str] = None
     po_number: Optional[str] = None
     po_attachment: Optional[str] = None
-    client: str
-    location: str
-    project_name: str
-    vendor: str
-    status: str
-    engineer_in_charge: str
+    client: str = ""
+    location: Optional[str] = ""
+    project_name: Optional[str] = ""
+    vendor: str = ""
+    status: str = "Need to Start"
+    engineer_in_charge: str = ""
     project_date: Optional[str] = None
     completion_date: Optional[str] = None
     action_items: Optional[List[dict]] = None
