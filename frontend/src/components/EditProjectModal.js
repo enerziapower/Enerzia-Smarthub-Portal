@@ -165,7 +165,7 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
 
   // Work Items handlers
   const addWorkItem = () => {
-    setWorkItems([...workItems, { description: '', quantity: '', unit: 'Nos', status: 'Pending' }]);
+    setWorkItems([...workItems, { description: '', quantity: '', unit: 'Nos', status: 'Pending', completion_percentage: 0 }]);
   };
 
   const updateWorkItem = (index, field, value) => {
