@@ -2,6 +2,32 @@
 
 ## Latest Updates
 
+### Phase 6.6: Project List UI Redesign ✅ COMPLETE (Mar 15, 2026)
+**User Request:** Rearrange Project & Services list to show Work Items, Material Requests, etc.
+
+**New 3-Column Card Layout:**
+1. **Financials** (left column):
+   - PO Amount, Invoiced, Balance, This Week
+   - Budget and PID Savings in footer
+
+2. **Work Items & Progress** (center column):
+   - Items completed count (e.g., "0/3 completed")
+   - Progress bar with percentage
+   - Target completion date
+
+3. **Requests** (right column):
+   - Material request count + pending indicator
+   - Vendor request count
+   - Payment request count + pending indicator
+
+**Additional Features:**
+- "Business Hub" badge for projects from orders
+- Compact card design (fits more projects on screen)
+- Weekly Actions section at bottom
+- Vendor and PO number in footer
+
+---
+
 ### Phase 6.5: Business Hub → Project Sync Improvements ✅ COMPLETE (Mar 15, 2026)
 **Issues Fixed Based on User Feedback:**
 
