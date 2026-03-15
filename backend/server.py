@@ -3596,6 +3596,7 @@ from routes.project_orders import router as project_orders_router
 from routes.user_access import router as user_access_router
 from routes.lead_management import router as lead_management_router
 from routes.som_tasks import router as som_tasks_router
+from routes.project_requests import router as project_requests_router
 
 # The modular routers will handle their routes
 app.include_router(projects_router_v2, prefix="/api", tags=["Projects-V2"])
