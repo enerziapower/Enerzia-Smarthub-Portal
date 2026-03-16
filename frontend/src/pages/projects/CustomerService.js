@@ -525,9 +525,7 @@ const CustomerService = () => {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Equipment</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Reported Date</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Assigned To</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
