@@ -25,8 +25,8 @@ class Project(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    pid_no: str
-    category: str
+    pid_no: Optional[str] = ""  # Made optional to handle legacy null values
+    category: str = "PSS"  # Default category
     department: Optional[str] = None
     po_number: Optional[str] = None
     po_attachment: Optional[str] = None
