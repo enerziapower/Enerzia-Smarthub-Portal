@@ -533,7 +533,7 @@ const CustomerService = () => {
             <tbody className="divide-y divide-slate-100">
               {filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-12 text-center text-slate-500">
+                  <td colSpan="8" className="py-12 text-center text-slate-500">
                     <Headphones size={40} className="mx-auto mb-3 text-slate-300" />
                     <p className="font-medium">No service requests found</p>
                     <p className="text-sm mt-1">Create your first service request</p>
