@@ -365,6 +365,31 @@ const CreateTestReport = () => {
     fetchInitialData();
   }, []);
 
+  // Load existing report data when editing
+  useEffect(() => {
+    if (isEdit && reportId) {
+      loadExistingReport();
+    }
+  }, [isEdit, reportId]);
+
+  const loadExistingReport = async () => {
+    try {
+      setLoading(true);
+      const response = await testReportsAPI.getById(reportId);
+      if (response.data) {
+        setFormData(prev => ({
+          ...prev,
+          ...response.data
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading report:', error);
+      alert('Failed to load report data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchInitialData = async () => {
     try {
       // Fetch projects and clients
