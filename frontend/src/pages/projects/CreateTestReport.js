@@ -517,13 +517,19 @@ const CreateTestReport = () => {
               <Icon className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">New {equipment.name} Report</h1>
-              <p className="text-slate-500">Create a new test report</p>
+              <h1 className="text-2xl font-bold text-slate-800">{isEdit ? 'Edit' : 'New'} {equipment.name} Report</h1>
+              <p className="text-slate-500">{isEdit ? `Editing report ${formData.report_no || ''}` : 'Create a new test report'}</p>
             </div>
           </div>
         </div>
       </div>
 
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <span className="ml-2 text-slate-600">Loading report data...</span>
+        </div>
+      ) : (
       <form onSubmit={(e) => handleSubmit(e, 'completed')}>
         {/* Common Fields Section */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
