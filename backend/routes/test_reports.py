@@ -312,27 +312,3 @@ async def delete_test_report(
     await db.test_reports.delete_one({"id": report_id})
     
     return {"message": "Test report deleted"}
-
-
-
-# ==================== EQUIPMENT TEMPLATES ====================
-
-from routes.equipment_templates import EQUIPMENT_TEMPLATES, get_equipment_template, get_all_equipment_types
-
-
-@router.get("/templates/all")
-async def get_all_templates(current_user: dict = Depends(require_auth)):
-    """Get all equipment templates."""
-    return {
-        "templates": EQUIPMENT_TEMPLATES,
-        "equipment_types": get_all_equipment_types()
-    }
-
-
-@router.get("/templates/{equipment_type}")
-async def get_template(equipment_type: str, current_user: dict = Depends(require_auth)):
-    """Get template for a specific equipment type."""
-    template = get_equipment_template(equipment_type)
-    if not template:
-        raise HTTPException(status_code=404, detail=f"Template not found for equipment type: {equipment_type}")
-    return template
