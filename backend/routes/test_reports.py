@@ -145,6 +145,31 @@ async def get_next_report_no(
     return {"report_no": f"{prefix}/{year}/{next_num:04d}"}
 
 
+# ==================== EQUIPMENT TEMPLATES ====================
+# NOTE: These routes MUST be defined BEFORE the /{report_id} route
+# to prevent FastAPI from matching "/templates/..." as a report_id
+
+from routes.equipment_templates import EQUIPMENT_TEMPLATES, get_equipment_template, get_all_equipment_types
+
+
+@router.get("/templates/all")
+async def get_all_templates(current_user: dict = Depends(require_auth)):
+    """Get all equipment templates."""
+    return {
+        "templates": EQUIPMENT_TEMPLATES,
+        "equipment_types": get_all_equipment_types()
+    }
+
+
+@router.get("/templates/{equipment_type}")
+async def get_template(equipment_type: str, current_user: dict = Depends(require_auth)):
+    """Get template for a specific equipment type."""
+    template = get_equipment_template(equipment_type)
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Template not found for equipment type: {equipment_type}")
+    return template
+
+
 @router.get("/{report_id}")
 async def get_test_report(
     report_id: str,
