@@ -62,6 +62,7 @@ class ServiceNumberedCanvas(BaseNumberedCanvas):
 def get_logo_image(org_settings, width=100):
     """Fetch and create logo image element."""
     try:
+        # First try local static paths
         local_paths = [
             '/app/backend/uploads/company_logo.png',
             '/app/backend/uploads/enerzia_logo_2025.png'
@@ -71,14 +72,27 @@ def get_logo_image(org_settings, width=100):
                 img = Image(local_path, width=width, height=width*0.35)
                 return img
         
+        # Get logo URL from org settings
         logo_url = org_settings.get('logo_url', '') if org_settings else ''
-        if logo_url and logo_url.startswith('http'):
-            response = requests.get(logo_url, timeout=5)
-            if response.status_code == 200:
-                img_data = io.BytesIO(response.content)
-                return Image(img_data, width=width, height=width*0.35)
+        
+        if logo_url:
+            # If it's a relative path like /uploads/logo.png, construct local path
+            if logo_url.startswith('/uploads/'):
+                local_logo_path = f'/app/backend{logo_url}'
+                if os.path.exists(local_logo_path):
+                    img = Image(local_logo_path, width=width, height=width*0.35)
+                    return img
+            
+            # If it's a full URL, fetch it
+            if logo_url.startswith('http'):
+                response = requests.get(logo_url, timeout=5)
+                if response.status_code == 200:
+                    img_data = io.BytesIO(response.content)
+                    return Image(img_data, width=width, height=width*0.35)
+                    
     except Exception as e:
         print(f"Error loading logo: {e}")
+    return None
     return None
 
 
