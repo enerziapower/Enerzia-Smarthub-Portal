@@ -445,8 +445,9 @@ def get_logo_image(logo_url, width=80):
     
     Tries in order:
     1. Local file paths (company_logo.png, enerzia_logo_2025.png)
-    2. URL starting with /api/uploads/
-    3. Full HTTP URL
+    2. Local file from /uploads/ relative path
+    3. URL starting with /api/uploads/
+    4. Full HTTP URL
     """
     from reportlab.platypus import Image
     
@@ -467,13 +468,22 @@ def get_logo_image(logo_url, width=80):
     # Then try URL-based loading
     if logo_url:
         try:
+            # Handle relative /uploads/ path (used in org settings)
+            if logo_url.startswith('/uploads/'):
+                local_logo_path = f'/app/backend{logo_url}'
+                if os.path.exists(local_logo_path):
+                    return Image(local_logo_path, width=width, height=width*0.35)
+            
+            # Handle /api/uploads/ path (served via API)
             if logo_url.startswith('/api/uploads/'):
-                full_url = f"https://workflow-nexus-11.preview.emergentagent.com{logo_url}"
-                response = requests.get(full_url, timeout=5)
-                if response.status_code == 200:
-                    img_data = io.BytesIO(response.content)
-                    return Image(img_data, width=width, height=width*0.35)
-            elif logo_url.startswith('http'):
+                # Extract the filename and try local path
+                filename = logo_url.replace('/api/uploads/', '')
+                local_logo_path = f'/app/backend/uploads/{filename}'
+                if os.path.exists(local_logo_path):
+                    return Image(local_logo_path, width=width, height=width*0.35)
+            
+            # Try full HTTP URL
+            if logo_url.startswith('http'):
                 response = requests.get(logo_url, timeout=5)
                 if response.status_code == 200:
                     img_data = io.BytesIO(response.content)
