@@ -877,10 +877,11 @@ const CreateTestReport = () => {
             className={`flex items-center gap-2 px-4 py-2.5 ${equipment.color} text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50`}
           >
             <Save size={18} />
-            {saving ? 'Saving...' : 'Save Report'}
+            {saving ? 'Saving...' : (isEdit ? 'Update Report' : 'Save Report')}
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 };
