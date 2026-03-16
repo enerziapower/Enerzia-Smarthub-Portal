@@ -315,9 +315,11 @@ const EQUIPMENT_FIELDS = {
 };
 
 const CreateTestReport = () => {
-  const { equipmentId } = useParams();
+  const { equipmentId, reportId } = useParams(); // Added reportId for editing
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  const isEdit = !!reportId; // Determine if we're editing an existing report
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
