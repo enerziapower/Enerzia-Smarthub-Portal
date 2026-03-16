@@ -528,9 +528,12 @@ async def get_email_html_template(
     logo_html = ""
     logo_url = email_template.get('company_logo_url') or (org_settings.get('logo_url') if org_settings else None)
     if logo_url:
-        base_url = "https://workflow-nexus-11.preview.emergentagent.com/api"
+        # For email, we need a full URL - try to construct from environment or use production URL
+        base_url = os.environ.get('APP_URL', 'https://smarthub.enerzia.com')
         if logo_url.startswith('/'):
-            logo_html = f'<img src="{base_url}{logo_url}" alt="{company_name}" style="max-height: 60px; margin-bottom: 16px;" />'
+            logo_html = f'<img src="{base_url}/api{logo_url}" alt="{company_name}" style="max-height: 60px; margin-bottom: 16px;" />'
+        elif logo_url.startswith('http'):
+            logo_html = f'<img src="{logo_url}" alt="{company_name}" style="max-height: 60px; margin-bottom: 16px;" />'
     
     # Custom message section
     custom_msg_html = ""
