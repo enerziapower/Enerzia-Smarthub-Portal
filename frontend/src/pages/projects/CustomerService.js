@@ -556,10 +556,7 @@ const CustomerService = () => {
                         <span className="text-sm font-semibold text-blue-600">{request.srn_no}</span>
                       </td>
                       <td className="py-3 px-4">
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{request.customer_name}</p>
-                          <p className="text-xs text-slate-500">{request.site_location}</p>
-                        </div>
+                        <p className="text-sm font-medium text-slate-900">{request.customer_name}</p>
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
@@ -581,13 +578,7 @@ const CustomerService = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="text-sm text-slate-700">{request.equipment_name || '-'}</span>
-                      </td>
-                      <td className="py-3 px-4">
                         <span className="text-sm text-slate-700">{request.reported_date}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-slate-700">{request.assigned_to || '-'}</span>
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
