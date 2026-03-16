@@ -477,10 +477,16 @@ const CreateTestReport = () => {
         created_by: user?.name || user?.email
       };
 
-      const response = await testReportsAPI.create(reportData);
-      
-      // Show success message
-      alert(`Report ${response.data.report_no} created successfully!`);
+      let response;
+      if (isEdit && reportId) {
+        // Update existing report
+        response = await testReportsAPI.update(reportId, reportData);
+        alert(`Report ${response.data.report_no || formData.report_no} updated successfully!`);
+      } else {
+        // Create new report
+        response = await testReportsAPI.create(reportData);
+        alert(`Report ${response.data.report_no} created successfully!`);
+      }
       
       navigate(`/projects/project-reports/equipment/${equipmentId}`);
     } catch (error) {
