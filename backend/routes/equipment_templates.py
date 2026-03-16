@@ -881,6 +881,47 @@ EQUIPMENT_TEMPLATES["voltmeter"] = VOLTMETER_TEMPLATE
 EQUIPMENT_TEMPLATES["ammeter"] = AMMETER_TEMPLATE
 
 
+# ==================== Battery Template ====================
+BATTERY_TEMPLATE = {
+    "equipment_type": "battery",
+    "title": "BATTERY TEST REPORT",
+    "report_type": "Battery Service Report",
+    "equipment_fields": [
+        {"name": "battery_bank_id", "label": "Battery Bank ID/Tag", "type": "text"},
+        {"name": "location", "label": "Location", "type": "text"},
+        {"name": "battery_type", "label": "Battery Type", "type": "select", "options": ["SMF", "Tubular", "Lithium-ion", "Lead Acid", "Gel"]},
+        {"name": "make", "label": "Make/Manufacturer", "type": "text"},
+        {"name": "model", "label": "Model", "type": "text"},
+        {"name": "capacity_ah", "label": "Capacity (AH)", "type": "text"},
+        {"name": "voltage", "label": "Voltage (V)", "type": "text"},
+        {"name": "no_of_cells", "label": "No. of Cells/Batteries", "type": "number"},
+        {"name": "installation_date", "label": "Installation Date", "type": "date"},
+        {"name": "last_service_date", "label": "Last Service Date", "type": "date"},
+    ],
+    "checklist": [
+        {"id": 1, "item": "Visual inspection of battery bank"},
+        {"id": 2, "item": "Cleaning of battery terminals and connectors"},
+        {"id": 3, "item": "Checking for corrosion/damage"},
+        {"id": 4, "item": "Checking electrolyte level (if applicable)"},
+        {"id": 5, "item": "Checking of battery voltage"},
+        {"id": 6, "item": "Checking of individual cell voltages"},
+        {"id": 7, "item": "Checking of specific gravity (if applicable)"},
+        {"id": 8, "item": "Temperature measurement"},
+        {"id": 9, "item": "Tightening of terminal connections"},
+        {"id": 10, "item": "Impedance/Internal resistance test"},
+        {"id": 11, "item": "Load test/Discharge test"},
+        {"id": 12, "item": "Checking of charging system"},
+    ],
+    "readings": {
+        "columns": ["Cell No.", "Voltage (V)", "Specific Gravity", "Temperature (°C)", "Impedance (mΩ)", "Remarks"],
+        "default_rows": 12
+    },
+    "notes": []
+}
+
+EQUIPMENT_TEMPLATES["battery"] = BATTERY_TEMPLATE
+
+
 # ==================== Generic/Other Template ====================
 OTHER_TEMPLATE = {
     "equipment_type": "other",
