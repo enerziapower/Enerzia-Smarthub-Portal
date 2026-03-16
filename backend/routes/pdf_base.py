@@ -449,8 +449,6 @@ def get_logo_image(logo_url, width=80):
     3. URL starting with /api/uploads/
     4. Full HTTP URL
     """
-    from reportlab.platypus import Image
-    
     # First try common local file paths
     local_paths = [
         '/app/backend/uploads/company_logo.png',
