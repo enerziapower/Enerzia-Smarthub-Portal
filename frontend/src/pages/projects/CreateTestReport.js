@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, FileText, Plus, Trash2, Upload, Camera, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Save, FileText, Plus, Trash2, Upload, Camera, CheckCircle, Loader2 } from 'lucide-react';
 import { EQUIPMENT_TYPES } from './EquipmentTestReports';
 import { testReportsAPI, projectsAPI, settingsAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
