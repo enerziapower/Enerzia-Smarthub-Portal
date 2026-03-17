@@ -9,6 +9,498 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
+// Raise Request Modal Component - Full Form
+const RaiseRequestModal = ({ isOpen, onClose, project, onSuccess }) => {
+  const [requestType, setRequestType] = useState('material');
+  const [submitting, setSubmitting] = useState(false);
+  
+  const initialRequestData = {
+    items: [{ description: '', quantity: 1, unit: 'Nos', estimated_cost: 0 }],
+    service_type: 'Subcontractor',
+    description: '',
+    estimated_cost: 0,
+    payment_type: 'Advance',
+    payee: '',
+    amount: 0,
+    due_date: '',
+    bank_details: '',
+    required_by: '',
+    priority: 'medium',
+    notes: ''
+  };
+  const [requestData, setRequestData] = useState(initialRequestData);
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setRequestData(initialRequestData);
+      setRequestType('material');
+    }
+  }, [isOpen]);
+
+  // Material item handlers
+  const addMaterialItem = () => {
+    setRequestData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, unit: 'Nos', estimated_cost: 0 }]
+    }));
+  };
+
+  const updateMaterialItem = (index, field, value) => {
+    setRequestData(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const removeMaterialItem = (index) => {
+    if (requestData.items.length > 1) {
+      setRequestData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Submit handlers
+  const handleSubmitMaterialRequest = async () => {
+    if (!project) return;
+    if (!requestData.items.some(item => item.description)) {
+      toast.error('Please add at least one item');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/materials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: project.id,
+          order_no: project.pid_no,
+          project_name: project.project_name,
+          customer_name: project.client,
+          items: requestData.items.filter(item => item.description),
+          required_by: requestData.required_by,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Material Request ${data.request.request_number} created`);
+        onClose();
+        onSuccess?.();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitVendorRequest = async () => {
+    if (!project) return;
+    if (!requestData.description) {
+      toast.error('Please enter a description');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/vendors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: project.id,
+          order_no: project.pid_no,
+          project_name: project.project_name,
+          customer_name: project.client,
+          service_type: requestData.service_type,
+          description: requestData.description,
+          estimated_cost: requestData.estimated_cost,
+          required_by: requestData.required_by,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Vendor Request ${data.request.request_number} created`);
+        onClose();
+        onSuccess?.();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitPaymentRequest = async () => {
+    if (!project) return;
+    if (!requestData.payee || !requestData.amount) {
+      toast.error('Please enter payee and amount');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          order_id: project.id,
+          order_no: project.pid_no,
+          project_name: project.project_name,
+          customer_name: project.client,
+          payment_type: requestData.payment_type,
+          payee: requestData.payee,
+          amount: requestData.amount,
+          due_date: requestData.due_date,
+          bank_details: requestData.bank_details,
+          priority: requestData.priority,
+          notes: requestData.notes
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Payment Request ${data.request.request_number} created`);
+        onClose();
+        onSuccess?.();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to create request');
+      }
+    } catch (error) {
+      toast.error('Error creating request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (requestType === 'material') handleSubmitMaterialRequest();
+    else if (requestType === 'vendor') handleSubmitVendorRequest();
+    else handleSubmitPaymentRequest();
+  };
+
+  if (!isOpen || !project) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="raise-request-modal">
+      <div className="bg-white rounded-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-800">Raise Request</h3>
+            <p className="text-sm text-slate-500">
+              {project.pid_no} • <span className="text-slate-600">{project.client || project.project_name}</span>
+            </p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-lg" data-testid="close-modal-btn">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Request Type Tabs */}
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
+            <button
+              onClick={() => setRequestType('material')}
+              data-testid="material-tab"
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                requestType === 'material' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              <Package size={16} /> Material
+            </button>
+            <button
+              onClick={() => setRequestType('vendor')}
+              data-testid="vendor-tab"
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                requestType === 'vendor' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              <Truck size={16} /> Vendor
+            </button>
+            <button
+              onClick={() => setRequestType('payment')}
+              data-testid="payment-tab"
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                requestType === 'payment' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              <CreditCard size={16} /> Payment
+            </button>
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {/* Material Request Form */}
+          {requestType === 'material' && (
+            <>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-700">Items Required</label>
+                  <button
+                    onClick={addMaterialItem}
+                    className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                    data-testid="add-material-item-btn"
+                  >
+                    <Plus size={14} /> Add Item
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {requestData.items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={item.description}
+                        onChange={(e) => updateMaterialItem(index, 'description', e.target.value)}
+                        className="col-span-5 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        data-testid={`material-desc-${index}`}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Qty"
+                        value={item.quantity}
+                        onChange={(e) => updateMaterialItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className="col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        data-testid={`material-qty-${index}`}
+                      />
+                      <select
+                        value={item.unit}
+                        onChange={(e) => updateMaterialItem(index, 'unit', e.target.value)}
+                        className="col-span-2 px-2 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                        data-testid={`material-unit-${index}`}
+                      >
+                        <option>Nos</option>
+                        <option>Kg</option>
+                        <option>Mtr</option>
+                        <option>Set</option>
+                        <option>Lot</option>
+                      </select>
+                      <input
+                        type="number"
+                        placeholder="Est. Cost"
+                        value={item.estimated_cost}
+                        onChange={(e) => updateMaterialItem(index, 'estimated_cost', parseFloat(e.target.value) || 0)}
+                        className="col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        data-testid={`material-cost-${index}`}
+                      />
+                      <button
+                        onClick={() => removeMaterialItem(index)}
+                        className="col-span-1 p-2 text-red-500 hover:bg-red-50 rounded"
+                        disabled={requestData.items.length === 1}
+                        data-testid={`remove-material-item-${index}`}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Vendor Request Form */}
+          {requestType === 'vendor' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Service Type</label>
+                <select
+                  value={requestData.service_type}
+                  onChange={(e) => setRequestData(prev => ({ ...prev, service_type: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                  data-testid="vendor-service-type"
+                >
+                  <option>Subcontractor</option>
+                  <option>Equipment Rental</option>
+                  <option>Transportation</option>
+                  <option>Testing Services</option>
+                  <option>Consulting</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <textarea
+                  value={requestData.description}
+                  onChange={(e) => setRequestData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Describe the vendor service required..."
+                  data-testid="vendor-description"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Estimated Cost (₹)</label>
+                <input
+                  type="number"
+                  value={requestData.estimated_cost}
+                  onChange={(e) => setRequestData(prev => ({ ...prev, estimated_cost: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  data-testid="vendor-cost"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Payment Request Form */}
+          {requestType === 'payment' && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment Type</label>
+                  <select
+                    value={requestData.payment_type}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, payment_type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                    data-testid="payment-type"
+                  >
+                    <option>Advance</option>
+                    <option>Milestone</option>
+                    <option>Final</option>
+                    <option>Reimbursement</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={requestData.amount}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    data-testid="payment-amount"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Payee Name</label>
+                <input
+                  type="text"
+                  value={requestData.payee}
+                  onChange={(e) => setRequestData(prev => ({ ...prev, payee: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Vendor/Supplier name"
+                  data-testid="payment-payee"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={requestData.due_date}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, due_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    data-testid="payment-due-date"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Bank Details</label>
+                  <input
+                    type="text"
+                    value={requestData.bank_details}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, bank_details: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    placeholder="Account/IFSC"
+                    data-testid="payment-bank"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Common Fields */}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Required By</label>
+              <input
+                type="date"
+                value={requestData.required_by}
+                onChange={(e) => setRequestData(prev => ({ ...prev, required_by: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                data-testid="required-by"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
+              <select
+                value={requestData.priority}
+                onChange={(e) => setRequestData(prev => ({ ...prev, priority: e.target.value }))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                data-testid="priority"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+            <textarea
+              value={requestData.notes}
+              onChange={(e) => setRequestData(prev => ({ ...prev, notes: e.target.value }))}
+              rows={2}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              placeholder="Additional notes..."
+              data-testid="request-notes"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+            data-testid="cancel-request-btn"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
+            data-testid="submit-request-btn"
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            Submit Request
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
