@@ -19,6 +19,8 @@ const Projects = () => {
   const [activeView, setActiveView] = useState('live'); // 'live' or 'completed'
   const [lastUpdated, setLastUpdated] = useState(null);
   const [projectRequests, setProjectRequests] = useState({}); // Cache for requests
+  const [showRaiseRequestModal, setShowRaiseRequestModal] = useState(false);
+  const [raiseRequestProject, setRaiseRequestProject] = useState(null);
   const fileInputRef = useRef(null);
   const [filters, setFilters] = useState({
     status: '',
