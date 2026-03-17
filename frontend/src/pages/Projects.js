@@ -277,58 +277,16 @@ const Projects = () => {
         project={selectedProject}
       />
 
-      {/* Raise Request Modal */}
-      {showRaiseRequestModal && raiseRequestProject && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowRaiseRequestModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Raise Request</h3>
-            <p className="text-sm text-slate-600 mb-4">
-              Project: <span className="font-semibold">{raiseRequestProject.pid_no}</span>
-              <br />
-              <span className="text-slate-500">{raiseRequestProject.client || raiseRequestProject.project_name}</span>
-            </p>
-            <p className="text-xs text-slate-500 mb-4">Select the type of request you want to raise for this project:</p>
-            <div className="space-y-2">
-              <a
-                href={`/business-hub/projects?action=material&project=${raiseRequestProject.id}`}
-                className="flex items-center gap-3 w-full p-3 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-all"
-              >
-                <Package size={20} className="text-amber-600" />
-                <div className="text-left">
-                  <p className="font-medium text-amber-800">Material Request</p>
-                  <p className="text-xs text-amber-600">Request materials for this project</p>
-                </div>
-              </a>
-              <a
-                href={`/business-hub/projects?action=vendor&project=${raiseRequestProject.id}`}
-                className="flex items-center gap-3 w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
-              >
-                <Truck size={20} className="text-blue-600" />
-                <div className="text-left">
-                  <p className="font-medium text-blue-800">Vendor Request</p>
-                  <p className="text-xs text-blue-600">Request vendor services</p>
-                </div>
-              </a>
-              <a
-                href={`/business-hub/projects?action=payment&project=${raiseRequestProject.id}`}
-                className="flex items-center gap-3 w-full p-3 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-all"
-              >
-                <CreditCard size={20} className="text-emerald-600" />
-                <div className="text-left">
-                  <p className="font-medium text-emerald-800">Payment Request</p>
-                  <p className="text-xs text-emerald-600">Request payment/expense approval</p>
-                </div>
-              </a>
-            </div>
-            <button
-              onClick={() => setShowRaiseRequestModal(false)}
-              className="w-full mt-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Raise Request Modal - Full Form */}
+      <RaiseRequestModal
+        isOpen={showRaiseRequestModal}
+        onClose={() => {
+          setShowRaiseRequestModal(false);
+          setRaiseRequestProject(null);
+        }}
+        project={raiseRequestProject}
+        onSuccess={loadProjects}
+      />
 
       {/* Header with Actions */}
       <div className="flex items-center justify-between">
