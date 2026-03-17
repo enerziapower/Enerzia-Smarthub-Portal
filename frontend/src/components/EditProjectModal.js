@@ -493,11 +493,11 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Actual Expenses (₹)</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">This Week Billing (₹)</label>
                   <input
                     type="number"
-                    name="actual_expenses"
-                    value={formData.actual_expenses}
+                    name="this_week_billing"
+                    value={formData.this_week_billing}
                     onChange={handleChange}
                     min="0"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
@@ -505,27 +505,22 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                 </div>
               </div>
               
-              {/* Financial Summary Cards */}
+              {/* Financial Summary Cards - Projects Department View (No profit info) */}
               <div className="grid grid-cols-3 gap-4 mt-4">
                 <div className="bg-white rounded-lg p-3 border border-emerald-200">
-                  <p className="text-xs text-slate-500">This Week Billing</p>
-                  <input
-                    type="number"
-                    name="this_week_billing"
-                    value={formData.this_week_billing}
-                    onChange={handleChange}
-                    min="0"
-                    className="w-full text-lg font-bold text-emerald-700 bg-transparent border-none p-0 focus:ring-0"
-                  />
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-emerald-200">
-                  <p className="text-xs text-slate-500">Balance</p>
+                  <p className="text-xs text-slate-500">Balance to Invoice</p>
                   <p className="text-lg font-bold text-blue-700">
                     {formatCurrency((formData.po_amount || 0) - (formData.invoiced_amount || 0))}
                   </p>
                 </div>
+                <div className="bg-white rounded-lg p-3 border border-emerald-200">
+                  <p className="text-xs text-slate-500">Budget</p>
+                  <p className="text-lg font-bold text-slate-700">
+                    {formatCurrency(formData.budget || 0)}
+                  </p>
+                </div>
                 <div className={`rounded-lg p-3 border ${savings >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <p className="text-xs text-slate-500">PID Savings</p>
+                  <p className="text-xs text-slate-500">Available Budget</p>
                   <p className={`text-lg font-bold ${savings >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                     {formatCurrency(savings)}
                   </p>
