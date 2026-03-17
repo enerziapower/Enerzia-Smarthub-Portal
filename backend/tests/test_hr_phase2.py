@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://workflow-nexus-11.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-business-hub-3.preview.emergentagent.com')
 
 # Test data
 TEST_EMPLOYEE_ID = "EMP001"  # Existing employee
