@@ -2,6 +2,37 @@
 
 ## Latest Updates
 
+### Phase 6.7: Raise Request Modal & Financials View Update ✅ COMPLETE (Mar 17, 2026)
+**User Request:** 
+1. Add a "Raise Request" button to each project card on Project & Services page
+2. Hide profit-related information from Projects Department users
+
+**Implementation Details:**
+
+**1. Raise Request Modal (Projects.js):**
+- New `RaiseRequestModal` component with full request creation form
+- **Material Tab:** Items list with Description, Qty, Unit, Estimated Cost + "Add Item" button
+- **Vendor Tab:** Service Type dropdown, Description textarea, Estimated Cost
+- **Payment Tab:** Payment Type, Amount, Payee Name, Due Date, Bank Details
+- **Common Fields:** Required By date, Priority dropdown, Notes textarea
+- Submit functionality calls existing `/api/project-requests/*` endpoints
+- Button placed next to Edit/Delete on each project card
+
+**2. EditProjectModal Financials Update:**
+- **REMOVED:** "Actual Expenses" input field
+- **REMOVED:** "PID Savings" summary card
+- **ADDED:** "This Week Billing" input field (moved from summary card)
+- **ADDED:** "Available Budget" summary card (Budget - Actual Expenses)
+- Summary cards now show: Balance to Invoice, Budget, Available Budget
+
+**Data Segregation:**
+- Projects Department users can no longer see profit metrics
+- Available Budget shown instead of PID Savings for expense tracking
+
+**Test Results:** 100% Frontend - See `/app/test_reports/iteration_101.json`
+
+---
+
 ### Phase 6.6: Project List UI Redesign ✅ COMPLETE (Mar 15, 2026)
 **User Request:** Rearrange Project & Services list to show Work Items, Material Requests, etc.
 
