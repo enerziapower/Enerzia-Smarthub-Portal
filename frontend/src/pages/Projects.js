@@ -592,14 +592,16 @@ const Projects = () => {
                 </div>
               </div>
 
-              {/* Footer - Budget & Savings */}
+              {/* Footer - Budget Info */}
               <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-4">
                   <span className="text-slate-500">
                     Budget: <span className="font-mono font-medium text-blue-600">₹{(project.budget || 0).toLocaleString('en-IN')}</span>
                   </span>
-                  <span className={`${(project.pid_savings || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    Savings: <span className="font-mono font-semibold">₹{(project.pid_savings || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-slate-500">
+                    Available: <span className={`font-mono font-semibold ${((project.budget || 0) - (project.actual_expenses || 0)) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      ₹{((project.budget || 0) - (project.actual_expenses || 0)).toLocaleString('en-IN')}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
