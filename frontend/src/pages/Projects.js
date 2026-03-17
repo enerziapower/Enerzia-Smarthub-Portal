@@ -468,6 +468,18 @@ const Projects = () => {
                 </div>
                 <div className="flex gap-1.5">
                   <button
+                    onClick={() => {
+                      setRaiseRequestProject(project);
+                      setShowRaiseRequestModal(true);
+                    }}
+                    data-testid={`raise-request-btn-${index}`}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-100 transition-all"
+                    title="Raise Request"
+                  >
+                    <Plus size={14} />
+                    Request
+                  </button>
+                  <button
                     onClick={() => handleEditProject(project)}
                     data-testid={`edit-project-btn-${index}`}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium hover:bg-slate-100 transition-all"
