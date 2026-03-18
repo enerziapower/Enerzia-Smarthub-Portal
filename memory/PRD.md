@@ -33,6 +33,28 @@
 
 ---
 
+### Phase 6.7b: Sidebar Cleanup & Data Fixes ✅ COMPLETE (Mar 18, 2026)
+**User Request:** Clean up redundant menu items and fix data integrity issues
+
+**1. Sidebar Cleanup (Layout.js):**
+- Removed "Project Management" link from Projects Department sidebar
+- This functionality is now consolidated in Business Hub → Project Management
+- Updated comment to note the move
+
+**2. Data Cleanup - Equipment Type Naming:**
+- Created script: `/app/backend/scripts/fix_equipment_type_naming.py`
+- Fixed 5 documents with inconsistent naming:
+  - `earth_pit` (2) → `earth-pit`
+  - `energy_meter` (3) → `energy-meter`
+- Standardized to hyphen-based naming convention
+
+**3. Data Cleanup - Null PID Numbers:**
+- Created script: `/app/backend/scripts/fix_null_pid_no.py`
+- Fixed 1 project with missing pid_no:
+  - Generated new PID: `CID-25-26-0001` for CS category project
+
+---
+
 ### Phase 6.6: Project List UI Redesign ✅ COMPLETE (Mar 15, 2026)
 **User Request:** Rearrange Project & Services list to show Work Items, Material Requests, etc.
 
