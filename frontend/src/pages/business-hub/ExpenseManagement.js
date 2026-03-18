@@ -360,6 +360,7 @@ const ExpenseManagement = () => {
       description: '',
       amount: '',
       date: new Date().toISOString().split('T')[0],
+      vendor_id: '',
       vendor: '',
       reference_no: '',
       payment_mode: 'bank',
