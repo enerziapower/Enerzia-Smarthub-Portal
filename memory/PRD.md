@@ -55,6 +55,39 @@
 
 ---
 
+### Phase 6.8: Expense Management & Profit Calculation Refactor ✅ COMPLETE (Mar 18, 2026)
+**User Request:** Clarify expense vs request workflow and update profit calculation
+
+**Business Logic Clarification:**
+- **Requests** (Material, Vendor, Payment) = Workflow/approval items ONLY
+- **Expenses** (from Expense Management) = Actual costs incurred
+- **Profit** = Order Amount - Actual Expenses (from Expense Management only)
+- **Budget** = Allocated in Order Management, READ-ONLY in P&S
+
+**1. Enhanced Expense Management (ExpenseManagement.js):**
+- Added "Add Expense" button with full form modal
+- PID/Project selection dropdown (fetches from `/api/order-lifecycle/orders`)
+- Budget info display when PID selected (Order Value, Execution Budget, Available Budget)
+- All expense fields: Category, Amount, Description, Vendor, Bill/Receipt No., Date, Payment Mode, Remarks
+- File upload for bills/receipts
+- Approval workflow (Submit → Approve/Reject)
+- Stats: Total Expenses, Pending, Approved, Total Amount, Approved Amount
+
+**2. Updated Finance Analytics (FinanceAnalytics.js):**
+- Profit now calculated from approved expenses in Expense Management ONLY
+- Clear note: "Profit is calculated from approved expenses in Expense Management only. Material, Vendor, and Payment Requests are workflow items and not counted as expenses."
+- New "Expense Breakdown" tab showing expenses by category
+- Stats: Total Revenue, Actual Expenses (from Expense Management), Net Profit, Total Budget
+
+**3. Read-Only Budget in P&S (EditProjectModal.js):**
+- Budget field is now read-only for projects originating from Business Hub
+- Label shows "(Set in Order Management)" for Business Hub projects
+- Visual indicator: gray background for read-only field
+
+**Test Results:** 100% Frontend - See `/app/test_reports/iteration_102.json`
+
+---
+
 ### Phase 6.6: Project List UI Redesign ✅ COMPLETE (Mar 15, 2026)
 **User Request:** Rearrange Project & Services list to show Work Items, Material Requests, etc.
 
