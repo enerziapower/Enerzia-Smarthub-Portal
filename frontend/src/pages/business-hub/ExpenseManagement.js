@@ -684,14 +684,34 @@ const ExpenseManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Vendor / Supplier</label>
-                  <input
-                    type="text"
-                    value={formData.vendor}
-                    onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                    placeholder="Vendor name"
-                    data-testid="vendor-input"
-                  />
+                  <select
+                    value={formData.vendor_id}
+                    onChange={(e) => {
+                      const vendor = vendors.find(v => v.id === e.target.value);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        vendor_id: e.target.value,
+                        vendor: vendor?.name || ''
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                    data-testid="vendor-select"
+                  >
+                    <option value="">-- Select Vendor --</option>
+                    {vendors.map(vendor => (
+                      <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                    ))}
+                  </select>
+                  {!formData.vendor_id && (
+                    <input
+                      type="text"
+                      value={formData.vendor}
+                      onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mt-2"
+                      placeholder="Or enter vendor name manually"
+                      data-testid="vendor-input"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Bill / Receipt No.</label>
