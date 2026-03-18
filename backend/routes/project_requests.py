@@ -1368,9 +1368,9 @@ async def update_request_status(request_id: str, data: RequestStatusUpdate):
                 "amount": request.get("amount", 0),
                 "date": now.strftime("%Y-%m-%d"),
                 "vendor": request.get("payee", ""),
-                "reference_no": request.get("request_number"),
+                "reference_no": request.get("request_no"),
                 "payment_mode": "bank",
-                "remarks": f"Auto-created from Payment Request {request.get('request_number')}",
+                "remarks": f"Auto-created from Payment Request {request.get('request_no')}",
                 "linked_payment_request": request_id,
                 "pending_bill": True,  # Flag: Bill needs to be uploaded
                 "approval_status": "approved",  # Auto-approved since payment was approved
