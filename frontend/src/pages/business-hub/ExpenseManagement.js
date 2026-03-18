@@ -154,10 +154,28 @@ const ExpenseManagement = () => {
     }
   }, []);
 
+  // Fetch vendors from Vendor Management
+  const fetchVendors = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/settings/vendors`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setVendors(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchExpenses();
     fetchProjects();
-  }, [fetchExpenses, fetchProjects]);
+    fetchVendors();
+  }, [fetchExpenses, fetchProjects, fetchVendors]);
 
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = !searchTerm || 
