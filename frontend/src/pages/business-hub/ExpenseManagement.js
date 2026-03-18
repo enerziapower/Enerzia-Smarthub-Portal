@@ -113,32 +113,24 @@ const ExpenseManagement = () => {
   const fetchProjects = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      // Fetch orders that have been accepted (have projects)
-      const response = await fetch(`${API_URL}/api/sales-orders?status=accepted&limit=500`, {
+      
+      // Fetch orders from order lifecycle API
+      const response = await fetch(`${API_URL}/api/order-lifecycle/orders?limit=500`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
-        // Also fetch from order lifecycle for budget info
-        const lifecycleRes = await fetch(`${API_URL}/api/order-lifecycle/all?limit=500`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const orders = data.orders || data || [];
         
-        let lifecycleMap = {};
-        if (lifecycleRes.ok) {
-          const lifecycleData = await lifecycleRes.json();
-          (lifecycleData.orders || []).forEach(o => {
-            lifecycleMap[o.sales_order_id] = o;
-          });
-        }
+        // Filter to only accepted orders (those with projects)
+        const acceptedOrders = orders.filter(o => o.status === 'accepted' || o.project_id);
         
-        // Combine order data with lifecycle budget info
-        const ordersWithBudget = (data.orders || data || []).map(order => {
-          const lifecycle = lifecycleMap[order.id];
+        // Enrich with budget info
+        const ordersWithBudget = acceptedOrders.map(order => {
           let executionBudget = 0;
-          if (lifecycle?.execution_budget) {
-            const budget = lifecycle.execution_budget;
+          if (order.execution_budget) {
+            const budget = order.execution_budget;
             if (budget.type === 'percentage') {
               executionBudget = (order.total_amount || 0) * (budget.value / 100);
             } else {
@@ -147,8 +139,7 @@ const ExpenseManagement = () => {
           }
           return {
             ...order,
-            execution_budget: executionBudget,
-            lifecycle
+            execution_budget: executionBudget
           };
         });
         
