@@ -109,12 +109,53 @@
 - **Removed:** Purchase Orders tab, GRN tab
 - **Kept:** Material Requests tab, Vendor Requests tab
 - Added delivery tracking fields: Vendor, Expected Delivery, Tracking Info
-- Status workflow: Pending → Approved → Ordered (in Zoho) → Dispatched → Delivered → Completed
-- Vendor dropdown from Vendor Management for assignment
+- Status workflow: Pending → Approved → Ordered (in Zoho) → Dispatched → Delivered
 
 **Vendor Management:**
 - Kept in Business Hub sidebar
 - Used by: Purchase Management (vendor assignment), Expense Management (vendor selection)
+
+---
+
+### Phase 6.10: PID-Centric Purchase Management & Auto-Expense ✅ COMPLETE (Mar 18, 2026)
+**User Request:** 
+1. Create consolidated PID-centric view (like P&S) showing all data per project
+2. Auto-create expense when payment is approved
+3. Show budget warnings
+4. Track missing bills
+
+**Implementation:**
+
+**1. PID-Centric Purchase Management (Complete Redesign):**
+- Card-based layout showing each PID with:
+  - **Column 1 - Financials:** PO Amount, Budget, Expenses, Available Budget
+  - **Column 2 - Requests:** Material, Vendor, Payment counts with pending indicators
+  - **Column 3 - Expenses & Profit:** Total Expenses, Entries count, Profit %
+- Budget warnings: "No Budget", "Over Budget" badges
+- Click "View Details" → Modal with all requests/expenses for that PID
+
+**2. Auto-Create Expense on Payment Approval:**
+- When payment request is approved → Expense auto-created
+- Expense linked to payment request (`linked_payment_request`)
+- `pending_bill: true` flag for bills to be uploaded later
+- Category mapped from payment type
+
+**3. Budget Warnings:**
+- ⚠️ "No Budget" - when PID has no budget allocated
+- ⚠️ "Over Budget" - when expenses exceed budget
+- Yellow warning bar in detail modal with guidance
+
+**4. Bills Missing Tracking:**
+- Stats card shows total bills missing count
+- Per-PID count of expenses without bills
+- Auto-created expenses from payments marked as "pending_bill"
+
+**New API Endpoints:**
+- `GET /api/project-requests/consolidated/by-pid` - All PIDs with aggregated data
+- `GET /api/project-requests/consolidated/pid/{order_id}` - Full details for single PID
+
+**Updated Backend:**
+- `PUT /api/project-requests/{request_id}/status` - Now auto-creates expense on payment approval
 
 ---
 
