@@ -2,10 +2,12 @@
  * Purchase Management - Business Hub
  * 
  * Handles:
- * - Material Requests from Project Management
- * - Vendor Requests from Project Management
- * - Purchase Orders
- * - Goods Received Notes (GRN)
+ * - Material Requests from P&S (Raise Request)
+ * - Vendor Requests from P&S (Raise Request)
+ * - Follow-up status and delivery tracking
+ * 
+ * Note: Purchase Orders are managed in Zoho Books
+ * Note: GRN removed - not needed for current workflow
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
