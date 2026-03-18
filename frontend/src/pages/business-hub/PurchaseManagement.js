@@ -550,7 +550,7 @@ const PurchaseManagement = () => {
           <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {filteredPids.map(pid => renderPidCard(pid))}
         </div>
       )}
