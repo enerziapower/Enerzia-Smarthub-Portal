@@ -89,8 +89,8 @@ const FinanceAnalytics = () => {
       let totalExpenses = 0;
       let totalBudget = 0;
       
-      // Also fetch sales orders for matching
-      const ordersRes = await fetch(`${API_URL}/api/sales-orders?limit=500`, {
+      // Also fetch orders for matching
+      const ordersRes = await fetch(`${API_URL}/api/order-lifecycle/orders?limit=500`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
