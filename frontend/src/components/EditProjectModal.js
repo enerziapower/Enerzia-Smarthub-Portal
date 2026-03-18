@@ -482,14 +482,19 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Budget (₹)</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Budget (₹)
+                    {isFromBusinessHub && <span className="text-xs text-amber-600 ml-1">(Set in Order Management)</span>}
+                  </label>
                   <input
                     type="number"
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    readOnly={isFromBusinessHub}
+                    className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm ${isFromBusinessHub ? 'bg-slate-100 cursor-not-allowed' : ''}`}
+                    title={isFromBusinessHub ? 'Budget is managed in Order Management' : ''}
                   />
                 </div>
                 <div>
