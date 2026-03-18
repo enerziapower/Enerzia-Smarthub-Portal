@@ -88,6 +88,36 @@
 
 ---
 
+### Phase 6.9: Module Cleanup & Vendor Integration ✅ COMPLETE (Mar 18, 2026)
+**User Request:** 
+1. Connect Vendor Management to Expense Management
+2. Remove GRN Management (using Zoho Books)
+3. Simplify Purchase Management (no PO, only request tracking)
+
+**Changes Made:**
+
+**1. Expense Management - Vendor Dropdown:**
+- Added vendor dropdown that pulls from Vendor Management (`/api/settings/vendors`)
+- Option to manually enter vendor name if not in list
+- Connected Expense Management ↔ Vendor Management
+
+**2. GRN Management Removed:**
+- Removed from Layout sidebar
+- Reason: Using Zoho Books for PO and GRN workflow
+
+**3. Purchase Management Simplified:**
+- **Removed:** Purchase Orders tab, GRN tab
+- **Kept:** Material Requests tab, Vendor Requests tab
+- Added delivery tracking fields: Vendor, Expected Delivery, Tracking Info
+- Status workflow: Pending → Approved → Ordered (in Zoho) → Dispatched → Delivered → Completed
+- Vendor dropdown from Vendor Management for assignment
+
+**Vendor Management:**
+- Kept in Business Hub sidebar
+- Used by: Purchase Management (vendor assignment), Expense Management (vendor selection)
+
+---
+
 ### Phase 6.6: Project List UI Redesign ✅ COMPLETE (Mar 15, 2026)
 **User Request:** Rearrange Project & Services list to show Work Items, Material Requests, etc.
 
