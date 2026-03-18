@@ -1047,8 +1047,14 @@ async def get_request_details(request_id: str):
 
 @router.put("/{request_id}/status")
 async def update_request_status(request_id: str, data: RequestStatusUpdate):
-    """Update request status (used by Purchase/Payment Management)"""
-    valid_statuses = ["pending", "approved", "rejected", "in_progress", "completed", "cancelled"]
+    """Update request status (used by Purchase/Payment Management)
+    
+    When a PAYMENT request is APPROVED:
+    - Auto-creates an expense entry in Expense Management
+    - Links expense to the payment request
+    - Marks expense as "pending_bill" (bills to be uploaded later)
+    """
+    valid_statuses = ["pending", "approved", "rejected", "in_progress", "ordered", "dispatched", "delivered", "completed", "cancelled"]
     if data.status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     
@@ -1066,20 +1072,93 @@ async def update_request_status(request_id: str, data: RequestStatusUpdate):
         "comments": data.comments
     }
     
+    update_data = {
+        "status": data.status,
+        "updated_at": now
+    }
+    
+    # Add tracking info if provided
+    if hasattr(data, 'vendor_id') and data.vendor_id:
+        update_data["vendor_id"] = data.vendor_id
+    if hasattr(data, 'vendor_name') and data.vendor_name:
+        update_data["vendor_name"] = data.vendor_name
+    if hasattr(data, 'expected_delivery') and data.expected_delivery:
+        update_data["expected_delivery"] = data.expected_delivery
+    if hasattr(data, 'tracking_info') and data.tracking_info:
+        update_data["tracking_info"] = data.tracking_info
+    if hasattr(data, 'remarks') and data.remarks:
+        update_data["remarks"] = data.remarks
+    
     await db.project_requests.update_one(
         {"id": request_id},
         {
-            "$set": {
-                "status": data.status,
-                "updated_at": now
-            },
+            "$set": update_data,
             "$push": {
                 "status_history": status_entry
             }
         }
     )
     
-    return {"message": f"Status updated to {data.status}", "status": data.status}
+    response_data = {"message": f"Status updated to {data.status}", "status": data.status}
+    
+    # AUTO-CREATE EXPENSE when PAYMENT request is APPROVED
+    if request.get("request_type") == "payment" and data.status == "approved":
+        try:
+            # Map payment type to expense category
+            payment_type = request.get("payment_type", "").lower()
+            category_map = {
+                "advance": "misc",
+                "milestone": "misc",
+                "final": "misc",
+                "vendor payment": "subcontractor",
+                "material": "material_purchase",
+                "labor": "labor",
+                "subcontractor": "subcontractor",
+                "transport": "transport",
+                "equipment": "equipment_rental"
+            }
+            expense_category = category_map.get(payment_type, "misc")
+            
+            # Generate expense number
+            count = await db.expenses.count_documents({})
+            expense_no = f"EXP-{now.strftime('%y%m')}-{count + 1:04d}"
+            
+            # Create expense entry
+            expense = {
+                "id": str(uuid.uuid4()),
+                "expense_no": expense_no,
+                "order_id": request.get("order_id"),
+                "order_no": request.get("order_no"),
+                "customer_name": request.get("customer_name"),
+                "project_name": request.get("project_name"),
+                "category": expense_category,
+                "description": f"Payment: {request.get('payment_type', 'N/A')} - {request.get('title', request.get('payee', 'N/A'))}",
+                "amount": request.get("amount", 0),
+                "date": now.strftime("%Y-%m-%d"),
+                "vendor": request.get("payee", ""),
+                "reference_no": request.get("request_number"),
+                "payment_mode": "bank",
+                "remarks": f"Auto-created from Payment Request {request.get('request_number')}",
+                "linked_payment_request": request_id,
+                "pending_bill": True,  # Flag: Bill needs to be uploaded
+                "approval_status": "approved",  # Auto-approved since payment was approved
+                "approved_by": data.updated_by or "system",
+                "approved_at": now.isoformat(),
+                "created_at": now,
+                "created_by": data.updated_by or "system"
+            }
+            
+            await db.expenses.insert_one(expense)
+            
+            response_data["expense_created"] = True
+            response_data["expense_no"] = expense_no
+            response_data["message"] = f"Payment approved & Expense {expense_no} auto-created (bill pending)"
+            
+        except Exception as e:
+            # Don't fail the status update if expense creation fails
+            response_data["expense_error"] = str(e)
+    
+    return response_data
 
 
 @router.delete("/{request_id}")
