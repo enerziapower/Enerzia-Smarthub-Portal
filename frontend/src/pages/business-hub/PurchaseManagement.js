@@ -6,7 +6,7 @@
  * - Vendor Requests from P&S (Raise Request)
  * - Follow-up status and delivery tracking
  * 
- * Note: Purchase Orders are managed in Zoho Books
+ * Note: Purchase Orders are managed in Zoho Books (external)
  * Note: GRN removed - not needed for current workflow
  */
 
@@ -14,8 +14,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Package, Search, RefreshCw, Eye, CheckCircle, X,
   Clock, AlertTriangle, Truck, Building2, DollarSign,
-  ShoppingCart, ClipboardList, FileCheck, Check, XCircle,
-  ExternalLink, Calendar, FileText, Plus, Loader2, Send
+  ShoppingCart, ClipboardList, Check, XCircle,
+  Calendar, Loader2, MapPin, Phone, User, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,6 +26,9 @@ const STATUS_CONFIG = {
   approved: { label: 'Approved', color: 'bg-green-100 text-green-700', icon: CheckCircle },
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },
   in_progress: { label: 'In Progress', color: 'bg-blue-100 text-blue-700', icon: RefreshCw },
+  ordered: { label: 'Ordered', color: 'bg-violet-100 text-violet-700', icon: ShoppingCart },
+  dispatched: { label: 'Dispatched', color: 'bg-cyan-100 text-cyan-700', icon: Truck },
+  delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', icon: Check },
   completed: { label: 'Completed', color: 'bg-emerald-100 text-emerald-700', icon: Check },
   cancelled: { label: 'Cancelled', color: 'bg-slate-100 text-slate-700', icon: X }
 };
@@ -38,30 +41,26 @@ const PRIORITY_CONFIG = {
 };
 
 const PurchaseManagement = () => {
-  const [activeSubTab, setActiveSubTab] = useState('project_materials');
+  const [activeSubTab, setActiveSubTab] = useState('materials');
   const [materialRequests, setMaterialRequests] = useState([]);
   const [vendorRequests, setVendorRequests] = useState([]);
-  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showCreatePOModal, setShowCreatePOModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [creatingPO, setCreatingPO] = useState(false);
-  const [poFormData, setPOFormData] = useState({
+  
+  // Update form data
+  const [updateFormData, setUpdateFormData] = useState({
+    status: '',
+    vendor_id: '',
     vendor_name: '',
-    vendor_contact: '',
-    delivery_date: '',
-    payment_terms: '',
-    notes: ''
-  });
-  const [stats, setStats] = useState({ 
-    materials_pending: 0, 
-    vendors_pending: 0, 
-    orders: 0, 
-    total_value: 0 
+    expected_delivery: '',
+    tracking_info: '',
+    remarks: ''
   });
 
   const formatCurrency = (amount) => {
@@ -108,37 +107,14 @@ const PurchaseManagement = () => {
         setVendorRequests(vendorList);
       }
       
-      // Fetch project-created purchase orders
-      const projectPOResponse = await fetch(`${API_URL}/api/project-requests/purchase-orders`, {
+      // Fetch vendors for dropdown
+      const vendorsRes = await fetch(`${API_URL}/api/settings/vendors`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      let poList = [];
-      if (projectPOResponse.ok) {
-        const projectPOData = await projectPOResponse.json();
-        poList = projectPOData.purchase_orders || [];
+      if (vendorsRes.ok) {
+        const vendorsData = await vendorsRes.json();
+        setVendors(vendorsData || []);
       }
-      
-      // Also fetch existing purchase orders from old API
-      const poResponse = await fetch(`${API_URL}/api/purchase/orders`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (poResponse.ok) {
-        const poData = await poResponse.json();
-        poList = [...poList, ...(poData || [])];
-      }
-      setPurchaseOrders(poList);
-      
-      // Calculate stats
-      const matPending = matList.filter(r => r.status === 'pending').length;
-      const vendorPending = vendorList.filter(r => r.status === 'pending').length;
-      const totalValue = [...matList, ...vendorList].reduce((sum, r) => sum + (r.estimated_cost || r.amount || 0), 0);
-      
-      setStats({
-        materials_pending: matPending,
-        vendors_pending: vendorPending,
-        orders: poList.length,
-        total_value: totalValue
-      });
       
     } catch (error) {
       console.error('Error fetching purchase data:', error);
@@ -146,14 +122,55 @@ const PurchaseManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [materialRequests, vendorRequests, purchaseOrders.length]);
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Update request status
-  const handleUpdateStatus = async (requestId, newStatus) => {
+  const handleUpdateStatus = async () => {
+    if (!selectedRequest || !updateFormData.status) {
+      toast.error('Please select a status');
+      return;
+    }
+    
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/${selectedRequest.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          status: updateFormData.status,
+          vendor_id: updateFormData.vendor_id,
+          vendor_name: updateFormData.vendor_name,
+          expected_delivery: updateFormData.expected_delivery,
+          tracking_info: updateFormData.tracking_info,
+          remarks: updateFormData.remarks
+        })
+      });
+      
+      if (response.ok) {
+        toast.success(`Status updated to ${STATUS_CONFIG[updateFormData.status]?.label || updateFormData.status}`);
+        fetchData();
+        setShowUpdateModal(false);
+        setShowDetailModal(false);
+      } else {
+        toast.error('Failed to update status');
+      }
+    } catch (error) {
+      toast.error('Error updating status');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Quick status update
+  const handleQuickStatusUpdate = async (requestId, newStatus) => {
     setUpdating(true);
     try {
       const token = localStorage.getItem('token');
@@ -167,92 +184,150 @@ const PurchaseManagement = () => {
       });
       
       if (response.ok) {
-        toast.success(`Status updated to ${newStatus}`);
+        toast.success(`Status updated`);
         fetchData();
-        setShowDetailModal(false);
       } else {
-        toast.error('Failed to update status');
+        toast.error('Failed to update');
       }
     } catch (error) {
-      toast.error('Error updating status');
+      toast.error('Error updating');
     } finally {
       setUpdating(false);
     }
   };
 
-  // Open Create PO modal
-  const openCreatePOModal = (request) => {
+  // Open update modal
+  const openUpdateModal = (request) => {
     setSelectedRequest(request);
-    setPOFormData({
-      vendor_name: '',
-      vendor_contact: '',
-      delivery_date: request.required_by || '',
-      payment_terms: '',
-      notes: ''
+    setUpdateFormData({
+      status: request.status || 'pending',
+      vendor_id: request.vendor_id || '',
+      vendor_name: request.vendor_name || '',
+      expected_delivery: request.expected_delivery || '',
+      tracking_info: request.tracking_info || '',
+      remarks: request.remarks || ''
     });
-    setShowCreatePOModal(true);
+    setShowUpdateModal(true);
   };
 
-  // Create PO from material request
-  const handleCreatePO = async () => {
-    if (!selectedRequest || !poFormData.vendor_name) {
-      toast.error('Please provide vendor name');
-      return;
-    }
-    
-    setCreatingPO(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/project-requests/create-po`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          request_id: selectedRequest.id,
-          ...poFormData
-        })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(`Purchase Order ${data.po.po_number} created`);
-        setShowCreatePOModal(false);
-        fetchData();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Failed to create PO');
-      }
-    } catch (error) {
-      toast.error('Error creating purchase order');
-    } finally {
-      setCreatingPO(false);
-    }
-  };
-
-  // Filter requests based on search and status
+  // Filter requests
   const filterRequests = (requests) => {
     return requests.filter(req => {
       const matchesSearch = !searchTerm || 
-        req.request_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.request_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.order_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        req.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = !statusFilter || req.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   };
 
+  const filteredMaterials = filterRequests(materialRequests);
+  const filteredVendors = filterRequests(vendorRequests);
+
   const subTabs = [
-    { id: 'project_materials', label: 'Material Requests', icon: Package, count: materialRequests.filter(r => r.status === 'pending').length },
-    { id: 'project_vendors', label: 'Vendor Requests', icon: Truck, count: vendorRequests.filter(r => r.status === 'pending').length },
-    { id: 'orders', label: 'Purchase Orders', icon: ShoppingCart, count: purchaseOrders.length },
-    { id: 'grn', label: 'Goods Received', icon: FileCheck, count: 0 },
+    { id: 'materials', label: 'Material Requests', icon: Package, count: materialRequests.length, pending: materialRequests.filter(r => r.status === 'pending').length },
+    { id: 'vendors', label: 'Vendor Requests', icon: Truck, count: vendorRequests.length, pending: vendorRequests.filter(r => r.status === 'pending').length },
   ];
 
   const getStatusConfig = (status) => STATUS_CONFIG[status] || STATUS_CONFIG.pending;
   const getPriorityConfig = (priority) => PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
+
+  // Render request card
+  const renderRequestCard = (request, type) => {
+    const statusConfig = getStatusConfig(request.status);
+    const priorityConfig = getPriorityConfig(request.priority);
+    const StatusIcon = statusConfig.icon;
+    
+    return (
+      <div key={request.id} className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-medium text-amber-600">{request.request_number}</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.color}`}>
+                {priorityConfig.label}
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 mt-1">{request.order_no}</p>
+          </div>
+          <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+            <StatusIcon size={12} />
+            {statusConfig.label}
+          </span>
+        </div>
+        
+        <div className="mb-3">
+          <p className="text-sm font-medium text-slate-800 line-clamp-2">
+            {type === 'material' 
+              ? request.items?.map(i => `${i.description} (${i.quantity} ${i.unit})`).join(', ')
+              : request.description
+            }
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            <Building2 size={12} className="inline mr-1" />
+            {request.customer_name}
+          </p>
+        </div>
+        
+        <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+          <span className="flex items-center gap-1">
+            <Calendar size={12} />
+            Required: {formatDate(request.required_by)}
+          </span>
+          <span className="font-semibold text-slate-700">
+            {formatCurrency(type === 'material' 
+              ? request.items?.reduce((sum, i) => sum + (i.estimated_cost || 0), 0)
+              : request.estimated_cost
+            )}
+          </span>
+        </div>
+        
+        {/* Delivery tracking info */}
+        {(request.vendor_name || request.expected_delivery) && (
+          <div className="bg-slate-50 rounded-lg p-2 mb-3 text-xs">
+            {request.vendor_name && (
+              <p className="text-slate-600"><User size={10} className="inline mr-1" />Vendor: {request.vendor_name}</p>
+            )}
+            {request.expected_delivery && (
+              <p className="text-slate-600"><Truck size={10} className="inline mr-1" />Expected: {formatDate(request.expected_delivery)}</p>
+            )}
+            {request.tracking_info && (
+              <p className="text-slate-600"><MapPin size={10} className="inline mr-1" />{request.tracking_info}</p>
+            )}
+          </div>
+        )}
+        
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+          <button
+            onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
+          >
+            <Eye size={14} />
+            View
+          </button>
+          <button
+            onClick={() => openUpdateModal(request)}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg"
+          >
+            <RefreshCw size={14} />
+            Update
+          </button>
+          {request.status === 'pending' && (
+            <button
+              onClick={() => handleQuickStatusUpdate(request.id, 'approved')}
+              className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg"
+              disabled={updating}
+            >
+              <Check size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6" data-testid="purchase-management">
@@ -264,7 +339,7 @@ const PurchaseManagement = () => {
               <ShoppingCart className="text-amber-600" />
               Purchase Management
             </h2>
-            <p className="text-sm text-slate-500">Process material and vendor requests from projects</p>
+            <p className="text-sm text-slate-500">Track material and vendor requests from P&S projects</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -276,22 +351,26 @@ const PurchaseManagement = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm w-64"
+                data-testid="search-input"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+              data-testid="status-filter"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
-              <option value="in_progress">In Progress</option>
+              <option value="ordered">Ordered</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="delivered">Delivered</option>
               <option value="completed">Completed</option>
               <option value="rejected">Rejected</option>
             </select>
             <button onClick={fetchData} className="p-2 hover:bg-slate-100 rounded-lg" title="Refresh">
-              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={20} className={loading ? 'animate-spin text-amber-600' : 'text-slate-600'} />
             </button>
           </div>
         </div>
@@ -315,19 +394,26 @@ const PurchaseManagement = () => {
           <p className="text-2xl font-bold text-blue-700">{vendorRequests.length}</p>
           <p className="text-xs text-blue-600">{vendorRequests.filter(r => r.status === 'pending').length} pending</p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <ShoppingCart size={18} className="text-purple-600" />
-            <span className="text-sm text-slate-600">Purchase Orders</span>
+            <Clock size={18} className="text-violet-600" />
+            <span className="text-sm text-slate-600">In Progress</span>
           </div>
-          <p className="text-2xl font-bold text-purple-700">{purchaseOrders.length}</p>
+          <p className="text-2xl font-bold text-violet-700">
+            {[...materialRequests, ...vendorRequests].filter(r => ['approved', 'ordered', 'dispatched', 'in_progress'].includes(r.status)).length}
+          </p>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign size={18} className="text-emerald-600" />
             <span className="text-sm text-slate-600">Total Est. Value</span>
           </div>
-          <p className="text-2xl font-bold text-emerald-700">{formatCurrency([...materialRequests, ...vendorRequests].reduce((sum, r) => sum + (r.estimated_cost || 0), 0))}</p>
+          <p className="text-2xl font-bold text-emerald-700">
+            {formatCurrency([...materialRequests, ...vendorRequests].reduce((sum, r) => {
+              if (r.items) return sum + r.items.reduce((s, i) => s + (i.estimated_cost || 0), 0);
+              return sum + (r.estimated_cost || 0);
+            }, 0))}
+          </p>
         </div>
       </div>
 
@@ -346,15 +432,17 @@ const PurchaseManagement = () => {
                       ? 'border-amber-500 text-amber-700'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}
+                  data-testid={`tab-${tab.id}`}
                 >
                   <Icon size={16} />
                   {tab.label}
-                  {tab.count > 0 && (
-                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                      activeSubTab === tab.id ? 'bg-amber-100' : 'bg-slate-100'
-                    }`}>
-                      {tab.count}
-                    </span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    activeSubTab === tab.id ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                  {tab.pending > 0 && (
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   )}
                 </button>
               );
@@ -362,6 +450,7 @@ const PurchaseManagement = () => {
           </div>
         </div>
 
+        {/* Content */}
         <div className="p-4">
           {loading ? (
             <div className="flex items-center justify-center h-64">
@@ -369,520 +458,260 @@ const PurchaseManagement = () => {
             </div>
           ) : (
             <>
-              {/* Material Requests Tab */}
-              {activeSubTab === 'project_materials' && (
-                <div className="space-y-3">
-                  {filterRequests(materialRequests).length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <Package size={48} className="mx-auto text-slate-300 mb-4" />
-                      <p>No material requests found</p>
-                      <p className="text-sm mt-2">Material requests from Project Management will appear here</p>
-                    </div>
-                  ) : (
-                    filterRequests(materialRequests).map(request => {
-                      const statusConfig = getStatusConfig(request.status);
-                      const StatusIcon = statusConfig.icon;
-                      const priorityConfig = getPriorityConfig(request.priority);
-                      
-                      return (
-                        <div key={request.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className="font-mono font-bold text-amber-600">{request.request_no}</span>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.color} flex items-center gap-1`}>
-                                  <StatusIcon size={12} />
-                                  {statusConfig.label}
-                                </span>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.color}`}>
-                                  {priorityConfig.label}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600">
-                                <Building2 size={14} className="inline mr-1" />
-                                {request.customer_name} • {request.order_no}
-                              </p>
-                            </div>
-                            
-                            <div className="text-center px-4">
-                              <p className="text-lg font-bold text-slate-800">{request.total_items} items</p>
-                              <p className="text-xs text-slate-500">Est. {formatCurrency(request.estimated_cost)}</p>
-                            </div>
-                            
-                            <div className="text-center px-4 border-l border-slate-100">
-                              <p className="text-sm font-medium text-slate-700">{formatDate(request.required_by)}</p>
-                              <p className="text-xs text-slate-500">Required By</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 pl-4 border-l border-slate-100">
-                              {request.status === 'pending' && (
-                                <>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'approved')}
-                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <Check size={14} /> Accept
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'rejected')}
-                                    className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
-                                  >
-                                    <X size={14} /> Reject
-                                  </button>
-                                </>
-                              )}
-                              {request.status === 'approved' && (
-                                <>
-                                  <button
-                                    onClick={() => openCreatePOModal(request)}
-                                    className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <FileText size={14} /> Create PO
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'in_progress')}
-                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <RefreshCw size={14} /> Start
-                                  </button>
-                                </>
-                              )}
-                              {request.status === 'in_progress' && (
-                                <>
-                                  {!request.po_number && (
-                                    <button
-                                      onClick={() => openCreatePOModal(request)}
-                                      className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
-                                    >
-                                      <FileText size={14} /> Create PO
-                                    </button>
-                                  )}
-                                  {request.po_number && (
-                                    <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-xs font-mono">
-                                      {request.po_number}
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'completed')}
-                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <CheckCircle size={14} /> Complete
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
-                                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                                title="View Details"
-                              >
-                                <Eye size={18} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
+              {/* Material Requests */}
+              {activeSubTab === 'materials' && (
+                filteredMaterials.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">No material requests found</p>
+                    <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredMaterials.map(req => renderRequestCard(req, 'material'))}
+                  </div>
+                )
               )}
 
-              {/* Vendor Requests Tab */}
-              {activeSubTab === 'project_vendors' && (
-                <div className="space-y-3">
-                  {filterRequests(vendorRequests).length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <Truck size={48} className="mx-auto text-slate-300 mb-4" />
-                      <p>No vendor requests found</p>
-                      <p className="text-sm mt-2">Vendor requests from Project Management will appear here</p>
-                    </div>
-                  ) : (
-                    filterRequests(vendorRequests).map(request => {
-                      const statusConfig = getStatusConfig(request.status);
-                      const StatusIcon = statusConfig.icon;
-                      const priorityConfig = getPriorityConfig(request.priority);
-                      
-                      return (
-                        <div key={request.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className="font-mono font-bold text-blue-600">{request.request_no}</span>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.color} flex items-center gap-1`}>
-                                  <StatusIcon size={12} />
-                                  {statusConfig.label}
-                                </span>
-                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{request.service_type}</span>
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.color}`}>
-                                  {priorityConfig.label}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600">
-                                <Building2 size={14} className="inline mr-1" />
-                                {request.customer_name} • {request.order_no}
-                              </p>
-                              <p className="text-sm text-slate-500 mt-1 truncate max-w-md">{request.description}</p>
-                            </div>
-                            
-                            <div className="text-center px-4">
-                              <p className="text-lg font-bold text-slate-800">{formatCurrency(request.estimated_cost)}</p>
-                              <p className="text-xs text-slate-500">Estimated</p>
-                            </div>
-                            
-                            <div className="text-center px-4 border-l border-slate-100">
-                              <p className="text-sm font-medium text-slate-700">{formatDate(request.required_by)}</p>
-                              <p className="text-xs text-slate-500">Required By</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 pl-4 border-l border-slate-100">
-                              {request.status === 'pending' && (
-                                <>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'approved')}
-                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <Check size={14} /> Accept
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'rejected')}
-                                    className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1 text-sm"
-                                  >
-                                    <X size={14} /> Reject
-                                  </button>
-                                </>
-                              )}
-                              {request.status === 'approved' && (
-                                <>
-                                  <button
-                                    onClick={() => openCreatePOModal(request)}
-                                    className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <FileText size={14} /> Create PO
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'in_progress')}
-                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <RefreshCw size={14} /> Start
-                                  </button>
-                                </>
-                              )}
-                              {request.status === 'in_progress' && (
-                                <>
-                                  {!request.po_number && (
-                                    <button
-                                      onClick={() => openCreatePOModal(request)}
-                                      className="px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 flex items-center gap-1 text-sm"
-                                    >
-                                      <FileText size={14} /> Create PO
-                                    </button>
-                                  )}
-                                  {request.po_number && (
-                                    <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-xs font-mono">
-                                      {request.po_number}
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={() => handleUpdateStatus(request.id, 'completed')}
-                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1 text-sm"
-                                  >
-                                    <CheckCircle size={14} /> Complete
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
-                                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                                title="View Details"
-                              >
-                                <Eye size={18} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-
-              {/* Purchase Orders Tab */}
-              {activeSubTab === 'orders' && (
-                <div className="text-center py-12 text-slate-500">
-                  <ShoppingCart size={48} className="mx-auto text-slate-300 mb-4" />
-                  <p>Purchase Orders</p>
-                  <p className="text-sm mt-2">{purchaseOrders.length} orders from existing Purchase Module</p>
-                </div>
-              )}
-
-              {/* GRN Tab */}
-              {activeSubTab === 'grn' && (
-                <div className="text-center py-12 text-slate-500">
-                  <FileCheck size={48} className="mx-auto text-slate-300 mb-4" />
-                  <p>Goods Received Notes</p>
-                  <p className="text-sm mt-2">GRN tracking will be displayed here</p>
-                </div>
+              {/* Vendor Requests */}
+              {activeSubTab === 'vendors' && (
+                filteredVendors.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Truck size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">No vendor requests found</p>
+                    <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredVendors.map(req => renderRequestCard(req, 'vendor'))}
+                  </div>
+                )
               )}
             </>
           )}
         </div>
       </div>
 
-      {/* Request Detail Modal */}
+      {/* Detail Modal */}
       {showDetailModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-            <div className={`flex items-center justify-between p-4 border-b border-slate-200 ${
-              selectedRequest.request_type === 'material' ? 'bg-gradient-to-r from-amber-50 to-orange-50' : 'bg-gradient-to-r from-blue-50 to-cyan-50'
-            }`}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="detail-modal">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  {selectedRequest.request_type === 'material' ? <Package size={20} className="text-amber-600" /> : <Truck size={20} className="text-blue-600" />}
-                  {selectedRequest.request_no}
-                </h3>
-                <p className="text-sm text-slate-500">{selectedRequest.order_no} • {selectedRequest.customer_name}</p>
+                <h3 className="text-lg font-semibold text-slate-800">Request Details</h3>
+                <p className="text-sm text-amber-600 font-mono">{selectedRequest.request_number}</p>
               </div>
-              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
+              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto flex-1 space-y-4">
-              {/* Status & Priority */}
-              <div className="flex gap-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusConfig(selectedRequest.status).color}`}>
-                  {getStatusConfig(selectedRequest.status).label}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityConfig(selectedRequest.priority).color}`}>
-                  {getPriorityConfig(selectedRequest.priority).label} Priority
-                </span>
-              </div>
-              
-              {/* Material Items */}
-              {selectedRequest.request_type === 'material' && selectedRequest.items && (
-                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <h4 className="font-medium text-amber-800 mb-3">Material Items</h4>
-                  <div className="space-y-2">
-                    {selectedRequest.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-white rounded-lg p-2 border border-amber-100">
-                        <span className="font-medium">{item.description}</span>
-                        <span className="text-sm text-slate-600">
-                          {item.quantity} {item.unit} • {formatCurrency(item.estimated_cost * item.quantity)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-amber-200 flex justify-between">
-                    <span className="font-medium">Total Estimated</span>
-                    <span className="font-bold text-amber-700">{formatCurrency(selectedRequest.estimated_cost)}</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Vendor Details */}
-              {selectedRequest.request_type === 'vendor' && (
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <h4 className="font-medium text-blue-800 mb-3">Vendor Requirement</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Service Type:</span>
-                      <span className="font-medium">{selectedRequest.service_type}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Estimated Cost:</span>
-                      <span className="font-bold text-blue-700">{formatCurrency(selectedRequest.estimated_cost)}</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <p className="text-sm text-slate-700">{selectedRequest.description}</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Timeline */}
+
+            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-slate-600 text-xs mb-1">
-                    <Calendar size={14} />
-                    Required By
-                  </div>
-                  <p className="font-medium">{formatDate(selectedRequest.required_by)}</p>
+                <div>
+                  <label className="text-xs text-slate-500">Project / PID</label>
+                  <p className="font-medium text-slate-800">{selectedRequest.order_no}</p>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-slate-600 text-xs mb-1">
-                    <Clock size={14} />
-                    Created
-                  </div>
-                  <p className="font-medium">{formatDate(selectedRequest.created_at)}</p>
+                <div>
+                  <label className="text-xs text-slate-500">Customer</label>
+                  <p className="font-medium text-slate-800">{selectedRequest.customer_name}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500">Status</label>
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusConfig(selectedRequest.status).color}`}>
+                    {getStatusConfig(selectedRequest.status).label}
+                  </span>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500">Priority</label>
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getPriorityConfig(selectedRequest.priority).color}`}>
+                    {getPriorityConfig(selectedRequest.priority).label}
+                  </span>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500">Required By</label>
+                  <p className="font-medium text-slate-800">{formatDate(selectedRequest.required_by)}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500">Created</label>
+                  <p className="font-medium text-slate-800">{formatDate(selectedRequest.created_at)}</p>
                 </div>
               </div>
-              
-              {/* Notes */}
-              {selectedRequest.notes && (
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Notes</p>
-                  <p className="text-sm">{selectedRequest.notes}</p>
-                </div>
-              )}
-              
-              {/* Status History */}
-              {selectedRequest.status_history && selectedRequest.status_history.length > 0 && (
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h4 className="font-medium text-slate-700 mb-3">Status History</h4>
-                  <div className="space-y-2">
-                    {selectedRequest.status_history.map((entry, idx) => (
-                      <div key={idx} className="flex items-center gap-3 text-sm">
-                        <span className={`px-2 py-0.5 rounded text-xs ${getStatusConfig(entry.status).color}`}>
-                          {getStatusConfig(entry.status).label}
-                        </span>
-                        <span className="text-slate-500">{formatDate(entry.timestamp)}</span>
-                        {entry.comments && <span className="text-slate-600">- {entry.comments}</span>}
+
+              {/* Items (for material requests) */}
+              {selectedRequest.items && (
+                <div>
+                  <label className="text-xs text-slate-500">Items</label>
+                  <div className="mt-1 space-y-2">
+                    {selectedRequest.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-slate-50 rounded-lg p-2">
+                        <div>
+                          <p className="text-sm font-medium text-slate-800">{item.description}</p>
+                          <p className="text-xs text-slate-500">{item.quantity} {item.unit}</p>
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">{formatCurrency(item.estimated_cost)}</span>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Description (for vendor requests) */}
+              {selectedRequest.description && !selectedRequest.items && (
+                <div>
+                  <label className="text-xs text-slate-500">Description</label>
+                  <p className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">{selectedRequest.description}</p>
+                </div>
+              )}
+
+              {/* Delivery Info */}
+              {(selectedRequest.vendor_name || selectedRequest.expected_delivery || selectedRequest.tracking_info) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <label className="text-xs text-blue-600 font-medium">Delivery Tracking</label>
+                  <div className="mt-2 space-y-1 text-sm">
+                    {selectedRequest.vendor_name && <p><strong>Vendor:</strong> {selectedRequest.vendor_name}</p>}
+                    {selectedRequest.expected_delivery && <p><strong>Expected:</strong> {formatDate(selectedRequest.expected_delivery)}</p>}
+                    {selectedRequest.tracking_info && <p><strong>Tracking:</strong> {selectedRequest.tracking_info}</p>}
+                  </div>
+                </div>
+              )}
+
+              {selectedRequest.notes && (
+                <div>
+                  <label className="text-xs text-slate-500">Notes</label>
+                  <p className="text-sm text-slate-700">{selectedRequest.notes}</p>
                 </div>
               )}
             </div>
-            
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between">
-              <a
-                href={`/business-hub/projects`}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg flex items-center gap-2 text-sm"
+
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
               >
-                <ExternalLink size={14} /> View Project
-              </a>
-              <div className="flex gap-2">
-                {selectedRequest.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleUpdateStatus(selectedRequest.id, 'rejected')}
-                      disabled={updating}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-2"
-                    >
-                      <X size={16} /> Reject
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(selectedRequest.id, 'approved')}
-                      disabled={updating}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-                    >
-                      <Check size={16} /> Accept
-                    </button>
-                  </>
-                )}
-                {selectedRequest.status !== 'pending' && (
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
-                  >
-                    Close
-                  </button>
-                )}
-              </div>
+                Close
+              </button>
+              <button
+                onClick={() => { setShowDetailModal(false); openUpdateModal(selectedRequest); }}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+              >
+                Update Status
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Create PO Modal */}
-      {showCreatePOModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-purple-50">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  <FileText size={20} className="text-violet-600" />
-                  Create Purchase Order
-                </h3>
-                <p className="text-sm text-slate-500">{selectedRequest.request_no}</p>
-              </div>
-              <button onClick={() => setShowCreatePOModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
-                <X size={20} />
-              </button>
+      {/* Update Status Modal */}
+      {showUpdateModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="update-modal">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md m-4">
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-800">Update Request</h3>
+              <p className="text-sm text-slate-500">{selectedRequest.request_number}</p>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Vendor Name *</label>
-                <input
-                  type="text"
-                  value={poFormData.vendor_name}
-                  onChange={(e) => setPOFormData({...poFormData, vendor_name: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  placeholder="Enter vendor name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Vendor Contact</label>
-                <input
-                  type="text"
-                  value={poFormData.vendor_contact}
-                  onChange={(e) => setPOFormData({...poFormData, vendor_contact: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  placeholder="Phone/Email"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
-                <input
-                  type="date"
-                  value={poFormData.delivery_date}
-                  onChange={(e) => setPOFormData({...poFormData, delivery_date: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Status *</label>
                 <select
-                  value={poFormData.payment_terms}
-                  onChange={(e) => setPOFormData({...poFormData, payment_terms: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  value={updateFormData.status}
+                  onChange={(e) => setUpdateFormData(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                  data-testid="update-status"
                 >
-                  <option value="">Select payment terms</option>
-                  <option value="net_30">Net 30 days</option>
-                  <option value="net_15">Net 15 days</option>
-                  <option value="advance">Advance payment</option>
-                  <option value="cod">Cash on delivery</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="ordered">Ordered (PO Created in Zoho)</option>
+                  <option value="dispatched">Dispatched</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="completed">Completed</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Vendor</label>
+                <select
+                  value={updateFormData.vendor_id}
+                  onChange={(e) => {
+                    const vendor = vendors.find(v => v.id === e.target.value);
+                    setUpdateFormData(prev => ({ 
+                      ...prev, 
+                      vendor_id: e.target.value,
+                      vendor_name: vendor?.name || ''
+                    }));
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                  data-testid="update-vendor"
+                >
+                  <option value="">-- Select Vendor --</option>
+                  {vendors.map(vendor => (
+                    <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                  ))}
+                </select>
+                {!updateFormData.vendor_id && (
+                  <input
+                    type="text"
+                    value={updateFormData.vendor_name}
+                    onChange={(e) => setUpdateFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mt-2"
+                    placeholder="Or enter vendor name manually"
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Expected Delivery</label>
+                <input
+                  type="date"
+                  value={updateFormData.expected_delivery}
+                  onChange={(e) => setUpdateFormData(prev => ({ ...prev, expected_delivery: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  data-testid="update-delivery"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tracking Info</label>
+                <input
+                  type="text"
+                  value={updateFormData.tracking_info}
+                  onChange={(e) => setUpdateFormData(prev => ({ ...prev, tracking_info: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Courier, tracking number, etc."
+                  data-testid="update-tracking"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Remarks</label>
                 <textarea
-                  value={poFormData.notes}
-                  onChange={(e) => setPOFormData({...poFormData, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  rows="3"
-                  placeholder="Additional notes or requirements"
+                  value={updateFormData.remarks}
+                  onChange={(e) => setUpdateFormData(prev => ({ ...prev, remarks: e.target.value }))}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder="Additional notes..."
+                  data-testid="update-remarks"
                 />
               </div>
             </div>
-            
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
               <button
-                onClick={() => setShowCreatePOModal(false)}
-                className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded-lg"
+                onClick={() => setShowUpdateModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
               >
                 Cancel
               </button>
               <button
-                onClick={handleCreatePO}
-                disabled={creatingPO || !poFormData.vendor_name}
-                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                onClick={handleUpdateStatus}
+                disabled={updating}
+                className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
+                data-testid="submit-update"
               >
-                {creatingPO ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    Create PO
-                  </>
-                )}
+                {updating ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                Update
               </button>
             </div>
           </div>
