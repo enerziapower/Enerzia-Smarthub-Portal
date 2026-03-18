@@ -68,6 +68,9 @@ const ExpenseManagement = () => {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   
+  // Vendors for dropdown
+  const [vendors, setVendors] = useState([]);
+  
   // Form state
   const [formData, setFormData] = useState({
     order_id: '',
@@ -75,6 +78,7 @@ const ExpenseManagement = () => {
     description: '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
+    vendor_id: '',
     vendor: '',
     reference_no: '',
     payment_mode: 'bank',
