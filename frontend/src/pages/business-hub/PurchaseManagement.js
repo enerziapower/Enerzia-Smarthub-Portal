@@ -1,13 +1,16 @@
 /**
  * Purchase Management - Business Hub
  * 
- * Handles:
- * - Material Requests from P&S (Raise Request)
- * - Vendor Requests from P&S (Raise Request)
- * - Follow-up status and delivery tracking
+ * PID-Centric Consolidated View
+ * Shows all PIDs with their:
+ * - Financials (PO Amount, Budget, Available, Profit)
+ * - Material Requests
+ * - Vendor Requests  
+ * - Payment Requests
+ * - Expenses (with bills missing count)
  * 
- * Note: Purchase Orders are managed in Zoho Books (external)
- * Note: GRN removed - not needed for current workflow
+ * Note: Purchase Orders managed in Zoho Books
+ * Note: Payment approval auto-creates expense entry
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -15,7 +18,9 @@ import {
   Package, Search, RefreshCw, Eye, CheckCircle, X,
   Clock, AlertTriangle, Truck, Building2, DollarSign,
   ShoppingCart, ClipboardList, Check, XCircle,
-  Calendar, Loader2, MapPin, Phone, User, FileText
+  Calendar, Loader2, MapPin, User, FileText, Receipt,
+  TrendingUp, TrendingDown, Wallet, CreditCard, ChevronDown,
+  ChevronUp, AlertCircle, Plus, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -40,28 +45,45 @@ const PRIORITY_CONFIG = {
   urgent: { label: 'Urgent', color: 'bg-red-100 text-red-600' }
 };
 
+const CATEGORY_COLORS = {
+  PSS: { bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-200' },
+  AS: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
+  OSS: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200' },
+  CS: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' }
+};
+
 const PurchaseManagement = () => {
-  const [activeSubTab, setActiveSubTab] = useState('materials');
-  const [materialRequests, setMaterialRequests] = useState([]);
-  const [vendorRequests, setVendorRequests] = useState([]);
-  const [vendors, setVendors] = useState([]);
+  const [pids, setPids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [expandedPid, setExpandedPid] = useState(null);
+  const [pidDetails, setPidDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const [activeDetailTab, setActiveDetailTab] = useState('materials');
   
-  // Update form data
+  // Stats
+  const [stats, setStats] = useState({
+    totalPids: 0,
+    pendingRequests: 0,
+    totalExpenses: 0,
+    billsMissing: 0
+  });
+  
+  // Update modal
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [updating, setUpdating] = useState(false);
   const [updateFormData, setUpdateFormData] = useState({
     status: '',
-    vendor_id: '',
     vendor_name: '',
     expected_delivery: '',
     tracking_info: '',
     remarks: ''
   });
+
+  // Vendors for dropdown
+  const [vendors, setVendors] = useState([]);
 
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '₹0';
@@ -80,53 +102,93 @@ const PurchaseManagement = () => {
     }
   };
 
-  const fetchData = useCallback(async () => {
+  const fetchPids = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      // Fetch material requests from projects
-      const matResponse = await fetch(`${API_URL}/api/project-requests/materials`, {
+      const response = await fetch(`${API_URL}/api/project-requests/consolidated/by-pid?limit=200`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      let matList = [];
-      if (matResponse.ok) {
-        const matData = await matResponse.json();
-        matList = matData.requests || [];
-        setMaterialRequests(matList);
-      }
       
-      // Fetch vendor requests from projects
-      const vendorResponse = await fetch(`${API_URL}/api/project-requests/vendors`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      let vendorList = [];
-      if (vendorResponse.ok) {
-        const vendorData = await vendorResponse.json();
-        vendorList = vendorData.requests || [];
-        setVendorRequests(vendorList);
+      if (response.ok) {
+        const data = await response.json();
+        setPids(data.pids || []);
+        
+        // Calculate stats
+        const allPids = data.pids || [];
+        const pending = allPids.reduce((sum, p) => 
+          sum + (p.materials?.pending || 0) + (p.vendors?.pending || 0) + (p.payments?.pending || 0), 0);
+        const expenses = allPids.reduce((sum, p) => sum + (p.expenses?.value || 0), 0);
+        const bills = allPids.reduce((sum, p) => sum + (p.expenses?.bills_missing || 0), 0);
+        
+        setStats({
+          totalPids: allPids.length,
+          pendingRequests: pending,
+          totalExpenses: expenses,
+          billsMissing: bills
+        });
       }
-      
-      // Fetch vendors for dropdown
-      const vendorsRes = await fetch(`${API_URL}/api/settings/vendors`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (vendorsRes.ok) {
-        const vendorsData = await vendorsRes.json();
-        setVendors(vendorsData || []);
-      }
-      
     } catch (error) {
-      console.error('Error fetching purchase data:', error);
-      toast.error('Failed to load purchase data');
+      console.error('Error fetching PIDs:', error);
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const fetchVendors = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/settings/vendors`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVendors(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+    }
+  }, []);
+
+  const fetchPidDetails = async (orderId) => {
+    try {
+      setLoadingDetails(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_URL}/api/project-requests/consolidated/pid/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPidDetails(data);
+        setShowDetailModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching PID details:', error);
+      toast.error('Failed to load details');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchPids();
+    fetchVendors();
+  }, [fetchPids, fetchVendors]);
+
+  // Filter PIDs
+  const filteredPids = pids.filter(pid => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      (pid.order_no || '').toLowerCase().includes(search) ||
+      (pid.customer_name || '').toLowerCase().includes(search) ||
+      (pid.project_name || '').toLowerCase().includes(search)
+    );
+  });
 
   // Update request status
   const handleUpdateStatus = async () => {
@@ -144,21 +206,21 @@ const PurchaseManagement = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          status: updateFormData.status,
-          vendor_id: updateFormData.vendor_id,
-          vendor_name: updateFormData.vendor_name,
-          expected_delivery: updateFormData.expected_delivery,
-          tracking_info: updateFormData.tracking_info,
-          remarks: updateFormData.remarks
-        })
+        body: JSON.stringify(updateFormData)
       });
       
       if (response.ok) {
-        toast.success(`Status updated to ${STATUS_CONFIG[updateFormData.status]?.label || updateFormData.status}`);
-        fetchData();
+        const result = await response.json();
+        if (result.expense_created) {
+          toast.success(`Approved! Expense ${result.expense_no} auto-created (bill pending)`);
+        } else {
+          toast.success(`Status updated to ${STATUS_CONFIG[updateFormData.status]?.label || updateFormData.status}`);
+        }
+        fetchPids();
+        if (pidDetails) {
+          fetchPidDetails(pidDetails.order_id);
+        }
         setShowUpdateModal(false);
-        setShowDetailModal(false);
       } else {
         toast.error('Failed to update status');
       }
@@ -169,39 +231,10 @@ const PurchaseManagement = () => {
     }
   };
 
-  // Quick status update
-  const handleQuickStatusUpdate = async (requestId, newStatus) => {
-    setUpdating(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/project-requests/${requestId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      
-      if (response.ok) {
-        toast.success(`Status updated`);
-        fetchData();
-      } else {
-        toast.error('Failed to update');
-      }
-    } catch (error) {
-      toast.error('Error updating');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // Open update modal
   const openUpdateModal = (request) => {
     setSelectedRequest(request);
     setUpdateFormData({
       status: request.status || 'pending',
-      vendor_id: request.vendor_id || '',
       vendor_name: request.vendor_name || '',
       expected_delivery: request.expected_delivery || '',
       tracking_info: request.tracking_info || '',
@@ -210,120 +243,230 @@ const PurchaseManagement = () => {
     setShowUpdateModal(true);
   };
 
-  // Filter requests
-  const filterRequests = (requests) => {
-    return requests.filter(req => {
-      const matchesSearch = !searchTerm || 
-        req.request_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.order_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !statusFilter || req.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
+  // Render PID Card
+  const renderPidCard = (pid) => {
+    const colors = CATEGORY_COLORS[pid.category] || CATEGORY_COLORS.PSS;
+    const hasPending = (pid.materials?.pending || 0) + (pid.vendors?.pending || 0) + (pid.payments?.pending || 0) > 0;
+    const isExpanded = expandedPid === pid.order_id;
+    
+    return (
+      <div 
+        key={pid.order_id} 
+        className={`bg-white border rounded-xl overflow-hidden transition-all ${
+          hasPending ? 'border-amber-300 shadow-amber-100 shadow-md' : 'border-slate-200'
+        }`}
+        data-testid={`pid-card-${pid.order_no}`}
+      >
+        {/* Card Header */}
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`px-2 py-1 rounded text-xs font-medium ${colors.bg} ${colors.text}`}>
+                {pid.category || 'PSS'}
+              </span>
+              <div>
+                <h3 className="font-semibold text-slate-800">{pid.order_no}</h3>
+                <p className="text-sm text-slate-500 truncate max-w-[250px]">{pid.customer_name}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {pid.budget_warning === 'no_budget' && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs">
+                  <AlertCircle size={12} />
+                  No Budget
+                </span>
+              )}
+              {pid.budget_warning === 'over_budget' && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+                  <AlertTriangle size={12} />
+                  Over Budget
+                </span>
+              )}
+              {hasPending && (
+                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Card Body - 3 Column Layout */}
+        <div className="grid grid-cols-3 divide-x divide-slate-100">
+          {/* Column 1: Financials */}
+          <div className="p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-3 flex items-center gap-1">
+              <DollarSign size={12} />
+              Financials
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">PO Amount</span>
+                <span className="font-medium">{formatCurrency(pid.po_amount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Budget</span>
+                <span className="font-medium text-blue-700">{formatCurrency(pid.budget)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Expenses</span>
+                <span className="font-medium text-rose-600">{formatCurrency(pid.total_expenses)}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-slate-100">
+                <span className="text-slate-500">Available</span>
+                <span className={`font-bold ${pid.available_budget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(pid.available_budget)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Requests */}
+          <div className="p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-3 flex items-center gap-1">
+              <ClipboardList size={12} />
+              Requests
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1 text-slate-600">
+                  <Package size={12} className="text-amber-500" />
+                  Material
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{pid.materials?.total || 0}</span>
+                  {(pid.materials?.pending || 0) > 0 && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                      {pid.materials.pending} ⏳
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1 text-slate-600">
+                  <Truck size={12} className="text-blue-500" />
+                  Vendor
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{pid.vendors?.total || 0}</span>
+                  {(pid.vendors?.pending || 0) > 0 && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                      {pid.vendors.pending} ⏳
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1 text-slate-600">
+                  <CreditCard size={12} className="text-green-500" />
+                  Payment
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{pid.payments?.total || 0}</span>
+                  {(pid.payments?.pending || 0) > 0 && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                      {pid.payments.pending} ⏳
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Expenses & Profit */}
+          <div className="p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-3 flex items-center gap-1">
+              <Receipt size={12} />
+              Expenses & Profit
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Total Expenses</span>
+                <span className="font-medium">{formatCurrency(pid.total_expenses)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Entries</span>
+                <span className="font-medium">{pid.expenses?.total || 0}</span>
+              </div>
+              {(pid.expenses?.bills_missing || 0) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-amber-600">Bills Missing</span>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">
+                    {pid.expenses.bills_missing} ⚠️
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-slate-100">
+                <span className="text-slate-500">Profit</span>
+                <span className={`font-bold ${pid.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(pid.profit)} ({pid.profit_percent}%)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card Footer */}
+        <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>Est. Value: {formatCurrency((pid.materials?.value || 0) + (pid.vendors?.value || 0) + (pid.payments?.value || 0))}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchPidDetails(pid.order_id)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg"
+              data-testid={`view-details-${pid.order_no}`}
+            >
+              <Eye size={14} />
+              View Details
+            </button>
+            <button
+              onClick={() => setExpandedPid(isExpanded ? null : pid.order_id)}
+              className="p-1.5 hover:bg-slate-200 rounded-lg"
+            >
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const filteredMaterials = filterRequests(materialRequests);
-  const filteredVendors = filterRequests(vendorRequests);
-
-  const subTabs = [
-    { id: 'materials', label: 'Material Requests', icon: Package, count: materialRequests.length, pending: materialRequests.filter(r => r.status === 'pending').length },
-    { id: 'vendors', label: 'Vendor Requests', icon: Truck, count: vendorRequests.length, pending: vendorRequests.filter(r => r.status === 'pending').length },
-  ];
-
-  const getStatusConfig = (status) => STATUS_CONFIG[status] || STATUS_CONFIG.pending;
-  const getPriorityConfig = (priority) => PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
-
-  // Render request card
-  const renderRequestCard = (request, type) => {
-    const statusConfig = getStatusConfig(request.status);
-    const priorityConfig = getPriorityConfig(request.priority);
+  // Render request item in detail modal
+  const renderRequestItem = (request, type) => {
+    const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.pending;
     const StatusIcon = statusConfig.icon;
     
     return (
-      <div key={request.id} className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-        <div className="flex items-start justify-between mb-3">
+      <div key={request.id} className="border border-slate-200 rounded-lg p-3 hover:bg-slate-50">
+        <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-medium text-amber-600">{request.request_number}</span>
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.color}`}>
-                {priorityConfig.label}
-              </span>
-            </div>
-            <p className="text-sm text-slate-600 mt-1">{request.order_no}</p>
+            <span className="font-mono text-sm text-amber-600">{request.request_number}</span>
+            <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${statusConfig.color}`}>
+              <StatusIcon size={10} className="inline mr-1" />
+              {statusConfig.label}
+            </span>
           </div>
-          <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
-            <StatusIcon size={12} />
-            {statusConfig.label}
+          <span className={`px-2 py-0.5 rounded text-xs ${PRIORITY_CONFIG[request.priority]?.color || 'bg-slate-100'}`}>
+            {request.priority || 'medium'}
           </span>
         </div>
         
-        <div className="mb-3">
-          <p className="text-sm font-medium text-slate-800 line-clamp-2">
-            {type === 'material' 
-              ? request.items?.map(i => `${i.description} (${i.quantity} ${i.unit})`).join(', ')
-              : request.description
-            }
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            <Building2 size={12} className="inline mr-1" />
-            {request.customer_name}
-          </p>
-        </div>
+        <p className="text-sm text-slate-700 mb-2">
+          {type === 'material' 
+            ? request.items?.map(i => `${i.description} (${i.quantity} ${i.unit})`).join(', ')
+            : type === 'payment'
+            ? `${request.payment_type}: ${request.payee} - ${formatCurrency(request.amount)}`
+            : request.description
+          }
+        </p>
         
-        <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-          <span className="flex items-center gap-1">
-            <Calendar size={12} />
-            Required: {formatDate(request.required_by)}
-          </span>
-          <span className="font-semibold text-slate-700">
-            {formatCurrency(type === 'material' 
-              ? request.items?.reduce((sum, i) => sum + (i.estimated_cost || 0), 0)
-              : request.estimated_cost
-            )}
-          </span>
-        </div>
-        
-        {/* Delivery tracking info */}
-        {(request.vendor_name || request.expected_delivery) && (
-          <div className="bg-slate-50 rounded-lg p-2 mb-3 text-xs">
-            {request.vendor_name && (
-              <p className="text-slate-600"><User size={10} className="inline mr-1" />Vendor: {request.vendor_name}</p>
-            )}
-            {request.expected_delivery && (
-              <p className="text-slate-600"><Truck size={10} className="inline mr-1" />Expected: {formatDate(request.expected_delivery)}</p>
-            )}
-            {request.tracking_info && (
-              <p className="text-slate-600"><MapPin size={10} className="inline mr-1" />{request.tracking_info}</p>
-            )}
-          </div>
-        )}
-        
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-          <button
-            onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
-          >
-            <Eye size={14} />
-            View
-          </button>
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>Required: {formatDate(request.required_by)}</span>
           <button
             onClick={() => openUpdateModal(request)}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg"
+            className="text-amber-600 hover:text-amber-700 font-medium"
           >
-            <RefreshCw size={14} />
-            Update
+            Update Status →
           </button>
-          {request.status === 'pending' && (
-            <button
-              onClick={() => handleQuickStatusUpdate(request.id, 'approved')}
-              className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg"
-              disabled={updating}
-            >
-              <Check size={14} />
-            </button>
-          )}
         </div>
       </div>
     );
@@ -339,7 +482,7 @@ const PurchaseManagement = () => {
               <ShoppingCart className="text-amber-600" />
               Purchase Management
             </h2>
-            <p className="text-sm text-slate-500">Track material and vendor requests from P&S projects</p>
+            <p className="text-sm text-slate-500">PID-centric view: Requests, Expenses & Payments per Project</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -347,29 +490,14 @@ const PurchaseManagement = () => {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search requests..."
+                placeholder="Search PIDs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm w-64"
                 data-testid="search-input"
               />
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
-              data-testid="status-filter"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="ordered">Ordered</option>
-              <option value="dispatched">Dispatched</option>
-              <option value="delivered">Delivered</option>
-              <option value="completed">Completed</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <button onClick={fetchData} className="p-2 hover:bg-slate-100 rounded-lg" title="Refresh">
+            <button onClick={fetchPids} className="p-2 hover:bg-slate-100 rounded-lg" title="Refresh">
               <RefreshCw size={20} className={loading ? 'animate-spin text-amber-600' : 'text-slate-600'} />
             </button>
           </div>
@@ -378,225 +506,202 @@ const PurchaseManagement = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 size={18} className="text-violet-600" />
+            <span className="text-sm text-slate-600">Active PIDs</span>
+          </div>
+          <p className="text-2xl font-bold text-slate-800">{stats.totalPids}</p>
+        </div>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Package size={18} className="text-amber-600" />
-            <span className="text-sm text-slate-600">Material Requests</span>
+            <Clock size={18} className="text-amber-600" />
+            <span className="text-sm text-slate-600">Pending Requests</span>
           </div>
-          <p className="text-2xl font-bold text-amber-700">{materialRequests.length}</p>
-          <p className="text-xs text-amber-600">{materialRequests.filter(r => r.status === 'pending').length} pending</p>
+          <p className="text-2xl font-bold text-amber-700">{stats.pendingRequests}</p>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Truck size={18} className="text-blue-600" />
-            <span className="text-sm text-slate-600">Vendor Requests</span>
+            <Receipt size={18} className="text-rose-600" />
+            <span className="text-sm text-slate-600">Total Expenses</span>
           </div>
-          <p className="text-2xl font-bold text-blue-700">{vendorRequests.length}</p>
-          <p className="text-xs text-blue-600">{vendorRequests.filter(r => r.status === 'pending').length} pending</p>
+          <p className="text-2xl font-bold text-rose-700">{formatCurrency(stats.totalExpenses)}</p>
         </div>
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
+        <div className={`border rounded-xl p-4 ${stats.billsMissing > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={18} className="text-violet-600" />
-            <span className="text-sm text-slate-600">In Progress</span>
+            <FileText size={18} className={stats.billsMissing > 0 ? 'text-amber-600' : 'text-green-600'} />
+            <span className="text-sm text-slate-600">Bills Missing</span>
           </div>
-          <p className="text-2xl font-bold text-violet-700">
-            {[...materialRequests, ...vendorRequests].filter(r => ['approved', 'ordered', 'dispatched', 'in_progress'].includes(r.status)).length}
-          </p>
-        </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign size={18} className="text-emerald-600" />
-            <span className="text-sm text-slate-600">Total Est. Value</span>
-          </div>
-          <p className="text-2xl font-bold text-emerald-700">
-            {formatCurrency([...materialRequests, ...vendorRequests].reduce((sum, r) => {
-              if (r.items) return sum + r.items.reduce((s, i) => s + (i.estimated_cost || 0), 0);
-              return sum + (r.estimated_cost || 0);
-            }, 0))}
+          <p className={`text-2xl font-bold ${stats.billsMissing > 0 ? 'text-amber-700' : 'text-green-700'}`}>
+            {stats.billsMissing}
           </p>
         </div>
       </div>
 
-      {/* Sub-tabs */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="border-b border-slate-200 px-4">
-          <div className="flex gap-1">
-            {subTabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSubTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeSubTab === tab.id
-                      ? 'border-amber-500 text-amber-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-700'
-                  }`}
-                  data-testid={`tab-${tab.id}`}
-                >
-                  <Icon size={16} />
-                  {tab.label}
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    activeSubTab === tab.id ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {tab.count}
-                  </span>
-                  {tab.pending > 0 && (
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      {/* PID Cards */}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="animate-spin text-amber-500" size={32} />
         </div>
-
-        {/* Content */}
-        <div className="p-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <RefreshCw className="animate-spin text-amber-500" size={32} />
-            </div>
-          ) : (
-            <>
-              {/* Material Requests */}
-              {activeSubTab === 'materials' && (
-                filteredMaterials.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Package size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-500">No material requests found</p>
-                    <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredMaterials.map(req => renderRequestCard(req, 'material'))}
-                  </div>
-                )
-              )}
-
-              {/* Vendor Requests */}
-              {activeSubTab === 'vendors' && (
-                filteredVendors.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Truck size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-500">No vendor requests found</p>
-                    <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredVendors.map(req => renderRequestCard(req, 'vendor'))}
-                  </div>
-                )
-              )}
-            </>
-          )}
+      ) : filteredPids.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+          <ShoppingCart size={48} className="mx-auto text-slate-300 mb-4" />
+          <p className="text-slate-500">No PIDs found with requests</p>
+          <p className="text-sm text-slate-400">Requests raised from P&S will appear here</p>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filteredPids.map(pid => renderPidCard(pid))}
+        </div>
+      )}
 
       {/* Detail Modal */}
-      {showDetailModal && selectedRequest && (
+      {showDetailModal && pidDetails && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="detail-modal">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 max-h-[90vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800">Request Details</h3>
-                <p className="text-sm text-amber-600 font-mono">{selectedRequest.request_number}</p>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl m-4 max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800">{pidDetails.order_no}</h3>
+                  <p className="text-sm text-slate-500">{pidDetails.customer_name}</p>
+                </div>
+                <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-white/50 rounded-lg">
+                  <X size={20} />
+                </button>
               </div>
-              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-slate-500">Project / PID</label>
-                  <p className="font-medium text-slate-800">{selectedRequest.order_no}</p>
+              
+              {/* Financial Summary */}
+              <div className="grid grid-cols-5 gap-4 mt-4">
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">PO Amount</p>
+                  <p className="font-bold text-slate-800">{formatCurrency(pidDetails.po_amount)}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500">Customer</label>
-                  <p className="font-medium text-slate-800">{selectedRequest.customer_name}</p>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">Budget</p>
+                  <p className="font-bold text-blue-700">{formatCurrency(pidDetails.budget)}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500">Status</label>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusConfig(selectedRequest.status).color}`}>
-                    {getStatusConfig(selectedRequest.status).label}
-                  </span>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">Expenses</p>
+                  <p className="font-bold text-rose-600">{formatCurrency(pidDetails.total_expenses)}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500">Priority</label>
-                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getPriorityConfig(selectedRequest.priority).color}`}>
-                    {getPriorityConfig(selectedRequest.priority).label}
-                  </span>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">Available</p>
+                  <p className={`font-bold ${pidDetails.available_budget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(pidDetails.available_budget)}
+                  </p>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500">Required By</label>
-                  <p className="font-medium text-slate-800">{formatDate(selectedRequest.required_by)}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500">Created</label>
-                  <p className="font-medium text-slate-800">{formatDate(selectedRequest.created_at)}</p>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">Profit</p>
+                  <p className={`font-bold ${pidDetails.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(pidDetails.profit)} ({pidDetails.profit_percent}%)
+                  </p>
                 </div>
               </div>
-
-              {/* Items (for material requests) */}
-              {selectedRequest.items && (
-                <div>
-                  <label className="text-xs text-slate-500">Items</label>
-                  <div className="mt-1 space-y-2">
-                    {selectedRequest.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-slate-50 rounded-lg p-2">
-                        <div>
-                          <p className="text-sm font-medium text-slate-800">{item.description}</p>
-                          <p className="text-xs text-slate-500">{item.quantity} {item.unit}</p>
-                        </div>
-                        <span className="text-sm font-semibold text-slate-700">{formatCurrency(item.estimated_cost)}</span>
-                      </div>
-                    ))}
-                  </div>
+              
+              {/* Budget Warning */}
+              {pidDetails.budget_warning && (
+                <div className={`mt-3 p-2 rounded-lg text-sm flex items-center gap-2 ${
+                  pidDetails.budget_warning === 'no_budget' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  <AlertTriangle size={16} />
+                  {pidDetails.budget_warning === 'no_budget' 
+                    ? 'No budget allocated for this PID. Set budget in Order Management.'
+                    : 'Budget exceeded! Expenses are over the allocated budget.'
+                  }
                 </div>
               )}
-
-              {/* Description (for vendor requests) */}
-              {selectedRequest.description && !selectedRequest.items && (
-                <div>
-                  <label className="text-xs text-slate-500">Description</label>
-                  <p className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">{selectedRequest.description}</p>
-                </div>
-              )}
-
-              {/* Delivery Info */}
-              {(selectedRequest.vendor_name || selectedRequest.expected_delivery || selectedRequest.tracking_info) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <label className="text-xs text-blue-600 font-medium">Delivery Tracking</label>
-                  <div className="mt-2 space-y-1 text-sm">
-                    {selectedRequest.vendor_name && <p><strong>Vendor:</strong> {selectedRequest.vendor_name}</p>}
-                    {selectedRequest.expected_delivery && <p><strong>Expected:</strong> {formatDate(selectedRequest.expected_delivery)}</p>}
-                    {selectedRequest.tracking_info && <p><strong>Tracking:</strong> {selectedRequest.tracking_info}</p>}
-                  </div>
-                </div>
-              )}
-
-              {selectedRequest.notes && (
-                <div>
-                  <label className="text-xs text-slate-500">Notes</label>
-                  <p className="text-sm text-slate-700">{selectedRequest.notes}</p>
+              
+              {/* Bills Missing Warning */}
+              {(pidDetails.expenses?.bills_missing || 0) > 0 && (
+                <div className="mt-3 p-2 rounded-lg bg-amber-100 text-amber-700 text-sm flex items-center gap-2">
+                  <FileText size={16} />
+                  {pidDetails.expenses.bills_missing} expense(s) pending bill upload
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => { setShowDetailModal(false); openUpdateModal(selectedRequest); }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-              >
-                Update Status
-              </button>
+            {/* Tabs */}
+            <div className="border-b border-slate-200 px-6">
+              <div className="flex gap-1">
+                {['materials', 'vendors', 'payments', 'expenses'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveDetailTab(tab)}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+                      activeDetailTab === tab
+                        ? 'border-amber-500 text-amber-700'
+                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {tab}
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                      activeDetailTab === tab ? 'bg-amber-100' : 'bg-slate-100'
+                    }`}>
+                      {pidDetails[tab]?.total || pidDetails[tab]?.items?.length || 0}
+                    </span>
+                    {(pidDetails[tab]?.pending || 0) > 0 && (
+                      <span className="ml-1 w-2 h-2 bg-amber-500 rounded-full inline-block" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingDetails ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="animate-spin text-amber-500" size={24} />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeDetailTab === 'materials' && (
+                    pidDetails.materials?.items?.length > 0 
+                      ? pidDetails.materials.items.map(r => renderRequestItem(r, 'material'))
+                      : <p className="text-center text-slate-400 py-8">No material requests</p>
+                  )}
+                  {activeDetailTab === 'vendors' && (
+                    pidDetails.vendors?.items?.length > 0 
+                      ? pidDetails.vendors.items.map(r => renderRequestItem(r, 'vendor'))
+                      : <p className="text-center text-slate-400 py-8">No vendor requests</p>
+                  )}
+                  {activeDetailTab === 'payments' && (
+                    pidDetails.payments?.items?.length > 0 
+                      ? pidDetails.payments.items.map(r => renderRequestItem(r, 'payment'))
+                      : <p className="text-center text-slate-400 py-8">No payment requests</p>
+                  )}
+                  {activeDetailTab === 'expenses' && (
+                    pidDetails.expenses?.items?.length > 0 
+                      ? pidDetails.expenses.items.map(expense => (
+                          <div key={expense.id} className="border border-slate-200 rounded-lg p-3">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <span className="font-mono text-sm text-rose-600">{expense.expense_no}</span>
+                                <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
+                                  expense.approval_status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {expense.approval_status}
+                                </span>
+                                {expense.pending_bill && (
+                                  <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                                    ⚠️ Bill Pending
+                                  </span>
+                                )}
+                              </div>
+                              <span className="font-bold text-slate-800">{formatCurrency(expense.amount)}</span>
+                            </div>
+                            <p className="text-sm text-slate-700">{expense.description}</p>
+                            <div className="flex items-center justify-between text-xs text-slate-500 mt-2">
+                              <span>{expense.vendor} • {expense.date}</span>
+                              <span>{expense.category}</span>
+                            </div>
+                          </div>
+                        ))
+                      : <p className="text-center text-slate-400 py-8">No expenses recorded</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -604,7 +709,7 @@ const PurchaseManagement = () => {
 
       {/* Update Status Modal */}
       {showUpdateModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="update-modal">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" data-testid="update-modal">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md m-4">
             <div className="px-6 py-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-800">Update Request</h3>
@@ -618,47 +723,32 @@ const PurchaseManagement = () => {
                   value={updateFormData.status}
                   onChange={(e) => setUpdateFormData(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
-                  data-testid="update-status"
                 >
                   <option value="pending">Pending</option>
                   <option value="approved">Approved</option>
-                  <option value="ordered">Ordered (PO Created in Zoho)</option>
+                  <option value="ordered">Ordered (PO in Zoho)</option>
                   <option value="dispatched">Dispatched</option>
                   <option value="delivered">Delivered</option>
                   <option value="completed">Completed</option>
                   <option value="rejected">Rejected</option>
                 </select>
+                {selectedRequest.request_type === 'payment' && updateFormData.status === 'approved' && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Expense entry will be auto-created when approved
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Vendor</label>
                 <select
-                  value={updateFormData.vendor_id}
-                  onChange={(e) => {
-                    const vendor = vendors.find(v => v.id === e.target.value);
-                    setUpdateFormData(prev => ({ 
-                      ...prev, 
-                      vendor_id: e.target.value,
-                      vendor_name: vendor?.name || ''
-                    }));
-                  }}
+                  value={updateFormData.vendor_name}
+                  onChange={(e) => setUpdateFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
-                  data-testid="update-vendor"
                 >
                   <option value="">-- Select Vendor --</option>
-                  {vendors.map(vendor => (
-                    <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
-                  ))}
+                  {vendors.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
                 </select>
-                {!updateFormData.vendor_id && (
-                  <input
-                    type="text"
-                    value={updateFormData.vendor_name}
-                    onChange={(e) => setUpdateFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mt-2"
-                    placeholder="Or enter vendor name manually"
-                  />
-                )}
               </div>
 
               <div>
@@ -668,7 +758,6 @@ const PurchaseManagement = () => {
                   value={updateFormData.expected_delivery}
                   onChange={(e) => setUpdateFormData(prev => ({ ...prev, expected_delivery: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                  data-testid="update-delivery"
                 />
               </div>
 
@@ -679,8 +768,7 @@ const PurchaseManagement = () => {
                   value={updateFormData.tracking_info}
                   onChange={(e) => setUpdateFormData(prev => ({ ...prev, tracking_info: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                  placeholder="Courier, tracking number, etc."
-                  data-testid="update-tracking"
+                  placeholder="Courier, tracking number..."
                 />
               </div>
 
@@ -691,8 +779,6 @@ const PurchaseManagement = () => {
                   onChange={(e) => setUpdateFormData(prev => ({ ...prev, remarks: e.target.value }))}
                   rows={2}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                  placeholder="Additional notes..."
-                  data-testid="update-remarks"
                 />
               </div>
             </div>
@@ -708,7 +794,6 @@ const PurchaseManagement = () => {
                 onClick={handleUpdateStatus}
                 disabled={updating}
                 className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
-                data-testid="submit-update"
               >
                 {updating ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                 Update
