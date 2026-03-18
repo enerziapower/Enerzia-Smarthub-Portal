@@ -504,6 +504,232 @@ async def get_dashboard_stats():
     return stats
 
 
+# ============== PID-CENTRIC CONSOLIDATED VIEW ==============
+
+@router.get("/consolidated/by-pid")
+async def get_consolidated_by_pid(
+    search: Optional[str] = None,
+    status_filter: Optional[str] = None,
+    limit: int = 100
+):
+    """
+    Get consolidated view of all requests, expenses, and payments grouped by PID.
+    Used by Purchase Management for PID-centric view.
+    """
+    # Get all unique order_ids from requests
+    all_requests = await db.project_requests.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get all expenses
+    all_expenses = await db.expenses.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get orders/projects for budget info
+    all_orders = await db.order_lifecycle.find({}, {"_id": 0}).to_list(1000)
+    order_map = {o.get("id") or o.get("sales_order_id"): o for o in all_orders}
+    
+    # Also get from projects collection for PO amount
+    all_projects = await db.projects.find({}, {"_id": 0}).to_list(1000)
+    project_map = {p.get("source_order_id"): p for p in all_projects if p.get("source_order_id")}
+    
+    # Group by order_id (PID)
+    pids = {}
+    
+    for req in all_requests:
+        order_id = req.get("order_id")
+        if not order_id:
+            continue
+            
+        if order_id not in pids:
+            order = order_map.get(order_id, {})
+            project = project_map.get(order_id, {})
+            
+            # Calculate budget
+            execution_budget = 0
+            if order.get("execution_budget"):
+                budget = order["execution_budget"]
+                if budget.get("type") == "percentage":
+                    execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+                else:
+                    execution_budget = budget.get("value", 0)
+            elif project.get("budget"):
+                execution_budget = project.get("budget", 0)
+            
+            pids[order_id] = {
+                "order_id": order_id,
+                "order_no": req.get("order_no") or order.get("order_no"),
+                "customer_name": req.get("customer_name") or order.get("customer_name"),
+                "project_name": req.get("project_name") or order.get("project_name"),
+                "category": order.get("category") or project.get("category", "PSS"),
+                "po_amount": project.get("po_amount") or order.get("total_amount", 0),
+                "budget": execution_budget,
+                "status": project.get("status", "active"),
+                "materials": {"items": [], "pending": 0, "total": 0, "value": 0},
+                "vendors": {"items": [], "pending": 0, "total": 0, "value": 0},
+                "payments": {"items": [], "pending": 0, "total": 0, "value": 0},
+                "expenses": {"items": [], "total": 0, "value": 0, "bills_missing": 0},
+            }
+        
+        pid = pids[order_id]
+        req_type = req.get("request_type")
+        
+        if req_type == "material":
+            pid["materials"]["items"].append(req)
+            pid["materials"]["total"] += 1
+            if req.get("status") == "pending":
+                pid["materials"]["pending"] += 1
+            item_value = sum(i.get("estimated_cost", 0) for i in req.get("items", []))
+            pid["materials"]["value"] += item_value
+            
+        elif req_type == "vendor":
+            pid["vendors"]["items"].append(req)
+            pid["vendors"]["total"] += 1
+            if req.get("status") == "pending":
+                pid["vendors"]["pending"] += 1
+            pid["vendors"]["value"] += req.get("estimated_cost", 0)
+            
+        elif req_type == "payment":
+            pid["payments"]["items"].append(req)
+            pid["payments"]["total"] += 1
+            if req.get("status") == "pending":
+                pid["payments"]["pending"] += 1
+            pid["payments"]["value"] += req.get("amount", 0)
+    
+    # Add expenses
+    for expense in all_expenses:
+        order_id = expense.get("order_id")
+        if order_id and order_id in pids:
+            pid = pids[order_id]
+            pid["expenses"]["items"].append(expense)
+            pid["expenses"]["total"] += 1
+            if expense.get("approval_status") == "approved":
+                pid["expenses"]["value"] += expense.get("amount", 0)
+            if expense.get("pending_bill"):
+                pid["expenses"]["bills_missing"] += 1
+    
+    # Calculate profit and available budget for each PID
+    result = []
+    for order_id, pid in pids.items():
+        pid["total_expenses"] = pid["expenses"]["value"]
+        pid["available_budget"] = pid["budget"] - pid["total_expenses"]
+        pid["profit"] = pid["po_amount"] - pid["total_expenses"]
+        pid["profit_percent"] = round((pid["profit"] / pid["po_amount"]) * 100, 1) if pid["po_amount"] > 0 else 0
+        
+        # Budget warning
+        pid["budget_warning"] = None
+        if pid["budget"] == 0:
+            pid["budget_warning"] = "no_budget"
+        elif pid["available_budget"] < 0:
+            pid["budget_warning"] = "over_budget"
+        elif pid["available_budget"] < (pid["budget"] * 0.1):
+            pid["budget_warning"] = "low_budget"
+        
+        # Apply search filter
+        if search:
+            search_lower = search.lower()
+            if not (
+                search_lower in (pid.get("order_no") or "").lower() or
+                search_lower in (pid.get("customer_name") or "").lower() or
+                search_lower in (pid.get("project_name") or "").lower()
+            ):
+                continue
+        
+        # Don't include items in response to reduce size
+        pid_summary = {k: v for k, v in pid.items() if k not in ["materials", "vendors", "payments", "expenses"]}
+        pid_summary["materials"] = {k: v for k, v in pid["materials"].items() if k != "items"}
+        pid_summary["vendors"] = {k: v for k, v in pid["vendors"].items() if k != "items"}
+        pid_summary["payments"] = {k: v for k, v in pid["payments"].items() if k != "items"}
+        pid_summary["expenses"] = {k: v for k, v in pid["expenses"].items() if k != "items"}
+        
+        result.append(pid_summary)
+    
+    # Sort by pending requests (highest first), then by order_no
+    result.sort(key=lambda x: (
+        -(x["materials"]["pending"] + x["vendors"]["pending"] + x["payments"]["pending"]),
+        x.get("order_no", "")
+    ))
+    
+    return {"pids": result[:limit], "total": len(result)}
+
+
+@router.get("/consolidated/pid/{order_id}")
+async def get_pid_details(order_id: str):
+    """Get full details for a single PID including all requests, expenses"""
+    # Get all requests for this order
+    requests = await db.project_requests.find({"order_id": order_id}, {"_id": 0}).to_list(100)
+    
+    # Get all expenses for this order
+    expenses = await db.expenses.find({"order_id": order_id}, {"_id": 0}).to_list(100)
+    
+    # Get order/project info
+    order = await db.order_lifecycle.find_one(
+        {"$or": [{"id": order_id}, {"sales_order_id": order_id}]}, 
+        {"_id": 0}
+    )
+    project = await db.projects.find_one({"source_order_id": order_id}, {"_id": 0})
+    
+    # Calculate budget
+    execution_budget = 0
+    if order and order.get("execution_budget"):
+        budget = order["execution_budget"]
+        if budget.get("type") == "percentage":
+            execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+        else:
+            execution_budget = budget.get("value", 0)
+    elif project and project.get("budget"):
+        execution_budget = project.get("budget", 0)
+    
+    # Categorize requests
+    materials = [r for r in requests if r.get("request_type") == "material"]
+    vendors = [r for r in requests if r.get("request_type") == "vendor"]
+    payments = [r for r in requests if r.get("request_type") == "payment"]
+    
+    # Calculate totals
+    material_value = sum(sum(i.get("estimated_cost", 0) for i in r.get("items", [])) for r in materials)
+    vendor_value = sum(r.get("estimated_cost", 0) for r in vendors)
+    payment_value = sum(r.get("amount", 0) for r in payments)
+    expense_value = sum(e.get("amount", 0) for e in expenses if e.get("approval_status") == "approved")
+    bills_missing = sum(1 for e in expenses if e.get("pending_bill"))
+    
+    po_amount = (project.get("po_amount") if project else None) or (order.get("total_amount") if order else 0)
+    
+    return {
+        "order_id": order_id,
+        "order_no": (requests[0].get("order_no") if requests else None) or (order.get("order_no") if order else None),
+        "customer_name": (requests[0].get("customer_name") if requests else None) or (order.get("customer_name") if order else None),
+        "project_name": (requests[0].get("project_name") if requests else None) or (order.get("project_name") if order else None),
+        "category": (order.get("category") if order else None) or (project.get("category") if project else "PSS"),
+        "po_amount": po_amount,
+        "budget": execution_budget,
+        "total_expenses": expense_value,
+        "available_budget": execution_budget - expense_value,
+        "profit": po_amount - expense_value,
+        "profit_percent": round((po_amount - expense_value) / po_amount * 100, 1) if po_amount > 0 else 0,
+        "materials": {
+            "items": materials,
+            "pending": sum(1 for r in materials if r.get("status") == "pending"),
+            "total": len(materials),
+            "value": material_value
+        },
+        "vendors": {
+            "items": vendors,
+            "pending": sum(1 for r in vendors if r.get("status") == "pending"),
+            "total": len(vendors),
+            "value": vendor_value
+        },
+        "payments": {
+            "items": payments,
+            "pending": sum(1 for r in payments if r.get("status") == "pending"),
+            "total": len(payments),
+            "value": payment_value
+        },
+        "expenses": {
+            "items": expenses,
+            "total": len(expenses),
+            "value": expense_value,
+            "bills_missing": bills_missing
+        },
+        "budget_warning": "no_budget" if execution_budget == 0 else ("over_budget" if (execution_budget - expense_value) < 0 else None)
+    }
+
 
 # ============== PO CREATION FROM MATERIAL REQUESTS ==============
 
