@@ -80,10 +80,16 @@ class PaymentRequestCreate(BaseModel):
 
 
 class RequestStatusUpdate(BaseModel):
-    """Update request status"""
+    """Update request status with optional tracking info"""
     status: str
     comments: Optional[str] = None
     updated_by: Optional[str] = None
+    # Tracking fields for delivery
+    vendor_id: Optional[str] = None
+    vendor_name: Optional[str] = None
+    expected_delivery: Optional[str] = None
+    tracking_info: Optional[str] = None
+    remarks: Optional[str] = None
 
 
 # ============== REQUEST NUMBERING ==============
