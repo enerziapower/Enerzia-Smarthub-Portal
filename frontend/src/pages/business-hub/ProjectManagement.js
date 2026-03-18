@@ -1458,7 +1458,7 @@ const ProjectManagement = () => {
                       <div key={req.id} className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="font-mono text-sm text-green-700">{req.request_number}</span>
+                            <span className="font-mono text-sm text-green-700">{req.request_no}</span>
                             <p className="text-sm text-slate-600 mt-1">{req.payee} • {formatCurrency(req.amount)}</p>
                           </div>
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${
