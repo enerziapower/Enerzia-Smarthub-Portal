@@ -140,7 +140,7 @@ const RaiseRequestModal = ({ isOpen, onClose, project, onSuccess }) => {
       
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Vendor Request ${data.request.request_number} created`);
+        toast.success(`Vendor Request ${data.request.request_no} created`);
         onClose();
         onSuccess?.();
       } else {
