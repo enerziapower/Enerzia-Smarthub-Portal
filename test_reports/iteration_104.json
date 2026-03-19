@@ -1,0 +1,78 @@
+{
+  "summary": "Budget sync bug fix verified. All 5 tests PASS. Budget from Order Management (sales_orders.financials.execution_budget) now correctly displays in Purchase Management and budget-check API. Edit Modal label cleaned - '(Set in Order Management)' text removed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_budget_sync_fix.py",
+    "/app/test_reports/pytest/pytest_budget_sync_fix.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_budget_sync_fix.py"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 tests passed)",
+    "frontend": "100% (verified via code review and API response)"
+  },
+  "test_credentials": {
+    "email": "admin@enerzia.com",
+    "password": "123456"
+  },
+  "seed_data_creation": "None - used existing data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Budget sync fix is complete. Key changes: 1) Backend now fetches budget from sales_orders.financials.execution_budget as backup when order_lifecycle has null financials. 2) Frontend EditProjectModal.js line 486 changed from 'Budget (₹) (Set in Order Management)' to just 'Budget (₹)'. Test data: PID/25-26/401 now correctly shows Budget=₹15,000 in Purchase Management.",
+  "features_tested": {
+    "budget_from_order_management_displays_in_purchase_management": {
+      "description": "Budget set in Order Management (financials.execution_budget) now displays correctly in Purchase Management view",
+      "status": "PASS",
+      "evidence": "API /api/project-requests/consolidated/by-pid returns budget=15000 for PID/25-26/401"
+    },
+    "pid_401_shows_correct_budget": {
+      "description": "PID/25-26/401 should show Budget: ₹15,000 in Purchase Management (not ₹0)",
+      "status": "PASS",
+      "evidence": "Screenshot shows Budget ₹15,000 in PID card; API confirms budget=15000"
+    },
+    "edit_modal_label_cleaned": {
+      "description": "Edit Project Modal should NOT show '(Set in Order Management)' text next to Budget label",
+      "status": "PASS",
+      "evidence": "Code verification: EditProjectModal.js line 486 now shows 'Budget (₹)' without extra text. grep confirms no '(Set in Order Management)' in file."
+    },
+    "budget_warning_shows_correct_amount": {
+      "description": "Budget warning in payment approval modal shows correct budget amount",
+      "status": "PASS",
+      "evidence": "API /api/project-requests/{id}/budget-check returns budget=15000, warning='over_budget', available_budget=0"
+    },
+    "consolidated_pid_endpoint_fetches_from_sales_orders": {
+      "description": "Consolidated PID endpoint /api/project-requests/consolidated/by-pid returns correct budget from sales_orders collection",
+      "status": "PASS",
+      "evidence": "Backend code lines 525-590 now check: 1) order_lifecycle, 2) sales_orders.financials.execution_budget (backup), 3) projects.budget (fallback)"
+    }
+  },
+  "backend_tests": {
+    "test_consolidated_by_pid_returns_correct_budget": "PASS",
+    "test_pid_detail_returns_correct_budget": "PASS",
+    "test_budget_check_for_payment_shows_correct_budget": "PASS",
+    "test_consolidated_endpoint_returns_budget_warning": "PASS",
+    "test_edit_modal_code_has_clean_budget_label": "PASS"
+  },
+  "screenshots": {
+    "purchase_management_budget_display": ".screenshots/purchase_management_budget_display.png - Shows PID/25-26/401 with Budget: ₹15,000"
+  },
+  "rca_of_the_issue": {
+    "root_cause": "Budget data was stored in sales_orders.financials.execution_budget but the code was only looking in order_lifecycle collection which had null financials for PID/25-26/401",
+    "fix_applied": "Code now checks multiple sources in order: 1) order_lifecycle.financials.execution_budget, 2) sales_orders.financials.execution_budget, 3) projects.budget",
+    "files_modified": [
+      "/app/backend/routes/project_requests.py - Lines 525-590: Added sales_orders lookup as backup source",
+      "/app/frontend/src/components/EditProjectModal.js - Line 487: Removed '(Set in Order Management)' text from Budget label"
+    ]
+  }
+}

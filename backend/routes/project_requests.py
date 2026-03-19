@@ -526,6 +526,12 @@ async def get_consolidated_by_pid(
     all_orders = await db.order_lifecycle.find({}, {"_id": 0}).to_list(1000)
     order_map = {o.get("id") or o.get("sales_order_id"): o for o in all_orders}
     
+    # Also get sales_orders for budget info (backup source)
+    all_sales_orders = await db.sales_orders.find({}, {"_id": 0}).to_list(1000)
+    sales_order_map = {so.get("id"): so for so in all_sales_orders}
+    # Also map by order_no for fallback lookup
+    sales_order_by_order_no = {so.get("order_no"): so for so in all_sales_orders if so.get("order_no")}
+    
     # Also get from projects collection for PO amount
     all_projects = await db.projects.find({}, {"_id": 0}).to_list(1000)
     project_map = {p.get("source_order_id"): p for p in all_projects if p.get("source_order_id")}
@@ -535,6 +541,7 @@ async def get_consolidated_by_pid(
     
     for req in all_requests:
         order_id = req.get("order_id")
+        order_no = req.get("order_no")
         if not order_id:
             continue
             
@@ -542,24 +549,63 @@ async def get_consolidated_by_pid(
             order = order_map.get(order_id, {})
             project = project_map.get(order_id, {})
             
-            # Calculate budget
+            # Also try to get from sales_orders if order_lifecycle doesn't have data
+            sales_order = sales_order_map.get(order_id, {})
+            if not sales_order and order_no:
+                sales_order = sales_order_by_order_no.get(order_no, {})
+            
+            # Calculate budget - check multiple sources
             execution_budget = 0
-            if order.get("execution_budget"):
-                budget = order["execution_budget"]
-                if budget.get("type") == "percentage":
-                    execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+            
+            # Source 1: order_lifecycle.financials.execution_budget
+            financials = order.get("financials", {})
+            
+            # Check financials.execution_budget (newer format)
+            if financials.get("execution_budget"):
+                execution_budget = financials.get("execution_budget", 0)
+            # Check lifecycle.execution_budget (older format)  
+            elif order.get("lifecycle", {}).get("execution_budget"):
+                lifecycle_budget = order["lifecycle"]["execution_budget"]
+                if isinstance(lifecycle_budget, dict):
+                    if lifecycle_budget.get("type") == "percentage":
+                        execution_budget = (order.get("total_amount", 0)) * (lifecycle_budget.get("value", 0) / 100)
+                    else:
+                        execution_budget = lifecycle_budget.get("value", 0) or lifecycle_budget.get("amount", 0)
                 else:
-                    execution_budget = budget.get("value", 0)
-            elif project.get("budget"):
+                    execution_budget = lifecycle_budget
+            # Check top-level execution_budget (legacy format)
+            elif order.get("execution_budget"):
+                budget = order["execution_budget"]
+                if isinstance(budget, dict):
+                    if budget.get("type") == "percentage":
+                        execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+                    else:
+                        execution_budget = budget.get("value", 0)
+                else:
+                    execution_budget = budget
+            
+            # Source 2: sales_orders.financials.execution_budget (backup source)
+            if execution_budget == 0 and sales_order:
+                so_financials = sales_order.get("financials", {})
+                if so_financials.get("execution_budget"):
+                    execution_budget = so_financials.get("execution_budget", 0)
+                elif sales_order.get("lifecycle", {}).get("execution_budget"):
+                    execution_budget = sales_order["lifecycle"]["execution_budget"]
+            
+            # Source 3: Fallback to project budget
+            if execution_budget == 0 and project.get("budget"):
                 execution_budget = project.get("budget", 0)
+            
+            # Get PO amount from sales_order if not in project
+            po_amount = project.get("po_amount") or order.get("total_amount") or sales_order.get("total_amount", 0)
             
             pids[order_id] = {
                 "order_id": order_id,
-                "order_no": req.get("order_no") or order.get("order_no"),
-                "customer_name": req.get("customer_name") or order.get("customer_name"),
-                "project_name": req.get("project_name") or order.get("project_name"),
-                "category": order.get("category") or project.get("category", "PSS"),
-                "po_amount": project.get("po_amount") or order.get("total_amount", 0),
+                "order_no": req.get("order_no") or order.get("order_no") or sales_order.get("order_no"),
+                "customer_name": req.get("customer_name") or order.get("customer_name") or sales_order.get("customer_name"),
+                "project_name": req.get("project_name") or order.get("project_name") or sales_order.get("project_name"),
+                "category": order.get("category") or project.get("category") or sales_order.get("category", "PSS"),
+                "po_amount": po_amount,
                 "budget": execution_budget,
                 "status": project.get("status", "active"),
                 "materials": {"items": [], "pending": 0, "total": 0, "value": 0},
@@ -666,15 +712,56 @@ async def get_pid_details(order_id: str):
     )
     project = await db.projects.find_one({"source_order_id": order_id}, {"_id": 0})
     
-    # Calculate budget
+    # Get order_no from requests for sales_order lookup
+    order_no = requests[0].get("order_no") if requests else None
+    
+    # Also check sales_orders collection for budget info
+    sales_order = await db.sales_orders.find_one(
+        {"$or": [{"id": order_id}, {"order_no": order_no}]},
+        {"_id": 0}
+    ) if order_no else None
+    
+    # Calculate budget - check multiple sources
     execution_budget = 0
-    if order and order.get("execution_budget"):
-        budget = order["execution_budget"]
-        if budget.get("type") == "percentage":
-            execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
-        else:
-            execution_budget = budget.get("value", 0)
-    elif project and project.get("budget"):
+    
+    # Source 1: order_lifecycle
+    if order:
+        financials = order.get("financials", {})
+        
+        # Check financials.execution_budget (newer format)
+        if financials.get("execution_budget"):
+            execution_budget = financials.get("execution_budget", 0)
+        # Check lifecycle.execution_budget (older format)  
+        elif order.get("lifecycle", {}).get("execution_budget"):
+            lifecycle_budget = order["lifecycle"]["execution_budget"]
+            if isinstance(lifecycle_budget, dict):
+                if lifecycle_budget.get("type") == "percentage":
+                    execution_budget = (order.get("total_amount", 0)) * (lifecycle_budget.get("value", 0) / 100)
+                else:
+                    execution_budget = lifecycle_budget.get("value", 0) or lifecycle_budget.get("amount", 0)
+            else:
+                execution_budget = lifecycle_budget
+        # Check top-level execution_budget (legacy format)
+        elif order.get("execution_budget"):
+            budget = order["execution_budget"]
+            if isinstance(budget, dict):
+                if budget.get("type") == "percentage":
+                    execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+                else:
+                    execution_budget = budget.get("value", 0)
+            else:
+                execution_budget = budget
+    
+    # Source 2: sales_orders.financials.execution_budget (backup source)
+    if execution_budget == 0 and sales_order:
+        so_financials = sales_order.get("financials", {})
+        if so_financials.get("execution_budget"):
+            execution_budget = so_financials.get("execution_budget", 0)
+        elif sales_order.get("lifecycle", {}).get("execution_budget"):
+            execution_budget = sales_order["lifecycle"]["execution_budget"]
+    
+    # Source 3: Fallback to project budget
+    if execution_budget == 0 and project and project.get("budget"):
         execution_budget = project.get("budget", 0)
     
     # Categorize requests
@@ -1291,6 +1378,7 @@ async def check_budget_for_request(request_id: str):
         return {"warning": None, "message": "Budget check only applicable for payment requests"}
     
     order_id = request.get("order_id")
+    order_no = request.get("order_no")
     payment_amount = request.get("amount", 0)
     
     # Get project/order info for budget
@@ -1300,15 +1388,53 @@ async def check_budget_for_request(request_id: str):
     )
     project = await db.projects.find_one({"source_order_id": order_id}, {"_id": 0})
     
-    # Calculate budget
+    # Also check sales_orders collection for budget info
+    sales_order = await db.sales_orders.find_one(
+        {"$or": [{"id": order_id}, {"order_no": order_no}]},
+        {"_id": 0}
+    ) if order_no else None
+    
+    # Calculate budget - check multiple sources
     execution_budget = 0
-    if order and order.get("execution_budget"):
-        budget = order["execution_budget"]
-        if budget.get("type") == "percentage":
-            execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
-        else:
-            execution_budget = budget.get("value", 0)
-    elif project and project.get("budget"):
+    
+    # Source 1: order_lifecycle
+    if order:
+        financials = order.get("financials", {})
+        
+        # Check financials.execution_budget (newer format)
+        if financials.get("execution_budget"):
+            execution_budget = financials.get("execution_budget", 0)
+        # Check lifecycle.execution_budget (older format)  
+        elif order.get("lifecycle", {}).get("execution_budget"):
+            lifecycle_budget = order["lifecycle"]["execution_budget"]
+            if isinstance(lifecycle_budget, dict):
+                if lifecycle_budget.get("type") == "percentage":
+                    execution_budget = (order.get("total_amount", 0)) * (lifecycle_budget.get("value", 0) / 100)
+                else:
+                    execution_budget = lifecycle_budget.get("value", 0) or lifecycle_budget.get("amount", 0)
+            else:
+                execution_budget = lifecycle_budget
+        # Check top-level execution_budget (legacy format)
+        elif order.get("execution_budget"):
+            budget = order["execution_budget"]
+            if isinstance(budget, dict):
+                if budget.get("type") == "percentage":
+                    execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+                else:
+                    execution_budget = budget.get("value", 0)
+            else:
+                execution_budget = budget
+    
+    # Source 2: sales_orders.financials.execution_budget (backup source)
+    if execution_budget == 0 and sales_order:
+        so_financials = sales_order.get("financials", {})
+        if so_financials.get("execution_budget"):
+            execution_budget = so_financials.get("execution_budget", 0)
+        elif sales_order.get("lifecycle", {}).get("execution_budget"):
+            execution_budget = sales_order["lifecycle"]["execution_budget"]
+    
+    # Source 3: Fallback to project budget
+    if execution_budget == 0 and project and project.get("budget"):
         execution_budget = project.get("budget", 0)
     
     # Get current expenses

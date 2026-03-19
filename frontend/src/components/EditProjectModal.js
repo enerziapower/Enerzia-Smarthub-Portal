@@ -484,7 +484,6 @@ const EditProjectModal = ({ isOpen, onClose, onProjectUpdated, project }) => {
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">
                     Budget (₹)
-                    {isFromBusinessHub && <span className="text-xs text-amber-600 ml-1">(Set in Order Management)</span>}
                   </label>
                   <input
                     type="number"
