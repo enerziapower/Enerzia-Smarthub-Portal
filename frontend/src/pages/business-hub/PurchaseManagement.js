@@ -82,6 +82,10 @@ const PurchaseManagement = () => {
     remarks: ''
   });
 
+  // Budget warning for payment approvals
+  const [budgetWarning, setBudgetWarning] = useState(null);
+  const [loadingBudgetCheck, setLoadingBudgetCheck] = useState(false);
+
   // Vendors for dropdown
   const [vendors, setVendors] = useState([]);
 
@@ -231,6 +235,26 @@ const PurchaseManagement = () => {
     }
   };
 
+  // Check budget for payment request
+  const checkBudgetForPayment = async (requestId) => {
+    try {
+      setLoadingBudgetCheck(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/project-requests/${requestId}/budget-check`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBudgetWarning(data);
+      }
+    } catch (error) {
+      console.error('Error checking budget:', error);
+    } finally {
+      setLoadingBudgetCheck(false);
+    }
+  };
+
   const openUpdateModal = (request) => {
     setSelectedRequest(request);
     setUpdateFormData({
@@ -240,6 +264,13 @@ const PurchaseManagement = () => {
       tracking_info: request.tracking_info || '',
       remarks: request.remarks || ''
     });
+    setBudgetWarning(null); // Reset budget warning
+    
+    // Fetch budget info for payment requests
+    if (request.request_type === 'payment') {
+      checkBudgetForPayment(request.id);
+    }
+    
     setShowUpdateModal(true);
   };
 
@@ -717,6 +748,43 @@ const PurchaseManagement = () => {
             </div>
 
             <div className="p-6 space-y-4">
+              {/* Budget Warning for Payment Requests */}
+              {selectedRequest.request_type === 'payment' && budgetWarning && (
+                <div data-testid="budget-warning-section">
+                  {loadingBudgetCheck ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Loader2 size={14} className="animate-spin" />
+                      Checking budget...
+                    </div>
+                  ) : budgetWarning.warning ? (
+                    <div className={`p-3 rounded-lg text-sm flex items-start gap-2 ${
+                      budgetWarning.warning === 'over_budget' ? 'bg-red-50 text-red-700 border border-red-200' :
+                      budgetWarning.warning === 'no_budget' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    }`}>
+                      <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">{budgetWarning.warning_message}</p>
+                        {budgetWarning.warning !== 'no_budget' && (
+                          <p className="text-xs mt-1 opacity-80">
+                            Budget: {formatCurrency(budgetWarning.budget)} | 
+                            Spent: {formatCurrency(budgetWarning.total_expenses)} | 
+                            Available: {formatCurrency(budgetWarning.available_budget)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200 flex items-center gap-2">
+                      <CheckCircle size={16} />
+                      <span>
+                        Budget OK - {formatCurrency(budgetWarning.available_budget)} available after this payment
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Status *</label>
                 <select

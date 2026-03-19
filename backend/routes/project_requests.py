@@ -1277,6 +1277,74 @@ async def get_request_details(request_id: str):
     return request
 
 
+@router.get("/{request_id}/budget-check")
+async def check_budget_for_request(request_id: str):
+    """
+    Check budget availability for a payment request before approval.
+    Returns budget info and warnings if payment would exceed available budget.
+    """
+    request = await db.project_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if request.get("request_type") != "payment":
+        return {"warning": None, "message": "Budget check only applicable for payment requests"}
+    
+    order_id = request.get("order_id")
+    payment_amount = request.get("amount", 0)
+    
+    # Get project/order info for budget
+    order = await db.order_lifecycle.find_one(
+        {"$or": [{"id": order_id}, {"sales_order_id": order_id}]}, 
+        {"_id": 0}
+    )
+    project = await db.projects.find_one({"source_order_id": order_id}, {"_id": 0})
+    
+    # Calculate budget
+    execution_budget = 0
+    if order and order.get("execution_budget"):
+        budget = order["execution_budget"]
+        if budget.get("type") == "percentage":
+            execution_budget = (order.get("total_amount", 0)) * (budget.get("value", 0) / 100)
+        else:
+            execution_budget = budget.get("value", 0)
+    elif project and project.get("budget"):
+        execution_budget = project.get("budget", 0)
+    
+    # Get current expenses
+    expenses = await db.expenses.find({"order_id": order_id, "approval_status": "approved"}, {"_id": 0}).to_list(500)
+    total_expenses = sum(e.get("amount", 0) for e in expenses)
+    
+    available_budget = execution_budget - total_expenses
+    budget_after_payment = available_budget - payment_amount
+    
+    # Determine warning level
+    warning = None
+    warning_message = None
+    
+    if execution_budget == 0:
+        warning = "no_budget"
+        warning_message = "⚠️ No budget allocated for this project. Payment can still be approved but will not be tracked against budget."
+    elif budget_after_payment < 0:
+        warning = "over_budget"
+        warning_message = f"⚠️ This payment of ₹{payment_amount:,.0f} will exceed the budget by ₹{abs(budget_after_payment):,.0f}. Available: ₹{available_budget:,.0f}"
+    elif budget_after_payment < (execution_budget * 0.1):
+        warning = "low_budget"
+        warning_message = f"⚠️ After this payment, only ₹{budget_after_payment:,.0f} ({(budget_after_payment/execution_budget*100):.1f}%) will remain in budget."
+    
+    return {
+        "request_id": request_id,
+        "request_no": request.get("request_no"),
+        "payment_amount": payment_amount,
+        "budget": execution_budget,
+        "total_expenses": total_expenses,
+        "available_budget": available_budget,
+        "budget_after_payment": budget_after_payment,
+        "warning": warning,
+        "warning_message": warning_message
+    }
+
+
 @router.put("/{request_id}/status")
 async def update_request_status(request_id: str, data: RequestStatusUpdate):
     """Update request status (used by Purchase/Payment Management)
