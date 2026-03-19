@@ -34,6 +34,26 @@
 
 ---
 
+### Phase 6.12: Budget Sync Fix & Edit Modal Cleanup ✅ COMPLETE (Mar 19, 2026)
+**User Request:** Budget set in Order Management was not reflected in Purchase Management and P&S Edit modal. Also remove "(Set in Order Management)" text from Budget label.
+
+**Root Cause:** Budget data is stored in `sales_orders.financials.execution_budget` but the code was only looking in `order_lifecycle` collection which had null financials.
+
+**Fix Applied:**
+1. **Backend** - Updated budget lookup to check multiple sources:
+   - Primary: `order_lifecycle.financials.execution_budget`
+   - Backup: `sales_orders.financials.execution_budget`
+   - Fallback: `projects.budget`
+2. **Frontend** - Removed "(Set in Order Management)" text from Budget label in EditProjectModal
+
+**Files Modified:**
+- `/app/backend/routes/project_requests.py` - Lines 525-590: Added sales_orders lookup as backup source
+- `/app/frontend/src/components/EditProjectModal.js` - Line 487: Removed text from Budget label
+
+**Test Results:** 100% Backend (5/5), 100% Frontend - See `/app/test_reports/iteration_104.json`
+
+---
+
 ### Phase 6.7: Raise Request Modal & Financials View Update ✅ COMPLETE (Mar 17, 2026)
 **User Request:** 
 1. Add a "Raise Request" button to each project card on Project & Services page
