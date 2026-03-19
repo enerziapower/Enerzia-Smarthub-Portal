@@ -87,24 +87,34 @@ const Login = () => {
     setError('');
     setLoading(true);
 
+    // Trim inputs to remove accidental spaces
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+
     try {
       let result;
       if (needsSetup) {
         // Registration mode
-        if (password !== confirmPassword) {
+        if (trimmedPassword !== confirmPassword.trim()) {
           setError('Passwords do not match');
           setLoading(false);
           return;
         }
-        if (password.length < 6) {
+        if (trimmedPassword.length < 6) {
           setError('Password must be at least 6 characters');
           setLoading(false);
           return;
         }
-        result = await register(email, name, password);
+        result = await register(trimmedEmail, name.trim(), trimmedPassword);
       } else {
         // Login mode
-        result = await login(email, password);
+        result = await login(trimmedEmail, trimmedPassword);
       }
       
       // Redirect based on user's department
@@ -112,7 +122,19 @@ const Login = () => {
       const redirectPath = getDepartmentRoute(userData?.department, userData?.role);
       navigate(redirectPath);
     } catch (error) {
-      setError(error.response?.data?.detail || (needsSetup ? 'Registration failed.' : 'Login failed. Please try again.'));
+      console.error('Login error:', error);
+      
+      // More specific error messages
+      const errorMsg = error.response?.data?.detail;
+      if (errorMsg) {
+        setError(errorMsg);
+      } else if (error.message === 'Network Error') {
+        setError('Network error. Please check your internet connection.');
+      } else if (needsSetup) {
+        setError('Registration failed. Please try again.');
+      } else {
+        setError('Login failed. Please check your email and password.');
+      }
     } finally {
       setLoading(false);
     }
