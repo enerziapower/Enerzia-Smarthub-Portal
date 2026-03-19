@@ -2,6 +2,38 @@
 
 ## Latest Updates
 
+### Phase 6.11: Budget Warnings for Payment Approvals ✅ COMPLETE (Mar 19, 2026)
+**User Request:** Show warning when approving payment requests that exceed available budget or if project has no budget allocated.
+
+**Implementation:**
+
+**1. Backend - New Budget Check API:**
+- New endpoint: `GET /api/project-requests/{request_id}/budget-check`
+- Returns: `payment_amount`, `budget`, `total_expenses`, `available_budget`, `budget_after_payment`, `warning`, `warning_message`
+- Warning types:
+  - `no_budget` - Project has no budget allocated (amber warning)
+  - `over_budget` - Payment exceeds available budget (red warning)
+  - `low_budget` - Budget will be <10% after payment (yellow warning)
+  - `null` - Budget OK (green confirmation)
+
+**2. Frontend - Update Request Modal Enhancement:**
+- Budget warning section added at top of Update Request modal for payment requests
+- Calls `/api/project-requests/{request_id}/budget-check` when modal opens
+- Color-coded warnings:
+  - 🟡 Amber: No budget allocated
+  - 🔴 Red: Over budget
+  - 🟢 Green: Budget OK with available amount shown
+- Payment approval still works (warning is informational, not a blocker)
+- Shows budget breakdown: Budget | Spent | Available
+
+**Files Modified:**
+- `/app/backend/routes/project_requests.py` - Added budget-check endpoint
+- `/app/frontend/src/pages/business-hub/PurchaseManagement.js` - Added budget warning UI
+
+**Test Results:** 100% Backend (8/8), 100% Frontend - See `/app/test_reports/iteration_103.json`
+
+---
+
 ### Phase 6.7: Raise Request Modal & Financials View Update ✅ COMPLETE (Mar 17, 2026)
 **User Request:** 
 1. Add a "Raise Request" button to each project card on Project & Services page
@@ -1316,14 +1348,30 @@ Building a comprehensive ERP system for Enerzia Power Solutions (now "Workhub En
 1. **Project Completion Report Module** - New module based on sample PDF
 
 #### P2 - Medium Priority
-1. **Invoice Generation** - Auto-generate PDF invoices from billing module
-2. **Billing Page** - Connect to real data (currently static charts)
-3. **Automated Email Notifications** - AMC expiry alerts, service visit reminders
+1. **Keyboard Navigation for Customer Dropdown** - Add arrow keys + Enter navigation to searchable customer dropdown
+2. **Invoice Generation** - Auto-generate PDF invoices from billing module
+3. **Billing Page** - Connect to real data (currently static charts)
+4. **Automated Email Notifications** - AMC expiry alerts, service visit reminders
 
 #### P3 - Lower Priority
-1. **Analytics Dashboard** - Advanced analytics
+1. **Operations Department Module** - Develop operations module
+2. **Customer Portal Module** - Develop customer portal
+3. **Test Report Templates** - Add "Pressure Gauge" and "Water Flow Meter" templates
+4. **Queue-based PDF Generation** - Implement queue system for large PDFs
+5. **Analytics Dashboard** - Advanced analytics
 
 ### ✅ Recently Completed Features
+
+#### Budget Warnings for Payment Approvals ✅ COMPLETE (Mar 19, 2026)
+**Location:** Business Hub → Purchase Management → Update Request Modal
+
+| Feature | Description |
+|---------|-------------|
+| **Budget Check API** | `GET /api/project-requests/{request_id}/budget-check` returns budget status |
+| **No Budget Warning** | Amber warning when project has no budget allocated |
+| **Over Budget Warning** | Red warning when payment exceeds available budget |
+| **Budget OK Message** | Green confirmation with remaining budget shown |
+| **Non-blocking** | Warnings are informational, payment can still be approved |
 
 #### User Access Control System ✅ COMPLETE (Feb 27, 2026)
 **Location:** Administration → User Access Control
