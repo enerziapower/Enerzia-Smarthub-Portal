@@ -54,6 +54,25 @@
 
 ---
 
+### Phase 6.13: AMC PDF Download Fix ✅ COMPLETE (Mar 24, 2026)
+**User Request:** AMC PDF reports failing to download with "Failed to download PDF" error.
+
+**Root Cause:** Large PDF files (4.7MB+) were causing timeout issues in the browser. The previous implementation had no loading feedback or proper timeout handling.
+
+**Fix Applied:**
+1. **Frontend** - Improved PDF download function:
+   - Added loading spinner on download button
+   - Added toast notifications for progress feedback
+   - Added 2-minute timeout with AbortController
+   - Better error messages for timeout and other failures
+   - Uses `REACT_APP_BACKEND_URL` for API calls
+   - Added `toast` from sonner for user feedback
+
+**Files Modified:**
+- `/app/frontend/src/pages/projects/AMCManagement.js` - Lines 218-260: Enhanced handleDownloadPDF function
+
+---
+
 ### Phase 6.7: Raise Request Modal & Financials View Update ✅ COMPLETE (Mar 17, 2026)
 **User Request:** 
 1. Add a "Raise Request" button to each project card on Project & Services page

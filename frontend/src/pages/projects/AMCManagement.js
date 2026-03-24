@@ -5,13 +5,14 @@ import {
   Building2, Phone, Mail, FileText, ChevronRight, RefreshCw,
   TrendingUp, Bell, Download, Eye, Edit, Trash2, Copy,
   Filter, Search, Plus, CalendarClock, Repeat, User, MapPin,
-  Play, Pause, MoreVertical, ArrowUpRight
+  Play, Pause, MoreVertical, ArrowUpRight, Loader2
 } from 'lucide-react';
 import { scheduledInspectionsAPI, projectsAPI } from '../../services/api';
 import { EQUIPMENT_TYPES } from './EquipmentTestReports';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
 
-const API = window.location.origin;
+const API = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 // Tab definitions
 const TABS = [
@@ -60,6 +61,7 @@ const AMCManagement = () => {
   const [contractsLoading, setContractsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [downloadingPDF, setDownloadingPDF] = useState(null); // Track which AMC is downloading
   
   // Service Calendar state
   const [inspections, setInspections] = useState([]);
@@ -215,31 +217,62 @@ const AMCManagement = () => {
     }
   };
 
-  const handleDownloadPDF = async (amcId) => {
+  const handleDownloadPDF = async (amcId, amcNo) => {
     try {
+      setDownloadingPDF(amcId);
+      toast.info('Generating PDF report... This may take a moment for large reports.');
+      
       const token = localStorage.getItem('token');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      
       const response = await fetch(`${API}/api/amc-report/${amcId}/pdf`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const blob = await response.blob();
+        
+        // Check if we actually got a PDF
+        if (blob.size === 0) {
+          toast.error('Generated PDF is empty. Please try again.');
+          return;
+        }
+        
         // Ensure the blob has the correct PDF type
         const pdfBlob = new Blob([blob], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(pdfBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `AMC_Report_${amcId}.pdf`;
+        a.download = `AMC_Report_${(amcNo || amcId).replace(/\//g, '_')}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        toast.success('PDF downloaded successfully!');
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(errorData.detail || 'Failed to download PDF');
+        let errorMessage = 'Failed to download PDF';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // Response might not be JSON
+          errorMessage = `Failed to download PDF (Status: ${response.status})`;
+        }
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Error downloading PDF. Please try again.');
+      if (error.name === 'AbortError') {
+        toast.error('PDF generation timed out. The report may be too large. Please try again.');
+      } else {
+        toast.error('Error downloading PDF. Please check your connection and try again.');
+      }
+    } finally {
+      setDownloadingPDF(null);
     }
   };
 
@@ -680,11 +713,16 @@ const AMCManagement = () => {
                             <Copy size={18} className="text-green-500" />
                           </button>
                           <button
-                            onClick={() => handleDownloadPDF(amc.id)}
-                            className="p-2 hover:bg-slate-200 rounded-lg"
+                            onClick={() => handleDownloadPDF(amc.id, amc.amc_no)}
+                            className="p-2 hover:bg-slate-200 rounded-lg disabled:opacity-50"
                             title="Download PDF"
+                            disabled={downloadingPDF === amc.id}
                           >
-                            <Download size={18} className="text-slate-500" />
+                            {downloadingPDF === amc.id ? (
+                              <Loader2 size={18} className="text-amber-500 animate-spin" />
+                            ) : (
+                              <Download size={18} className="text-slate-500" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleDeleteContract(amc.id)}
