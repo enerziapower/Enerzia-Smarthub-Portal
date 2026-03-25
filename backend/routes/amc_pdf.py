@@ -1938,7 +1938,10 @@ async def generate_amc_report_pdf(amc_id: str):
         statutory_docs = amc.get('statutory_documents', []) or []
         annexure_docs = amc.get('annexure', []) or []
         all_docs = annexure_docs + statutory_docs
-        docs_with_files = [doc for doc in statutory_docs if doc.get('file_url')]
+        # Check for file_url, file, or document_file fields
+        docs_with_files = [doc for doc in statutory_docs if (doc.get('file_url') or doc.get('file') or doc.get('document_file'))]
+        
+        print(f"Statutory documents: total={len(statutory_docs)}, with_files={len(docs_with_files)}")
         
         if all_docs or docs_with_files:
             # Create the statutory documents section page
@@ -2030,6 +2033,12 @@ async def generate_amc_report_pdf(amc_id: str):
                     f"<i>Note: {len(docs_with_files)} document(s) with uploaded files are attached in the following pages.</i>",
                     ParagraphStyle('Note', fontSize=9, textColor=colors.gray, fontName='Helvetica-Oblique')
                 ))
+            elif len(statutory_docs) > 0:
+                # Documents exist but no files uploaded
+                stat_section_elements.append(Paragraph(
+                    f"<i>Note: {len(statutory_docs)} document(s) listed above do not have uploaded PDF files attached.</i>",
+                    ParagraphStyle('NoteWarning', fontSize=9, textColor=colors.HexColor('#cc0000'), fontName='Helvetica-Oblique')
+                ))
             
             stat_section_doc.build(stat_section_elements)
             stat_section_buffer.seek(0)
@@ -2065,26 +2074,64 @@ async def generate_amc_report_pdf(amc_id: str):
             UPLOADS_DIR = "/app/uploads"
             for doc in docs_with_files:
                 try:
-                    file_url = doc.get('file_url', '')
+                    file_url = doc.get('file_url', '') or doc.get('file', '') or doc.get('document_file', '')
                     if file_url:
-                        # Extract file path from URL (e.g., /api/uploads/statutory_document/filename.pdf)
-                        # Handle both formats: /api/uploads/category/file or /uploads/file
+                        # Extract file path from URL - handle multiple formats
+                        # Format 1: /api/uploads/category/file
+                        # Format 2: /uploads/file  
+                        # Format 3: Full URL like https://domain.com/api/uploads/...
+                        # Format 4: Just filename
+                        
+                        if file_url.startswith('http://') or file_url.startswith('https://'):
+                            # Full URL - extract path after /uploads/
+                            if '/uploads/' in file_url:
+                                file_url = file_url.split('/uploads/')[-1]
+                            elif '/api/uploads/' in file_url:
+                                file_url = file_url.split('/api/uploads/')[-1]
+                        
                         if file_url.startswith('/api/uploads/'):
                             file_path = os.path.join(UPLOADS_DIR, file_url.replace('/api/uploads/', ''))
                         elif file_url.startswith('/uploads/'):
                             file_path = os.path.join(UPLOADS_DIR, file_url.replace('/uploads/', ''))
-                        else:
+                        elif file_url.startswith('statutory_document/'):
                             file_path = os.path.join(UPLOADS_DIR, file_url)
+                        else:
+                            # Try direct path or just filename
+                            file_path = os.path.join(UPLOADS_DIR, 'statutory_document', file_url)
+                        
+                        print(f"Attempting to attach statutory document: {doc.get('document_name', 'Unknown')}")
+                        print(f"  Original file_url: {doc.get('file_url', 'NONE')}")
+                        print(f"  Resolved file_path: {file_path}")
                         
                         if os.path.exists(file_path) and file_path.lower().endswith('.pdf'):
                             stat_pdf = PdfReader(file_path)
                             for page in stat_pdf.pages:
                                 writer.add_page(page)
-                            print(f"Attached statutory document: {doc.get('document_name', file_url)}")
+                            print(f"  SUCCESS: Attached {len(stat_pdf.pages)} pages from {doc.get('document_name', file_url)}")
                         else:
-                            print(f"Statutory document not found or not PDF: {file_path}")
+                            # Try alternate paths
+                            alt_paths = [
+                                os.path.join(UPLOADS_DIR, file_url.lstrip('/')),
+                                os.path.join(UPLOADS_DIR, 'statutory_document', os.path.basename(file_url)),
+                                file_url if os.path.isabs(file_url) else None
+                            ]
+                            attached = False
+                            for alt_path in alt_paths:
+                                if alt_path and os.path.exists(alt_path) and alt_path.lower().endswith('.pdf'):
+                                    stat_pdf = PdfReader(alt_path)
+                                    for page in stat_pdf.pages:
+                                        writer.add_page(page)
+                                    print(f"  SUCCESS (alt path): Attached {len(stat_pdf.pages)} pages from {alt_path}")
+                                    attached = True
+                                    break
+                            
+                            if not attached:
+                                print(f"  WARNING: Statutory document not found or not PDF: {file_path}")
+                                print(f"  Tried alternate paths: {alt_paths}")
                 except Exception as e:
                     print(f"Error attaching statutory document {doc.get('document_name', '')}: {e}")
+                    import traceback
+                    traceback.print_exc()
         
         # LAST: Add Back Cover page (NO header/footer - like thermography report)
         back_cover_buffer = BytesIO()
