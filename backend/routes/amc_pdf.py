@@ -1577,10 +1577,18 @@ def create_back_cover(styles):
 
 
 async def generate_amc_report_pdf(amc_id: str):
-    """Generate complete AMC report PDF with enhanced formatting and attached reports"""
+    """Generate complete AMC report PDF with enhanced formatting and attached reports
+    
+    Memory optimization: Uses explicit garbage collection and buffer cleanup
+    to prevent memory exhaustion during large PDF generation.
+    """
     from PyPDF2 import PdfReader, PdfWriter
+    import gc
     
     db = get_db()
+    
+    # Force garbage collection before starting
+    gc.collect()
     
     # Get AMC data
     amc = await db.amcs.find_one({"id": amc_id}, {"_id": 0})
@@ -2155,9 +2163,18 @@ async def generate_amc_report_pdf(amc_id: str):
         writer.write(output_buffer)
         output_buffer.seek(0)
         
+        # Cleanup: Close buffers and force garbage collection
+        try:
+            buffer.close()
+            back_cover_buffer.close()
+        except:
+            pass
+        gc.collect()
+        
         return output_buffer
     except Exception as e:
         print(f"Error combining PDFs: {e}")
+        gc.collect()  # Cleanup on error too
         buffer.seek(0)
         return buffer
 
@@ -2165,6 +2182,7 @@ async def generate_amc_report_pdf(amc_id: str):
 @router.get("/{amc_id}/pdf")
 async def download_amc_report(amc_id: str):
     """Download AMC report as PDF"""
+    import gc
     try:
         pdf_buffer = await generate_amc_report_pdf(amc_id)
         
@@ -2178,4 +2196,5 @@ async def download_amc_report(amc_id: str):
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
+        gc.collect()  # Force cleanup on error
         raise HTTPException(status_code=500, detail=str(e))

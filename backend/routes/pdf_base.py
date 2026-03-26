@@ -4,6 +4,7 @@ This module consolidates common PDF generation code to reduce duplication.
 """
 import io
 import os
+import gc
 import base64
 from datetime import datetime, timezone
 from reportlab.lib import colors
@@ -33,6 +34,47 @@ from routes.pdf_template_settings import (
     REPORT_TYPES,
     REPORT_TYPE_LABELS
 )
+
+
+# ============ MEMORY MANAGEMENT ============
+def check_memory_and_cleanup(threshold_mb=500):
+    """
+    Check available memory and force garbage collection if below threshold.
+    Returns True if memory is sufficient, False if critically low.
+    
+    Args:
+        threshold_mb: Minimum available memory in MB before warning
+    """
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        memory_mb = memory_info.rss / 1024 / 1024  # Convert to MB
+        
+        # Get system available memory
+        system_memory = psutil.virtual_memory()
+        available_mb = system_memory.available / 1024 / 1024
+        
+        print(f"Memory check: Process={memory_mb:.1f}MB, System Available={available_mb:.1f}MB")
+        
+        if available_mb < threshold_mb:
+            print(f"WARNING: Low memory ({available_mb:.1f}MB available). Running garbage collection...")
+            gc.collect()
+            return False
+        return True
+    except ImportError:
+        # psutil not available, just run gc
+        gc.collect()
+        return True
+    except Exception as e:
+        print(f"Memory check error: {e}")
+        gc.collect()
+        return True
+
+
+def cleanup_pdf_resources():
+    """Force cleanup of PDF resources and memory"""
+    gc.collect()
 
 
 # ============ TEMPLATE SETTINGS CACHE ============

@@ -4135,6 +4135,7 @@ async def download_equipment_pdf(
 
 async def generate_test_report_pdf(equipment_type: str, report_id: str):
     """Internal function to generate test report PDF buffer (for AMC PDF attachment)"""
+    import gc
     try:
         report = await db.test_reports.find_one({"id": report_id}, {"_id": 0})
         if not report:
@@ -4151,9 +4152,12 @@ async def generate_test_report_pdf(equipment_type: str, report_id: str):
             # Use generic equipment PDF for other types
             buffer = generate_equipment_pdf_buffer(report, org_settings, equipment_type)
         
+        # Cleanup after PDF generation
+        gc.collect()
         return buffer
     except Exception as e:
         print(f"Error generating test report PDF: {e}")
+        gc.collect()
         return None
 
 
@@ -4163,6 +4167,10 @@ async def generate_equipment_pdf(
     current_user: dict = Depends(require_auth)
 ):
     """Generate PDF for any equipment test report."""
+    import gc
+    
+    # Cleanup before starting
+    gc.collect()
     
     report = await db.test_reports.find_one({"id": report_id}, {"_id": 0})
     if not report:
@@ -4173,6 +4181,9 @@ async def generate_equipment_pdf(
     
     # Generate PDF
     buffer = generate_equipment_pdf_buffer(report, org_settings, equipment_type)
+    
+    # Cleanup after generation
+    gc.collect()
     
     # Generate filename
     equipment_info = EQUIPMENT_INFO.get(equipment_type, EQUIPMENT_INFO['other'])
